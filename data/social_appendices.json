@@ -1,0 +1,1233 @@
+{
+ "_meta": {
+  "description": "נספחים חברתיים לתכניות התחדשות עירונית — נתוני מצב נכנס (המצב הקיים לפני הפינוי), לא מצב מאושר",
+  "state": "incoming_only",
+  "warning": "כל המספרים כאן מתארים את המתחם הקיים: יח\"ד קיימות, דיירים קיימים, דיור ציבורי קיים. אין להשוות אותם ל-units_add/units_total של התכנית המאושרת.",
+  "sources": [
+   "RMI TabaSearch nispachim (apps.land.gov.il)",
+   "Mavat SV4/1 section ZIP"
+  ],
+  "extracted": "2026-08-31",
+  "method": "קריאה ויזואלית של עמודים מרונדרים (היפוך ספרות RTL הופך פרסור טקסט ללא אמין)",
+  "signatures_note": "שדות החתימות (signatures/signature_pct/power_of_attorney/full_contracts) הם תיעוד היסטורי בלבד — לא מדד היתכנות ולא קלט לשום חישוב. הסף לאישור תכנית הוא 60% והסף להריסה בפועל 100%, כך שצילום-מצב מתאריך הסקר אינו מנבא דבר. אין לצבוע שכבה או לדרג תכניות לפיהם.",
+  "durable_fields": [
+   "units_existing",
+   "public_housing",
+   "rented",
+   "owner_occupied",
+   "avg_household_size",
+   "age_dist",
+   "families_with_children",
+   "religiosity",
+   "origin"
+  ],
+  "built_from": "social_appendices.json (taba-keyed)",
+  "keyed_by": "plan_name"
+ },
+ "plans": {
+  "101-0511923": {
+   "plan_name": "קדמת גונן, פינוי בינוי בר יוחאי 5-15",
+   "doc": "נספח 09 תסקיר חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2020-09-03",
+   "units_existing": 376,
+   "public_housing": 37,
+   "signatures": 273,
+   "signature_pct_excl_public": 80.0,
+   "signature_pct_incl_public": 82.5,
+   "signature_date": "2020-07-23",
+   "buildings": [
+    {
+     "name": "בר יוחאי 5",
+     "units": 76,
+     "public_housing": 5,
+     "signatures": 55,
+     "signature_pct": 77
+    },
+    {
+     "name": "בר יוחאי 7",
+     "units": 76,
+     "public_housing": 7,
+     "signatures": 52,
+     "signature_pct": 75
+    },
+    {
+     "name": "בר יוחאי 11",
+     "units": 74,
+     "public_housing": 8,
+     "signatures": 58,
+     "signature_pct": 87
+    },
+    {
+     "name": "בר יוחאי 13",
+     "units": 74,
+     "public_housing": 10,
+     "signatures": 49.5,
+     "signature_pct": 77
+    },
+    {
+     "name": "בר יוחאי 15",
+     "units": 76,
+     "public_housing": 7,
+     "signatures": 59.5,
+     "signature_pct": 86
+    }
+   ],
+   "confidence": "high",
+   "pages": [
+    84
+   ],
+   "taba": "511923",
+   "rented_pct_calc": null,
+   "public_housing_pct": 9.8,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1211,
+    "rent_pcnt": 49.2,
+    "age65_pcnt": 15.2,
+    "household_size": 2.2
+   }
+  },
+  "101-0771600": {
+   "plan_name": "מתחם דרך חברון 148, 150, 160",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2023-07-03",
+   "units_existing": 115,
+   "owner_occupied": 54,
+   "rented": 46,
+   "public_housing": 14,
+   "unclear": 1,
+   "survey_interviews": 78,
+   "survey_coverage_pct": 37,
+   "survey_questionnaires": 52,
+   "survey_date": "2021-08",
+   "buildings": [
+    {
+     "name": "דרך חברון 148",
+     "units": 34,
+     "owner_occupied": 17,
+     "rented": 13,
+     "public_housing": 4,
+     "signature_pct": 80
+    },
+    {
+     "name": "דרך חברון 150",
+     "units": 42,
+     "owner_occupied": 25,
+     "rented": 12,
+     "public_housing": 5
+    },
+    {
+     "name": "דרך חברון 160",
+     "units": 38,
+     "owner_occupied": 12,
+     "rented": 21,
+     "public_housing": 5
+    }
+   ],
+   "confidence": "high",
+   "pages": [
+    5,
+    6
+   ],
+   "taba": "771600",
+   "rented_pct_calc": 40.0,
+   "public_housing_pct": 12.2,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1815,
+    "rent_pcnt": 52.6,
+    "age65_pcnt": 14.4,
+    "household_size": 2.4,
+    "delta_rent": -12.6
+   }
+  },
+  "101-0098251": {
+   "plan_name": "פינוי בינוי דרך חברון-התנופה",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2014-07-02",
+   "owner_occupied": 55,
+   "rented": 62,
+   "public_housing": 11,
+   "households_couples": 15,
+   "households_single": 18,
+   "families_with_children": 22,
+   "families_children_under18": 9,
+   "families_children_over18": 13,
+   "confidence": "medium",
+   "pages": [
+    14
+   ],
+   "note": "עמוד מרונדר במראה — הערכים נקראו ויזואלית",
+   "taba": "98251",
+   "rented_pct_calc": 48.4,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1815,
+    "rent_pcnt": 52.6,
+    "age65_pcnt": 14.4,
+    "household_size": 2.4,
+    "delta_rent": -4.2
+   }
+  },
+  "101-1133180": {
+   "plan_name": "התחדשות עירונית דרך חברון 108-110",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2023-02-16",
+   "power_of_attorney": 46,
+   "power_of_attorney_pct": 74,
+   "full_contracts": 38,
+   "full_contracts_pct": 60,
+   "aware_of_project_pct": 96,
+   "buildings": [
+    {
+     "name": "בניין 108",
+     "power_of_attorney": 16,
+     "poa_pct": 73,
+     "full_contracts": 10,
+     "contracts_pct": 42
+    },
+    {
+     "name": "בניין 110",
+     "power_of_attorney": 30,
+     "poa_pct": 75,
+     "full_contracts": 28,
+     "contracts_pct": 70
+    }
+   ],
+   "confidence": "high",
+   "pages": [
+    13
+   ],
+   "taba": "1133180",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1815,
+    "rent_pcnt": 52.6,
+    "age65_pcnt": 14.4,
+    "household_size": 2.4
+   }
+  },
+  "101-1010123": {
+   "plan_name": "פינוי בינוי שלום יהודה 13-27",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2024-04-18",
+   "age_under18_pct": 26,
+   "age_65plus_pct": 12,
+   "israeli_born_pct": 73,
+   "immigrants_post1990_pct": 10,
+   "fsu_origin_pct": 17,
+   "renters_immigrant_pct": 25,
+   "age_dist_owners_pct": {
+    "0-18": 36,
+    "19-29": 3,
+    "30-49": 18,
+    "50-64": 23,
+    "65+": 20
+   },
+   "age_dist_renters_pct": {
+    "0-18": 17,
+    "19-29": 30,
+    "30-49": 30,
+    "50-64": 18,
+    "65+": 6
+   },
+   "confidence": "high",
+   "pages": [
+    15
+   ],
+   "note": "אחוזים בלבד — הנספח לא נותן ספירות מוחלטות בעמוד זה",
+   "taba": "1010123",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": 12.0,
+   "cbs": {
+    "stat_area_id": 1812,
+    "rent_pcnt": 41.6,
+    "age65_pcnt": 19.9,
+    "household_size": 2.5,
+    "delta_elderly": -7.9
+   }
+  },
+  "101-1071448": {
+   "plan_name": "רחל אמנו 46-48",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2023-03-09",
+   "units_existing": 35,
+   "buildings_count": 2,
+   "rented_pct": 42,
+   "survey_interviews": 25,
+   "survey_no_response": 9,
+   "signatures": 27,
+   "signature_pct": 77,
+   "confidence": "high",
+   "pages": [
+    16
+   ],
+   "taba": "1071448",
+   "rented_pct_calc": 42.0,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1312,
+    "rent_pcnt": 49.2,
+    "age65_pcnt": 26.1,
+    "household_size": 2.4,
+    "delta_rent": -7.2
+   }
+  },
+  "101-0477240": {
+   "plan_name": "הריסה ובנייה מחדש, סן מרטין",
+   "doc": "חוות דעת חברתית",
+   "doc_source": "rmi",
+   "doc_date": "2018-06-14",
+   "units_existing": 34,
+   "buildings_count": 2,
+   "rented": 19,
+   "age_60plus_pct": 38,
+   "breakdown": [
+    {
+     "group": "בעלי דירות המתגוררים בדירתם",
+     "units": 12,
+     "residents": 25,
+     "0-18": 8,
+     "19-40": 4,
+     "41-60": 3,
+     "61-75": 7,
+     "75+": 3
+    },
+    {
+     "group": "בעלי דירות משכירים",
+     "units": 16,
+     "residents": 39,
+     "0-18": 18,
+     "19-40": 6,
+     "41-60": 7,
+     "61-75": 5,
+     "75+": 3
+    },
+    {
+     "group": "שוכרי דירות",
+     "units": 16,
+     "residents": 27,
+     "0-18": 5,
+     "19-40": 17,
+     "41-60": 2,
+     "61-75": 3
+    },
+    {
+     "group": "דיירי דיור ציבורי",
+     "units": 3,
+     "residents": 3,
+     "41-60": 2,
+     "61-75": 1
+    },
+    {
+     "group": "דירות ריקות",
+     "units": 3
+    }
+   ],
+   "confidence": "high",
+   "pages": [
+    21
+   ],
+   "taba": "477240",
+   "rented_pct_calc": 55.9,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1212,
+    "rent_pcnt": 53.5,
+    "age65_pcnt": 13.5,
+    "household_size": 2.6,
+    "delta_rent": 2.4
+   }
+  },
+  "101-1019157": {
+   "plan_name": "פינוי בינוי סן מרטין 19-21",
+   "doc": "נספח חברתי - שלב 1+2",
+   "doc_source": "rmi",
+   "doc_date": "2022-01-05",
+   "residents_total": 32,
+   "age_dist": {
+    "22-40": 9,
+    "41-60": 12,
+    "61-74": 6,
+    "75-88": 4,
+    "unknown": 1
+   },
+   "origin": {
+    "יליד הארץ": 21,
+    "אתיופיה": 1,
+    "ארה\"ב": 3,
+    "הודו": 1,
+    "אירופה": 2,
+    "לא ידוע": 4
+   },
+   "religiosity": {
+    "חילונים": 7,
+    "מסורתיים": 13,
+    "דתיים": 7,
+    "חרדים": 4,
+    "לא ידוע": 1
+   },
+   "buildings": [
+    {
+     "name": "בניין 19",
+     "owner_occupied": 9,
+     "rented": 7,
+     "public_housing": 2
+    },
+    {
+     "name": "בניין 21",
+     "owner_occupied": 12,
+     "rented": 4,
+     "public_housing": 2
+    }
+   ],
+   "confidence": "high",
+   "pages": [
+    61
+   ],
+   "taba": "1019157",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1212,
+    "rent_pcnt": 53.5,
+    "age65_pcnt": 13.5,
+    "household_size": 2.6
+   }
+  },
+  "101-0608125": {
+   "plan_name": "פינוי בינוי דרך חברון 137-141",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2022-04-07",
+   "units_existing": 72,
+   "owner_occupied": 39,
+   "age_60_74": 17,
+   "age_60_74_pct": 24,
+   "age_75plus": 16,
+   "age_75plus_pct": 22,
+   "age_75plus_residents": 13,
+   "age_75plus_residents_pct": 33,
+   "disconnected_from_process_pct": 27.5,
+   "confidence": "high",
+   "pages": [
+    22,
+    45
+   ],
+   "taba": "608125",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1812,
+    "rent_pcnt": 41.6,
+    "age65_pcnt": 19.9,
+    "household_size": 2.5
+   }
+  },
+  "101-0397752": {
+   "plan_name": "פינוי בינוי ברל לוקר 13",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2018-09-05",
+   "units_existing": 24,
+   "owner_occupied": 21,
+   "rented": 2,
+   "public_housing": 1,
+   "public_housing_company": "פרזות",
+   "age_dist": {
+    "25-40": 5,
+    "40-55": 7,
+    "55-70": 12
+   },
+   "families_with_children": 9,
+   "support_pct": 80,
+   "confidence": "high",
+   "pages": [
+    2
+   ],
+   "taba": "397752",
+   "rented_pct_calc": 8.3,
+   "public_housing_pct": 4.2,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1213,
+    "rent_pcnt": 29.0,
+    "age65_pcnt": 20.1,
+    "household_size": 2.6,
+    "delta_rent": -20.7
+   }
+  },
+  "101-0581850": {
+   "plan_name": "פינוי בינוי פנמה 2 ו-6",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2020-10-13",
+   "units_existing": 48,
+   "rented": 6,
+   "public_housing": 4,
+   "survey_interviews": 36,
+   "survey_no_response": 12,
+   "signature_pct": 83,
+   "buildings": [
+    {
+     "name": "פנמה 2",
+     "units": 23,
+     "signatures": 19,
+     "signature_pct": 83
+    },
+    {
+     "name": "פנמה 6",
+     "units": 23,
+     "signatures": 19,
+     "signature_pct": 83
+    }
+   ],
+   "confidence": "medium",
+   "pages": [
+    14
+   ],
+   "note": "עמוד מרונדר במראה",
+   "taba": "581850",
+   "rented_pct_calc": 12.5,
+   "public_housing_pct": 8.3,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1141,
+    "rent_pcnt": 39.5,
+    "age65_pcnt": 14.8,
+    "household_size": 2.9,
+    "delta_rent": -27.0
+   }
+  },
+  "101-0515635": {
+   "plan_name": "פינוי בינוי אנטיגנוס 14",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2018-05-09",
+   "rented_pct": 56,
+   "age_dist_pct": {
+    "0-6": 5,
+    "19-64": 85,
+    "65+": 10
+   },
+   "household_size_pct": {
+    "up_to_2": 60,
+    "over_2": 40
+   },
+   "confidence": "medium",
+   "pages": [
+    19
+   ],
+   "taba": "515635",
+   "rented_pct_calc": 56.0,
+   "public_housing_pct": null,
+   "elderly_pct_calc": 10.0,
+   "cbs": {
+    "stat_area_id": 1215,
+    "rent_pcnt": 39.5,
+    "age65_pcnt": 15.6,
+    "household_size": 3.0,
+    "delta_rent": 16.5,
+    "delta_elderly": -5.6
+   }
+  },
+  "101-1024645": {
+   "plan_name": "פינוי בינוי חסדא ויהושע בן נון",
+   "doc": "נספח חברתי",
+   "doc_source": "mavat",
+   "doc_date": "2023-06-06",
+   "survey_date": "2022-09",
+   "renters_surveyed": 37,
+   "renters_avg_household_size": 2.1,
+   "renters_tenure_pct": {
+    "עד 3 שנים": 68,
+    "4-10 שנים": 32
+   },
+   "renters_age_pct": {
+    "0-20": 23,
+    "21-39": 69,
+    "40-64": 4,
+    "65+": 4
+   },
+   "renters_marital": {
+    "נשוי/בזוגיות": 11,
+    "רווק": 10,
+    "גרוש/אלמן": 2
+   },
+   "confidence": "high",
+   "pages": [
+    17
+   ],
+   "note": "הסקר ממוקד בשוכרים — אוכלוסייה צעירה (69% בני 21-39) וחולפת (68% פחות מ-3 שנים בדירה)",
+   "taba": "1024645",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1315,
+    "rent_pcnt": 46.8,
+    "age65_pcnt": 17.4,
+    "household_size": 2.6
+   }
+  },
+  "101-1404177": {
+   "plan_name": "הרצוג 33-37 וטשרניחובסקי 4, 6, 10",
+   "doc": "נספח חברתי מס' 6",
+   "doc_source": "mavat",
+   "doc_date": "2025-03-27",
+   "units_existing": 87,
+   "owner_occupied": 46,
+   "owner_occupied_pct": 53,
+   "absentee_owners": 41,
+   "absentee_owners_pct": 47,
+   "public_housing": 1,
+   "owners_with_multiple_units": 4,
+   "owners_65plus": 16,
+   "owners_65plus_pct": 18,
+   "owners_needing_special_assistance": 8,
+   "special_assistance_pct": 9,
+   "buildings_partial": [
+    {
+     "name": "הרצוג 37",
+     "units": 12
+    },
+    {
+     "name": "הרצוג 35",
+     "units": 12
+    },
+    {
+     "name": "טשרניחובסקי 6",
+     "units": 9
+    },
+    {
+     "name": "הרצוג 33",
+     "units": 9
+    },
+    {
+     "name": "טשרניחובסקי 4",
+     "units": 33
+    }
+   ],
+   "confidence": "high",
+   "pages": [
+    28,
+    42,
+    43
+   ],
+   "note": "המסמך עצמו מכותרת את הטבלה \"מצב נכנס\" — אותה סמנטיקה שאנחנו מאמצים. פירוט הבניינים חלקי (75 מתוך 87).",
+   "taba": "1404177",
+   "rented_pct_calc": 47.0,
+   "public_housing_pct": 1.1,
+   "elderly_pct_calc": 18.0,
+   "cbs": {
+    "stat_area_id": 1223,
+    "rent_pcnt": 44.7,
+    "age65_pcnt": 20.0,
+    "household_size": 2.3,
+    "delta_rent": 2.3,
+    "delta_elderly": -2.0
+   }
+  },
+  "101-1033869": {
+   "plan_name": "התחדשות עירונית בר יוחאי 1-3",
+   "doc": "נספח חברתי (דו\"ח חברתי)",
+   "doc_source": "rmi",
+   "doc_date": "2023-09-05",
+   "sub_parcels": 85,
+   "public_housing": 7,
+   "rented_complex_a": 42,
+   "rented_complex_b": 26,
+   "owner_occupied": 30,
+   "elderly": 6,
+   "owners_special_needs": 4,
+   "owners_under60": 42,
+   "confidence": "medium",
+   "pages": [
+    36,
+    37
+   ],
+   "note": "שני תת-מתחמים בעמודים נפרדים — ערכי השכירות מדווחים בנפרד ולא סוכמו",
+   "taba": "1033869",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1211,
+    "rent_pcnt": 49.2,
+    "age65_pcnt": 15.2,
+    "household_size": 2.2
+   }
+  },
+  "101-1394444": {
+   "plan_name": "התחדשות עירונית סן מרטין 7-15",
+   "doc": "נספח חברתי",
+   "doc_source": "mavat",
+   "doc_date": "2025-01-16",
+   "public_housing": 10,
+   "confidence": "medium",
+   "pages": [
+    29
+   ],
+   "note": "רוב המסמך תוכנית שיתוף ציבור ולוחות זמנים; הנתון הכמותי היחיד הוא הדיור הציבורי",
+   "taba": "1394444",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1212,
+    "rent_pcnt": 53.5,
+    "age65_pcnt": 13.5,
+    "household_size": 2.6
+   }
+  },
+  "101-1309061": {
+   "plan_name": "התחדשות עירונית כ\"ט בנובמבר 28",
+   "doc": "נספח חברתי",
+   "doc_source": "mavat",
+   "doc_date": "2024",
+   "public_housing": 0,
+   "confidence": "medium",
+   "pages": [
+    17,
+    23
+   ],
+   "note": "\"אין דיירים בדיור ציבורי במתחם\" — היעדר מאומת, לא נתון חסר",
+   "taba": "1309061",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1312,
+    "rent_pcnt": 49.2,
+    "age65_pcnt": 26.1,
+    "household_size": 2.4
+   }
+  },
+  "101-0690859": {
+   "plan_name": "התחדשות עירונית טשרניחובסקי 68 - שמעוני 39",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2020-07-08",
+   "quantitative_data": false,
+   "confidence": "n/a",
+   "pages": [],
+   "note": "מסמך איכותני בלבד — סיבות התנגדות ותמונת מצב, ללא ספירות הרכב מתחם",
+   "taba": "690859",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1222,
+    "rent_pcnt": 48.6,
+    "age65_pcnt": 23.0,
+    "household_size": 2.5
+   }
+  },
+  "101-1121920": {
+   "plan_name": "התחדשות עירונית משולש פת",
+   "doc": "נספח חברתי (דו\"ח חברתי)",
+   "doc_source": "mavat",
+   "doc_date": "2023-09-10",
+   "public_housing": 1,
+   "elderly_total": 40,
+   "elderly_by_age": {
+    "65-70": 6,
+    "70-75": 8,
+    "75+": 7,
+    "ללא מידע על גיל": 19
+   },
+   "special_needs_non_elderly": 5,
+   "special_needs_pct": 5,
+   "confidence": "high",
+   "pages": [
+    54
+   ],
+   "note": "הנספח מגדיר את הקשישים כסוגיה מרכזית ודורש תוכנית ליווי אישית עם פתיחת תיק ההיתר",
+   "taba": "1121920",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1213,
+    "rent_pcnt": 29.0,
+    "age65_pcnt": 20.1,
+    "household_size": 2.6
+   }
+  },
+  "101-1377753": {
+   "plan_name": "התחדשות עירונית הפלמ\"ח 49, 51 והשיירות",
+   "doc": "נספח חברתי (דו\"ח חברתי)",
+   "doc_source": "mavat",
+   "doc_date": "2025-02-20",
+   "units_existing": 44,
+   "survey_sample": 22,
+   "sample_residents": 61,
+   "estimated_residents": 122,
+   "avg_household_size": 3.5,
+   "cbs_comparison_in_doc": {
+    "stat_area_household_size": 3.5,
+    "jerusalem_household_size": 3.8
+   },
+   "household_type_pct": {
+    "יחידים": 29,
+    "זוגות ללא ילדים": 17,
+    "משפחות": 47
+   },
+   "religiosity_pct": {
+    "חרדים": 9,
+    "חילונים": 28,
+    "דתיים/מסורתיים": 61,
+    "סירבו": 4
+   },
+   "neighborhood_religiosity_pct": {
+    "חרדים": 5.7,
+    "חילונים": 65.3,
+    "דתיים/מסורתיים": 26.1
+   },
+   "immigrants_post1989_neighborhood_pct": 5.9,
+   "immigrant_households_in_sample_pct": 50,
+   "confidence": "high",
+   "pages": [
+    14
+   ],
+   "note": "המקרה החזק ביותר להשוואה מול הלמ\"ס: המתחם 61% דתיים/מסורתיים מול 26% בשכונה, ו-28% חילונים מול 65%. הנספח עצמו מצטט את הלמ\"ס 2019 ואת שנתון ירושלים.",
+   "taba": "1377753",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1311,
+    "rent_pcnt": 46.1,
+    "age65_pcnt": 23.0,
+    "household_size": 2.5,
+    "delta_household": 1.0
+   }
+  },
+  "101-0666032": {
+   "plan_name": "התחדשות עירונית פת/בר יוחאי",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2020-06-07",
+   "per_apartment_map": true,
+   "per_apartment_fields": [
+    "כתובת",
+    "תת חלקה",
+    "כניסה",
+    "קומה",
+    "מתגורר/מושכר/דיור ציבורי",
+    "מס' נפשות",
+    "ארץ לידה ושנת עליה",
+    "צרכים מיוחדים",
+    "עמדה כלפי הפרויקט"
+   ],
+   "confidence": "medium",
+   "pages": [
+    7
+   ],
+   "note": "שמות הדיירים מושחרים במסמך המפורסם; שאר השדות גלויים",
+   "taba": "666032",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1212,
+    "rent_pcnt": 53.5,
+    "age65_pcnt": 13.5,
+    "household_size": 2.6
+   }
+  },
+  "101-1115294": {
+   "plan_name": "התחדשות עירונית שלום יהודה 16",
+   "doc": "תסקיר חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2022-08-02",
+   "units_existing": 16,
+   "public_housing": 0,
+   "owner_occupied_pct": 50,
+   "investors_pct": 50,
+   "occupation_pct": {
+    "שכירים ועצמאים": 50,
+    "פנסיונרים": 50
+   },
+   "car_ownership_pct": 90,
+   "confidence": "high",
+   "pages": [
+    25
+   ],
+   "taba": "1115294",
+   "rented_pct_calc": null,
+   "public_housing_pct": 0.0,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1812,
+    "rent_pcnt": 41.6,
+    "age65_pcnt": 19.9,
+    "household_size": 2.5
+   }
+  },
+  "101-1291525": {
+   "plan_name": "התחדשות עירונית דרך חברון/עין גדי/שלום יהודה",
+   "doc": "נספח חברתי",
+   "doc_source": "mavat",
+   "doc_date": "2024-12-04",
+   "units_existing": 65,
+   "property_owners": 65,
+   "survey_interviews": 34,
+   "survey_coverage_pct": 52,
+   "survey_date": "2023-11",
+   "prepared_per": "נוהל העבודה החברתית של עיריית ירושלים, גרסה מעודכנת 2023",
+   "doc_sources": [
+    "למ\"ס",
+    "NADLAN.GOV",
+    "GOVMAP",
+    "GIS עיריית ירושלים",
+    "שנתון ירושלים 2022"
+   ],
+   "confidence": "high",
+   "pages": [
+    2
+   ],
+   "note": "מתעד תקן עירוני קיים — נוהל העבודה החברתית של עיריית ירושלים 2023",
+   "taba": "1291525",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1812,
+    "rent_pcnt": 41.6,
+    "age65_pcnt": 19.9,
+    "household_size": 2.5
+   }
+  },
+  "101-1504364": {
+   "plan_name": "התחדשות עירונית הרצוג / שמעוני",
+   "doc": "דוח חברתי שלב א'",
+   "doc_source": "mavat",
+   "doc_date": "2025-12-07",
+   "renters_majority": true,
+   "avg_household_size": 2.5,
+   "veteran_residents_pct": 60,
+   "confidence": "medium",
+   "pages": [
+    37
+   ],
+   "note": "איכותני בעיקרו — ריכוז שוכרים גבוה (מעל מחצית הדיירים), כמחצית המתחם זכאי בעיקר לקצבת זקנה",
+   "taba": "1504364",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1222,
+    "rent_pcnt": 48.6,
+    "age65_pcnt": 23.0,
+    "household_size": 2.5,
+    "delta_household": 0.0
+   }
+  },
+  "101-0855585": {
+   "plan_name": "התחדשות עירונית בר יוחאי 17-21",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2021-08-23",
+   "units_existing": 36,
+   "public_housing": 4,
+   "vacant": 1,
+   "avg_household_size": 3.4,
+   "per_apartment_map": true,
+   "per_apartment_fields": [
+    "מספר דירה",
+    "קומה",
+    "שם בעל הדירה",
+    "גיל",
+    "גודל משק בית",
+    "מתגורר/מושכרת",
+    "סטטוס חתימה"
+   ],
+   "confidence": "high",
+   "pages": [
+    22
+   ],
+   "note": "בר יוחאי 21 — 6 קומות × 6 דירות. גודל משק בית 3.4 מול 2.3 בבר יוחאי 4 (855668), שני מתחמים באותו רחוב",
+   "taba": "855585",
+   "rented_pct_calc": null,
+   "public_housing_pct": 11.1,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1211,
+    "rent_pcnt": 49.2,
+    "age65_pcnt": 15.2,
+    "household_size": 2.2,
+    "delta_household": 1.2
+   }
+  },
+  "101-1063957": {
+   "plan_name": "פינוי בינוי סן מרטין 22, 24, 26",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2022-07",
+   "public_housing": 12,
+   "public_housing_company": "עמידר",
+   "avg_household_size_owners": 2.8,
+   "avg_household_size_renters": 3.0,
+   "household_type_pct": {
+    "owners": {
+     "משפחה": 67,
+     "דייר יחיד": 33
+    },
+    "renters": {
+     "משפחה": 76,
+     "דייר יחיד": 14,
+     "שותפים": 11
+    }
+   },
+   "household_size_pct": {
+    "owners": {
+     "1-2": 54,
+     "3-4": 21,
+     "5+": 25
+    },
+    "renters": {
+     "1-2": 43,
+     "3-4": 41,
+     "5+": 16
+    }
+   },
+   "confidence": "high",
+   "pages": [
+    15
+   ],
+   "note": "בעלים מתגוררים = משפחות ותיקות עם מבוגרים; שוכרים = צעירים, ילדים קטנים וסטודנטים רווקים",
+   "taba": "1063957",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1211,
+    "rent_pcnt": 49.2,
+    "age65_pcnt": 15.2,
+    "household_size": 2.2
+   }
+  },
+  "101-0935189": {
+   "plan_name": "מתחם התחדשות עירונית למגורים ומסחר, דרך חברון",
+   "doc": "סקר / חוות דעת חברתית",
+   "doc_source": "rmi",
+   "doc_date": "2020-12-30",
+   "units_existing": 40,
+   "buildings": [
+    {
+     "name": "כניסה ב'",
+     "units": 8,
+     "owner_occupied": 6,
+     "absentee_owners": 1,
+     "public_housing": 1
+    },
+    {
+     "name": "כניסה ג'",
+     "units": 8,
+     "owner_occupied": 4,
+     "absentee_owners": 3
+    },
+    {
+     "name": "כניסה ד'",
+     "units": 12,
+     "owner_occupied": 5,
+     "absentee_owners": 6,
+     "public_housing": 1
+    }
+   ],
+   "confidence": "medium",
+   "pages": [
+    41
+   ],
+   "note": "עמוד מרונדר במראה; פילוח פר-כניסה",
+   "taba": "935189",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1815,
+    "rent_pcnt": 52.6,
+    "age65_pcnt": 14.4,
+    "household_size": 2.4
+   }
+  },
+  "101-0791467": {
+   "plan_name": "התחדשות עירונית עין צורים",
+   "doc": "דו\"ח חברתי שלב א'",
+   "doc_source": "mavat",
+   "doc_date": "2019-04",
+   "prepared_for": "חברת י.ד בראזני (יזמית)",
+   "author": "חגית ג'יניאו אדיב, יעדים בפיתוח",
+   "prepared_per": "הנחיות חברת מוריה",
+   "stat_area_in_doc": 1344,
+   "per_apartment_map": true,
+   "per_apartment_fields": [
+    "מספר דירה",
+    "כניסה",
+    "קומה",
+    "גרים/שכירות",
+    "ארץ מוצא",
+    "הרכב המשפחה",
+    "גיל ראש המשפחה",
+    "שנים בדירה",
+    "צרכים מיוחדים"
+   ],
+   "confidence": "high",
+   "pages": [
+    14,
+    15,
+    16
+   ],
+   "note": "הרשומה המפורטת ביותר באוסף — שורה לכל דירה, כולל גילאי 85/87, נכות ניידות וארץ מוצא. הנספח עצמו מצטט אזור סטטיסטי 1344 כמקור ההשוואה.",
+   "taba": "791467",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1814,
+    "rent_pcnt": 40.4,
+    "age65_pcnt": 19.2,
+    "household_size": 2.8
+   }
+  },
+  "101-1025295": {
+   "plan_name": "התחדשות עירונית בן זכאי 31",
+   "doc": "דוח חברתי",
+   "doc_source": "mavat",
+   "doc_date": "2022-11-24",
+   "units_existing": 56,
+   "public_housing": 0,
+   "rented": 22,
+   "survey_interviews": 49,
+   "signature_pct": 87.5,
+   "confidence": "high",
+   "pages": [
+    12
+   ],
+   "note": "עמוד מרונדר במראה",
+   "taba": "1025295",
+   "rented_pct_calc": 39.3,
+   "public_housing_pct": 0.0,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1215,
+    "rent_pcnt": 39.5,
+    "age65_pcnt": 15.6,
+    "household_size": 3.0,
+    "delta_rent": -0.2
+   }
+  },
+  "101-1215656": {
+   "plan_name": "בני בתירא 7-9 התחדשות עירונית",
+   "doc": "נספח חברתי",
+   "doc_source": "mavat",
+   "doc_date": "2024-04-08",
+   "owner_occupied_pct": 33,
+   "rented_pct": 67,
+   "neighborhood_owner_occupied_pct": 62,
+   "neighborhood_rented_pct": 34,
+   "data_source_in_doc": "מערכת הארנונה העירונית",
+   "confidence": "high",
+   "pages": [
+    18
+   ],
+   "note": "הנספח עצמו מציג את הפער: 67% שכירות במתחם מול 34% בשכונה — פי שניים",
+   "taba": "1215656",
+   "rented_pct_calc": 67.0,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1216,
+    "rent_pcnt": 44.1,
+    "age65_pcnt": 16.1,
+    "household_size": 2.7,
+    "delta_rent": 22.9
+   }
+  },
+  "101-1437755": {
+   "plan_name": "פינוי בינוי בן גמלא 6, 8, 10",
+   "doc": "נספח חברתי",
+   "doc_source": "mavat",
+   "doc_date": "2025-04-02",
+   "units_existing": 42,
+   "buildings_count": 3,
+   "buildings": [
+    {
+     "name": "בן גמלא 6",
+     "units": 14,
+     "entrances": 2
+    },
+    {
+     "name": "בן גמלא 8",
+     "units": 14,
+     "entrances": 2
+    },
+    {
+     "name": "בן גמלא 10",
+     "units": 14,
+     "entrances": 2
+    }
+   ],
+   "confidence": "high",
+   "pages": [
+    13
+   ],
+   "note": "דירות קומת קרקע הורחבו לחצרות הסמוכות — פער בין שטח רשום לשטח בפועל",
+   "taba": "1437755",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1315,
+    "rent_pcnt": 46.8,
+    "age65_pcnt": 17.4,
+    "household_size": 2.6
+   }
+  },
+  "101-0855668": {
+   "plan_name": "התחדשות עירונית בר יוחאי 4 ויצחק שדה",
+   "doc": "נספח חברתי",
+   "doc_source": "rmi",
+   "doc_date": "2021-08-26",
+   "avg_household_size": 2.3,
+   "per_apartment_map": true,
+   "mapped_entrance_units": 24,
+   "signed": 18,
+   "opposed": 2,
+   "undecided": 2,
+   "supportive_unsigned": 1,
+   "public_housing": 1,
+   "confidence": "medium",
+   "pages": [
+    11
+   ],
+   "note": "הנספח ממפה כל דירה בנפרד: שם בעל הדירה, גיל, גודל משק בית וסטטוס חתימה",
+   "taba": "855668",
+   "rented_pct_calc": null,
+   "public_housing_pct": null,
+   "elderly_pct_calc": null,
+   "cbs": {
+    "stat_area_id": 1212,
+    "rent_pcnt": 53.5,
+    "age65_pcnt": 13.5,
+    "household_size": 2.6,
+    "delta_household": -0.3
+   }
+  }
+ }
+}

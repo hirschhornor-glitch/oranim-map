@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-31-infra-fixes';
+        const APP_VERSION = '2026-08-31-social-appendix';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -943,6 +943,7 @@
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
                     { id: 'new_construction', name: 'בינוי חדש', desc: 'בינוי שהושלם בפועל — תב"עות שאוכלסו (טופס 4) ומבני תמ"א 38 עם תעודת גמר. הפריטים האלה מוצגים מלאים בשכבה זו, ומעומעמים ל-30% בשכבות תב"ע/תמ"א 38 הרגילות', on: false },
                     { id: 'maintenance_fund', name: 'קרן תחזוקה', desc: 'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ארוכת-טווח. מקור: הוראות התכנית (מבא"ת) + טבלה 5', on: false, hiddenFromList: true },
+                    { id: 'social_appendix', name: 'מצב נכנס — נספח חברתי', desc: 'הרכב המתחם הקיים לפני הפינוי (דיור ציבורי, שכירות, גיל, גודל משק בית) מתוך הנספח החברתי של התכנית. מקור: רמ"י TabaSearch + מבא"ת', on: false, hiddenFromList: true },
                 ]
             },
             infrastructure: {
@@ -3439,6 +3440,11 @@
             // דוח קרן תחזוקה: תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה
             const [fundReport, setFundReport] = useState(false);
             const [fundReportFilter, setFundReportFilter] = useState({ sub: 'all', minahak: 'all', status: 'all', q: '' });
+            const [socialReport, setSocialReport] = useState(false);
+            // How the מצב-נכנס layer colours its polygons. 'delta_rent' is the default
+            // because the layer's job is to show where the CBS statistical-area average
+            // (what the programme model assumes) misses the actual complex.
+            const [socialMode, setSocialMode] = useState('delta_rent');
             const [fundExpanded, setFundExpanded] = useState({}); // sub -> show non-fund tower list
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
@@ -3916,6 +3922,7 @@
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [fundReport, () => setFundReport(false)],
+                        [socialReport, () => setSocialReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
                         [eduRenewalReport, () => setEduRenewalReport(false)],
                         [developersReport, () => { setDevelopersReport(false); setDevRepExpanded(null); }],
@@ -5491,6 +5498,7 @@
                     ['__executionStaging', 'data/execution_staging.json'],
                     ['__floorAllocations', 'data/floor_allocations.json'],
                     ['__maintenanceFund', 'data/maintenance_fund.json'],
+                    ['__socialAppendices', 'data/social_appendices.json'],
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                     ['__excavationPermits', 'data/excavation_permits.json'],
                     ['__orthoQuarters', 'data/ortho_quarters.json'],
@@ -6004,6 +6012,7 @@
                             else if (key === '__hafrashPermitUse') { window.__hafrashPermitUse = (data && data.by_plan) || {}; }
                             else if (key === '__planContainment') { window.__planContainment = (data && data.superseded) || {}; }
                             else if (key === '__maintenanceFund') { window.__maintenanceFund = data || {}; }
+                            else if (key === '__socialAppendices') { window.__socialAppendices = data || { plans: {} }; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
@@ -14676,6 +14685,9 @@
                     { key: 'fund', isOpen: () => fundReport, open: () => setFundReport(true),
                         ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, status: fundReportFilter.status, q: fundReportFilter.q }),
                         apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', status: p.status || 'all', q: p.q || '' }) },
+                    { key: 'social', isOpen: () => socialReport, open: () => setSocialReport(true),
+                        ser: () => ({ mode: socialMode }),
+                        apply: p => { if (p.mode) setSocialMode(p.mode); } },
                     { key: 'overlap', isOpen: () => overlapReport, open: () => setOverlapReport(true) },
                     { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true),
                         ser: () => ({ rec: objRecencyDays || '' }),
@@ -20503,6 +20515,57 @@
                     geoLayersRef.current.maintenance_fund = fundLayer;
                 }
 
+                // --- מצב נכנס: הנספח החברתי של תכניות ההתחדשות ---
+                // Draws the EXISTING complex profile (tenure, public housing, age,
+                // household size) that the plan's social appendix documents — never the
+                // approved plan. Renewal plans with no published appendix are drawn in
+                // grey so the coverage gap is visible rather than silently absent.
+                if (layers['social_appendix'] && gd.plans) {
+                    const socMap = (window.__socialAppendices || {}).plans || {};
+                    const socLayer = L.geoJSON(gd.plans, {
+                        filter: f => {
+                            const p = f.properties || {};
+                            const s = normalizeStatus((p.status_mavat || '').trim());
+                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                            if (socMap[p.plan_name]) return true;
+                            return isSocialGapPlan(p);
+                        },
+                        style: f => {
+                            const p = f.properties || {};
+                            const rec = socMap[p.plan_name];
+                            if (!rec) return { color: '#9aa0a6', weight: 1.4, dashArray: '4,4', fill: true,
+                                               fillColor: '#9aa0a6', fillOpacity: 0.07 };
+                            const col = socialColor(rec, socialMode);
+                            return { color: col.stroke, weight: 2.6, fill: true,
+                                     fillColor: col.fill, fillOpacity: col.value == null ? 0.10 : 0.38,
+                                     dashArray: col.value == null ? '4,4' : null };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const rec = socMap[p.plan_name] || null;
+                            layer.on('click', (e) => {
+                                const m = mapInstanceRef.current || map;
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(e.latlng).setContent(buildSocialAppendixPopup(p, rec));
+                                popup.openOn(m);
+                                bindPopupEvents(popup, [{ properties: p, type: 'plan' }], 0);
+                            });
+                            const title = p.plan_summary || p.plan_name_he || p.plan_name || '';
+                            let tip;
+                            if (!rec) {
+                                tip = '<div style="color:#5f6368;font-size:7.5pt;font-family:Assistant,sans-serif">'
+                                    + title + '<br>אין נספח חברתי מפורסם</div>';
+                            } else {
+                                const col = socialColor(rec, socialMode);
+                                tip = '<div style="color:#1a3a5c;font-size:7.5pt;font-weight:bold;font-family:Assistant,sans-serif">👥 '
+                                    + title + (col.label ? '<br>' + col.label : '') + '</div>';
+                            }
+                            layer.bindTooltip(tip, { permanent: false, direction: 'top', className: 'tama38-label', sticky: true });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.social_appendix = socLayer;
+                }
+
                 // --- בינוי חדש: תב"עות מאוכלסות (טופס 4) + מבני תמ"א 38 עם תעודת גמר ---
                 // A dedicated layer that highlights construction that finished in reality. The same
                 // items recede to BUILT_FADE_OPACITY in the regular תב"ע / תמ"א 38 layers (see the
@@ -20971,7 +21034,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets, permitStageFilter]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets, permitStageFilter, socialMode]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -22528,6 +22591,181 @@
             // floors, developer, cross-source banners. `permits` = getPermitsForTama38(fid).
             // Popup for the קרן תחזוקה (maintenance-fund) layer. `fund` is the
             // window.__maintenanceFund record for this plan.
+            // A renewal plan big enough that a social appendix is expected but none was
+            // found in either Mavat or RMI. Drawn grey by the מצב-נכנס layer so the
+            // coverage gap reads as a finding instead of as missing data.
+            function isSocialGapPlan(p) {
+                const pt = normalizePlanType(p.plan_type || '') || '';
+                if (!/התחדשות|פינוי/.test(pt)) return false;
+                const u = Math.max(parseFloat(p.units_add) || 0, parseFloat(p.units_total) || 0);
+                return u >= 50;
+            }
+
+            // Colour ramp for the מצב-נכנס layer. Returns {value, fill, stroke, label};
+            // value === null means "this plan's appendix didn't report this metric" and
+            // the caller draws it hollow/dashed rather than pretending it is a zero.
+            const SOCIAL_MODES = {
+                delta_rent:     { label: 'Δ שכירות מול הלמ"ס', unit: 'נק׳ אחוז', diverging: true },
+                rented:         { label: 'שכירות במתחם', unit: '%' },
+                public_housing: { label: 'דיור ציבורי', unit: '%' },
+                elderly:        { label: 'בני 65+', unit: '%' },
+                household:      { label: 'גודל משק בית', unit: 'נפשות' },
+            };
+            function socialValue(rec, mode) {
+                if (!rec) return null;
+                const cbs = rec.cbs || {};
+                const v = mode === 'delta_rent' ? cbs.delta_rent
+                        : mode === 'rented' ? rec.rented_pct_calc
+                        : mode === 'public_housing' ? rec.public_housing_pct
+                        : mode === 'elderly' ? rec.elderly_pct_calc
+                        : mode === 'household' ? rec.avg_household_size
+                        : null;
+                return (v === null || v === undefined || isNaN(v)) ? null : Number(v);
+            }
+            function socialColor(rec, mode) {
+                const v = socialValue(rec, mode);
+                const def = SOCIAL_MODES[mode] || SOCIAL_MODES.delta_rent;
+                if (v === null) return { value: null, fill: '#b0b6bd', stroke: '#8a9096', label: '' };
+                let fill, stroke;
+                if (def.diverging) {
+                    // Divergence from the surrounding statistical area, in percentage
+                    // points. Teal = the complex has LESS rental than its area,
+                    // orange = MORE. Grey band = the area average is a fair proxy.
+                    const a = Math.abs(v);
+                    if (a < 5)       { fill = '#c9ccd1'; stroke = '#8a9096'; }
+                    else if (v > 0)  { fill = a >= 15 ? '#d95f02' : '#f0a55c'; stroke = '#8a3b00'; }
+                    else             { fill = a >= 15 ? '#1b7f79' : '#7fc4bf'; stroke = '#0d4e4a'; }
+                } else {
+                    // Sequential purple ramp; thresholds chosen per metric so each mode
+                    // uses the full ramp instead of everything landing in one bucket.
+                    const stops = mode === 'household' ? [2.2, 2.6, 3.0, 3.4]
+                                : mode === 'public_housing' ? [3, 8, 15, 25]
+                                : mode === 'elderly' ? [8, 14, 20, 28]
+                                : [20, 35, 50, 65];
+                    const ramp = ['#ede7f6', '#c5b3e6', '#9575cd', '#6a3ab2', '#4a248c'];
+                    let i = 0;
+                    while (i < stops.length && v >= stops[i]) i++;
+                    fill = ramp[i]; stroke = '#3d1f75';
+                }
+                const shown = def.unit === 'נפשות' ? v.toFixed(1)
+                            : (v > 0 && def.diverging ? '+' : '') + v.toFixed(v % 1 ? 1 : 0);
+                return { value: v, fill, stroke, label: def.label + ': ' + shown + (def.unit === '%' ? '%' : ' ' + def.unit) };
+            }
+
+            // Zoom the map to a plan and open its regular popup. Same behaviour the other
+            // report tables use when a row is clicked.
+            function zoomToPlanByName(planName) {
+                const gd = geoDataRef.current;
+                if (!gd || !gd.plans || !mapInstanceRef.current) return;
+                const feat = gd.plans.features.find(f => (f.properties || {}).plan_name === planName);
+                if (!feat || !feat.geometry) return;
+                const coords = [];
+                const g = feat.geometry;
+                if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                if (!coords.length) return;
+                const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+                const center = L.latLng((bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2);
+                const props = JSON.parse(JSON.stringify(feat.properties));
+                mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+                setTimeout(() => {
+                    const mapped = mapPlanProps(props);
+                    const rec = ((window.__socialAppendices || {}).plans || {})[planName] || null;
+                    const content = rec ? buildSocialAppendixPopup(mapped, rec)
+                                        : buildPlanPopup(mapped, { properties: mapped, type: 'plan' });
+                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                        .setLatLng(center).setContent(content);
+                    popup.openOn(mapInstanceRef.current);
+                    bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                }, 600);
+            }
+
+            function buildSocialAppendixPopup(props, rec) {
+                const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                const title = props.plan_summary || props.plan_name_he || props.plan_name || '';
+                const status = normalizeStatus((props.status_mavat || '').trim()) || (props.status_mavat || '');
+                let html = '<div style="font-family:Assistant,sans-serif;min-width:250px;max-width:370px">';
+                html += '<div style="background:#4a248c;color:#fff;font-weight:800;padding:6px 10px;border-radius:6px 6px 0 0;font-size:11.5pt">👥 מצב נכנס — נספח חברתי</div>';
+                html += '<div style="padding:8px 10px 4px">';
+                html += '<div style="font-weight:800;font-size:11pt;color:#222;margin-bottom:2px">' + esc(title) + '</div>';
+                html += '<div style="font-size:8.5pt;color:#777;margin-bottom:6px">תב"ע ' + esc(props.plan_name || '') + (status ? ' · ' + esc(status) : '') + '</div>';
+                if (!rec) {
+                    html += '<div style="background:#f3f4f6;border:1px solid #d7dade;border-radius:6px;padding:8px 10px;font-size:9pt;color:#4a4f55;line-height:1.6">'
+                        + '<b>אין נספח חברתי מפורסם</b><br>לא נמצא נספח למתחם הזה לא במבא"ת ולא במאגר רמ"י. '
+                        + 'הנספח עשוי להיות מוגש לוועדה בלי שפורסם כמסמך תכנית.</div>';
+                    if (props.mavat_url) html += '<div style="margin-top:6px"><a href="' + esc(props.mavat_url) + '" target="_blank" style="color:#0a6cff;font-size:8.5pt;font-weight:700">↗ פתח במבא"ת</a></div>';
+                    html += '</div></div>';
+                    return html;
+                }
+                // Everything below describes the complex BEFORE the plan — labelled so it
+                // can never be read as the approved state.
+                html += '<div style="background:#f6f2fd;border:1px solid #d9cdf0;border-radius:6px;padding:7px 10px;margin-bottom:6px">'
+                    + '<div style="font-size:8pt;color:#5b3a9e;font-weight:700">המתחם הקיים, לפני הפינוי</div>';
+                const row = (label, val, colour) => '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-top:1px solid #e7dff7;font-size:9.5pt">'
+                    + '<span style="color:#6a4aa8;font-weight:700">' + label + '</span>'
+                    + '<span style="color:' + (colour || '#222') + ';text-align:left">' + val + '</span></div>';
+                let body = '';
+                if (rec.units_existing) body += row('יח"ד קיימות', '<b>' + rec.units_existing + '</b>');
+                if (rec.public_housing !== undefined && rec.public_housing !== null)
+                    body += row('דיור ציבורי', '<b>' + rec.public_housing + '</b>'
+                        + (rec.public_housing_pct != null ? ' <span style="color:#777">(' + rec.public_housing_pct + '%)</span>' : '')
+                        + (rec.public_housing_company ? ' <span style="color:#777;font-size:8pt">' + esc(rec.public_housing_company) + '</span>' : ''));
+                if (rec.owner_occupied != null) body += row('בעלים מתגוררים', rec.owner_occupied);
+                if (rec.rented_pct_calc != null) body += row('שכירות', rec.rented_pct_calc + '%');
+                if (rec.avg_household_size != null) body += row('גודל משק בית', rec.avg_household_size + ' נפשות');
+                if (rec.elderly_pct_calc != null) body += row('בני 65+', rec.elderly_pct_calc + '%');
+                if (rec.elderly_total != null) body += row('קשישים במתחם', rec.elderly_total);
+                html += (body || '<div style="font-size:8.5pt;color:#7a6ba0;padding-top:4px">הנספח איכותני — ללא ספירות הרכב</div>') + '</div>';
+
+                // The CBS row is the point of the layer: how far this complex sits from
+                // the statistical-area average the programme model would have assumed.
+                const cbs = rec.cbs || {};
+                if (cbs.stat_area_id) {
+                    html += '<div style="background:#eef4fb;border:1px solid #c5d8ee;border-radius:6px;padding:6px 10px;margin-bottom:6px;font-size:8.5pt;color:#274b73;line-height:1.7">'
+                        + '<b>מול אזור סטטיסטי ' + esc(cbs.stat_area_id) + '</b> (מפקד 2022)';
+                    const cmp = (label, mine, theirs, delta, unit) => {
+                        if (mine == null || theirs == null) return '';
+                        const sign = delta > 0 ? '+' : '';
+                        const col = Math.abs(delta) >= 15 ? '#b34700' : Math.abs(delta) >= 5 ? '#8a6d3b' : '#5a6b7a';
+                        return '<br>' + label + ': <b>' + mine + unit + '</b> במתחם · ' + theirs + unit + ' באזור · '
+                            + '<b style="color:' + col + '">Δ' + sign + delta + '</b>';
+                    };
+                    const cmps = cmp('שכירות', rec.rented_pct_calc, cbs.rent_pcnt, cbs.delta_rent, '%')
+                               + cmp('65+', rec.elderly_pct_calc, cbs.age65_pcnt, cbs.delta_elderly, '%')
+                               + cmp('משק בית', rec.avg_household_size, cbs.household_size, cbs.delta_household, '');
+                    if (cmps) {
+                        html += cmps;
+                    } else {
+                        // The appendix reported nothing this area also measures — show the
+                        // area's own averages so the block still says what we'd assume here.
+                        const parts = [];
+                        if (cbs.rent_pcnt != null) parts.push('שכירות ' + cbs.rent_pcnt + '%');
+                        if (cbs.age65_pcnt != null) parts.push('65+ ' + cbs.age65_pcnt + '%');
+                        if (cbs.household_size != null) parts.push('משק בית ' + cbs.household_size);
+                        html += '<br><span style="color:#5a6b7a">ממוצע האזור: ' + (parts.join(' · ') || 'אין נתונים')
+                             + '</span><br><span style="color:#8a97a5;font-size:8pt">הנספח לא דיווח מדדים מקבילים — אין השוואה</span>';
+                    }
+                    html += '</div>';
+                }
+                if (rec.note) html += '<div style="margin-top:2px;padding:6px 8px;background:#faf7ff;border-right:3px solid #6a3ab2;border-radius:4px;font-size:8pt;color:#4a3a6a;line-height:1.5">' + esc(rec.note) + '</div>';
+                // Signatures are shown as dated history only — approval needs 60% and
+                // demolition needs 100%, so a survey-date snapshot predicts nothing.
+                const sig = rec.signature_pct != null ? rec.signature_pct
+                          : (rec.signature_pct_excl_public != null ? rec.signature_pct_excl_public : null);
+                if (sig != null) {
+                    html += '<div style="margin-top:6px;font-size:7.5pt;color:#8a8a8a;border-top:1px dashed #ddd;padding-top:4px">'
+                        + 'חתימות בעת הסקר: ' + sig + '%' + (rec.signature_date ? ' (' + esc(rec.signature_date) + ')' : '')
+                        + ' — תיעוד היסטורי, לא מדד היתכנות</div>';
+                }
+                html += '<div style="margin-top:6px;font-size:8pt;color:#888">'
+                    + esc(rec.doc || 'נספח חברתי') + (rec.doc_date ? ' · ' + esc(rec.doc_date) : '')
+                    + ' · מקור: ' + (rec.doc_source === 'rmi' ? 'רמ"י' : 'מבא"ת') + '</div>';
+                if (props.mavat_url) html += '<div style="margin-top:4px"><a href="' + esc(props.mavat_url) + '" target="_blank" style="color:#0a6cff;font-size:8.5pt;font-weight:700">↗ פתח במבא"ת</a></div>';
+                html += '</div></div>';
+                return html;
+            }
+
             function buildMaintenanceFundPopup(props, fund) {
                 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
                 fund = fund || {};
@@ -25178,6 +25416,29 @@
                                     onClick={(e) => { e.stopPropagation(); setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
+                            <div className="layer-item"
+                                 title='הרכב המתחם הקיים לפני הפינוי מתוך הנספח החברתי — דיור ציבורי, שכירות, גיל וגודל משק בית. תכניות התחדשות ללא נספח מוצגות באפור'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => toggleLayer('social_appendix')}>
+                                <input type="checkbox" checked={layers.social_appendix || false} onChange={() => {}} onClick={e => e.stopPropagation()} />
+                                <label style={{flex:1}}>מצב נכנס — נספח חברתי</label>
+                                <button className="layer-legend-btn" title="דוח מצב נכנס"
+                                    onClick={(e) => { e.stopPropagation(); setSocialReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            {layers.social_appendix && (
+                                <div style={{padding:'2px 8px 6px 22px'}} onClick={e => e.stopPropagation()}>
+                                    <select value={socialMode} onChange={e => setSocialMode(e.target.value)}
+                                        style={{width:'100%',fontSize:11,padding:'3px 4px',borderRadius:4,
+                                                background:'#1a1a2e',color:'#ddd',border:'1px solid #2a2a4a'}}>
+                                        <option value="delta_rent">צביעה: Δ שכירות מול הלמ"ס</option>
+                                        <option value="rented">צביעה: שכירות במתחם</option>
+                                        <option value="public_housing">צביעה: דיור ציבורי</option>
+                                        <option value="elderly">צביעה: בני 65+</option>
+                                        <option value="household">צביעה: גודל משק בית</option>
+                                    </select>
+                                </div>
+                            )}
                             </div>)}
                         </div>
 
@@ -28038,6 +28299,7 @@
                                 { icon:'🏘️', title:'דיור להשכרה', desc:'יח"ד להשכרה + משך השכרה מ-טבלה 5 (יח"ד מותנות עברו לדוח קרן תחזוקה)', onClick:() => go(() => setSpecialHousingReport(true)) },
                                 { icon:'🏗️', title:'דוח יזמים', desc:'יח"ד מתוכננות לפי יזם, מינה"ק ושלב', onClick:() => go(() => { setDevRepExpanded(null); setDevelopersReport(true); }) },
                                 { icon:'💰', title:'קרן תחזוקה', desc:'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה — גובה הקרן ומספר יח"ד מותנות', onClick:() => go(() => { setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }) },
+                                { icon:'👥', title:'מצב נכנס — נספחים חברתיים', desc:'הרכב המתחם הקיים לפני הפינוי: דיור ציבורי, שכירות, גיל וגודל משק בית, מול ממוצע האזור הסטטיסטי (למ"ס 2022)', onClick:() => go(() => setSocialReport(true)) },
                             ]},
                             { key:'public', title:'🏛️ מבני ציבור והפרשות', color:'#b5651d', bg:'rgba(181,101,29,0.06)', items:[
                                 { icon:'🏢', title:'קומות הפרשות מבונות', desc:'טבלת קומה לכל הפרשה + ייצוא', onClick:() => go(() => setShowFloorReport(true)) },
@@ -33378,6 +33640,156 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                     })()}
 
                     {/* ── Rental & Conditional Housing Report (דיור להשכרה ומותנה) ── */}
+                    {socialReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const socMap = (window.__socialAppendices || {}).plans || {};
+                        const seen = new Set();
+                        const rows = [], gaps = [];
+                        for (const f of gd.plans.features) {
+                            const p = f.properties || {};
+                            const pn = (p.plan_name || '').trim();
+                            if (!pn || seen.has(pn)) continue;
+                            const st = normalizeStatus((p.status_mavat || '').trim());
+                            if (st === 'נגנזה' || st === 'נדחתה' || st === 'נגנזה/נדחתה') continue;
+                            const rec = socMap[pn];
+                            if (rec) {
+                                seen.add(pn);
+                                const cbs = rec.cbs || {};
+                                rows.push({
+                                    plan_name: pn,
+                                    title: p.plan_summary || p.plan_name_he || rec.plan_name || '',
+                                    minahak: (p.minahak || '').trim(),
+                                    status: (p.status_mavat || '').trim(),
+                                    units_existing: rec.units_existing,
+                                    public_housing: rec.public_housing,
+                                    public_housing_pct: rec.public_housing_pct,
+                                    rented_pct: rec.rented_pct_calc,
+                                    cbs_rent: cbs.rent_pcnt,
+                                    delta_rent: cbs.delta_rent,
+                                    elderly_pct: rec.elderly_pct_calc,
+                                    household: rec.avg_household_size,
+                                    doc_date: rec.doc_date || '',
+                                    source: rec.doc_source === 'rmi' ? 'רמ"י' : 'מבא"ת',
+                                });
+                            } else if (isSocialGapPlan(p)) {
+                                seen.add(pn);
+                                gaps.push({
+                                    plan_name: pn,
+                                    title: p.plan_summary || p.plan_name_he || '',
+                                    units: Math.max(parseFloat(p.units_add) || 0, parseFloat(p.units_total) || 0),
+                                    status: (p.status_mavat || '').trim(),
+                                });
+                            }
+                        }
+                        rows.sort((a, b) => (b.units_existing || 0) - (a.units_existing || 0));
+                        gaps.sort((a, b) => b.units - a.units);
+                        const totUnits = rows.reduce((s, r) => s + (r.units_existing || 0), 0);
+                        const totPH = rows.reduce((s, r) => s + (r.public_housing || 0), 0);
+                        const n = (v, suffix) => (v === null || v === undefined) ? '-' : v + (suffix || '');
+                        const dlt = (v) => v == null ? '-' : (v > 0 ? '+' : '') + v;
+                        const dltColor = (v) => v == null ? '#888' : Math.abs(v) >= 15 ? '#ff8a65' : Math.abs(v) >= 5 ? '#ffd54f' : '#9e9e9e';
+                        const HEAD = ['תב"ע', 'שם', 'מינה"ק', 'סטטוס', 'יח"ד קיימות', 'דיור ציבורי', '%', 'שכירות %', 'למ"ס %', 'Δ', '65+ %', 'משק בית', 'תאריך', 'מקור'];
+                        const asRow = (r) => [r.plan_name, r.title, r.minahak, r.status, r.units_existing, r.public_housing,
+                                              r.public_housing_pct, r.rented_pct, r.cbs_rent, r.delta_rent, r.elderly_pct,
+                                              r.household, r.doc_date, r.source];
+                        return (
+                        <div className="units-overlay" onClick={() => setSocialReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(1180px, 97vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column'}}>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setSocialReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>👥 מצב נכנס — נספחים חברתיים</h2>
+                                    <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{rows.length} תכניות עם נספח · {totUnits.toLocaleString()} יח"ד קיימות · {totPH} יח"ד דיור ציבורי</p>
+                                    <p style={{color:'#ff9e80',fontSize:11,marginBottom:4}}>כל הנתונים מתארים את המתחם <b>לפני</b> הפינוי — אינם מצב מאושר ואין להשוותם ל-units_add.</p>
+                                    <p style={{color:'#888',fontSize:11,marginBottom:12}}>Δ = הפרש בין המתחם לאזור הסטטיסטי שלו (מפקד 2022). ערך גבוה = ממוצע האזור מטעה לגבי המתחם הזה.</p>
+                                    <table style={{width:'100%',fontSize:11.5,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a',background:'#1a1a2e',position:'sticky',top:0}}>
+                                            {HEAD.map((h, i) => (
+                                                <th key={i} style={{textAlign:i<4?'right':'center',padding:'6px 4px',color:i>=7&&i<=9?'#90caf9':'#fff',whiteSpace:'nowrap'}}>{h}</th>
+                                            ))}
+                                        </tr></thead>
+                                        <tbody>
+                                            {rows.map((r, i) => (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
+                                                    onClick={() => { setSocialReport(false); setTimeout(() => zoomToPlanByName(r.plan_name), 100); }}>
+                                                    <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline',whiteSpace:'nowrap'}}>{r.plan_name}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0',maxWidth:230,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={r.title}>{r.title || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8',fontSize:10.5}}>{r.minahak || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#ffd54f',fontSize:10.5}}>{r.status || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#fff',fontWeight:600}}>{n(r.units_existing)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#b39ddb'}}>{n(r.public_housing)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#9575cd',fontSize:10.5}}>{n(r.public_housing_pct)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#90caf9'}}>{n(r.rented_pct)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#607d8b'}}>{n(r.cbs_rent)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:dltColor(r.delta_rent),fontWeight:700}}>{dlt(r.delta_rent)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#a5d6a7'}}>{n(r.elderly_pct)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ffcc80'}}>{n(r.household)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#888',fontSize:10}}>{r.doc_date || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#888',fontSize:10}}>{r.source}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <h3 style={{color:'#bbb',fontSize:14,marginBottom:4}}>תכניות התחדשות ללא נספח חברתי מפורסם ({gaps.length})</h3>
+                                    <p style={{color:'#888',fontSize:11,marginBottom:8}}>נבדקו במבא"ת ובמאגר רמ"י. הנספח עשוי להיות מוגש לוועדה בלי שפורסם כמסמך תכנית.</p>
+                                    <table style={{width:'100%',fontSize:11.5,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a',background:'#1a1a2e'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>תב"ע</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>יח"ד</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>סטטוס</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {gaps.map((g, i) => (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
+                                                    onClick={() => { setSocialReport(false); setTimeout(() => zoomToPlanByName(g.plan_name), 100); }}>
+                                                    <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline',whiteSpace:'nowrap'}}>{g.plan_name}</td>
+                                                    <td style={{padding:'4px',color:'#bbb',maxWidth:320,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={g.title}>{g.title || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ddd'}}>{g.units ? g.units.toLocaleString() : '-'}</td>
+                                                    <td style={{padding:'4px',color:'#ffd54f',fontSize:10.5}}>{g.status || '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                                            const w = window.open('', '_blank');
+                                            w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>מצב נכנס — נספחים חברתיים</title>');
+                                            w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:11px}th,td{padding:4px 5px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700;border-bottom:2px solid #333}h3{margin:18px 0 4px}.num{text-align:center}@media print{.no-print{display:none!important}body{padding:0}}</style>');
+                                            w.document.write('</head><body>');
+                                            w.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                                            w.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
+                                            w.document.write('<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128196; שמור PDF</button>');
+                                            w.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                                            w.document.write('</div>');
+                                            w.document.write('<h2>מצב נכנס — נספחים חברתיים</h2>');
+                                            w.document.write('<p>' + rows.length + ' תכניות עם נספח · ' + totUnits + ' יח"ד קיימות · ' + totPH + ' יח"ד דיור ציבורי</p>');
+                                            w.document.write('<p style="color:#a33;font-size:11px">כל הנתונים מתארים את המתחם לפני הפינוי — אינם מצב מאושר.</p>');
+                                            w.document.write('<table><thead><tr>' + HEAD.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>');
+                                            rows.forEach(r => { w.document.write('<tr>' + asRow(r).map(v => '<td>' + esc(v == null ? '-' : v) + '</td>').join('') + '</tr>'); });
+                                            w.document.write('</tbody></table>');
+                                            w.document.write('<h3>תכניות התחדשות ללא נספח חברתי מפורסם (' + gaps.length + ')</h3>');
+                                            w.document.write('<table><thead><tr><th>תב"ע</th><th>שם</th><th>יח"ד</th><th>סטטוס</th></tr></thead><tbody>');
+                                            gaps.forEach(g => { w.document.write('<tr><td>' + esc(g.plan_name) + '</td><td>' + esc(g.title) + '</td><td class="num">' + (g.units || '-') + '</td><td>' + esc(g.status) + '</td></tr>'); });
+                                            w.document.write('</tbody></table>');
+                                            w.document.write('<p style="color:#999;font-size:10px">מקור: נספחים חברתיים מ-Mavat וממאגר רמ"י (TabaSearch); השוואה למפקד הלמ"ס 2022 ברמת אזור סטטיסטי.</p>');
+                                            const csvLines = [HEAD.join(',')].concat(
+                                                rows.map(r => asRow(r).map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','))
+                                            ).concat(['', 'ללא נספח חברתי', 'תב"ע,שם,יח"ד,סטטוס']).concat(
+                                                gaps.map(g => ['"' + g.plan_name + '"', '"' + String(g.title).replace(/"/g, '""') + '"', g.units, '"' + g.status + '"'].join(','))
+                                            );
+                                            w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvLines.join('\n')) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="מצב_נכנס_נספחים_חברתיים.csv";a.click()});<\/script>');
+                                            w.document.write('</body></html>');
+                                            w.document.close();
+                                        }} style={{background:'#4a248c',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',cursor:'pointer',fontSize:13,fontWeight:600}}>🖨 הדפסה / ייצוא</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        );
+                    })()}
+
                     {specialHousingReport && (() => {
                         const gd = geoDataRef.current;
                         if (!gd.plans) return null;
