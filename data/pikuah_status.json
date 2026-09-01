@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-05T17:37:39",
+ "generated_at": "2026-09-01T04:34:47",
  "by_permit": {
   "1987/361": {
    "permit_tik": "1987/361",
@@ -2062,7 +2062,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 8
+   "steps": 9
   },
   "2014/609": {
    "permit_tik": "2014/609",
@@ -2813,7 +2813,7 @@
   "2020/322": {
    "permit_tik": "2020/322",
    "file_number": "2020/0322.00",
-   "taba": "511923",
+   "taba": "606129",
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2020/0322.00",
@@ -2828,7 +2828,7 @@
   "2017/976": {
    "permit_tik": "2017/976",
    "file_number": "2017/0976.01",
-   "taba": "189852",
+   "taba": "4539ב",
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2017/0976.00",
@@ -2991,7 +2991,7 @@
    "form2_date": "24/11/2021",
    "closed_date": null,
    "classification": "construction",
-   "steps": 10
+   "steps": 11
   },
   "2020/614": {
    "permit_tik": "2020/614",
@@ -3000,13 +3000,13 @@
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2020/0614.00",
-   "pikuah_status": "נפתח תיק רישוי",
+   "pikuah_status": null,
    "gmar_date": null,
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
    "classification": "file_opened",
-   "steps": 2
+   "steps": 3
   },
   "2020/489": {
    "permit_tik": "2020/489",
@@ -3415,7 +3415,7 @@
   "2019/228": {
    "permit_tik": "2019/228",
    "file_number": "2019/0228.00",
-   "taba": "2019/0228",
+   "taba": "2013/512.1",
    "units_added": 2,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2019/0228.00",
@@ -3554,7 +3554,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 15
+   "steps": 18
   },
   "2021/361": {
    "permit_tik": "2021/361",
@@ -3807,7 +3807,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2021/75": {
@@ -3880,7 +3880,7 @@
   "2018/713": {
    "permit_tik": "2018/713",
    "file_number": "2018/0713.02",
-   "taba": "275636",
+   "taba": "71951",
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2018/0713.00",
@@ -3890,7 +3890,7 @@
    "form2_date": "08/02/2023",
    "closed_date": null,
    "classification": "construction",
-   "steps": 7
+   "steps": 8
   },
   "2007/130": {
    "permit_tik": "2007/130",
@@ -4422,10 +4422,10 @@
   },
   "2021/190": {
    "permit_tik": "2021/190",
-   "file_number": "2021/0190.00",
+   "file_number": "2021/0190.02",
    "taba": "547992",
    "units_added": 158,
-   "permit_status": "הופק-הוצא היתר בניה",
+   "permit_status": "שולמה מקדמה",
    "pikuah_tik": "2021/0190.00",
    "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
@@ -4489,7 +4489,7 @@
    "form2_date": "21/03/2024",
    "closed_date": null,
    "classification": "construction",
-   "steps": 5
+   "steps": 6
   },
   "2017/317": {
    "permit_tik": "2017/317",
@@ -4504,7 +4504,7 @@
    "form2_date": "04/04/2024",
    "closed_date": null,
    "classification": "construction",
-   "steps": 5
+   "steps": 6
   },
   "2021/317": {
    "permit_tik": "2021/317",
@@ -4587,7 +4587,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2020/748": {
@@ -4684,7 +4684,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2017/384": {
@@ -4742,7 +4742,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2014/824": {
@@ -4787,7 +4787,7 @@
   "2022/311": {
    "permit_tik": "2022/311",
    "file_number": "2022/0311.00",
-   "taba": "547992",
+   "taba": "560805",
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2022/0311.00",
@@ -4964,7 +4964,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2016/84": {
@@ -4993,7 +4993,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 11
+   "steps": 12
   },
   "2017/1086": {
    "permit_tik": "2017/1086",
@@ -5038,7 +5038,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 13
+   "steps": 14
   },
   "2019/571": {
    "permit_tik": "2019/571",
@@ -5107,7 +5107,7 @@
    "form2_date": "20/05/2024",
    "closed_date": null,
    "classification": "construction",
-   "steps": 5
+   "steps": 6
   },
   "2021/205": {
    "permit_tik": "2021/205",
@@ -5208,7 +5208,7 @@
    "form2_date": "25/07/2024",
    "closed_date": null,
    "classification": "construction",
-   "steps": 6
+   "steps": 7
   },
   "2022/54": {
    "permit_tik": "2022/54",
@@ -5223,7 +5223,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 13
+   "steps": 14
   },
   "2022/354": {
    "permit_tik": "2022/354",
@@ -5322,7 +5322,7 @@
    "form2_date": "15/12/2024",
    "closed_date": null,
    "classification": "construction",
-   "steps": 9
+   "steps": 10
   },
   "2022/57": {
    "permit_tik": "2022/57",
@@ -5426,7 +5426,7 @@
   "2021/479": {
    "permit_tik": "2021/479",
    "file_number": "2021/0479.00",
-   "taba": "383109",
+   "taba": "98251",
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2021/0479.00",
@@ -5435,7 +5435,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2021/507": {
@@ -5672,7 +5672,7 @@
    "form2_date": "10/12/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 5
+   "steps": 7
   },
   "2021/216": {
    "permit_tik": "2021/216",
@@ -5686,7 +5686,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2017/569": {
@@ -5715,7 +5715,7 @@
    "form2_date": "05/03/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 10
+   "steps": 11
   },
   "2022/361": {
    "permit_tik": "2022/361",
@@ -5729,7 +5729,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "1995/44": {
@@ -5773,7 +5773,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 4
+   "steps": 5
   },
   "1969/107": {
    "permit_tik": "1969/107",
@@ -5848,7 +5848,7 @@
    "form2_date": "02/07/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 4
+   "steps": 5
   },
   "2019/612": {
    "permit_tik": "2019/612",
@@ -5863,7 +5863,7 @@
    "form2_date": "02/07/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 4
+   "steps": 5
   },
   "2022/462": {
    "permit_tik": "2022/462",
@@ -5963,7 +5963,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2021/476": {
@@ -6097,7 +6097,7 @@
    "form2_date": "26/02/2026",
    "closed_date": null,
    "classification": "construction",
-   "steps": 8
+   "steps": 9
   },
   "2016/704": {
    "permit_tik": "2016/704",
@@ -6170,7 +6170,7 @@
    "form2_date": "16/12/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 8
+   "steps": 9
   },
   "2024/57": {
    "permit_tik": "2024/57",
@@ -6185,7 +6185,7 @@
    "form2_date": "04/02/2026",
    "closed_date": null,
    "classification": "construction",
-   "steps": 8
+   "steps": 9
   },
   "2022/134": {
    "permit_tik": "2022/134",
@@ -6286,7 +6286,7 @@
    "form2_date": "07/05/2026",
    "closed_date": null,
    "classification": "construction",
-   "steps": 9
+   "steps": 10
   },
   "2023/68": {
    "permit_tik": "2023/68",
@@ -6301,7 +6301,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 4
+   "steps": 5
   },
   "2020/361": {
    "permit_tik": "2020/361",
@@ -6374,7 +6374,7 @@
    "form2_date": "02/03/2021",
    "closed_date": null,
    "classification": "construction",
-   "steps": 9
+   "steps": 10
   },
   "2022/399": {
    "permit_tik": "2022/399",
@@ -6492,7 +6492,7 @@
    "form2_date": "01/11/2023",
    "closed_date": null,
    "classification": "construction",
-   "steps": 15
+   "steps": 16
   },
   "2014/1000": {
    "permit_tik": "2014/1000",
@@ -6628,13 +6628,13 @@
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2021/0557.00",
-   "pikuah_status": "הופק טופס 2",
-   "gmar_date": null,
+   "pikuah_status": "הופקה תעודת גמר",
+   "gmar_date": "30/08/2026",
    "form4_date": null,
-   "form2_date": "12/01/2026",
+   "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
-   "steps": 6
+   "classification": "gmar",
+   "steps": 10
   },
   "2021/559": {
    "permit_tik": "2021/559",
@@ -6643,13 +6643,13 @@
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2021/0559.00",
-   "pikuah_status": "נפתח תיק רישוי",
+   "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
    "form4_date": null,
-   "form2_date": null,
+   "form2_date": "11/08/2026",
    "closed_date": null,
-   "classification": "file_opened",
-   "steps": 3
+   "classification": "construction",
+   "steps": 5
   },
   "1989/855": {
    "permit_tik": "1989/855",
@@ -6677,7 +6677,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 17
+   "steps": 18
   },
   "2019/551": {
    "permit_tik": "2019/551",
@@ -6836,7 +6836,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "file_opened",
-   "steps": 2
+   "steps": 3
   },
   "2020/569": {
    "permit_tik": "2020/569",
@@ -6845,13 +6845,13 @@
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2020/0569.00",
-   "pikuah_status": "נפתח תיק רישוי",
+   "pikuah_status": null,
    "gmar_date": null,
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
    "classification": "file_opened",
-   "steps": 2
+   "steps": 3
   },
   "1970/1060": {
    "permit_tik": "1970/1060",
@@ -6896,7 +6896,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 6
+   "steps": 7
   },
   "2024/152": {
    "permit_tik": "2024/152",
@@ -6991,7 +6991,7 @@
   "2017/332": {
    "permit_tik": "2017/332",
    "file_number": "2017/0332.01",
-   "taba": "834382",
+   "taba": "57596",
    "units_added": 26,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2017/0332.00",
@@ -7001,7 +7001,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 6
+   "steps": 7
   },
   "2024/129": {
    "permit_tik": "2024/129",
@@ -7030,8 +7030,8 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "file_opened",
-   "steps": 3
+   "classification": "construction",
+   "steps": 4
   },
   "2022/527": {
    "permit_tik": "2022/527",
@@ -7051,9 +7051,9 @@
   "1982/594": {
    "permit_tik": "1982/594",
    "file_number": "1982/0594.03",
-   "taba": "342170",
+   "taba": "205674",
    "units_added": 0,
-   "permit_status": "הופק-הוצא היתר בניה",
+   "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "1982/0594.00",
    "pikuah_status": null,
    "gmar_date": null,
@@ -7070,13 +7070,13 @@
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2022/0448.00",
-   "pikuah_status": null,
+   "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
    "form4_date": null,
-   "form2_date": null,
+   "form2_date": "26/08/2026",
    "closed_date": null,
-   "classification": "file_opened",
-   "steps": 3
+   "classification": "construction",
+   "steps": 5
   },
   "2006/812": {
    "permit_tik": "2006/812",
@@ -7461,7 +7461,7 @@
   "1969/742": {
    "permit_tik": "1969/742",
    "file_number": "1969/0742.00",
-   "taba": "14931",
+   "taba": "15085",
    "units_added": 0,
    "permit_status": "התקבל תיק ורוד / מסמכים חתומים",
    "pikuah_tik": "1969/0742.00",
@@ -7579,7 +7579,7 @@
   "1974/414": {
    "permit_tik": "1974/414",
    "file_number": "1974/0414.00",
-   "taba": "14931",
+   "taba": "15085",
    "units_added": 0,
    "permit_status": "הוכנה טיוטת היתר בניה",
    "pikuah_tik": "1974/0414.00",
@@ -8873,7 +8873,7 @@
   "2010/928": {
    "permit_tik": "2010/928",
    "file_number": "2010/0928.00",
-   "taba": "71951",
+   "taba": "405977",
    "units_added": 12,
    "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "2010/0928.00",
@@ -9775,7 +9775,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "file_opened",
+   "classification": "enforcement",
    "steps": 3
   },
   "2018/483": {
@@ -10164,7 +10164,7 @@
   "2021/307": {
    "permit_tik": "2021/307",
    "file_number": "2021/0307.00",
-   "taba": "178129",
+   "taba": "657601",
    "units_added": 0,
    "permit_status": "הגשה מקוונת הושלמה",
    "pikuah_tik": "2021/0307.00",
@@ -10179,7 +10179,7 @@
   "2021/308": {
    "permit_tik": "2021/308",
    "file_number": "2021/0308.00",
-   "taba": "178129",
+   "taba": "657601",
    "units_added": 0,
    "permit_status": "הגשה מקוונת הושלמה",
    "pikuah_tik": "2021/0308.00",
@@ -10194,7 +10194,7 @@
   "2021/346": {
    "permit_tik": "2021/346",
    "file_number": "2021/0346.00",
-   "taba": "178129",
+   "taba": "657601",
    "units_added": 0,
    "permit_status": "הגשה מקוונת הושלמה",
    "pikuah_tik": "2021/0346.00",
@@ -10209,7 +10209,7 @@
   "2021/347": {
    "permit_tik": "2021/347",
    "file_number": "2021/0347.00",
-   "taba": "178129",
+   "taba": "657601",
    "units_added": 0,
    "permit_status": "הגשה מקוונת הושלמה",
    "pikuah_tik": "2021/0347.00",
@@ -10927,7 +10927,7 @@
   "1980/1018": {
    "permit_tik": "1980/1018",
    "file_number": "1980/1018.03",
-   "taba": "14931",
+   "taba": "15085",
    "units_added": 0,
    "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "1980/1018.00",
@@ -11722,7 +11722,7 @@
   "1969/176": {
    "permit_tik": "1969/176",
    "file_number": "1969/0176.03",
-   "taba": "2016/0397",
+   "taba": "21615",
    "units_added": 0,
    "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "1969/0176.00",
@@ -12817,7 +12817,7 @@
    "file_number": "2016/0745.01",
    "taba": "764886",
    "units_added": 7,
-   "permit_status": "נדונה בוועדת המשנה",
+   "permit_status": "הוכנה טיוטת היתר בניה",
    "pikuah_tik": "2016/0745.00",
    "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
@@ -12843,7 +12843,7 @@
   "2018/276": {
    "permit_tik": "2018/276",
    "file_number": "2018/0276.00",
-   "taba": "150805",
+   "taba": "209593",
    "units_added": 0,
    "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "2018/0276.00",
@@ -12941,7 +12941,7 @@
    "form2_date": "25/07/2024",
    "closed_date": null,
    "classification": "construction",
-   "steps": 6
+   "steps": 7
   },
   "2019/217": {
    "permit_tik": "2019/217",
@@ -13423,7 +13423,7 @@
   "2017/588": {
    "permit_tik": "2017/588",
    "file_number": "2017/0588.07",
-   "taba": "487694",
+   "taba": "1068295",
    "units_added": 0,
    "permit_status": "נדונה ברשות הרישוי",
    "pikuah_tik": "2017/0588.00",
@@ -13455,7 +13455,7 @@
    "file_number": "2023/0051.00",
    "taba": "15636",
    "units_added": 0,
-   "permit_status": "נדונה בוועדת המשנה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2023/0051.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -13661,7 +13661,7 @@
    "file_number": "2023/0026.00",
    "taba": "349811",
    "units_added": 15,
-   "permit_status": "נדונה בועדת ערר",
+   "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "2023/0026.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -13691,7 +13691,7 @@
    "file_number": "2022/0166.00",
    "taba": "600700",
    "units_added": 10,
-   "permit_status": "נדונה ברשות הרישוי",
+   "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "2022/0166.00",
    "pikuah_status": null,
    "gmar_date": null,
@@ -13792,7 +13792,7 @@
   "2008/632": {
    "permit_tik": "2008/632",
    "file_number": "2008/0632.09",
-   "taba": "673897",
+   "taba": "209593",
    "units_added": 0,
    "permit_status": "נדונה ברשות הרישוי",
    "pikuah_tik": "2008/0632.00",
@@ -13822,7 +13822,7 @@
    "file_number": "2024/0194.00",
    "taba": "2024/0194.00",
    "units_added": 0,
-   "permit_status": "התקבל ערר",
+   "permit_status": "הוכנה טיוטת היתר בניה",
    "pikuah_tik": "2024/0194.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -13978,7 +13978,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 7
+   "steps": 8
   },
   "2008/773": {
    "permit_tik": "2008/773",
@@ -13998,7 +13998,7 @@
    "file_number": "2024/0221.00",
    "taba": "2024/0221.00",
    "units_added": 0,
-   "permit_status": "הוכנה טיוטת היתר בניה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2024/0221.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -14043,7 +14043,7 @@
    "file_number": "2022/0447.00",
    "taba": "560110",
    "units_added": 65,
-   "permit_status": "חידוש טיפול בבקשה",
+   "permit_status": "הוכנה טיוטת היתר בניה",
    "pikuah_tik": "2022/0447.00",
    "pikuah_status": null,
    "gmar_date": null,
@@ -14159,7 +14159,7 @@
    "file_number": "2022/0124.00",
    "taba": "15274",
    "units_added": 0,
-   "permit_status": "חידוש טיפול בבקשה",
+   "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "2022/0124.00",
    "pikuah_status": "נפתח תיק רישוי",
    "gmar_date": null,
@@ -14311,7 +14311,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 4
+   "steps": 5
   },
   "1989/168": {
    "permit_tik": "1989/168",
@@ -14399,14 +14399,14 @@
    "form2_date": "18/06/2026",
    "closed_date": null,
    "classification": "construction",
-   "steps": 10
+   "steps": 11
   },
   "2025/334": {
    "permit_tik": "2025/334",
    "file_number": "2025/0334.00",
    "taba": "15004",
    "units_added": 0,
-   "permit_status": "נפתח תיק רישוי",
+   "permit_status": "נדונה ברשות הרישוי",
    "pikuah_tik": "2025/0334.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -14607,7 +14607,7 @@
    "form2_date": "28/10/2024",
    "closed_date": null,
    "classification": "construction",
-   "steps": 8
+   "steps": 9
   },
   "2023/461": {
    "permit_tik": "2023/461",
@@ -14676,13 +14676,13 @@
    "units_added": 426,
    "permit_status": "נדונה ברשות הרישוי",
    "pikuah_tik": "2023/0326.00",
-   "pikuah_status": "נפתח תיק פיקוח",
+   "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
    "form4_date": null,
-   "form2_date": null,
+   "form2_date": "27/08/2026",
    "closed_date": null,
    "classification": "construction",
-   "steps": 6
+   "steps": 7
   },
   "2024/211": {
    "permit_tik": "2024/211",
@@ -14715,7 +14715,7 @@
   "2023/410": {
    "permit_tik": "2023/410",
    "file_number": "2023/0410.02",
-   "taba": "682849",
+   "taba": "415992",
    "units_added": 62,
    "permit_status": "נפתח תיק רישוי",
    "pikuah_tik": "2023/0410.00",
@@ -14725,7 +14725,7 @@
    "form2_date": "14/05/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 6
+   "steps": 7
   },
   "2023/411": {
    "permit_tik": "2023/411",
@@ -14740,7 +14740,7 @@
    "form2_date": "14/05/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 6
+   "steps": 7
   },
   "2024/135": {
    "permit_tik": "2024/135",
@@ -14760,7 +14760,7 @@
   "1974/734": {
    "permit_tik": "1974/734",
    "file_number": "1974/0734.05",
-   "taba": "73619",
+   "taba": "484170",
    "units_added": 0,
    "permit_status": "חידוש טיפול בבקשה",
    "pikuah_tik": "1974/0734.00",
@@ -14785,7 +14785,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "file_opened",
-   "steps": 3
+   "steps": 4
   },
   "2024/71": {
    "permit_tik": "2024/71",
@@ -14914,7 +14914,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "file_opened",
-   "steps": 3
+   "steps": 4
   },
   "2022/123": {
    "permit_tik": "2022/123",
@@ -14979,7 +14979,7 @@
    "file_number": "2025/0513.00",
    "taba": "15496",
    "units_added": 0,
-   "permit_status": "תחילת פרסום הבקשה להקלה",
+   "permit_status": "תום תקופת פרסום",
    "pikuah_tik": "2025/0513.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -15032,7 +15032,7 @@
    "form2_date": "02/02/2025",
    "closed_date": null,
    "classification": "construction",
-   "steps": 10
+   "steps": 11
   },
   "2017/638": {
    "permit_tik": "2017/638",
@@ -15092,12 +15092,12 @@
    "form2_date": "01/05/2023",
    "closed_date": null,
    "classification": "construction",
-   "steps": 13
+   "steps": 14
   },
   "2024/568": {
    "permit_tik": "2024/568",
    "file_number": "2024/0568.01",
-   "taba": "666032",
+   "taba": "855668",
    "units_added": 287,
    "permit_status": "נדונה בוועדת המשנה",
    "pikuah_tik": "2024/0568.00",
@@ -15176,13 +15176,13 @@
    "units_added": 0,
    "permit_status": "נדונה בוועדת המשנה",
    "pikuah_tik": "2022/0444.00",
-   "pikuah_status": null,
-   "gmar_date": null,
+   "pikuah_status": "הופקה תעודת גמר",
+   "gmar_date": "26/08/2026",
    "form4_date": null,
-   "form2_date": "12/05/2026",
+   "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
-   "steps": 5
+   "classification": "gmar",
+   "steps": 9
   },
   "2024/477": {
    "permit_tik": "2024/477",
@@ -15302,7 +15302,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "file_opened",
-   "steps": 3
+   "steps": 4
   },
   "2025/418": {
    "permit_tik": "2025/418",
@@ -15384,7 +15384,7 @@
    "file_number": "2023/0123.00",
    "taba": "859322",
    "units_added": 114,
-   "permit_status": "נדונה בוועדת המשנה",
+   "permit_status": "הוכנה טיוטת היתר בניה",
    "pikuah_tik": "2023/0123.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -15704,8 +15704,8 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "file_opened",
-   "steps": 3
+   "classification": "construction",
+   "steps": 4
   },
   "2015/320": {
    "permit_tik": "2015/320",
@@ -15834,7 +15834,7 @@
    "form2_date": null,
    "closed_date": null,
    "classification": "construction",
-   "steps": 7
+   "steps": 8
   },
   "2010/384": {
    "permit_tik": "2010/384",
@@ -16060,7 +16060,7 @@
    "file_number": "1991/0520.02",
    "taba": "15069",
    "units_added": 0,
-   "permit_status": "הבקשה נסגרה",
+   "permit_status": "חידוש טיפול בבקשה",
    "pikuah_tik": "1991/0520.00",
    "pikuah_status": null,
    "gmar_date": null,
@@ -16105,7 +16105,7 @@
    "file_number": "2025/0362.00",
    "taba": "1031640",
    "units_added": 10,
-   "permit_status": "נדונה ברשות הרישוי",
+   "permit_status": "חידוש טיפול בבקשה",
    "pikuah_tik": "2025/0362.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -16372,7 +16372,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 4
   },
   "2005/730": {
@@ -16406,7 +16406,7 @@
   "2020/270": {
    "permit_tik": "2020/270",
    "file_number": "2020/0270.02",
-   "taba": "2020/0270.01",
+   "taba": "2020/0270.02",
    "units_added": 0,
    "permit_status": "נפתח תיק רישוי",
    "pikuah_tik": "2020/0270.00",
@@ -16466,7 +16466,7 @@
    "file_number": "2023/0483.00",
    "taba": "768119",
    "units_added": 15,
-   "permit_status": "התקבל ערר",
+   "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "2023/0483.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -16494,7 +16494,7 @@
    "file_number": "2014/0567.01",
    "taba": "821082",
    "units_added": 10,
-   "permit_status": "חידוש טיפול בבקשה",
+   "permit_status": "הוכנה טיוטת היתר בניה",
    "pikuah_tik": "2014/0567.00",
    "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
@@ -16642,7 +16642,7 @@
    "file_number": "2016/0664.01",
    "taba": "209593",
    "units_added": 0,
-   "permit_status": "חידוש טיפול בבקשה",
+   "permit_status": "הבקשה נסגרה",
    "pikuah_tik": "2016/0664.00",
    "pikuah_status": "נפתח תיק רישוי",
    "gmar_date": null,
@@ -16844,7 +16844,7 @@
    "file_number": "2023/0530.00",
    "taba": "15664",
    "units_added": 0,
-   "permit_status": "נדונה בוועדת המשנה",
+   "permit_status": "התקבל ערר",
    "pikuah_tik": "2023/0530.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -16859,7 +16859,7 @@
    "file_number": "2026/0325.00",
    "taba": "178129",
    "units_added": 84,
-   "permit_status": "הגשה מקוונת הושלמה",
+   "permit_status": "שולמה מקדמה",
    "pikuah_tik": "2026/0325.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -16934,7 +16934,7 @@
    "file_number": "2024/0357.01",
    "taba": "1016229",
    "units_added": 57,
-   "permit_status": "הוכנה טיוטת היתר בניה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2024/0357.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -16962,7 +16962,7 @@
   "2025/104": {
    "permit_tik": "2025/104",
    "file_number": "2025/0104.00",
-   "taba": "2025/0104.00",
+   "taba": "972554",
    "units_added": 35,
    "permit_status": "נדונה בוועדת המשנה",
    "pikuah_tik": "2025/0104.00",
@@ -16979,7 +16979,7 @@
    "file_number": "2026/0247.00",
    "taba": "15681",
    "units_added": 0,
-   "permit_status": "תום תקופת פרסום",
+   "permit_status": "נפתח תיק רישוי",
    "pikuah_tik": "2026/0247.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -17095,7 +17095,7 @@
    "file_number": "2022/0426.00",
    "taba": "608034",
    "units_added": 8,
-   "permit_status": "חידוש טיפול בבקשה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2022/0426.00",
    "pikuah_status": null,
    "gmar_date": null,
@@ -17183,7 +17183,7 @@
   "2025/258": {
    "permit_tik": "2025/258",
    "file_number": "2025/0258.00",
-   "taba": "1021344",
+   "taba": "800771",
    "units_added": 0,
    "permit_status": "נדונה בוועדת המשנה",
    "pikuah_tik": "2025/0258.00",
@@ -17245,7 +17245,7 @@
    "file_number": "2026/0283.00",
    "taba": "15687",
    "units_added": 0,
-   "permit_status": "תחילת פרסום הבקשה להקלה",
+   "permit_status": "נפתח תיק רישוי",
    "pikuah_tik": "2026/0283.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -17260,7 +17260,7 @@
    "file_number": "2023/0107.02",
    "taba": "252379",
    "units_added": 280,
-   "permit_status": "הוכנה טיוטת היתר בניה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2023/0107.00",
    "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
@@ -17303,7 +17303,7 @@
    "file_number": "2023/0475.00",
    "taba": "2023/0475.00",
    "units_added": 10,
-   "permit_status": "הוכנה טיוטת היתר בניה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2023/0475.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -17318,15 +17318,15 @@
    "file_number": "2021/0168.00",
    "taba": "541102",
    "units_added": 0,
-   "permit_status": "הוכנה טיוטת היתר בניה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2021/0168.00",
-   "pikuah_status": "נפתח תיק רישוי",
+   "pikuah_status": "הופק טופס 2",
    "gmar_date": null,
    "form4_date": null,
-   "form2_date": null,
+   "form2_date": "27/08/2026",
    "closed_date": null,
-   "classification": "file_opened",
-   "steps": 2
+   "classification": "construction",
+   "steps": 4
   },
   "2026/75": {
    "permit_tik": "2026/75",
@@ -17554,7 +17554,7 @@
    "file_number": "2022/0210.00",
    "taba": "136804",
    "units_added": 0,
-   "permit_status": "נדונה בוועדת המשנה",
+   "permit_status": "התקבל ערר",
    "pikuah_tik": "2022/0210.00",
    "pikuah_status": null,
    "gmar_date": null,
@@ -17629,7 +17629,7 @@
    "file_number": "1987/1028.02",
    "taba": "351155",
    "units_added": 0,
-   "permit_status": "תום תקופת פרסום",
+   "permit_status": "נפתח תיק רישוי",
    "pikuah_tik": "1987/1028.00",
    "pikuah_status": null,
    "gmar_date": null,
@@ -17657,9 +17657,9 @@
   "2018/667": {
    "permit_tik": "2018/667",
    "file_number": "2018/0667.03",
-   "taba": "765347",
+   "taba": "132746",
    "units_added": 0,
-   "permit_status": "הוכנה טיוטת היתר בניה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2018/0667.00",
    "pikuah_status": "נפתח תיק רישוי",
    "gmar_date": null,
@@ -18405,7 +18405,7 @@
    "file_number": "2024/0435.00",
    "taba": "2024/0435.00",
    "units_added": 0,
-   "permit_status": "הוכנה טיוטת היתר בניה",
+   "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2024/0435.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -18435,7 +18435,7 @@
    "file_number": "2026/0190.00",
    "taba": "2026/0190.00",
    "units_added": 0,
-   "permit_status": "נוסח פרסום אושר",
+   "permit_status": "תחילת פרסום הבקשה להקלה",
    "pikuah_tik": "2026/0190.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -18465,7 +18465,7 @@
    "file_number": "2026/0363.00",
    "taba": "15508",
    "units_added": 0,
-   "permit_status": "שולמה מקדמה",
+   "permit_status": "תחילת פרסום הבקשה להקלה",
    "pikuah_tik": "2026/0363.00",
    "pikuah_status": "נפתח תיק פיקוח",
    "gmar_date": null,
@@ -18534,7 +18534,97 @@
    "closed_date": null,
    "classification": "file_opened",
    "steps": 1
+  },
+  "2016/336": {
+   "permit_tik": "2016/336",
+   "file_number": "2016/0336.01",
+   "taba": "1059831",
+   "units_added": 0,
+   "permit_status": "נפתח תיק רישוי",
+   "pikuah_tik": "2016/0336.00",
+   "pikuah_status": "הופק טופס 2",
+   "gmar_date": null,
+   "form4_date": null,
+   "form2_date": "07/11/2019",
+   "closed_date": null,
+   "classification": "construction",
+   "steps": 3
+  },
+  "1996/943": {
+   "permit_tik": "1996/943",
+   "file_number": "1996/0943.05",
+   "taba": "1278407",
+   "units_added": 0,
+   "permit_status": "נפתח תיק רישוי",
+   "pikuah_tik": "1996/0943.00",
+   "pikuah_status": "הופקה טיוטת כתב אישום/אי ציות",
+   "gmar_date": null,
+   "form4_date": null,
+   "form2_date": null,
+   "closed_date": "09/04/1997",
+   "classification": "closed",
+   "steps": 3
+  },
+  "2024/389": {
+   "permit_tik": "2024/389",
+   "file_number": "2024/0389.02",
+   "taba": "520163",
+   "units_added": 0,
+   "permit_status": "נפתח תיק רישוי",
+   "pikuah_tik": "2024/0389.00",
+   "pikuah_status": "הופק טופס 2",
+   "gmar_date": null,
+   "form4_date": null,
+   "form2_date": "06/08/2025",
+   "closed_date": null,
+   "classification": "construction",
+   "steps": 2
+  },
+  "2026/186": {
+   "permit_tik": "2026/186",
+   "file_number": "2026/0186.00",
+   "taba": "520163",
+   "units_added": 0,
+   "permit_status": "נפתח תיק רישוי",
+   "pikuah_tik": "2026/0186.00",
+   "pikuah_status": "נפתח תיק פיקוח",
+   "gmar_date": null,
+   "form4_date": null,
+   "form2_date": null,
+   "closed_date": null,
+   "classification": "file_opened",
+   "steps": 1
+  },
+  "1988/624": {
+   "permit_tik": "1988/624",
+   "file_number": "1988/0624.04",
+   "taba": "1274489",
+   "units_added": 0,
+   "permit_status": "נפתח תיק רישוי",
+   "pikuah_tik": "1988/0624.00",
+   "pikuah_status": null,
+   "gmar_date": null,
+   "form4_date": null,
+   "form2_date": null,
+   "closed_date": null,
+   "classification": "file_opened",
+   "steps": 0
+  },
+  "2025/68": {
+   "permit_tik": "2025/68",
+   "file_number": "2025/0068.00",
+   "taba": null,
+   "units_added": 0,
+   "permit_status": "",
+   "pikuah_tik": "2025/0068.00",
+   "pikuah_status": "נפתח תיק פיקוח",
+   "gmar_date": null,
+   "form4_date": null,
+   "form2_date": null,
+   "closed_date": null,
+   "classification": "file_opened",
+   "steps": 1
   }
  },
- "count": 1302
+ "count": 1308
 }
