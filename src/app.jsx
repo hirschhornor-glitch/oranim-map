@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-31-social-appendix';
+        const APP_VERSION = '2026-09-01-social-appendix2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3441,10 +3441,11 @@
             const [fundReport, setFundReport] = useState(false);
             const [fundReportFilter, setFundReportFilter] = useState({ sub: 'all', minahak: 'all', status: 'all', q: '' });
             const [socialReport, setSocialReport] = useState(false);
-            // How the מצב-נכנס layer colours its polygons. 'delta_rent' is the default
-            // because the layer's job is to show where the CBS statistical-area average
-            // (what the programme model assumes) misses the actual complex.
-            const [socialMode, setSocialMode] = useState('delta_rent');
+            // How the מצב-נכנס layer colours its polygons. Default is 'coverage' — which
+            // plans have a published appendix at all. The metric modes are deliberately
+            // NOT the default: each metric exists in only a handful of the 32 appendices,
+            // so opening on one of them paints ~90% of the layer grey and reads as broken.
+            const [socialMode, setSocialMode] = useState('coverage');
             const [fundExpanded, setFundExpanded] = useState({}); // sub -> show non-fund tower list
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
@@ -20533,12 +20534,12 @@
                         style: f => {
                             const p = f.properties || {};
                             const rec = socMap[p.plan_name];
-                            if (!rec) return { color: '#9aa0a6', weight: 1.4, dashArray: '4,4', fill: true,
-                                               fillColor: '#9aa0a6', fillOpacity: 0.07 };
+                            if (!rec) return { color: '#8a9096', weight: 1.6, dashArray: '5,4', fill: true,
+                                               fillColor: '#9aa0a6', fillOpacity: 0.12 };
                             const col = socialColor(rec, socialMode);
-                            return { color: col.stroke, weight: 2.6, fill: true,
-                                     fillColor: col.fill, fillOpacity: col.value == null ? 0.10 : 0.38,
-                                     dashArray: col.value == null ? '4,4' : null };
+                            return { color: col.stroke, weight: 3, fill: true,
+                                     fillColor: col.fill, fillOpacity: col.value == null ? 0.22 : 0.5,
+                                     dashArray: col.value == null ? '3,3' : null };
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties || {};
@@ -22605,6 +22606,7 @@
             // value === null means "this plan's appendix didn't report this metric" and
             // the caller draws it hollow/dashed rather than pretending it is a zero.
             const SOCIAL_MODES = {
+                coverage:       { label: 'נספח חברתי', unit: '', coverage: true },
                 delta_rent:     { label: 'Δ שכירות מול הלמ"ס', unit: 'נק׳ אחוז', diverging: true },
                 rented:         { label: 'שכירות במתחם', unit: '%' },
                 public_housing: { label: 'דיור ציבורי', unit: '%' },
@@ -22623,9 +22625,20 @@
                 return (v === null || v === undefined || isNaN(v)) ? null : Number(v);
             }
             function socialColor(rec, mode) {
+                const def = SOCIAL_MODES[mode] || SOCIAL_MODES.coverage;
+                // Coverage mode: every plan that HAS an appendix is solid purple. This is
+                // the only mode where no feature is greyed out for a missing metric.
+                if (def.coverage) {
+                    const bits = [];
+                    if (rec.units_existing) bits.push(rec.units_existing + ' יח"ד קיימות');
+                    if (rec.public_housing != null) bits.push(rec.public_housing + ' דיור ציבורי');
+                    return { value: 1, fill: '#6a3ab2', stroke: '#3d1f75',
+                             label: bits.join(' · ') || (rec.doc || 'נספח חברתי') };
+                }
                 const v = socialValue(rec, mode);
-                const def = SOCIAL_MODES[mode] || SOCIAL_MODES.delta_rent;
-                if (v === null) return { value: null, fill: '#b0b6bd', stroke: '#8a9096', label: '' };
+                // Has an appendix but not this metric — light purple, so it still reads as
+                // "documented" and stays distinct from the grey no-appendix plans.
+                if (v === null) return { value: null, fill: '#cbbde4', stroke: '#7a63a8', label: 'אין מדד זה בנספח' };
                 let fill, stroke;
                 if (def.diverging) {
                     // Divergence from the surrounding statistical area, in percentage
@@ -25431,6 +25444,7 @@
                                     <select value={socialMode} onChange={e => setSocialMode(e.target.value)}
                                         style={{width:'100%',fontSize:11,padding:'3px 4px',borderRadius:4,
                                                 background:'#1a1a2e',color:'#ddd',border:'1px solid #2a2a4a'}}>
+                                        <option value="coverage">צביעה: יש/אין נספח חברתי</option>
                                         <option value="delta_rent">צביעה: Δ שכירות מול הלמ"ס</option>
                                         <option value="rented">צביעה: שכירות במתחם</option>
                                         <option value="public_housing">צביעה: דיור ציבורי</option>
