@@ -1872,6 +1872,29 @@
     "status": "partial",
     "file_number": "2024/0477.00"
   },
+  "15520": {
+    "by_bucket": {
+      "7-13": {
+        "shimur": 12,
+        "krita": 15
+      },
+      "14-16": {
+        "shimur": 3,
+        "krita": 2
+      }
+    },
+    "bucket_totals": {
+      "7-13": 27,
+      "14-16": 5
+    },
+    "by_reco": {
+      "shimur": 15,
+      "krita": 17
+    },
+    "total_trees": 32,
+    "status": "ok",
+    "file_number": "2024/0484.00"
+  },
   "2024/0518.00": {
     "by_bucket": {
       "0-6": {
@@ -1977,6 +2000,38 @@
     "total_trees": 7,
     "status": "partial",
     "file_number": "2024/0595.00"
+  },
+  "2025/0022.00": {
+    "by_bucket": {
+      "14-16": {
+        "krita": 1,
+        "shimur": 1,
+        "haataka": 1
+      },
+      "7-13": {
+        "shimur": 7,
+        "krita": 4
+      },
+      "0-6": {
+        "shimur": 2,
+        "krita": 1,
+        "?": 10
+      }
+    },
+    "bucket_totals": {
+      "14-16": 3,
+      "7-13": 11,
+      "0-6": 13
+    },
+    "by_reco": {
+      "krita": 6,
+      "shimur": 10,
+      "haataka": 1,
+      "?": 10
+    },
+    "total_trees": 27,
+    "status": "partial",
+    "file_number": "2025/0022.00"
   },
   "2025/0104.00": {
     "by_bucket": {
@@ -2276,6 +2331,34 @@
     "status": "partial",
     "file_number": "2026/0113.00"
   },
+  "15710": {
+    "by_bucket": {
+      "17-20": {
+        "shimur": 1
+      },
+      "14-16": {
+        "shimur": 7,
+        "krita": 5
+      },
+      "7-13": {
+        "shimur": 1,
+        "lo_nidresh": 3
+      }
+    },
+    "bucket_totals": {
+      "17-20": 1,
+      "14-16": 12,
+      "7-13": 4
+    },
+    "by_reco": {
+      "shimur": 9,
+      "krita": 5,
+      "lo_nidresh": 3
+    },
+    "total_trees": 17,
+    "status": "ok",
+    "file_number": "2026/0180.00"
+  },
   "2026/0267.00": {
     "by_bucket": {
       "7-13": {
@@ -2414,33 +2497,6 @@
     "total_trees": 14,
     "status": "ok",
     "file_number": "2026/0258.00",
-    "source": "harmonica"
-  },
-  "15710": {
-    "by_bucket": {
-      "17-20": {
-        "shimur": 1
-      },
-      "14-16": {
-        "shimur": 8,
-        "krita": 5
-      },
-      "7-13": {
-        "shimur": 4
-      }
-    },
-    "bucket_totals": {
-      "17-20": 1,
-      "14-16": 13,
-      "7-13": 4
-    },
-    "by_reco": {
-      "shimur": 13,
-      "krita": 5
-    },
-    "total_trees": 18,
-    "status": "ok",
-    "file_number": "2026/0180.00",
     "source": "harmonica"
   },
   "15666": {
