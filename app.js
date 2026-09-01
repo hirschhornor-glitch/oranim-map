@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-09-01-social-appendix2';
+const APP_VERSION = '2026-09-01-social-appendix3';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -4400,11 +4400,6 @@ function App() {
     q: ''
   });
   const [socialReport, setSocialReport] = useState(false);
-  // How the מצב-נכנס layer colours its polygons. Default is 'coverage' — which
-  // plans have a published appendix at all. The metric modes are deliberately
-  // NOT the default: each metric exists in only a handful of the 32 appendices,
-  // so opening on one of them paints ~90% of the layer grey and reads as broken.
-  const [socialMode, setSocialMode] = useState('coverage');
   const [fundExpanded, setFundExpanded] = useState({}); // sub -> show non-fund tower list
   const [specialHousingReport, setSpecialHousingReport] = useState(false);
   // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
@@ -17804,13 +17799,7 @@ function App() {
     }, {
       key: 'social',
       isOpen: () => socialReport,
-      open: () => setSocialReport(true),
-      ser: () => ({
-        mode: socialMode
-      }),
-      apply: p => {
-        if (p.mode) setSocialMode(p.mode);
-      }
+      open: () => setSocialReport(true)
     }, {
       key: 'overlap',
       isOpen: () => overlapReport,
@@ -25039,14 +25028,13 @@ function App() {
             fillColor: '#9aa0a6',
             fillOpacity: 0.12
           };
-          const col = socialColor(rec, socialMode);
+          const col = socialColor(rec);
           return {
             color: col.stroke,
             weight: 3,
             fill: true,
             fillColor: col.fill,
-            fillOpacity: col.value == null ? 0.22 : 0.5,
-            dashArray: col.value == null ? '3,3' : null
+            fillOpacity: 0.5
           };
         },
         onEachFeature: (f, layer) => {
@@ -25069,7 +25057,7 @@ function App() {
           if (!rec) {
             tip = '<div style="color:#5f6368;font-size:7.5pt;font-family:Assistant,sans-serif">' + title + '<br>אין נספח חברתי מפורסם</div>';
           } else {
-            const col = socialColor(rec, socialMode);
+            const col = socialColor(rec);
             tip = '<div style="color:#1a3a5c;font-size:7.5pt;font-weight:bold;font-family:Assistant,sans-serif">👥 ' + title + (col.label ? '<br>' + col.label : '') + '</div>';
           }
           layer.bindTooltip(tip, {
@@ -25633,7 +25621,7 @@ function App() {
     }
     window.__geoLayersForPrint = geoLayersRef.current;
     console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-  }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText, showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets, permitStageFilter, socialMode]);
+  }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText, showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets, permitStageFilter]);
 
   // Build the plan popup HTML
   function getStatusColor(status) {
@@ -27360,96 +27348,18 @@ function App() {
   // Colour ramp for the מצב-נכנס layer. Returns {value, fill, stroke, label};
   // value === null means "this plan's appendix didn't report this metric" and
   // the caller draws it hollow/dashed rather than pretending it is a zero.
-  const SOCIAL_MODES = {
-    coverage: {
-      label: 'נספח חברתי',
-      unit: '',
-      coverage: true
-    },
-    delta_rent: {
-      label: 'Δ שכירות מול הלמ"ס',
-      unit: 'נק׳ אחוז',
-      diverging: true
-    },
-    rented: {
-      label: 'שכירות במתחם',
-      unit: '%'
-    },
-    public_housing: {
-      label: 'דיור ציבורי',
-      unit: '%'
-    },
-    elderly: {
-      label: 'בני 65+',
-      unit: '%'
-    },
-    household: {
-      label: 'גודל משק בית',
-      unit: 'נפשות'
-    }
-  };
-  function socialValue(rec, mode) {
-    if (!rec) return null;
-    const cbs = rec.cbs || {};
-    const v = mode === 'delta_rent' ? cbs.delta_rent : mode === 'rented' ? rec.rented_pct_calc : mode === 'public_housing' ? rec.public_housing_pct : mode === 'elderly' ? rec.elderly_pct_calc : mode === 'household' ? rec.avg_household_size : null;
-    return v === null || v === undefined || isNaN(v) ? null : Number(v);
-  }
-  function socialColor(rec, mode) {
-    const def = SOCIAL_MODES[mode] || SOCIAL_MODES.coverage;
-    // Coverage mode: every plan that HAS an appendix is solid purple. This is
-    // the only mode where no feature is greyed out for a missing metric.
-    if (def.coverage) {
-      const bits = [];
-      if (rec.units_existing) bits.push(rec.units_existing + ' יח"ד קיימות');
-      if (rec.public_housing != null) bits.push(rec.public_housing + ' דיור ציבורי');
-      return {
-        value: 1,
-        fill: '#6a3ab2',
-        stroke: '#3d1f75',
-        label: bits.join(' · ') || rec.doc || 'נספח חברתי'
-      };
-    }
-    const v = socialValue(rec, mode);
-    // Has an appendix but not this metric — light purple, so it still reads as
-    // "documented" and stays distinct from the grey no-appendix plans.
-    if (v === null) return {
-      value: null,
-      fill: '#cbbde4',
-      stroke: '#7a63a8',
-      label: 'אין מדד זה בנספח'
-    };
-    let fill, stroke;
-    if (def.diverging) {
-      // Divergence from the surrounding statistical area, in percentage
-      // points. Teal = the complex has LESS rental than its area,
-      // orange = MORE. Grey band = the area average is a fair proxy.
-      const a = Math.abs(v);
-      if (a < 5) {
-        fill = '#c9ccd1';
-        stroke = '#8a9096';
-      } else if (v > 0) {
-        fill = a >= 15 ? '#d95f02' : '#f0a55c';
-        stroke = '#8a3b00';
-      } else {
-        fill = a >= 15 ? '#1b7f79' : '#7fc4bf';
-        stroke = '#0d4e4a';
-      }
-    } else {
-      // Sequential purple ramp; thresholds chosen per metric so each mode
-      // uses the full ramp instead of everything landing in one bucket.
-      const stops = mode === 'household' ? [2.2, 2.6, 3.0, 3.4] : mode === 'public_housing' ? [3, 8, 15, 25] : mode === 'elderly' ? [8, 14, 20, 28] : [20, 35, 50, 65];
-      const ramp = ['#ede7f6', '#c5b3e6', '#9575cd', '#6a3ab2', '#4a248c'];
-      let i = 0;
-      while (i < stops.length && v >= stops[i]) i++;
-      fill = ramp[i];
-      stroke = '#3d1f75';
-    }
-    const shown = def.unit === 'נפשות' ? v.toFixed(1) : (v > 0 && def.diverging ? '+' : '') + v.toFixed(v % 1 ? 1 : 0);
+  // The layer answers one question: does this plan have a published social
+  // appendix or not. Everything the appendix reports lives in the popup and the
+  // report — putting a metric on the map only greys out the majority of plans,
+  // since each appendix documents a different subset of fields.
+  function socialColor(rec) {
+    const bits = [];
+    if (rec.units_existing) bits.push(rec.units_existing + ' יח"ד קיימות');
+    if (rec.public_housing != null) bits.push(rec.public_housing + ' דיור ציבורי');
     return {
-      value: v,
-      fill,
-      stroke,
-      label: def.label + ': ' + shown + (def.unit === '%' ? '%' : ' ' + def.unit)
+      fill: '#6a3ab2',
+      stroke: '#3d1f75',
+      label: bits.join(' · ') || rec.doc || 'נספח חברתי'
     };
   }
 
@@ -30733,36 +30643,7 @@ function App() {
       marginRight: 4,
       fontSize: 11
     }
-  }, "\uD83D\uDCCA")), layers.social_appendix && /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '2px 8px 6px 22px'
-    },
-    onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("select", {
-    value: socialMode,
-    onChange: e => setSocialMode(e.target.value),
-    style: {
-      width: '100%',
-      fontSize: 11,
-      padding: '3px 4px',
-      borderRadius: 4,
-      background: '#1a1a2e',
-      color: '#ddd',
-      border: '1px solid #2a2a4a'
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "coverage"
-  }, "\u05E6\u05D1\u05D9\u05E2\u05D4: \u05D9\u05E9/\u05D0\u05D9\u05DF \u05E0\u05E1\u05E4\u05D7 \u05D7\u05D1\u05E8\u05EA\u05D9"), /*#__PURE__*/React.createElement("option", {
-    value: "delta_rent"
-  }, "\u05E6\u05D1\u05D9\u05E2\u05D4: \u0394 \u05E9\u05DB\u05D9\u05E8\u05D5\u05EA \u05DE\u05D5\u05DC \u05D4\u05DC\u05DE\"\u05E1"), /*#__PURE__*/React.createElement("option", {
-    value: "rented"
-  }, "\u05E6\u05D1\u05D9\u05E2\u05D4: \u05E9\u05DB\u05D9\u05E8\u05D5\u05EA \u05D1\u05DE\u05EA\u05D7\u05DD"), /*#__PURE__*/React.createElement("option", {
-    value: "public_housing"
-  }, "\u05E6\u05D1\u05D9\u05E2\u05D4: \u05D3\u05D9\u05D5\u05E8 \u05E6\u05D9\u05D1\u05D5\u05E8\u05D9"), /*#__PURE__*/React.createElement("option", {
-    value: "elderly"
-  }, "\u05E6\u05D1\u05D9\u05E2\u05D4: \u05D1\u05E0\u05D9 65+"), /*#__PURE__*/React.createElement("option", {
-    value: "household"
-  }, "\u05E6\u05D1\u05D9\u05E2\u05D4: \u05D2\u05D5\u05D3\u05DC \u05DE\u05E9\u05E7 \u05D1\u05D9\u05EA"))))), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDCCA")))), /*#__PURE__*/React.createElement("div", {
     className: "sidebar-section"
   }, /*#__PURE__*/React.createElement("div", {
     className: "layer-group-title",
