@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-09-02T11:09:02",
- "count": 1312,
+ "generated_at": "2026-09-02T12:46:20",
+ "count": 1313,
  "bucket_counts": {
   "tava_gadol": 298,
   "zchuyot": 349,
   "tama38": 472,
-  "acher": 111,
+  "acher": 112,
   "shimush_chorag": 38,
   "ibuy": 44
  },
@@ -19,7 +19,7 @@
   "tachzukah": 8,
   "shinuyim": 20,
   "harisa": 24,
-  "acher": 81,
+  "acher": 82,
   "mivne_nilve": 89
  },
  "permits": {
@@ -17019,12 +17019,13 @@
    "taba": "972554",
    "provenance": [
     "all_permits",
-    "tama38"
+    "tama38",
+    "committee"
    ],
    "in_tama38_registry": true,
    "lat": 31.763174,
    "lng": 35.201236,
-   "on_committee_agenda": false,
+   "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
@@ -40033,12 +40034,13 @@
    "address": "",
    "taba": "15260",
    "provenance": [
-    "tama38"
+    "tama38",
+    "committee"
    ],
    "in_tama38_registry": true,
    "lat": 31.766394,
    "lng": 35.207168,
-   "on_committee_agenda": false,
+   "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": true,
    "unassigned": false,
@@ -42075,12 +42077,13 @@
    "address": "שד עין צורים 2",
    "taba": "791467",
    "provenance": [
-    "extra"
+    "extra",
+    "committee"
    ],
    "in_tama38_registry": false,
    "lat": 31.748888,
    "lng": 35.218851,
-   "on_committee_agenda": false,
+   "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": true,
    "unassigned": false,
@@ -42333,7 +42336,7 @@
    "request_description": "",
    "units": null,
    "tama_type": "",
-   "address": "אלחייני מיכאל יהודה14 , גאולים - בקעה",
+   "address": "יהודה 14, גאולים - בקעה",
    "taba": null,
    "provenance": [
     "committee"
@@ -42365,7 +42368,7 @@
    "request_description": "",
    "units": null,
    "tama_type": "",
-   "address": "דורפמן יצחק שדיאור רשב\" ג8 , גוננים",
+   "address": "רשב\"ג 8, גוננים",
    "taba": null,
    "provenance": [
     "committee"
@@ -42397,7 +42400,7 @@
    "request_description": "",
    "units": null,
    "tama_type": "",
-   "address": "הוד גלעד יהודה הנשיא11 , גוננים",
+   "address": "יהודה הנשיא 11, גוננים",
    "taba": null,
    "provenance": [
     "committee"
@@ -42429,7 +42432,7 @@
    "request_description": "",
    "units": null,
    "tama_type": "",
-   "address": "יואן סולי נטף כט בנובמבר25 , קטמון הישנה",
+   "address": "כט בנובמבר 25, קטמון הישנה",
    "taba": null,
    "provenance": [
     "committee"
@@ -42461,7 +42464,7 @@
    "request_description": "",
    "units": null,
    "tama_type": "",
-   "address": "קטמון הישנה תוספת חדר מחוזק מובא להכרעת הועדה האם לזמן",
+   "address": "הפורצים 16, קטמון הישנה",
    "taba": null,
    "provenance": [
     "committee"
@@ -42493,7 +42496,7 @@
    "request_description": "",
    "units": null,
    "tama_type": "",
-   "address": "קרדשוב קרן רשב\" ג19 , גוננים",
+   "address": "רשב\"ג 19, גוננים",
    "taba": null,
    "provenance": [
     "committee"
@@ -42557,7 +42560,7 @@
    "request_description": "",
    "units": null,
    "tama_type": "",
-   "address": "מושבה גרמנית תוספת ממ\"ד ומחסן לאשר את הבקשה בכפוף לשינויים",
+   "address": "צבי גרץ 11, מושבה גרמנית",
    "taba": null,
    "provenance": [
     "committee"
@@ -42565,38 +42568,6 @@
    "in_tama38_registry": false,
    "lat": 31.767366489306678,
    "lng": 35.2209226201187,
-   "on_committee_agenda": true,
-   "open_for_objections": false,
-   "has_field_obs": false,
-   "unassigned": false,
-   "is_tama38": false,
-   "units_added": 0,
-   "urban_renewal": false,
-   "category": "acher",
-   "category_label": "אחר",
-   "bucket": "acher",
-   "bucket_label": "אחר"
-  },
-  "1973/136": {
-   "tik": "1973/136",
-   "file_number": "1973/0136.01",
-   "revisions": [
-    "1973/136.1"
-   ],
-   "status": "",
-   "status_date": "",
-   "request_type": "",
-   "request_description": "",
-   "units": null,
-   "tama_type": "",
-   "address": "לסרי אלי  דב גרונר12 , תלפיות מזרח",
-   "taba": null,
-   "provenance": [
-    "committee"
-   ],
-   "in_tama38_registry": false,
-   "lat": 31.7501383168838,
-   "lng": 35.23642357197833,
    "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": false,
@@ -42789,6 +42760,70 @@
    "in_tama38_registry": false,
    "lat": 31.75556222784077,
    "lng": 35.211600680891344,
+   "on_committee_agenda": true,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": false,
+   "units_added": 0,
+   "urban_renewal": false,
+   "category": "acher",
+   "category_label": "אחר",
+   "bucket": "acher",
+   "bucket_label": "אחר"
+  },
+  "2025/385": {
+   "tik": "2025/385",
+   "file_number": "2025/0385.00",
+   "revisions": [
+    "2025/385.0"
+   ],
+   "status": "",
+   "status_date": "",
+   "request_type": "",
+   "request_description": "",
+   "units": null,
+   "tama_type": "",
+   "address": "שרפת, בית צפפה גוש עתידי 30915",
+   "taba": null,
+   "provenance": [
+    "committee"
+   ],
+   "in_tama38_registry": false,
+   "lat": 31.744343153320415,
+   "lng": 35.19526303525446,
+   "on_committee_agenda": true,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": false,
+   "units_added": 0,
+   "urban_renewal": false,
+   "category": "acher",
+   "category_label": "אחר",
+   "bucket": "acher",
+   "bucket_label": "אחר"
+  },
+  "2025/238": {
+   "tik": "2025/238",
+   "file_number": "2025/0238.00",
+   "revisions": [
+    "2025/238.0"
+   ],
+   "status": "",
+   "status_date": "",
+   "request_type": "",
+   "request_description": "",
+   "units": null,
+   "tama_type": "",
+   "address": "אל טנטור, בית צפפה ירושלים",
+   "taba": null,
+   "provenance": [
+    "committee"
+   ],
+   "in_tama38_registry": false,
+   "lat": 31.733683646998788,
+   "lng": 35.205520879600556,
    "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": false,
