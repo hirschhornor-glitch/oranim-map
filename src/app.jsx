@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-02-mimush-sub-merge';
+        const APP_VERSION = '2026-09-02-sub-minahak-filter';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -14966,9 +14966,13 @@
                 known.forEach(r => {
                     const key = r.sub || r.minahak || '(לא משויך)';
                     const t = subs[key] || (subs[key] = {
-                        sub: key, minahak: r.minahak, n: 0, units: 0,
+                        sub: key, minahak: r.minahak, minahaks: [], n: 0, units: 0,
                         brown: 0, brownLand: 0, open: 0, plans: [],
                     });
+                    // תת-שכונה יכולה להשתרע על יותר ממינה"ק אחד (גוננים א-ו מופיעה
+                    // גם תחת גינות העיר). שיוך לפי התכנית הראשונה היה מסתיר אותה
+                    // מהמינה"ק השני בסינון, ולכן נשמרים כל השיוכים.
+                    if (r.minahak && t.minahaks.indexOf(r.minahak) < 0) t.minahaks.push(r.minahak);
                     t.n++; t.units += r.ua; t.brown += r.brown;
                     t.brownLand += r.brownPlot; t.open += r.open;
                     t.plans.push(r.plan);
@@ -15012,7 +15016,7 @@
                     rows: rows,
                     bands: RATIO_BANDS.map(b => ({ label: b.label, lo: b.lo, hi: b.hi === Infinity ? 1e9 : b.hi, median: b.median, n: b.n })),
                     subs: subList.map(t => ({
-                        sub: t.sub, minahak: t.minahak, n: t.n, units: t.units,
+                        sub: t.sub, minahak: t.minahak, minahaks: t.minahaks, n: t.n, units: t.units,
                         unitsNoData: t.unitsNoData || 0, brown: t.brown,
                         brownLand: t.brownLand, open: t.open,
                         brownPerUnit: t.brownPerUnit, landDemand: t.landDemand,
@@ -33459,7 +33463,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         מלאי מבני הציבור הקיים והאוכלוסייה הוותיקה אינם בחישוב — אין לקרוא "כיסוי 13%" כגירעון מוחלט של האזור.
                                         ביקוש הקרקע מחושב ממכסות הדונם-לכיתה שבמדריך מינהל התכנון 2018 ולפי פרופיל האוכלוסייה של המינהל.
                                         מושווה לקרקע חומה בלבד, והמדריך מתיר גם הקצאה מבונה במקום קרקע — לכן הדגל נקבע לפי התרומה היחסית ולא לפי הכיסוי.
-                                        הטבלה מחושבת תמיד על כלל התכניות ולא על התוצאה המסוננת.
+                                        <b>סינון מינה"ק מצמצם את השורות המוצגות</b>, אך המספרים בכל שורה והחציון שמולו היא נמדדת
+                                        מחושבים תמיד על כלל התכניות באזור — מצב תת-השכונה אינו משתנה לפי סוג הבינוי או השנה שנבחרו בתצוגה.
                                     </p>
                                     <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse', marginBottom: 16 }}>
                                         <thead><tr style={{ borderBottom: '2px solid #2a3a5e' }}>
@@ -33469,7 +33474,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             <th style={THR}>הערכה (חציון {f1(d.subMedian)})</th>
                                         </tr></thead>
                                         <tbody>
-                                        {d.subs.map(t => {
+                                        {d.subs.filter(t => !F.minahak || (t.minahaks || []).indexOf(F.minahak) >= 0).map(t => {
                                             const covCol = t.landCover == null ? '#8a9bc0'
                                                 : t.landCover >= 1 ? '#7fc98a' : t.landCover >= 0.5 ? '#e0a458' : '#e57373';
                                             return (

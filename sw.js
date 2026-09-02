@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v42-mimush-sub-merge';
+const CACHE_VERSION = 'v43-sub-minahak-filter';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
