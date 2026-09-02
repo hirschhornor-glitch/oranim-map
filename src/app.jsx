@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-02-sub-minahak-filter';
+        const APP_VERSION = '2026-09-02-dominant-minahak';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -14964,26 +14964,30 @@
                 const overallMedian = median(known.map(r => r.brown / r.ua));
                 const subs = {};
                 known.forEach(r => {
-                    const key = r.sub || r.minahak || '(לא משויך)';
+                    const key = r.sub || '(ללא תת-שכונה)';
                     const t = subs[key] || (subs[key] = {
-                        sub: key, minahak: r.minahak, minahaks: [], n: 0, units: 0,
+                        sub: key, minahak: r.minahak, unitsByMinahak: {}, n: 0, units: 0,
                         brown: 0, brownLand: 0, open: 0, plans: [],
                     });
-                    // תת-שכונה יכולה להשתרע על יותר ממינה"ק אחד (גוננים א-ו מופיעה
-                    // גם תחת גינות העיר). שיוך לפי התכנית הראשונה היה מסתיר אותה
-                    // מהמינה"ק השני בסינון, ולכן נשמרים כל השיוכים.
-                    if (r.minahak && t.minahaks.indexOf(r.minahak) < 0) t.minahaks.push(r.minahak);
+                    // תת-שכונה משויכת למינה"ק ה*דומיננטי* שלה לפי יח"ד, ולא לכל מינה"ק
+                    // שאיזושהי תכנית תויגה בו: ב"בית צפאפא,שרפת" יש 194 תכניות בבית
+                    // צפאפא ואחת בגוננים, ותיוג בודד כזה אינו הופך אותה לתת-שכונה של
+                    // גוננים. הסינון מציג רק תת-שכונות שהמינה"ק הנבחר שולט בהן.
+                    if (r.minahak) t.unitsByMinahak[r.minahak] = (t.unitsByMinahak[r.minahak] || 0) + r.ua;
                     t.n++; t.units += r.ua; t.brown += r.brown;
                     t.brownLand += r.brownPlot; t.open += r.open;
                     t.plans.push(r.plan);
                 });
                 // יח"ד שיושבות בתכניות ללא נתון — מסייג את הכיסוי פר תת-שכונה
                 rows.filter(r => !r.known).forEach(r => {
-                    const key = r.sub || r.minahak || '(לא משויך)';
+                    const key = r.sub || '(ללא תת-שכונה)';
                     if (subs[key]) subs[key].unitsNoData = (subs[key].unitsNoData || 0) + r.ua;
                 });
                 const subList = Object.keys(subs).map(k => {
                     const t = subs[k];
+                    const mk = Object.keys(t.unitsByMinahak);
+                    t.minahak = mk.sort((a, b) => t.unitsByMinahak[b] - t.unitsByMinahak[a])[0] || t.minahak;
+                    t.otherMinahaks = mk.filter(x => x !== t.minahak);   // תיוגים משניים — מוצגים כהערה
                     t.brownPerUnit = t.units ? t.brown / t.units : 0;
                     t.landDemand = eduLandDemand(t.units, t.minahak);
                     t.landBalance = t.brownLand - t.landDemand;
@@ -15016,7 +15020,7 @@
                     rows: rows,
                     bands: RATIO_BANDS.map(b => ({ label: b.label, lo: b.lo, hi: b.hi === Infinity ? 1e9 : b.hi, median: b.median, n: b.n })),
                     subs: subList.map(t => ({
-                        sub: t.sub, minahak: t.minahak, minahaks: t.minahaks, n: t.n, units: t.units,
+                        sub: t.sub, minahak: t.minahak, otherMinahaks: t.otherMinahaks, n: t.n, units: t.units,
                         unitsNoData: t.unitsNoData || 0, brown: t.brown,
                         brownLand: t.brownLand, open: t.open,
                         brownPerUnit: t.brownPerUnit, landDemand: t.landDemand,
@@ -33474,12 +33478,14 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             <th style={THR}>הערכה (חציון {f1(d.subMedian)})</th>
                                         </tr></thead>
                                         <tbody>
-                                        {d.subs.filter(t => !F.minahak || (t.minahaks || []).indexOf(F.minahak) >= 0).map(t => {
+                                        {d.subs.filter(t => !F.minahak || t.minahak === F.minahak).map(t => {
                                             const covCol = t.landCover == null ? '#8a9bc0'
                                                 : t.landCover >= 1 ? '#7fc98a' : t.landCover >= 0.5 ? '#e0a458' : '#e57373';
                                             return (
                                             <tr key={t.sub} style={{ borderBottom: '1px solid #1a2340', background: t.weak ? 'rgba(198,40,40,0.10)' : 'transparent' }}>
-                                                <td style={TDR}>{t.sub}</td>
+                                                <td style={TDR}>{t.sub}
+                                                    {(t.otherMinahaks || []).length ? <span style={{ color: '#7a8299', fontSize: 10 }}
+                                                        title={'תכניות בודדות בתת-שכונה זו מתויגות גם: ' + t.otherMinahaks.join(', ')}> ●</span> : null}</td>
                                                 <td style={TD}>{t.n}{t.unitsNoData ? <span style={{ color: '#7a8299' }} title="יח&quot;ד בתכניות ללא נתון"> +{nf(t.unitsNoData)}</span> : null}</td>
                                                 <td style={TD}>{nf(t.units)}</td><td style={TD}>{nf(t.brown)}</td>
                                                 <td style={{ ...TD, fontWeight: 700, color: t.weak ? '#e57373' : '#7fc98a' }}>{f1(t.brownPerUnit)}</td>
