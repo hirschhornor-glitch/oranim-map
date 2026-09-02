@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-01-social-appendix3';
+        const APP_VERSION = '2026-09-02-mimush-sub-merge';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -14581,8 +14581,11 @@
                     plansByCell[m][result.stageIndex].push(planInfo);
                     if (result.isTail) tailPlans.push({ ...planInfo, minahak: m });
 
-                    // Sub-neighborhood
-                    const sub = effectiveSubInScope(p.plan_name, p.sub_neighborhood) || 'לא ידוע';
+                    // Sub-neighborhood — normalize aliases first so duplicate names
+                    // (גוננים א-ו → גוננים, קטמונים ח-ט → קטמונים, רסקו - גבעת הורדים → רסקו)
+                    // collapse into one row instead of two.
+                    const subRaw = p.sub_neighborhood || '';
+                    const sub = effectiveSubInScope(p.plan_name, SUB_NORMALIZE[subRaw] || subRaw) || 'לא ידוע';
                     if (!bySub[m][sub]) {
                         bySub[m][sub] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0, byYear: {} };
                         MILESTONE_YEARS.forEach(y => { bySub[m][sub].byYear[y] = 0; });
@@ -32311,6 +32314,24 @@
                                         let html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>';
                                         html += '<style>body{font-family:Arial,sans-serif;padding:24px;direction:rtl}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#1a1a3a;color:#8ecae6;padding:8px 6px;text-align:center;border:1px solid #333}th:first-child{text-align:right}td{padding:6px;border:1px solid #ddd;text-align:center}td:first-child{text-align:right;font-weight:600}.total-row td{font-weight:700;border-top:2px solid #e94560;background:#f0f0f0}.tail{color:#e94560;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{margin:0;color:#666;font-size:13px}.print-btns{margin-top:16px;display:flex;gap:8px}@media print{.print-btns{display:none}}</style></head><body>';
                                         html += '<div class="header"><h2>' + title + '</h2><p>תאריך: ' + new Date().toLocaleDateString('he-IL') + '</p></div>';
+                                        // Same "מה כבר קיים ומה תוספת" note as on screen.
+                                        const pAgg = keys.reduce((a, k) => {
+                                            const row = data[k];
+                                            if (!row || row.total <= 0) return a;
+                                            a.total += row.total; a.done += row.byStage[6] || 0; a.building += row.byStage[5] || 0;
+                                            for (let i = 0; i <= 4; i++) a.prePermit += row.byStage[i] || 0;
+                                            return a;
+                                        }, { total: 0, done: 0, building: 0, prePermit: 0 });
+                                        const pPct = v => pAgg.total > 0 ? Math.round(v * 100 / pAgg.total) + '%' : '0%';
+                                        html += '<div style="border:1px solid #ccc;border-radius:6px;padding:8px 10px;margin-bottom:12px;font-size:11.5px;line-height:1.7;background:#fafafa">'
+                                            + '<b>מה נספר כאן?</b><br>'
+                                            + '<b>סה"כ יח"ד</b> = <b>תוספת</b> יח"ד מתוכננת בתכניות (יח"ד נוספות), <b>לא</b> מלאי הדירות הקיים בשכונה. '
+                                            + 'מתוך ' + pAgg.total.toLocaleString() + ' יח"ד התוספת: ' + pAgg.done.toLocaleString() + ' כבר הושלמו (' + pPct(pAgg.done) + '), '
+                                            + pAgg.building.toLocaleString() + ' בבנייה (' + pPct(pAgg.building) + '), '
+                                            + pAgg.prePermit.toLocaleString() + ' עדיין לפני היתר (' + pPct(pAgg.prePermit) + ').<br>'
+                                            + 'עמודות ' + MILESTONE_YEARS.join('/') + ' מצטברות: תוספת היח"ד הצפויה להתממש עד אותה שנה, משוקללת ב-% המימוש.<br>'
+                                            + '<span style="color:#666">השלב, % המימוש ושנת היעד נגזרים בזמן אמת מסטטוס מבא"ת + שלב הביצוע ומתאריך הסטטוס.</span>'
+                                            + '</div>';
                                         html += '<table><thead><tr><th>' + (mimushDrilldown ? 'תת-שכונה' : 'מינהק') + '</th><th>סה"כ יח"ד</th>';
                                         MIMUSH_STAGES.filter(s => s.index <= 6).forEach(s => { html += '<th>' + s.shortLabel + '</th>'; });
                                         html += '<th>% מימוש</th><th>זנב</th>';
@@ -32374,8 +32395,38 @@
                                         const tots = mimushDrilldown ? null : mimushData.totals;
                                         const showStages = mimushExpanded === 'stages';
 
+                                        // "מה כבר קיים ומה תוספת" — split the planned addition by how far
+                                        // it already got: הושלם (built) / בנייה (under construction) /
+                                        // everything before a building permit (still only on paper).
+                                        const noteAgg = keys.reduce((a, k) => {
+                                            const row = data[k];
+                                            if (!row || row.total <= 0) return a;
+                                            a.total += row.total;
+                                            a.done += row.byStage[6] || 0;
+                                            a.building += row.byStage[5] || 0;
+                                            for (let i = 0; i <= 4; i++) a.prePermit += row.byStage[i] || 0;
+                                            return a;
+                                        }, { total: 0, done: 0, building: 0, prePermit: 0 });
+                                        const notePct = v => noteAgg.total > 0 ? Math.round(v * 100 / noteAgg.total) + '%' : '0%';
+
                                         return (
                                             <React.Fragment>
+                                            <div className="mimush-note" style={{background:'#12122a', border:'1px solid #2a2a4a', borderRadius:8, padding:'10px 12px', marginBottom:10, fontSize:12, lineHeight:1.7, color:'#b8b8d0'}}>
+                                                <div style={{fontWeight:700, color:'#8ecae6', marginBottom:4}}>מה נספר כאן?</div>
+                                                <div>
+                                                    <b>סה"כ יח"ד</b> = <b>תוספת</b> יח"ד מתוכננת בתכניות (יח"ד נוספות), <b>לא</b> מלאי הדירות הקיים בשכונה.
+                                                    מתוך {noteAgg.total.toLocaleString()} יח"ד התוספת:
+                                                    <span style={{color:'#494CC2', fontWeight:700}}> {noteAgg.done.toLocaleString()}</span> כבר הושלמו ({notePct(noteAgg.done)}),
+                                                    <span style={{color:'#4a69d1', fontWeight:700}}> {noteAgg.building.toLocaleString()}</span> בבנייה ({notePct(noteAgg.building)}),
+                                                    <span style={{color:'#F44336', fontWeight:700}}> {noteAgg.prePermit.toLocaleString()}</span> עדיין לפני היתר ({notePct(noteAgg.prePermit)}) — כלומר תוספת שטרם קיימת בשטח.
+                                                </div>
+                                                <div>
+                                                    עמודות {mimushData.milestoneYears.join('/')} הן <b>מצטברות</b>: תוספת היח"ד הצפויה להתממש עד אותה שנה, משוקללת ב-% המימוש.
+                                                </div>
+                                                <div style={{color:'#8888aa'}}>
+                                                    השלב, % המימוש ושנת היעד נגזרים בזמן אמת מסטטוס מבא"ת + שלב הביצוע ומתאריך הסטטוס — שינוי סטטוס של תכנית משתקף בדוח מיד עם פתיחתו מחדש.
+                                                </div>
+                                            </div>
                                             <div className="units-toggle-btns" style={{marginBottom:8}}>
                                                 <button className={`units-toggle-btn ${showStages ? 'active' : ''}`}
                                                     onClick={() => setMimushExpanded(prev => prev === 'stages' ? null : 'stages')}>
