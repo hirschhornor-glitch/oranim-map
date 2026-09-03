@@ -1,1 +1,20 @@
-{}
+{
+ "1079011|hafrash_sqm": {
+  "taba": 1079011,
+  "plan_name": "101-1079011",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 11450,
+  "status": "נדחתה",
+  "first_seen": "2026-09-03 07:20:47"
+ },
+ "1057355|hafrash_sqm": {
+  "taba": 1057355,
+  "plan_name": "101-1057355",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 998.4,
+  "status": "נדחתה",
+  "first_seen": "2026-09-03 07:20:47"
+ }
+}
