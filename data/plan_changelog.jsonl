@@ -429,3 +429,10 @@
 {"ts": "2026-09-03 07:20:47", "taba": 1488261, "plan_name": "101-1488261", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-09-03 07:20:47", "taba": 1397504, "plan_name": "101-1397504", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-09-03 07:20:47", "taba": 98897, "plan_name": "101-0098897", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-06 13:14:16", "taba": 1444603, "plan_name": "101-1444603", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-06 13:14:16", "taba": 1485051, "plan_name": "101-1485051", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "בקעה"}
+{"ts": "2026-09-06 13:14:16", "taba": 1485051, "plan_name": "101-1485051", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-09-06 13:14:16", "taba": 1214279, "plan_name": "101-1214279", "status": "הפקדה להתנגדויות/השגות", "field": "SUB_N", "old": null, "new": "רחביה"}
+{"ts": "2026-09-06 13:14:16", "taba": 1214279, "plan_name": "101-1214279", "status": "הפקדה להתנגדויות/השגות", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-09-06 13:14:16", "taba": 1214279, "plan_name": "101-1214279", "status": "הפקדה להתנגדויות/השגות", "field": "objection_end_date", "old": null, "new": "20/10/2026"}
+{"ts": "2026-09-06 13:14:16", "taba": 1214279, "plan_name": "101-1214279", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
