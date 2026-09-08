@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-02-dominant-minahak';
+        const APP_VERSION = '2026-09-08-active-sites';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3313,7 +3313,8 @@
                 rental: false,           // פרוייקטים עם דירות להשכרה
                 permit_objections: false, // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
                 tree_permits: false,      // אישורי כריתת עצים פתוחים לערר (מקור: יעל"ה / פקיד היערות, משרד החקלאות)
-                excavation: false         // היתרי חפירה בתוקף — עבודות בשטח (GIS עירוני 232)
+                excavation: false,        // היתרי חפירה בתוקף — עבודות בשטח (GIS עירוני 232)
+                active_sites: false       // אתרי בנייה פעילים — מנהל הבטיחות בעבודה (gov.il)
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             // Permits-layer bucket filter (derives views from the canonical master). All on
@@ -3431,6 +3432,8 @@
             const [objRecencyDays, setObjRecencyDays] = useState(0);
             const [permObjRecencyDays, setPermObjRecencyDays] = useState(0);
             const [treePermitsReport, setTreePermitsReport] = useState(false);
+            const [activeSitesReport, setActiveSitesReport] = useState(false);
+            const [activeSitesFilter, setActiveSitesFilter] = useState({ sub: 'all', flag: 'all', q: '' });
             const [publicRatioReport, setPublicRatioReport] = useState(false);
             const [prFilter, setPrFilter] = useState({ year: '', status: '', minahak: '', build: '', flag: '', minUnits: 0 });
             const [meetingsReport, setMeetingsReport] = useState(false);
@@ -3914,6 +3917,7 @@
                         [objectionsReport, () => setObjectionsReport(false)],
                         [permitObjectionsReport, () => setPermitObjectionsReport(false)],
                         [treePermitsReport, () => setTreePermitsReport(false)],
+                        [activeSitesReport, () => setActiveSitesReport(false)],
                         [meetingsReport, () => setMeetingsReport(false)],
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
@@ -3937,7 +3941,7 @@
                 return () => document.removeEventListener('keydown', onEsc);
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, stagingReport, conditionsReport, showPermitsGap,
-                showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
+                showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, activeSitesReport, meetingsReport, overlapReport,
                 shavazKayamReport, specialHousingReport, eduRenewalReport, developersReport, devMapSel, showAnnotations, showAllocChooser, showExecChooser, showFilter, showEduForecast, showReportsMenu]);
 
             // Focus input when global search opens
@@ -5463,6 +5467,7 @@
                 window.__maintenanceFund = {}; // קרן תחזוקה — by plan_name
                 window.__hafrashaDelivery = {};
                 window.__excavationPermits = {};
+                window.__activeSites = { sites: [] }; // אתרי בנייה פעילים (מנהל הבטיחות)
                 window.__orthoQuarters = {};
                 window.__assetAllocations = {};
                 window.__rentalFlags = {};
@@ -5497,6 +5502,7 @@
                     ['__socialAppendices', 'data/social_appendices.json'],
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                     ['__excavationPermits', 'data/excavation_permits.json'],
+                    ['__activeSites', 'data/active_sites.json'],
                     ['__orthoQuarters', 'data/ortho_quarters.json'],
                     ['__assetAllocations', 'data/asset_allocations.json'],
                     ['__rentalFlags', 'data/rental_flags.json'],
@@ -6011,6 +6017,7 @@
                             else if (key === '__socialAppendices') { window.__socialAppendices = data || { plans: {} }; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
+                            else if (key === '__activeSites') { window.__activeSites = data || { sites: [] }; }
                             else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
                             else if (key === '__assetAllocations') { window.__assetAllocations = data || {}; }
                             else if (key === '__rentalFlags') { window.__rentalFlags = data || {}; }
@@ -6371,6 +6378,7 @@
                 conditionsReport, conditionsDomainFilter, conditionsActorFilter,
                 shavazKayamReport, shavazReportFilter,
                 overlapReport, objectionsReport, permitObjectionsReport, treePermitsReport,
+                activeSitesReport, activeSitesFilter,
                 meetingsReport, specialHousingReport, masterPlanReport,
                 developersReport, devRepMinahak, devRepQ, devRepSort, devRepTama38, devRepType, devRepMuniCo,
                 showEduForecast, eduForecastChumash, eduForecastNb,
@@ -14695,6 +14703,9 @@
                         ser: () => ({ rec: permObjRecencyDays || '' }),
                         apply: p => { if (p.rec) setPermObjRecencyDays(parseInt(p.rec) || 0); } },
                     { key: 'treePermits', isOpen: () => treePermitsReport, open: () => setTreePermitsReport(true) },
+                    { key: 'activeSites', isOpen: () => activeSitesReport, open: () => setActiveSitesReport(true),
+                        ser: () => ({ sub: activeSitesFilter.sub, flag: activeSitesFilter.flag, q: activeSitesFilter.q }),
+                        apply: p => setActiveSitesFilter({ sub: p.sub || 'all', flag: p.flag || 'all', q: p.q || '' }) },
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
                     { key: 'eduRenewal', isOpen: () => eduRenewalReport, open: () => setEduRenewalReport(true),
@@ -20411,6 +20422,34 @@
                     geoLayersRef.current.excavationPermits = excGroup;
                 }
 
+                // --- אתרי בנייה פעילים (מנהל הבטיחות בעבודה) ---
+                if (planningTopics.active_sites && window.__activeSites && window.__activeSites.sites) {
+                    const asGroup = L.layerGroup().addTo(map);
+                    window.__activeSites.sites.forEach(rec => {
+                        if (!rec.lnglat || rec.lnglat.length !== 2) return;
+                        const latlng = L.latLng(rec.lnglat[1], rec.lnglat[0]);
+                        const col = activeSiteColor(rec);
+                        const approx = rec.conf === 'low';
+                        const sz = rec.cranes ? 26 : 22;
+                        const html = '<div style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);'
+                            + 'background:' + col + ';border:2px ' + (approx ? 'dashed' : 'solid') + ' #fff;'
+                            + 'box-shadow:0 1px 3px rgba(0,0,0,.5);opacity:' + (approx ? 0.8 : 1) + ';'
+                            + 'display:flex;align-items:center;justify-content:center">'
+                            + '<span style="transform:rotate(45deg);font-size:' + (rec.cranes ? 14 : 12) + 'px;line-height:1">'
+                            + (rec.cranes ? '🏗️' : '🚧') + '</span></div>';
+                        const icon = L.divIcon({ className: 'active-site-marker', html, iconSize: [sz, sz], iconAnchor: [sz / 2, sz - 2], popupAnchor: [0, -sz + 4] });
+                        const marker = L.marker(latlng, { icon, title: rec.name });
+                        marker.on('click', () => {
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                .setLatLng(latlng)
+                                .setContent(buildActiveSitePopup(rec))
+                                .openOn(map);
+                        });
+                        marker.addTo(asGroup);
+                    });
+                    geoLayersRef.current.activeSites = asGroup;
+                }
+
                 // --- Tama38 ---
                 if (layers['tama38'] && gd.tama38) {
                     const tama38Layer = L.geoJSON(gd.tama38, {
@@ -21330,6 +21369,64 @@
                 }
                 return best;
             }
+            // ── אתרי בנייה פעילים (מנהל הבטיחות בעבודה, gov.il) ──
+            // המקור מפרסם שם-אתר חופשי בלבד (בלי קואורדינטות / מספר היתר); cranes_jlm.py
+            // ממקם לפי שם רחוב + מספר בית מול roads.geojson ומצרף את ההיתר הקרוב ביותר.
+            const ACTIVE_SITE_PIKUAH_HE = {
+                construction: 'בביצוע', file_opened: 'נפתח תיק פיקוח', gmar: 'תעודת גמר',
+                closed: 'תיק נסגר', built: 'טופס 4', enforcement: 'אכיפה',
+            };
+            function activeSiteRisk(rec) {
+                // אכיפה = צווי בטיחות + עיצומים כספיים; העיצום חמור מהצו
+                return (rec.sanctions || 0) * 2 + (rec.warrants || 0);
+            }
+            function activeSiteColor(rec) {
+                if (rec.sanctions) return '#c62828';       // עיצום כספי
+                if (rec.warrants) return '#ef6c00';        // צו בטיחות
+                if (rec.cranes) return '#1565c0';          // עגורן, ללא אכיפה
+                return '#546e7a';
+            }
+            // סתירה: יש אתר פעיל בשטח, אבל תיק הפיקוח של ההיתר הקרוב סגור/הסתיים
+            function activeSiteConflict(rec) {
+                return rec.permit && rec.permit_m != null && rec.permit_m <= 150
+                    && (rec.pikuah === 'closed' || rec.pikuah === 'gmar' || rec.pikuah === 'built');
+            }
+            function buildActiveSitePopup(rec) {
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const row = (label, val) => (val || val === 0) ? '<tr><td style="padding:3px 8px;color:#9ab;white-space:nowrap">' + esc(label) + '</td>'
+                    + '<td style="padding:3px 8px;color:#dfe">' + esc(val) + '</td></tr>' : '';
+                const col = activeSiteColor(rec);
+                let h = '<div class="plan-popup-inner" style="direction:rtl;min-width:250px">';
+                h += '<div style="font-weight:bold;color:' + col + ';font-size:13px;margin-bottom:4px">'
+                   + (rec.cranes ? '🏗️' : '🚧') + ' ' + esc(rec.name) + '</div>';
+                h += '<table style="border-collapse:collapse;font-size:11.5px">';
+                h += row('קבלן מבצע', rec.executor);
+                h += row('ח.פ. קבלן', rec.executor_id);
+                h += row('מנהל עבודה', rec.foreman);
+                h += row('עגורן באתר', rec.cranes ? 'כן' : '');
+                h += row('צווי בטיחות', rec.warrants || '');
+                h += row('עיצומים כספיים', rec.sanctions || '');
+                h += row('תת-שכונה', rec.sub);
+                if (rec.permit && rec.permit_m != null && rec.permit_m <= 150) {
+                    h += row('היתר קרוב', rec.permit + ' (' + rec.permit_m + ' מ׳)');
+                    h += row('סטטוס היתר', rec.permit_status);
+                    h += row('פיקוח בנייה', ACTIVE_SITE_PIKUAH_HE[rec.pikuah] || rec.pikuah_status || '');
+                } else {
+                    h += row('היתר קרוב', 'לא נמצא ברדיוס 150 מ׳');
+                }
+                h += '</table>';
+                if (activeSiteConflict(rec)) {
+                    h += '<div style="margin-top:5px;padding:4px 6px;border-radius:4px;background:rgba(198,40,40,.16);'
+                       + 'border:1px solid #c62828;color:#ff8a80;font-size:10.5px">⚠️ סתירה: האתר מדווח פעיל, אך תיק הפיקוח של ההיתר הקרוב סגור/הסתיים</div>';
+                }
+                if (rec.conf === 'low') {
+                    h += '<div style="font-size:10px;color:#ffb74d;margin-top:4px">~ מיקום מקורב (' + (rec.geocode === 'neighborhood-centroid' ? 'מרכז תת-שכונה' : 'מרכז רחוב') + ')</div>';
+                }
+                h += '<div style="font-size:9px;color:#8a8a9a;margin-top:4px">מקור: מנהל הבטיחות בעבודה — אתרי בנייה פעילים · מס׳ אתר ' + esc(rec.id) + '</div>';
+                h += '</div>';
+                return h;
+            }
+
             function buildTreePopup(rec) {
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const days = objectionsDaysLeft(rec.deadline);
@@ -24599,6 +24696,7 @@
                     { id: 'new_plans',    title: 'תכניות חדשות',            desc: 'זוהו ב-30 הימים האחרונים', icon: '🆕' },
                     { id: 'permit_objections', title: 'היתרים פתוחים להתנגדויות', desc: 'בקשות להיתר עם הקלות (סעיף 149)', icon: '⚖️' },
                     { id: 'tree_permits', title: 'אישורי כריתת עצים פתוחים לערר', desc: 'אישורי כריתה עם מועד אחרון לערר (מעירים/פקיד היערות)', icon: '🌳' },
+                    { id: 'active_sites', title: 'אתרי בנייה פעילים', desc: 'קבלן מבצע, עגורן, צווי בטיחות ועיצומים (מנהל הבטיחות)', icon: '🏗️' },
                     { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
                     { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
                     { id: 'use_gaps',     title: 'פערי שימוש — ספר הנכסים',  desc: 'שימוש נכסי הפרשה בפועל מול טבלה 5 (כולל חפיפות)', icon: '⚖️' },
@@ -24720,6 +24818,7 @@
                     else if (id === 'new_plans') setNewPlansReport(true);
                     else if (id === 'permit_objections') setPermitObjectionsReport(true);
                     else if (id === 'tree_permits') setTreePermitsReport(true);
+                    else if (id === 'active_sites') setActiveSitesReport(true);
                     else if (id === 'meetings') setMeetingsReport(true);
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
                     else if (id === 'use_gaps') setShowUseGaps(true);
@@ -25463,6 +25562,16 @@
                                  onClick={() => setPlanningTopics(prev => ({...prev, excavation: !prev.excavation}))}>
                                 <input type="checkbox" checked={planningTopics.excavation} onChange={() => {}} />
                                 <label style={{flex:1}}>🚧 היתרי חפירה בתוקף (עבודות בשטח)</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='אתרי בנייה פעילים מרשם מנהל הבטיחות בעבודה — קבלן מבצע, מנהל עבודה, עגורן, צווי בטיחות ועיצומים (gov.il)'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, active_sites: !prev.active_sites}))}>
+                                <input type="checkbox" checked={planningTopics.active_sites} onChange={() => {}} />
+                                <label style={{flex:1}}>🏗️ אתרי בנייה פעילים (מנהל הבטיחות)</label>
+                                <button className="layer-legend-btn" title="דוח אתרי בנייה פעילים"
+                                    onClick={(e) => { e.stopPropagation(); setActiveSitesReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             </div>)}
                         </div>
@@ -28279,6 +28388,7 @@
                                 { icon:'🚧', title:'מצב ביצוע — משפך יח"ד', desc:'כמה מהיח"ד המאושרות ברישוי / בהיתר / בביצוע / הושלמו — לפי אזור מצויר, רדיוס, תת-שכונה או מינהל', onClick:() => go(() => setShowExecChooser(true)) },
                                 { icon:'📐', title:'מיצוי יח"ד לפי מגרש', desc:'יח"ד בהיתר מול תב"ע (טבלה 5) פר מגרש/קבוצת-בניין — דורש שכבת היתרים', onClick:() => { openMigrashUnitsReport(); } },
                                 { icon:'⚖️', title:'היתרים פתוחים להתנגדויות', desc:'בקשות להיתר עם הקלות (סעיף 149) + מועד אחרון', onClick:() => go(() => setPermitObjectionsReport(true)) },
+                                { icon:'🏗️', title:'אתרי בנייה פעילים', desc:'בנייה בפועל בשטח מול הפיקוח — קבלן מבצע, עגורן, צווי בטיחות ועיצומים (מנהל הבטיחות)', onClick:() => go(() => setActiveSitesReport(true)) },
                             ]},
                             { key:'commerce', title:'🟣 מסחר ותעסוקה', color:'#8e24aa', bg:'rgba(142,36,170,0.06)', items:[
                                 { icon:'🏪', title:'סיכום מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה לפי מינהל', onClick:() => go(() => fetchCommerceData()) },
@@ -33638,6 +33748,174 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+'+JSON.stringify(csv.join('\n'))+'],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="אישורי_כריתת_עצים_לערר.csv";a.click()});<\/script>');
                                             w.document.write('</body></html>'); w.document.close(); w.focus();
                                         }} style={{background:'#2e7d32',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {/* ── אתרי בנייה פעילים (מנהל הבטיחות בעבודה) ── */}
+                    {activeSitesReport && (() => {
+                        const src = window.__activeSites || { sites: [] };
+                        const all = src.sites || [];
+                        const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                        const noPermit = (r) => !(r.permit && r.permit_m != null && r.permit_m <= 150);
+                        const f = activeSitesFilter;
+                        const q = (f.q || '').trim();
+                        const rows = all.filter(r => {
+                            if (f.sub !== 'all' && (r.sub || '—') !== f.sub) return false;
+                            if (f.flag === 'cranes' && !r.cranes) return false;
+                            if (f.flag === 'enforcement' && !(r.warrants || r.sanctions)) return false;
+                            if (f.flag === 'conflict' && !activeSiteConflict(r)) return false;
+                            if (f.flag === 'nopermit' && !noPermit(r)) return false;
+                            if (q && !((r.name || '') + ' ' + (r.executor || '') + ' ' + (r.foreman || '') + ' ' + (r.street || '')).includes(q)) return false;
+                            return true;
+                        });
+                        const subs = Array.from(new Set(all.map(r => r.sub || '—'))).sort();
+                        const nCranes = rows.reduce((a, r) => a + (r.cranes ? 1 : 0), 0);
+                        const nWar = rows.reduce((a, r) => a + (r.warrants || 0), 0);
+                        const nSanc = rows.reduce((a, r) => a + (r.sanctions || 0), 0);
+                        const nConf = rows.filter(activeSiteConflict).length;
+
+                        // הפער ההפוך: היתרים שהפיקוח מסמן "בביצוע" ואין מולם אתר פעיל רשום
+                        // __permitsMaster / __pikuahStatus are already the flat maps (see stage-2 loader)
+                        const pm = window.__permitsMaster || {};
+                        const pk = window.__pikuahStatus || {};
+                        const sitePts = all.map(r => r.lnglat).filter(c => c && c.length === 2);
+                        const missing = [];
+                        Object.values(pm).forEach(pr => {
+                            if (!pr.lat || !pr.lng) return;
+                            const cls = (pk[pr.tik] || {}).classification;
+                            if (cls !== 'construction') return;
+                            const hit = sitePts.some(c => {
+                                const dy = (c[1] - pr.lat) * 111000, dx = (c[0] - pr.lng) * 95000;
+                                return Math.sqrt(dx * dx + dy * dy) <= 150;
+                            });
+                            if (!hit) missing.push(pr);
+                        });
+
+                        const chip = (key, label) => (
+                            <button key={key} onClick={() => setActiveSitesFilter(prev => ({...prev, flag: key}))}
+                                style={{background: f.flag === key ? '#1565c0' : '#1a1a2e', color:'#fff', border:'1px solid #2a2a4a',
+                                        borderRadius:14, padding:'3px 11px', cursor:'pointer', fontSize:11, fontFamily:'inherit'}}>{label}</button>
+                        );
+                        const flyTo = (r) => {
+                            if (!r.lnglat || !mapInstanceRef.current) return;
+                            const center = L.latLng(r.lnglat[1], r.lnglat[0]);
+                            setActiveSitesReport(false);
+                            setTimeout(() => {
+                                mapInstanceRef.current.setView(center, 18);
+                                setTimeout(() => {
+                                    L.popup({maxWidth:340, className:'plan-popup'}).setLatLng(center)
+                                        .setContent(buildActiveSitePopup(r)).openOn(mapInstanceRef.current);
+                                }, 500);
+                            }, 100);
+                        };
+                        return (
+                        <div className="units-overlay" onClick={() => setActiveSitesReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1080px,96vw)',maxHeight:'88vh',display:'flex',flexDirection:'column'}}>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setActiveSitesReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY:'auto',flex:1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#127959; אתרי בנייה פעילים</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:4}}>
+                                        {rows.length} אתרים · {nCranes} עם עגורן · {nWar} צווי בטיחות · {nSanc} עיצומים · {nConf} בסתירה מול הפיקוח
+                                    </p>
+                                    <p style={{color:'#777',fontSize:11,marginBottom:10}}>
+                                        מקור: מנהל הבטיחות בעבודה — מרשם אתרי בנייה פעילים (gov.il) · נשלף {src.meta && src.meta.fetched} · {src.meta && src.meta.city_total} אתרים בירושלים, {all.length} מוקמו ברובע
+                                    </p>
+                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center',marginBottom:10}}>
+                                        {chip('all','הכל')}
+                                        {chip('cranes','🏗️ עם עגורן')}
+                                        {chip('enforcement','⚠️ עם אכיפה')}
+                                        {chip('conflict','❗ סתירה מול הפיקוח')}
+                                        {chip('nopermit','❓ בלי היתר מוכר')}
+                                        <select value={f.sub} onChange={e => setActiveSitesFilter(prev => ({...prev, sub: e.target.value}))}
+                                            style={{background:'#1a1a2e',color:'#fff',border:'1px solid #2a2a4a',borderRadius:4,padding:'3px 6px',fontSize:11,fontFamily:'inherit'}}>
+                                            <option value="all">כל תת-השכונות</option>
+                                            {subs.map(sn => <option key={sn} value={sn}>{sn}</option>)}
+                                        </select>
+                                        <input value={f.q} placeholder="חיפוש: אתר / קבלן / מנהל עבודה"
+                                            onChange={e => setActiveSitesFilter(prev => ({...prev, q: e.target.value}))}
+                                            style={{background:'#1a1a2e',color:'#fff',border:'1px solid #2a2a4a',borderRadius:4,padding:'3px 8px',fontSize:11,fontFamily:'inherit',minWidth:190}} />
+                                    </div>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:14}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>אתר</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>קבלן מבצע</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מנהל עבודה</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>עגורן</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>צווים</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>עיצומים</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>תת-שכונה</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>היתר קרוב</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>פיקוח בנייה</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {rows.map((r, i) => (
+                                                <tr key={r.id} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} onClick={() => flyTo(r)}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0',textDecoration:'underline'}}>{r.name}{r.conf === 'low' ? ' ~' : ''}</td>
+                                                    <td style={{padding:'4px',color:'#90caf9'}}>{r.executor || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#bbb',fontSize:11}}>{r.foreman || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px'}}>{r.cranes ? '🏗️' : ''}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#fff',background:r.warrants ? 'rgba(239,108,0,.35)' : 'transparent'}}>{r.warrants || ''}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#fff',background:r.sanctions ? 'rgba(198,40,40,.4)' : 'transparent'}}>{r.sanctions || ''}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8',fontSize:11}}>{r.sub || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#a5d6a7',fontSize:11}}>{noPermit(r) ? '—' : (r.permit + ' (' + r.permit_m + 'מ׳)')}</td>
+                                                    <td style={{padding:'4px',fontSize:11,color:activeSiteConflict(r) ? '#ff8a80' : '#bbb'}}>
+                                                        {activeSiteConflict(r) ? '❗ ' : ''}{ACTIVE_SITE_PIKUAH_HE[r.pikuah] || (noPermit(r) ? '-' : (r.pikuah_status || '-'))}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <details style={{marginBottom:12}}>
+                                        <summary style={{cursor:'pointer',color:'#ffb74d',fontSize:13,fontWeight:600}}>
+                                            הפער ההפוך: {missing.length} היתרים שהפיקוח מסמן "בביצוע" — ואין מולם אתר פעיל רשום
+                                        </summary>
+                                        <p style={{color:'#888',fontSize:11,margin:'6px 0'}}>
+                                            עבודות קטנות אינן חייבות רישום מנהל עבודה, ולכן חלק מהשורות תקינות — אך שורה שאמורה להיות אתר גדול פעיל מסמנת תיק פיקוח שלא עודכן.
+                                        </p>
+                                        <table style={{width:'100%',fontSize:11.5,borderCollapse:'collapse'}}>
+                                            <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
+                                                <th style={{textAlign:'right',padding:'4px',color:'#fff'}}>תיק</th>
+                                                <th style={{textAlign:'right',padding:'4px',color:'#fff'}}>סטטוס</th>
+                                                <th style={{textAlign:'center',padding:'4px',color:'#fff'}}>יח"ד</th>
+                                                <th style={{textAlign:'right',padding:'4px',color:'#fff'}}>מהות</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {missing.map(pr => (
+                                                    <tr key={pr.tik} style={{borderBottom:'1px solid #16162a'}}>
+                                                        <td style={{padding:'3px 4px',color:'#90caf9'}}>{pr.tik}</td>
+                                                        <td style={{padding:'3px 4px',color:'#bbb'}}>{pr.status || '-'}</td>
+                                                        <td style={{textAlign:'center',padding:'3px 4px',color:'#fff'}}>{pr.units_added || ''}</td>
+                                                        <td style={{padding:'3px 4px',color:'#ccc'}}>{(pr.request_description || '-').slice(0, 90)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </details>
+                                    <p style={{color:'#777',fontSize:11,marginBottom:8}}>
+                                        ~ = מיקום מקורב (המרשם מפרסם שם-אתר חופשי בלבד; המיקום נגזר מרחוב/תת-שכונה). "היתר קרוב" הוא ההיתר הגיאוגרפית-קרוב ביותר ברדיוס 150 מ׳ — לא בהכרח ההיתר של האתר.
+                                    </p>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const w = window.open('', '_blank');
+                                            w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>אתרי בנייה פעילים</title>');
+                                            w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd;font-size:12px}th{background:#f5f5f5;font-weight:700}@media print{.no-print{display:none!important}}</style></head><body>');
+                                            w.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px"><button onclick="window.print()" style="background:#1565c0;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">הדפסה / PDF</button><button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">CSV</button></div>');
+                                            w.document.write('<h2>🏗️ אתרי בנייה פעילים — רובע אורנים</h2><p>' + rows.length + ' אתרים · ' + nCranes + ' עם עגורן · ' + nWar + ' צווי בטיחות · ' + nSanc + ' עיצומים · מקור: מנהל הבטיחות בעבודה (gov.il)</p>');
+                                            w.document.write('<table><thead><tr><th>#</th><th>אתר</th><th>קבלן מבצע</th><th>ח.פ.</th><th>מנהל עבודה</th><th>עגורן</th><th>צווים</th><th>עיצומים</th><th>תת-שכונה</th><th>היתר קרוב</th><th>פיקוח</th></tr></thead><tbody>');
+                                            rows.forEach((r, i) => { w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.name)+(r.conf==='low'?' (מקורב)':'')+'</td><td>'+esc(r.executor||'-')+'</td><td>'+esc(r.executor_id||'-')+'</td><td>'+esc(r.foreman||'-')+'</td><td>'+(r.cranes?'כן':'')+'</td><td>'+(r.warrants||'')+'</td><td>'+(r.sanctions||'')+'</td><td>'+esc(r.sub||'-')+'</td><td>'+(noPermit(r)?'—':esc(r.permit))+'</td><td>'+esc(ACTIVE_SITE_PIKUAH_HE[r.pikuah]||'-')+'</td></tr>'); });
+                                            w.document.write('</tbody></table>');
+                                            const csv = ['"#","אתר","קבלן מבצע","ח.פ.","מנהל עבודה","עגורן","צווים","עיצומים","תת-שכונה","היתר קרוב","פיקוח"'];
+                                            rows.forEach((r,i) => csv.push('"'+(i+1)+'","'+String(r.name||'').replace(/"/g,'""')+'","'+String(r.executor||'').replace(/"/g,'""')+'","'+String(r.executor_id||'')+'","'+String(r.foreman||'').replace(/"/g,'""')+'","'+(r.cranes?'כן':'')+'","'+(r.warrants||0)+'","'+(r.sanctions||0)+'","'+String(r.sub||'')+'","'+(noPermit(r)?'':String(r.permit||''))+'","'+String(ACTIVE_SITE_PIKUAH_HE[r.pikuah]||'')+'"'));
+                                            w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\uFEFF"+'+JSON.stringify(csv.join('\n'))+'],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="אתרי_בנייה_פעילים.csv";a.click()});<\/script>');
+                                            w.document.write('</body></html>'); w.document.close(); w.focus();
+                                        }} style={{background:'#1565c0',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
                                             &#128424; הדפסה / שמירה
                                         </button>
                                     </div>
