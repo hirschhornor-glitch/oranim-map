@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v45-active-sites';
+const CACHE_VERSION = 'v46-works-section';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

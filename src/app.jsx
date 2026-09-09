@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-08-active-sites';
+        const APP_VERSION = '2026-09-09-works-section';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -25556,6 +25556,18 @@
                                     onClick={(e) => { e.stopPropagation(); setTreePermitsReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
+                            </div>)}
+                        </div>
+
+                        <div className="sidebar-section">
+                            <div className="layer-group-title" onClick={() => setCollapsedGroups(prev => ({...prev, works: !prev.works}))}
+                                 style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                    <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups.works?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
+                                    <span>עבודות</span>
+                                </div>
+                            </div>
+                            {!collapsedGroups.works && (<div>
                             <div className="layer-item"
                                  title='פוליגונים של היתרי חפירה / הגבלת שימוש בדרך בתוקף — יזם, קבלן, מהות ותקופת העבודה (מקור: GIS עירוני, מתעדכן בשליפה)'
                                  style={{display:'flex',alignItems:'center'}}
