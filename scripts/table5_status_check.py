@@ -20,6 +20,7 @@ import asyncio
 from parse_table5_xlsx import parse_table5_xlsx, result_to_dict
 from parse_quantity_balance import parse_quantity_balance
 from scrape_table5_xlsx import download_xlsx, MAVAT_BASE
+from xplan_units import units_for_plan
 
 CLICK_MORE_JS = r"""
 () => { let c=0; document.querySelectorAll('*').forEach(el=>{
@@ -158,7 +159,25 @@ async def scrape_plan(page, plan, force=False):
             bal = {k: v for k, v in parse_quantity_balance(text).items() if k != "cards"}
     except Exception:
         pass
-    return {"t5": t5, "bal": bal}
+
+    # The accordion is a lazily-rendered nested UIkit widget behind four silent
+    # `except` paths above — when any of them trips it yields "", and units_in /
+    # units_add were then skipped WITHOUT a trace while units_total (XLSX) still
+    # landed. That combination — total filled, נכנס empty, add=0 — sat on 42 rows
+    # for months. Fall back to XPLAN, which publishes the same two numbers, and
+    # record what happened either way so the failure is never silent again.
+    units_note = ""
+    # Only worth chasing (and only worth complaining about) when the plan
+    # actually has residential units in Table 5.
+    if bal.get("units_in") is None and t5.get("total_residential_units"):
+        vals, why = units_for_plan(plan.get("plan_number") or plan.get("plan_name"),
+                                   t5.get("total_residential_units"))
+        if vals:
+            bal["units_in"] = vals["units_in"]
+            units_note = f"יח\"ד נכנס מ-XPLAN (אקורדיון מבא\"ת ריק) — {why}"
+        else:
+            units_note = f"⚠ יח\"ד נכנס לא נקרא — אקורדיון ריק; {why}"
+    return {"t5": t5, "bal": bal, "units_note": units_note}
 
 
 def _num(s):
@@ -275,8 +294,11 @@ def compute_changes(h, row, scraped, plan_label=""):
         updates[ci_notes] = notes
         report.append(f"      resident_shared_prg: {cur('resident_shared_prg') or '∅'} → {notes}")
 
-    # IN fields — accordion only.
+    # IN fields — accordion, or XPLAN when the accordion came back empty.
     ui = bal.get("units_in")
+    note = scraped.get("units_note")
+    if note:
+        report.append(f"      {note}")
     if ui is not None and t5.get("total_residential_units"):
         set_field("units_in", ui, "units_in")
     if bal.get("commerce_in"):

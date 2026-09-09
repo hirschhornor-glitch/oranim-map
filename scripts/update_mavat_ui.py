@@ -1833,6 +1833,9 @@ async def main():
                             page, {'agam_id': aid, 'plan_number': item.get('plan_name', ''), 'taba': _taba},
                             force=True)
                         log_msg("  ↳ Table 5 + נכנס re-checked")
+                        _un = (result['t5_balance'] or {}).get('units_note')
+                        if _un:
+                            log_msg(f"     {_un}")
                     except Exception as te:
                         log_msg(f"  ↳ Table 5 re-check failed: {te}")
 
