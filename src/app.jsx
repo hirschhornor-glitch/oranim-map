@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-09-works-section';
+        const APP_VERSION = '2026-09-09-fund-checkbox';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -25478,7 +25478,7 @@
                                  title='תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ארוכת-טווח (מגדלים)'
                                  style={{display:'flex',alignItems:'center'}}
                                  onClick={() => toggleLayer('maintenance_fund')}>
-                                <input type="checkbox" checked={layers.maintenance_fund || false} onChange={() => {}} onClick={e => e.stopPropagation()} />
+                                <input type="checkbox" checked={layers.maintenance_fund || false} onChange={() => toggleLayer('maintenance_fund')} onClick={e => e.stopPropagation()} />
                                 <label style={{flex:1}}>קרן תחזוקה</label>
                                 <button className="layer-legend-btn" title="דוח קרן תחזוקה"
                                     onClick={(e) => { e.stopPropagation(); setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }}
@@ -25488,7 +25488,7 @@
                                  title='הרכב המתחם הקיים לפני הפינוי מתוך הנספח החברתי — דיור ציבורי, שכירות, גיל וגודל משק בית. תכניות התחדשות ללא נספח מוצגות באפור'
                                  style={{display:'flex',alignItems:'center'}}
                                  onClick={() => toggleLayer('social_appendix')}>
-                                <input type="checkbox" checked={layers.social_appendix || false} onChange={() => {}} onClick={e => e.stopPropagation()} />
+                                <input type="checkbox" checked={layers.social_appendix || false} onChange={() => toggleLayer('social_appendix')} onClick={e => e.stopPropagation()} />
                                 <label style={{flex:1}}>מצב נכנס — נספח חברתי</label>
                                 <button className="layer-legend-btn" title="דוח מצב נכנס"
                                     onClick={(e) => { e.stopPropagation(); setSocialReport(true); }}
