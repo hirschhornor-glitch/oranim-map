@@ -436,3 +436,8 @@
 {"ts": "2026-09-06 13:14:16", "taba": 1214279, "plan_name": "101-1214279", "status": "הפקדה להתנגדויות/השגות", "field": "overlapping_plans", "old": 0.0, "new": ""}
 {"ts": "2026-09-06 13:14:16", "taba": 1214279, "plan_name": "101-1214279", "status": "הפקדה להתנגדויות/השגות", "field": "objection_end_date", "old": null, "new": "20/10/2026"}
 {"ts": "2026-09-06 13:14:16", "taba": 1214279, "plan_name": "101-1214279", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-09 20:52:09", "taba": 1551324, "plan_name": "101-1551324", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-09 20:52:09", "taba": 1551068, "plan_name": "101-1551068", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-09 20:52:09", "taba": 1550508, "plan_name": "101-1550508", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": "", "new": "רסקו - גבעת הורדים"}
+{"ts": "2026-09-09 20:52:09", "taba": 1582451, "plan_name": "101-1582451", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": "", "new": "בית צפאפא,שרפת"}
+{"ts": "2026-09-09 20:52:09", "taba": 1582451, "plan_name": "101-1582451", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
