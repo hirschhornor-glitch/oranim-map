@@ -230,30 +230,6 @@
    "sub_neighborhood": "המושבה היוונית",
    "status": "בהליך אישור"
   },
-  "123": {
-   "plan_name": "פינוי בינוי שלום יהודה 13-27",
-   "req_private": 492,
-   "req_residential": 472,
-   "guests": 43,
-   "bikes_req": 432,
-   "moto_req": 47,
-   "operational": 2,
-   "accessible": 9,
-   "standard": "1:1 לכל יח\"ד + 10% אורחים (החלטת ועדה 23.01.16 סעיף 22, אזור עתיר תח\"צ)",
-   "confidence": "high",
-   "notes": "95 יח\"ד קטנות + 334 גדולות. מסחר 800 מ\"ר=14. בי\"ס 12 כיתות ובית כנסת 250 מ\"ר ללא דרישת חניה (מפרץ הורדה). אין טבלת היצע בגיליון.",
-   "source": {
-    "crop": "crops/123/doc12_p0_k0.png",
-    "doc": "נספח תנועה"
-   },
-   "units": 429.0,
-   "units_basis": "appendix",
-   "ratio_req": 1.147,
-   "ratio_res_req": 1.1,
-   "minahak": "בקעה רבתי",
-   "sub_neighborhood": "בקעה",
-   "status": "אישור"
-  },
   "1033869": {
    "plan_name": "מתחם 01 - בר יוחאי 1-3",
    "req_private": 412,
@@ -2197,32 +2173,6 @@
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
   },
-  "9157": {
-   "plan_name": "סן מרטין 19-21",
-   "req_private": 200,
-   "prov_private": 208,
-   "req_residential": 171,
-   "guests": 16,
-   "bikes_prov": 172,
-   "moto_prov": 42,
-   "operational": 2,
-   "standard": "1:1 לדירה מתחת 95 מ\"ר + 10% אורחים; שימושים לא-מגורים בתקן מופחת 50%",
-   "confidence": "medium",
-   "notes": "155 יח\"ד (GS 148). שני מקבצי מגרשים: הראשון דרישה 182 / מתוכנן 188; השני 18 / 20. חניות האופניים (168) ממוקמות במחסנים. אותר ב-OCR rescue.",
-   "source": {
-    "crop": "crops/9157/doc15_p0_rescue3750_0.png",
-    "doc": "נספח תנועה"
-   },
-   "units": 155.0,
-   "units_basis": "appendix",
-   "units_gap_vs_gs": 7,
-   "ratio_req": 1.29,
-   "ratio_prov": 1.342,
-   "ratio_res_req": 1.103,
-   "minahak": "גוננים",
-   "sub_neighborhood": "קטמונים ח-ט",
-   "status": "אישור"
-  },
   "1225218": {
    "plan_name": "דינמומטר",
    "req_private": 200,
@@ -3320,30 +3270,6 @@
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
   },
-  "6229": {
-   "plan_name": "אביטל 15",
-   "req_private": 74,
-   "prov_private": 78,
-   "req_residential": 65,
-   "guests": 0,
-   "moto_req": 13,
-   "accessible": 4,
-   "standard": "⚠️ תקן מופחת עתיר תח\"צ/רק\"ל: 1:1 לכל הדירות, אך **דירות עד 45 מ\"ר מקבלות פטור של 80%** (10 יח\"ד → 2 מקומות)",
-   "confidence": "high",
-   "notes": "37 יח\"ד עד 95 + 26 מעל 95 + 10 עד 45 מ\"ר = 73, תואם במדויק ל-GS. יחס מגורים 0.89 — מהנמוכים שנמדדו, בזכות פטור ה-80% לדירות הזעירות. הגיליון מחשב גם חפיפת שימושים לפי שעות (לפנה\"צ/אחה\"צ/ערב). מאזן +4. אותר ב-OCR rescue.",
-   "source": {
-    "crop": "crops/6229/doc4_p0_rescue1250_0.png",
-    "doc": "נספח תנועה"
-   },
-   "units": 73.0,
-   "units_basis": "appendix",
-   "ratio_req": 1.014,
-   "ratio_prov": 1.068,
-   "ratio_res_req": 0.89,
-   "minahak": "בקעה רבתי",
-   "sub_neighborhood": "מקור חיים",
-   "status": "אישור"
-  },
   "1078476": {
    "plan_name": "שמעוני 30,32 - גבעת הורדים",
    "req_private": 99,
@@ -4428,6 +4354,79 @@
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
+  },
+  "1010123": {
+   "plan_name": "פינוי בינוי שלום יהודה 13-27",
+   "req_private": 492,
+   "req_residential": 472,
+   "guests": 43,
+   "bikes_req": 432,
+   "moto_req": 47,
+   "operational": 2,
+   "accessible": 9,
+   "standard": "1:1 לכל יח\"ד + 10% אורחים (החלטת ועדה 23.01.16 סעיף 22, אזור עתיר תח\"צ)",
+   "confidence": "high",
+   "notes": "95 יח\"ד קטנות + 334 גדולות. מסחר 800 מ\"ר=14. בי\"ס 12 כיתות ובית כנסת 250 מ\"ר ללא דרישת חניה (מפרץ הורדה). אין טבלת היצע בגיליון.",
+   "source": {
+    "crop": "crops/123/doc12_p0_k0.png",
+    "doc": "נספח תנועה"
+   },
+   "units": 429.0,
+   "units_basis": "appendix",
+   "ratio_req": 1.147,
+   "ratio_res_req": 1.1,
+   "minahak": "",
+   "sub_neighborhood": "",
+   "status": ""
+  },
+  "1016229": {
+   "plan_name": "אביטל 15",
+   "req_private": 74,
+   "prov_private": 78,
+   "req_residential": 65,
+   "guests": 0,
+   "moto_req": 13,
+   "accessible": 4,
+   "standard": "⚠️ תקן מופחת עתיר תח\"צ/רק\"ל: 1:1 לכל הדירות, אך **דירות עד 45 מ\"ר מקבלות פטור של 80%** (10 יח\"ד → 2 מקומות)",
+   "confidence": "high",
+   "notes": "37 יח\"ד עד 95 + 26 מעל 95 + 10 עד 45 מ\"ר = 73, תואם במדויק ל-GS. יחס מגורים 0.89 — מהנמוכים שנמדדו, בזכות פטור ה-80% לדירות הזעירות. הגיליון מחשב גם חפיפת שימושים לפי שעות (לפנה\"צ/אחה\"צ/ערב). מאזן +4. אותר ב-OCR rescue.",
+   "source": {
+    "crop": "crops/6229/doc4_p0_rescue1250_0.png",
+    "doc": "נספח תנועה"
+   },
+   "units": 73.0,
+   "units_basis": "appendix",
+   "ratio_req": 1.014,
+   "ratio_prov": 1.068,
+   "ratio_res_req": 0.89,
+   "minahak": "",
+   "sub_neighborhood": "",
+   "status": ""
+  },
+  "1019157": {
+   "plan_name": "סן מרטין 19-21",
+   "req_private": 200,
+   "prov_private": 208,
+   "req_residential": 171,
+   "guests": 16,
+   "bikes_prov": 172,
+   "moto_prov": 42,
+   "operational": 2,
+   "standard": "1:1 לדירה מתחת 95 מ\"ר + 10% אורחים; שימושים לא-מגורים בתקן מופחת 50%",
+   "confidence": "medium",
+   "notes": "155 יח\"ד (GS 148). שני מקבצי מגרשים: הראשון דרישה 182 / מתוכנן 188; השני 18 / 20. חניות האופניים (168) ממוקמות במחסנים. אותר ב-OCR rescue.",
+   "source": {
+    "crop": "crops/9157/doc15_p0_rescue3750_0.png",
+    "doc": "נספח תנועה"
+   },
+   "units": 155.0,
+   "units_basis": "appendix",
+   "ratio_req": 1.29,
+   "ratio_prov": 1.342,
+   "ratio_res_req": 1.103,
+   "minahak": "",
+   "sub_neighborhood": "",
+   "status": ""
   }
  },
  "no_traffic_appendix": [

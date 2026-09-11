@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-09-fund-checkbox';
+        const APP_VERSION = '2026-09-11-parking';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3435,6 +3435,8 @@
             const [activeSitesReport, setActiveSitesReport] = useState(false);
             const [activeSitesFilter, setActiveSitesFilter] = useState({ sub: 'all', flag: 'all', q: '' });
             const [publicRatioReport, setPublicRatioReport] = useState(false);
+            const [parkingReport, setParkingReport] = useState(false);
+            const [parkFilter, setParkFilter] = useState({ minahak: 'all', sub: 'all', band: 'all', q: '' });
             const [prFilter, setPrFilter] = useState({ year: '', status: '', minahak: '', build: '', flag: '', minUnits: 0 });
             const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
@@ -5508,6 +5510,7 @@
                     ['__rentalFlags', 'data/rental_flags.json'],
                     ['__fuelBarriers', 'data/fuel_barriers.json'],
                     ['__binuiPlans', 'data/binui_plans.json'],
+                    ['__parking', 'data/parking.json'],
                     ['__tama38Developers', 'data/tama38_developers.json'],
                     ['__permitsMaster', 'data/permits_master.json'],
                     ['__tama38MpCheck', 'data/tama38_master_plan_check.json'],
@@ -6014,6 +6017,7 @@
                             else if (key === '__hafrashPermitUse') { window.__hafrashPermitUse = (data && data.by_plan) || {}; }
                             else if (key === '__planContainment') { window.__planContainment = (data && data.superseded) || {}; }
                             else if (key === '__maintenanceFund') { window.__maintenanceFund = data || {}; }
+                            else if (key === '__parking') { window.__parking = data || { plans: {}, no_traffic_appendix: [] }; }
                             else if (key === '__socialAppendices') { window.__socialAppendices = data || { plans: {} }; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
@@ -23371,6 +23375,50 @@
                     }
                 }
 
+
+                // ── Parking section (parking.json, read off the traffic appendix) ──
+                // The appendix is the only source that states both the REQUIRED and the
+                // PROVIDED spaces; the residential-only figure is what makes plans with
+                // very different use mixes comparable, so it leads.
+                const parkRec = ((window.__parking || {}).plans || {})[taba];
+                if (parkRec && (parkRec.req_private || parkRec.prov_private || parkRec.req_residential)) {
+                    const pUnits = parkRec.units || 0;
+                    const r2 = v => (v == null || !isFinite(v)) ? null : (Math.round(v * 100) / 100).toFixed(2);
+                    const resSpaces = parkRec.prov_residential || parkRec.req_residential;
+                    const resRatio = (resSpaces && pUnits) ? resSpaces / pUnits : null;
+                    // colour against the citywide median (1.15): well below = transit-oriented,
+                    // well above = high-standard zone. Neither is "bad" — it flags the regime.
+                    const rColor = resRatio == null ? '#9fb3d1'
+                        : resRatio < 0.85 ? '#5dade2' : resRatio > 1.45 ? '#e67e22' : '#27ae60';
+                    html += '<div class="popup-section-title">🅿️ חניה</div>';
+                    html += '<div class="popup-pair">';
+                    if (parkRec.req_private) html += `<div class="popup-pair-item"><span class="popup-pair-label">נדרש</span><span class="popup-pair-value">${parkRec.req_private.toLocaleString('he-IL')}</span></div>`;
+                    if (parkRec.prov_private) html += `<div class="popup-pair-item"><span class="popup-pair-label">מוצע</span><span class="popup-pair-value">${parkRec.prov_private.toLocaleString('he-IL')}</span></div>`;
+                    html += '</div>';
+                    if (resRatio != null) {
+                        html += `<div class="popup-sub-row" style="margin-top:4px">חניות מגורים ליח"ד: <span style="color:${rColor};font-weight:700">${r2(resRatio)}</span>` +
+                            ` <span style="color:#8a93a6;font-size:10px">(${resSpaces.toLocaleString('he-IL')} ל-${Math.round(pUnits).toLocaleString('he-IL')} יח"ד)</span></div>`;
+                    }
+                    if (parkRec.req_private_full_standard && parkRec.req_private &&
+                        parkRec.req_private_full_standard > parkRec.req_private) {
+                        const cut = Math.round((1 - parkRec.req_private / parkRec.req_private_full_standard) * 100);
+                        html += `<div class="popup-sub-row" style="color:#5dade2">תקן מופחת: ${parkRec.req_private_full_standard.toLocaleString('he-IL')} → ${parkRec.req_private.toLocaleString('he-IL')} (−${cut}%)</div>`;
+                    }
+                    const extras = [];
+                    if (parkRec.bikes_req || parkRec.bikes_prov) extras.push('אופניים ' + (parkRec.bikes_prov || parkRec.bikes_req));
+                    if (parkRec.moto_req || parkRec.moto_prov) extras.push('אופנועים ' + (parkRec.moto_prov || parkRec.moto_req));
+                    if (parkRec.accessible) extras.push('נכים ' + parkRec.accessible);
+                    if (parkRec.operational) extras.push('תפעולי ' + parkRec.operational);
+                    if (extras.length) html += '<div class="popup-sub-row" style="color:#8a93a6;font-size:10px">' + extras.join(' · ') + '</div>';
+                    if (parkRec.standard) html += `<div class="popup-sub-row" style="color:#9fb3d1;font-size:10px;white-space:normal">${parkRec.standard}</div>`;
+                    if (parkRec.coverage === 'partial') html += '<div class="popup-sub-row" style="color:#e67e22;font-size:10px">⚠️ הנספח מכסה רק חלק ממגרשי התכנית</div>';
+                    else if (parkRec.units_gap_vs_gs && pUnits && Math.abs(parkRec.units_gap_vs_gs) / pUnits > 0.15)
+                        html += `<div class="popup-sub-row" style="color:#e67e22;font-size:10px">⚠️ הנספח מונה ${Math.round(pUnits).toLocaleString('he-IL')} יח"ד — פער מול הרישום בעירייה</div>`;
+                } else if (((window.__parking || {}).no_traffic_appendix || []).indexOf(taba) >= 0) {
+                    html += '<div class="popup-section-title">🅿️ חניה</div>';
+                    html += '<div class="popup-sub-row" style="color:#8a93a6;font-size:10px">אין נספח תנועה לתכנית זו במבא"ת — לא ניתן לקבוע מאזן חניה</div>';
+                }
+
                 html += '</div>'; // end popup-body
 
                  // ── Unified footer: all action buttons in one flex row ──
@@ -28404,6 +28452,9 @@
                             ]},
                             { key:'commerce', title:'🟣 מסחר ותעסוקה', color:'#8e24aa', bg:'rgba(142,36,170,0.06)', items:[
                                 { icon:'🏪', title:'סיכום מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה לפי מינהל', onClick:() => go(() => fetchCommerceData()) },
+                            ]},
+                            { key:'transport', title:'🅿️ תנועה וחניה', color:'#00838f', bg:'rgba(0,131,143,0.06)', items:[
+                                { icon:'🅿️', title:'יחס חניה ליח"ד', desc:'מקומות חניה שכל תכנית מספקת לכל יח"ד — נקרא מטבלת מאזן החניה בנספח התנועה; כולל תקן מלא מול מופחת וחתך אזורי', onClick:() => go(() => { setParkFilter({ minahak:'all', sub:'all', band:'all', q:'' }); setParkingReport(true); }) },
                             ]},
                             { key:'status', title:'📋 סטטוס ותהליך תכנוני', color:'#78909c', bg:'rgba(120,144,156,0.06)', items:[
                                 { icon:'🚧', title:'דוח מימוש', desc:'שלביות ביצוע לפי מינהל ותכנית', onClick:() => go(() => openMimushModal()) },
@@ -36129,6 +36180,293 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                     })()}
 
                     {/* ── קרן תחזוקה: תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ── */}
+                    {parkingReport && (() => {
+                        // Parking per dwelling, read off each plan's traffic appendix
+                        // (טבלת מאזן חניה). Two numbers matter and they are not the same:
+                        // the TOTAL private-car spaces (which a big commercial component
+                        // inflates) and the RESIDENTIAL-only figure, which is the one that
+                        // compares plans with different use mixes. The report leads with
+                        // residential and keeps the total beside it.
+                        const P = window.__parking || { plans: {}, no_traffic_appendix: [] };
+                        const plansMap = P.plans || {};
+                        const noApp = (P.no_traffic_appendix || []).length;
+
+                        const BAND = r => r == null ? null : (r < 0.85 ? 'low' : r > 1.45 ? 'high' : 'mid');
+                        const BAND_LABEL = { low: 'נמוך (<0.85)', mid: 'בינוני (0.85–1.45)', high: 'גבוה (>1.45)' };
+                        const BAND_COLOR = { low: '#5dade2', mid: '#27ae60', high: '#e67e22' };
+
+                        const rows = Object.keys(plansMap).map(taba => {
+                            const v = plansMap[taba];
+                            const units = Number(v.units) || 0;
+                            const resSpaces = v.prov_residential || v.req_residential || null;
+                            const resRatio = (resSpaces && units) ? resSpaces / units : null;
+                            const totSpaces = v.prov_private || v.req_private || null;
+                            const totRatio = (totSpaces && units) ? totSpaces / units : null;
+                            const cut = (v.req_private_full_standard && v.req_private &&
+                                v.req_private_full_standard > v.req_private)
+                                ? 1 - v.req_private / v.req_private_full_standard : null;
+                            return {
+                                taba, plan_name: '101-' + String(taba).padStart(7, '0'),
+                                title: v.plan_name || '', minahak: v.minahak || '', sub: v.sub_neighborhood || '',
+                                status: v.status || '', units,
+                                req: v.req_private || null, prov: v.prov_private || null,
+                                full: v.req_private_full_standard || null,
+                                resSpaces, resRatio, totSpaces, totRatio, cut,
+                                band: BAND(resRatio), standard: v.standard || '',
+                                confidence: v.confidence || '', notes: v.notes || '',
+                                partial: v.coverage === 'partial',
+                                gap: v.units_gap_vs_gs || 0,
+                            };
+                        });
+
+                        const f = parkFilter;
+                        const q = (f.q || '').trim().toLowerCase();
+                        const allMin = [...new Set(rows.map(r => r.minahak).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
+                        const allSub = [...new Set(rows.filter(r => f.minahak === 'all' || r.minahak === f.minahak)
+                            .map(r => r.sub).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
+                        const filtered = rows.filter(r => {
+                            if (f.minahak !== 'all' && r.minahak !== f.minahak) return false;
+                            if (f.sub !== 'all' && r.sub !== f.sub) return false;
+                            if (f.band !== 'all' && r.band !== f.band) return false;
+                            if (q && ![r.plan_name, r.title, r.sub, r.minahak, r.standard].join(' ').toLowerCase().includes(q)) return false;
+                            return true;
+                        }).sort((a, b) => b.units - a.units);
+
+                        // A plan whose appendix covered only part of its plots would drag any
+                        // average down, so it stays in the table but out of every aggregate.
+                        const solid = filtered.filter(r => !r.partial);
+                        const med = arr => {
+                            if (!arr.length) return null;
+                            const s2 = arr.slice().sort((x, y) => x - y), m = s2.length >> 1;
+                            return s2.length % 2 ? s2[m] : (s2[m - 1] + s2[m]) / 2;
+                        };
+                        const medRes = med(solid.map(r => r.resRatio).filter(v => v != null));
+                        const totUnits = solid.reduce((s2, r) => s2 + r.units, 0);
+                        const cutRows = solid.filter(r => r.cut != null);
+                        const medCut = med(cutRows.map(r => r.cut));
+
+                        // Area roll-up is UNIT-WEIGHTED (total spaces / total units), never a
+                        // mean of per-plan ratios — a 20-unit plan must not move an area.
+                        const rollup = (key) => {
+                            const agg = {};
+                            solid.forEach(r => {
+                                const k = r[key] || '(ללא)';
+                                const a = agg[k] || (agg[k] = { k, plans: 0, units: 0, res: 0, resUnits: 0, tot: 0, totUnits: 0 });
+                                a.plans++; a.units += r.units;
+                                if (r.resSpaces) { a.res += r.resSpaces; a.resUnits += r.units; }
+                                if (r.totSpaces) { a.tot += r.totSpaces; a.totUnits += r.units; }
+                            });
+                            return Object.values(agg).sort((a, b) => b.units - a.units);
+                        };
+                        const byMin = rollup('minahak');
+                        const bySub = rollup('sub');
+
+                        const f2 = v => (v == null || !isFinite(v)) ? '—' : (Math.round(v * 100) / 100).toFixed(2);
+                        const nf = v => (v == null || !isFinite(v) || v === 0) ? '—' : Math.round(v).toLocaleString('he-IL');
+                        const pct = v => v == null ? '—' : Math.round(v * 100) + '%';
+                        const set = (k, v) => setParkFilter(prev => ({ ...prev, [k]: v, ...(k === 'minahak' ? { sub: 'all' } : {}) }));
+
+                        const jumpToPlan = (r) => {
+                            const gd = geoDataRef.current;
+                            const map = mapInstanceRef.current;
+                            if (!gd || !map) return;
+                            const feat = (gd.features || []).find(x => (x.properties || {}).plan_name === r.plan_name);
+                            if (!feat || !feat.geometry) return;
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            setParkingReport(false);
+                            setTimeout(() => map.fitBounds([[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]],
+                                { padding: [60, 60], maxZoom: 18 }), 100);
+                        };
+
+                        const COLS = ['תב"ע', 'שם התכנית', 'תת-שכונה', 'מינהל', 'סטטוס', 'יח"ד',
+                            'חניות מגורים', 'מגורים ליח"ד', 'נדרש סה"כ', 'מוצע סה"כ', 'סה"כ ליח"ד',
+                            'תקן מלא', 'הפחתה %', 'רמה', 'תקן החניה', 'ודאות', 'הערות'];
+                        const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ') + '"';
+                        const exportCSV = () => {
+                            if (!filtered.length) { alert('אין שורות לייצוא'); return; }
+                            const lines = [COLS.join(',')].concat(filtered.map(r => [
+                                r.plan_name, r.title, r.sub, r.minahak, r.status, r.units,
+                                r.resSpaces || '', r.resRatio == null ? '' : f2(r.resRatio),
+                                r.req || '', r.prov || '', r.totRatio == null ? '' : f2(r.totRatio),
+                                r.full || '', r.cut == null ? '' : Math.round(r.cut * 100),
+                                r.band ? BAND_LABEL[r.band] : '', r.standard, r.confidence,
+                                (r.partial ? 'כיסוי חלקי של מגרשי התכנית. ' : '') + r.notes,
+                            ].map(esc).join(','))).join('\n');
+                            const blob = new Blob(['﻿' + lines], { type: 'text/csv;charset=utf-8;' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'יחס_חניה_ליחד.csv';
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                        };
+
+                        const printReport = () => {
+                            const win = window.open('', '_blank');
+                            const today = new Date().toLocaleDateString('he-IL');
+                            let body = '<h2>🅿️ יחס חניה ליח"ד · ' + today + '</h2>';
+                            body += '<p class="summary"><b>' + solid.length + '</b> תכניות · <b>' + totUnits.toLocaleString('he-IL') +
+                                '</b> יח"ד · חציון חניות מגורים ליח"ד <b>' + f2(medRes) + '</b>' +
+                                (noApp ? ' · ' + noApp + ' תכניות ללא נספח תנועה' : '') + '</p>';
+                            body += '<h3>לפי מינהל</h3><table><thead><tr><th>מינהל</th><th>תכניות</th><th>יח"ד</th><th>מגורים ליח"ד</th><th>סה"כ ליח"ד</th></tr></thead><tbody>';
+                            byMin.forEach(a => { body += '<tr><td>' + a.k + '</td><td style="text-align:center">' + a.plans +
+                                '</td><td style="text-align:center">' + a.units.toLocaleString('he-IL') +
+                                '</td><td style="text-align:center">' + f2(a.resUnits ? a.res / a.resUnits : null) +
+                                '</td><td style="text-align:center">' + f2(a.totUnits ? a.tot / a.totUnits : null) + '</td></tr>'; });
+                            body += '</tbody></table><h3>תכניות</h3><table><thead><tr><th>תב"ע</th><th>שם</th><th>תת-שכונה</th><th>יח"ד</th><th>מגורים ליח"ד</th><th>סה"כ ליח"ד</th><th>תקן</th></tr></thead><tbody>';
+                            filtered.forEach(r => { body += '<tr><td>' + r.plan_name + '</td><td>' + (r.title || '-') + '</td><td>' + (r.sub || '-') +
+                                '</td><td style="text-align:center">' + nf(r.units) + '</td><td style="text-align:center">' + f2(r.resRatio) +
+                                '</td><td style="text-align:center">' + f2(r.totRatio) + '</td><td style="font-size:10px">' + (r.standard || '-') + '</td></tr>'; });
+                            body += '</tbody></table>';
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>יחס חניה ליח"ד</title><style>' +
+                                'body{font-family:Arial,sans-serif;direction:rtl;padding:18px}h2{margin:0 0 6px}h3{margin:16px 0 6px}' +
+                                'table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:3px 5px;text-align:right}' +
+                                'th{background:#eee}.summary{font-size:12px;color:#444}</style></head><body>' + body + '</body></html>');
+                            win.document.close();
+                            setTimeout(() => win.print(), 250);
+                        };
+
+                        const TH = { textAlign: 'center', padding: '5px 6px', color: '#bbb', fontWeight: 600, whiteSpace: 'nowrap' };
+                        const THR = { ...TH, textAlign: 'right' };
+                        const TD = { padding: '5px 6px', color: '#cfd8ea', textAlign: 'center', whiteSpace: 'nowrap' };
+                        const SEL = { background: '#2a2a4a', color: '#fff', border: '1px solid #444', padding: '3px 6px', borderRadius: 4, fontSize: 11, fontFamily: 'inherit' };
+                        const tile = (label, value, sub, accent, bg) => (
+                            <div style={{ background: bg, border: '1px solid ' + accent + '66', borderRadius: 8, padding: '8px 14px', minWidth: 140 }}>
+                                <div style={{ fontSize: 22, fontWeight: 800, color: accent }}>{value}</div>
+                                <div style={{ fontSize: 11, color: '#c5cee0' }}>{label}</div>
+                                {sub ? <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>{sub}</div> : null}
+                            </div>
+                        );
+
+                        return (
+                        <div className="units-overlay" onClick={() => setParkingReport(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(1180px,97vw)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                                <div className="units-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                                    <h2 style={{ margin: 0, color: '#4dd0e1', fontSize: 17 }}>🅿️ יחס חניה ליח"ד</h2>
+                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                        <button onClick={printReport} style={{ background: '#3a5a8c', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>📄 הדפסה / PDF</button>
+                                        <button onClick={exportCSV} style={{ background: '#2d6a4f', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>📊 ייצוא אקסל</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setParkingReport(false)}>&times;</button>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: 10, padding: '10px 16px', flexWrap: 'wrap', borderBottom: '1px solid #2a2a4a' }}>
+                                    {tile('תכניות עם מאזן חניה', solid.length, noApp ? noApp + ' תכניות ללא נספח תנועה' : '', '#4dd0e1', 'rgba(77,208,225,0.12)')}
+                                    {tile('יח"ד מכוסות', totUnits.toLocaleString('he-IL'), '', '#90caf9', 'rgba(144,202,249,0.12)')}
+                                    {tile('חציון חניות מגורים ליח"ד', f2(medRes), 'צבע בטבלה לפי סטייה מהחציון', '#27ae60', 'rgba(39,174,96,0.12)')}
+                                    {tile('חציון הפחתת תקן', pct(medCut), cutRows.length + ' תכניות שהציגו תקן מלא ומופחת', '#5dade2', 'rgba(93,173,226,0.12)')}
+                                </div>
+
+                                <div style={{ padding: '8px 16px', borderBottom: '1px solid #2a2a4a', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 11 }}>
+                                    <span style={{ color: '#aab' }}>מינהל:</span>
+                                    <select value={f.minahak} onChange={e => set('minahak', e.target.value)} style={SEL}>
+                                        <option value="all">הכל ({allMin.length})</option>
+                                        {allMin.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                    <span style={{ color: '#aab' }}>תת-שכונה:</span>
+                                    <select value={f.sub} onChange={e => set('sub', e.target.value)} style={SEL}>
+                                        <option value="all">הכל ({allSub.length})</option>
+                                        {allSub.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                    <span style={{ color: '#aab' }}>רמת יחס:</span>
+                                    <select value={f.band} onChange={e => set('band', e.target.value)} style={SEL}>
+                                        <option value="all">הכל</option>
+                                        <option value="low">{BAND_LABEL.low}</option>
+                                        <option value="mid">{BAND_LABEL.mid}</option>
+                                        <option value="high">{BAND_LABEL.high}</option>
+                                    </select>
+                                    <input type="text" placeholder="חיפוש (תב״ע / שם / תקן)" value={f.q}
+                                        onChange={e => set('q', e.target.value)}
+                                        style={{ ...SEL, flex: '1 1 170px', minWidth: 130 }} />
+                                </div>
+
+                                <div style={{ overflowY: 'auto', flex: 1, padding: '8px 12px' }}>
+                                    <div style={{ marginBottom: 14, border: '1px solid #2a2a4a', borderRadius: 6, background: '#16162a' }}>
+                                        <div style={{ padding: '7px 12px', background: 'rgba(77,208,225,0.12)', borderBottom: '1px solid #2a2a4a', color: '#4dd0e1', fontWeight: 600, fontSize: 13 }}>
+                                            חתך אזורי — היחס משוקלל ביח"ד (סך מקומות ÷ סך יח"ד), לא ממוצע של יחסים
+                                        </div>
+                                        <table style={{ width: '100%', fontSize: 11.5, borderCollapse: 'collapse' }}>
+                                            <thead><tr style={{ borderBottom: '1px solid #2a2a4a', background: '#1c1c30' }}>
+                                                <th style={THR}>אזור</th><th style={TH}>תכניות</th><th style={TH}>יח"ד</th>
+                                                <th style={TH}>חניות מגורים ליח"ד</th><th style={TH}>סה"כ ליח"ד</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {(f.minahak === 'all' ? byMin : bySub).map(a => {
+                                                    const rr = a.resUnits ? a.res / a.resUnits : null;
+                                                    return (
+                                                        <tr key={a.k} style={{ borderBottom: '1px solid #1a1a2e' }}>
+                                                            <td style={{ ...TD, textAlign: 'right', color: '#e0e0e0' }}>{a.k}</td>
+                                                            <td style={TD}>{a.plans}</td>
+                                                            <td style={TD}>{a.units.toLocaleString('he-IL')}</td>
+                                                            <td style={{ ...TD, fontWeight: 700, color: BAND_COLOR[BAND(rr)] || '#cfd8ea' }}>{f2(rr)}</td>
+                                                            <td style={TD}>{f2(a.totUnits ? a.tot / a.totUnits : null)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {filtered.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: '#aab' }}>אין תכניות התואמות את הסינון.</div>}
+                                    {filtered.length > 0 && (
+                                    <div style={{ border: '1px solid #2a2a4a', borderRadius: 6, background: '#16162a' }}>
+                                        <table style={{ width: '100%', fontSize: 11.5, borderCollapse: 'collapse' }}>
+                                            <thead><tr style={{ borderBottom: '1px solid #2a2a4a', background: '#1c1c30' }}>
+                                                <th style={{ ...THR, width: 104 }}>תב״ע</th>
+                                                <th style={THR}>שם התכנית</th>
+                                                <th style={{ ...THR, width: 112 }}>תת-שכונה</th>
+                                                <th style={{ ...TH, width: 60 }}>יח"ד</th>
+                                                <th style={{ ...TH, width: 74 }}>חניות מגורים</th>
+                                                <th style={{ ...TH, width: 84 }}>מגורים ליח"ד</th>
+                                                <th style={{ ...TH, width: 70 }}>נדרש</th>
+                                                <th style={{ ...TH, width: 70 }}>מוצע</th>
+                                                <th style={{ ...TH, width: 72 }}>סה"כ ליח"ד</th>
+                                                <th style={{ ...TH, width: 76 }}>הפחתת תקן</th>
+                                                <th style={THR}>תקן החניה</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {filtered.map(r => (
+                                                    <tr key={r.taba} style={{ borderBottom: '1px solid #1a1a2e', cursor: 'pointer',
+                                                            background: r.partial ? 'rgba(230,126,34,0.08)' : 'transparent' }}
+                                                        onClick={() => jumpToPlan(r)} title="קליק להצגה על המפה">
+                                                        <td style={{ ...TD, textAlign: 'right', color: '#64b5f6' }}>{r.plan_name}</td>
+                                                        <td style={{ ...TD, textAlign: 'right', color: '#e0e0e0', whiteSpace: 'normal' }}>
+                                                            {r.title || '-'}
+                                                            {r.partial ? <span style={{ color: '#e67e22', fontSize: 10 }}> · כיסוי חלקי</span> : null}
+                                                        </td>
+                                                        <td style={{ ...TD, textAlign: 'right', color: '#9bb4d6' }}>{r.sub || r.minahak || '-'}</td>
+                                                        <td style={TD}>{nf(r.units)}</td>
+                                                        <td style={TD}>{nf(r.resSpaces)}</td>
+                                                        <td style={{ ...TD, fontWeight: 700, color: BAND_COLOR[r.band] || '#cfd8ea' }}>{f2(r.resRatio)}</td>
+                                                        <td style={TD}>{nf(r.req)}</td>
+                                                        <td style={TD}>{nf(r.prov)}</td>
+                                                        <td style={TD}>{f2(r.totRatio)}</td>
+                                                        <td style={{ ...TD, color: r.cut ? '#5dade2' : '#5a6478' }} title={r.full ? 'תקן מלא ' + r.full : ''}>{r.cut == null ? '—' : '−' + Math.round(r.cut * 100) + '%'}</td>
+                                                        <td style={{ ...TD, textAlign: 'right', color: '#8a9bc0', fontSize: 10.5, whiteSpace: 'normal' }}>{r.standard || '-'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    )}
+
+                                    <div style={{ marginTop: 10, fontSize: 10.5, color: '#8a9bc0', lineHeight: 1.7 }}>
+                                        המקור לכל שורה הוא טבלת מאזן החניה בנספח התנועה של התכנית במבא"ת.
+                                        עמודת <b>חניות מגורים</b> כוללת את שורות המגורים ואת שורת האורחים בלבד — בלי מסחר, תעסוקה, מבני ציבור, חינוך ומלונאות —
+                                        ולכן היא בת-השוואה בין תכניות עם תמהיל שימושים שונה; עמודות <b>נדרש/מוצע</b> הן סך הכל כל השימושים.
+                                        כשהנספח הציג גם תקן מלא וגם תקן מופחת (עתיר תח"צ / קרבה לרק"ל), <b>נדרש</b> הוא המופחת — המחייב — ועמודת ההפחתה מראה את הפער.
+                                        תכניות בסימון כתום כוסו חלקית בנספח ולכן אינן נכללות בחתך האזורי ובחציונים.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        );
+                    })()}
+
                     {fundReport && (() => {
                         const gd = geoDataRef.current;
                         const fundMap = window.__maintenanceFund || {};
