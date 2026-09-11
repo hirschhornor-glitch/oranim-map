@@ -171,7 +171,7 @@ def main():
     for pr in pairs:
         if pr["kind"] != "duplicate_obligation":
             continue
-        key = re.sub(r"^101-?0*", "", str(pr["superseded"] or "")).lstrip("0")
+        key = re.sub(r"^101-0*", "", str(pr["superseded"] or "")).lstrip("0")
         superseded[key] = {"superseded_by": pr["operative"],
                            "hafrash_sqm": pr["hafrash"].get(pr["superseded"]),
                            "containment": pr["containment"]}
