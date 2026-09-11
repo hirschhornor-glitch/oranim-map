@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>מסחר, תעסוקה ומשרדים — מיפוי עירוני</title>
+    <meta name="theme-color" content="#2a1533">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="מסחר ותעסוקה">
+    <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body { font-family: 'Assistant', system-ui, sans-serif; background: #140a19; color: #f0e9f3; overflow: hidden; }
+        #root { height: 100vh; width: 100vw; }
+        .leaflet-container { background: #140a19; font-family: 'Assistant', sans-serif; }
+        .spin { width:34px;height:34px;border:3px solid #4a2c58;border-top-color:#c084fc;border-radius:50%;
+            animation:sp 1s linear infinite; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { width:9px; height:9px; }
+        ::-webkit-scrollbar-track { background:#1d1023; }
+        ::-webkit-scrollbar-thumb { background:#4a2c58; border-radius:5px; }
+        ::-webkit-scrollbar-thumb:hover { background:#5f3a70; }
+        button, input, select { font-family: inherit; }
+        .ce-pop { font-family:'Assistant',sans-serif; direction:rtl; }
+        .leaflet-popup-content-wrapper { background:#231029; color:#f0e9f3; border:1px solid #5f3a70; border-radius:10px; }
+        .leaflet-popup-tip { background:#231029; }
+        .leaflet-popup-content { margin:10px 12px; }
+        tbody tr:hover { background:#2a1533 !important; }
+        /* Narrow viewports (split screen, tablet): stack the table above the map
+           instead of squeezing the map to zero width, which made it vanish
+           entirely below ~900px. */
+        @media (max-width: 900px) {
+            .ce-split { flex-direction: column; }
+            /* flex-basis, not max-height: in a column flex container a plain
+               overflow:auto child collapses to a single row instead of keeping
+               its share of the height. */
+            .ce-list { width: 100% !important; min-width: 0 !important;
+                       flex: 1 1 55vh; min-height: 200px;
+                       border-left: none !important;
+                       border-bottom: 1px solid #3b1d47; }
+            #cmap { flex: 1 1 45vh; min-height: 260px; }
+        }
+        @media print {
+            body { background:#fff; color:#000; overflow:visible; }
+            .noprint { display:none !important; }
+            #root { height:auto; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+            <div class="spin"></div>
+            <div style="color:#c9a7d8;font-weight:600;">טוען מיפוי מסחר ותעסוקה…</div>
+        </div>
+    </div>
+    <script src="commerce.js?v=2026-09-11e"></script>
+</body>
+</html>

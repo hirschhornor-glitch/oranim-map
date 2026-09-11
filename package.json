@@ -7,7 +7,8 @@
     "build": "babel src/app.jsx --presets=@babel/preset-react --out-file app.js",
     "build:debug": "babel src/app.jsx --presets=@babel/preset-react --out-file app.js --source-maps",
     "build:junction": "babel src/junction.jsx --presets=@babel/preset-react --out-file junction.js",
-    "build:all": "npm run build && npm run build:junction"
+    "build:all": "npm run build && npm run build:junction && npm run build:commerce",
+    "build:commerce": "babel src/commerce.jsx --presets=@babel/preset-react --out-file commerce.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.0",
