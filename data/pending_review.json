@@ -16,5 +16,14 @@
   "held_value": 998.4,
   "status": "נדחתה",
   "first_seen": "2026-09-03 07:20:47"
+ },
+ "1587294|hafrash_sqm": {
+  "taba": 1587294,
+  "plan_name": "101-1587294",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 15790,
+  "status": "בבדיקה תכנונית",
+  "first_seen": "2026-09-13 07:55:21"
  }
 }
