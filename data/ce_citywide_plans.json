@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-11T16:40:50",
+ "generated_at": "2026-09-13T21:32:20",
  "count": 944,
  "by_plan": {
   "101-0051813": {
@@ -9875,14 +9875,14 @@
    "mp_id": 1000982805,
    "taba": "717041",
    "parcel_count": 1,
-   "commerce_sqm": 0,
-   "employment_sqm": 0,
+   "commerce_sqm": 930,
+   "employment_sqm": 43730,
    "mixed_other_sqm": 0,
-   "ce_unsplit_sqm": 44660,
+   "ce_unsplit_sqm": 0,
    "split_note": "",
    "t5_status": "success",
    "t5_source": "horaot_pdf",
-   "split_source": "מאוחד — טרם פוצל",
+   "split_source": "נספח תנועה (מאזן חניה 23.5.22: מסחר 950 · משרד 15,713 קיים + 28,971 מוצע)",
    "has_licensing_file": false,
    "permit_count": 0,
    "any_issued": false,
