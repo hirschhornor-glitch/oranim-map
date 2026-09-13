@@ -441,3 +441,28 @@
 {"ts": "2026-09-09 20:52:09", "taba": 1550508, "plan_name": "101-1550508", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": "", "new": "רסקו - גבעת הורדים"}
 {"ts": "2026-09-09 20:52:09", "taba": 1582451, "plan_name": "101-1582451", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": "", "new": "בית צפאפא,שרפת"}
 {"ts": "2026-09-09 20:52:09", "taba": 1582451, "plan_name": "101-1582451", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1236736, "plan_name": "101-1236736", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1158146, "plan_name": "101-1158146", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 560, "new": 800}
+{"ts": "2026-09-13 07:55:21", "taba": 1158146, "plan_name": "101-1158146", "status": "במילוי תנאים להפקדה", "field": "employment", "old": 1260, "new": 1800}
+{"ts": "2026-09-13 07:55:21", "taba": 1158146, "plan_name": "101-1158146", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1371368, "plan_name": "101-1371368", "status": "בבדיקה תכנונית", "field": "level_num", "old": "", "new": 30}
+{"ts": "2026-09-13 07:55:21", "taba": 1371368, "plan_name": "101-1371368", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1366053, "plan_name": "101-1366053", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1398130, "plan_name": "101-1398130", "status": "הפקדה להתנגדויות/השגות", "field": "shatzap_out", "old": "", "new": 4283.8}
+{"ts": "2026-09-13 07:55:21", "taba": 1398130, "plan_name": "101-1398130", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1451699, "plan_name": "101-1451699", "status": "הפקדה להתנגדויות/השגות", "field": "shavatz_out_sqm", "old": 7375.1, "new": 7450}
+{"ts": "2026-09-13 07:55:21", "taba": 1451699, "plan_name": "101-1451699", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1420926, "plan_name": "101-1420926", "status": "אישור", "field": "shatzap_out", "old": 640, "new": 530}
+{"ts": "2026-09-13 07:55:21", "taba": 1420926, "plan_name": "101-1420926", "status": "אישור", "field": "High", "old": "", "new": 125}
+{"ts": "2026-09-13 07:55:21", "taba": 1420926, "plan_name": "101-1420926", "status": "אישור", "field": "level_num", "old": 28, "new": 23}
+{"ts": "2026-09-13 07:55:21", "taba": 1420926, "plan_name": "101-1420926", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1496140, "plan_name": "101-1496140", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1488261, "plan_name": "101-1488261", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1397504, "plan_name": "101-1397504", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1500909, "plan_name": "101-1500909", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1090091, "plan_name": "101-1090091", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "shatzap_out", "old": "", "new": 1099.9}
+{"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "commerce_out", "old": 23730, "new": 58094}
+{"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "employment", "old": 56000, "new": 65495}
+{"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "hafrash_sqm", "old": "", "new": 15790, "held": true}
+{"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
