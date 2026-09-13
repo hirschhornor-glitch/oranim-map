@@ -1022,8 +1022,8 @@
   },
   "1451699": {
     "total": 54,
-    "shimur": 29,
-    "krita": 25,
+    "shimur": 26,
+    "krita": 28,
     "haataka": 0,
     "lo_nidresh": 0,
     "confidence": "xplan",
@@ -3889,9 +3889,9 @@
     "source": "xplan"
   },
   "1500909": {
-    "total": 6,
+    "total": 7,
     "shimur": 4,
-    "krita": 2,
+    "krita": 3,
     "haataka": 0,
     "lo_nidresh": 0,
     "confidence": "xplan",
