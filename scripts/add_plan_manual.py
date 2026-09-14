@@ -107,7 +107,7 @@ async def main():
     norm = d.normalize_plan_number(pl)
     print(f"=== הוספה ידנית: {pl} (taba={norm}) ===")
 
-    existing = d.load_existing_plan_numbers()
+    existing, _gs_norms, _gj_props = d.load_existing_plan_numbers()
     if norm in existing:
         print(f"התכנית {norm} כבר קיימת (גיליון או geojson) — יוצא.")
         return

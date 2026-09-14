@@ -1204,9 +1204,14 @@ def _load_pending_new_plans():
             return [], path
         with open(path, encoding='utf-8') as f:
             report = json.load(f)
-        if report.get('new_plans_count', 0) == 0:
+        # `resynced` = plans whose sheet row had gone missing and was rebuilt
+        # from plans.geojson. They are not newly detected, but the run that DID
+        # detect them never got as far as the email (2026-09-09), so they are
+        # announced here once, alongside the genuinely new ones.
+        resynced = report.get('resynced') or []
+        if report.get('new_plans_count', 0) == 0 and not resynced:
             return [], path
-        plans = list((report.get('plans') or {}).values())
+        plans = list((report.get('plans') or {}).values()) + list(resynced)
         return plans, path
     except Exception as e:
         log_msg(f"Failed to read new_plans_report.json: {e}")
@@ -1393,7 +1398,14 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     # New plans section — placed first so it stands out.
     if has_new_plans:
         html += "<h2>🆕 תכניות חדשות שזוהו</h2>"
-        html += f"<p>נמצאו {len(new_plans)} תכניות חדשות שנוספו ל-GS ו-plans.geojson:</p>"
+        _n_resync = sum(1 for _p in new_plans if _p.get('resynced'))
+        _n_fresh = len(new_plans) - _n_resync
+        _intro = []
+        if _n_fresh:
+            _intro.append(f"{_n_fresh} תכניות חדשות שנוספו ל-GS ו-plans.geojson")
+        if _n_resync:
+            _intro.append(f"{_n_resync} תכניות ששורתן חזרה לגיליון (השלמת פער)")
+        html += f"<p>{' ו-'.join(_intro)}:</p>"
         html += "<table border='1' cellpadding='8' style='border-collapse: collapse;'>"
         html += ("<tr style='background-color: #e8f5e9;'>"
                  "<th>מספר תכנית</th><th>שם התכנית</th><th>מינה\"ק</th>"
@@ -1415,7 +1427,9 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
             hgt_lvl = f"{hgt}מ׳ / {lvl}ק׳" if hgt and lvl else (hgt + 'מ׳' if hgt else (lvl + ' קומות' if lvl else ''))
             mavat = p.get('mavat_url', '')
             html += "<tr>"
-            html += f"<td>{p.get('pl_number', '')}</td>"
+            _badge = ('<br><span style="color:#b26a00;font-size:11px">'
+                      'הושלמה בדיעבד</span>') if p.get('resynced') else ''
+            html += f"<td>{p.get('pl_number', '')}{_badge}</td>"
             html += f"<td dir='rtl'>{p.get('name_he', '')}</td>"
             html += f"<td dir='rtl'>{p.get('minahak', '') or '-'}</td>"
             html += f"<td dir='rtl'>{status_cell}</td>"

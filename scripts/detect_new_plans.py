@@ -538,8 +538,17 @@ def extract_unique_plans(xplan_features, boundary_rings=None, exclusion_geom=Non
 
 def load_existing_plan_numbers():
     """Load plan numbers from both Google Sheets and plans.geojson.
-    Returns set of normalized plan numbers."""
+
+    Returns (existing, gs_norms, gj_props) where `existing` is the union used
+    for new-plan detection, `gs_norms` is what the sheet actually holds and
+    `gj_props` maps norm -> geojson properties. The two sources are kept apart
+    on purpose: a plan that sits in only ONE of them is NOT a new plan, but it
+    is a desync that has to be repaired and reported — folding them into one
+    set hides it (2026-09-13 incident, see find_desynced_plans).
+    """
     existing = set()
+    gs_norms = set()
+    gj_props = {}
 
     # From plans.geojson
     print("Loading plans.geojson...")
@@ -551,6 +560,7 @@ def load_existing_plan_numbers():
             norm = normalize_plan_number(pn)
             if norm:
                 existing.add(norm)
+                gj_props[norm] = feat['properties']
         print(f"  {len(existing)} plans from GeoJSON")
     except Exception as e:
         print(f"  Error loading GeoJSON: {e}")
@@ -576,6 +586,7 @@ def load_existing_plan_numbers():
                     norm = normalize_plan_number(row[pn_idx].strip())
                     if norm:
                         existing.add(norm)
+                        gs_norms.add(norm)
                         sheet_count += 1
             print(f"  {sheet_count} plans from Sheets")
         else:
@@ -583,7 +594,29 @@ def load_existing_plan_numbers():
     except Exception as e:
         print(f"  Error loading Sheets: {e}")
 
-    return existing
+    return existing, gs_norms, gj_props
+
+
+def find_desynced_plans(gj_props, gs_norms):
+    """Plans present in plans.geojson but missing from the Google Sheet.
+
+    2026-09-13: the 4 plans detected on 2026-09-09 were written to BOTH stores,
+    then their sheet rows were deleted by a manual UI edit on 2026-09-10. The
+    next detection run compared XPLAN against the UNION of the two stores, saw
+    them in the geojson, and reported "New plans found: 0" — so they were never
+    re-added and never reached the email. GS is the master store; anything the
+    geojson knows about and the sheet does not is a hole that must be refilled.
+    """
+    # A blocklisted plan that someone removed from the sheet on purpose must
+    # stay removed — the blocklist is the sanctioned way to drop a plan.
+    missing = {n: p for n, p in gj_props.items()
+               if n not in gs_norms and n not in EXCLUDE_PLAN_NUMBERS}
+    if missing:
+        print(f"\n  DESYNC: {len(missing)} plan(s) in plans.geojson but NOT in Google Sheets:")
+        for n, p in missing.items():
+            print(f"    {p.get('plan_name', n)} | {p.get('plan_name_he', '')[:45]} "
+                  f"| first_detected={p.get('first_detected', '?')}")
+    return missing
 
 
 def find_new_plans(xplan_plans, existing_numbers):
@@ -904,34 +937,116 @@ def update_sheets(new_plans):
         rows_to_append.append(row)
 
     if rows_to_append:
-        # 2026-07-12: switched from append_rows(table_range='A1') to explicit
-        # insert_rows at last_data+1. Even with insert_data_option='INSERT_ROWS'
-        # the append endpoint's table-detection still clobbered row 1 on
-        # 2026-07-12 (same failure mode as the 2026-07-05 incident). Explicit
-        # positioning bypasses table detection entirely.
-        last_data = 1  # 1-indexed row of the last non-empty row
-        for i in range(len(all_data) - 1, 0, -1):
-            if all_data[i] and any(c.strip() for c in all_data[i]):
-                last_data = i + 1
-                break
-        insert_at = last_data + 1
-        # Google Sheets rejects insertDimension when the 0-indexed start
-        # (insert_at - 1) is >= the current grid size and inheritFromBefore is
-        # false — i.e. when the grid is exactly full (2026-07-26 incident, grid
-        # size 1087, "startIndex must be less than the grid size"). Grow the
-        # grid first so there's a row before the insertion point.
-        if sheet.row_count < insert_at:
-            sheet.add_rows(insert_at - sheet.row_count + len(rows_to_append))
-        sheet.insert_rows(rows_to_append, row=insert_at, value_input_option='RAW')
-        row1 = sheet.row_values(1)
-        if not row1 or row1[0].strip() != 'agam_id':
-            raise RuntimeError(
-                "Header row damaged by insert (row 1 no longer starts with "
-                "'agam_id') — restore it before the next scheduled sync."
-            )
-        print(f"  Added {len(rows_to_append)} rows to Sheets (at row {insert_at}).")
+        _insert_rows_safely(sheet, all_data, rows_to_append)
+        print(f"  Added {len(rows_to_append)} rows to Sheets.")
 
     return len(rows_to_append)
+
+
+def _insert_rows_safely(sheet, all_data, rows_to_append):
+    """Append rows after the last non-empty row, WITHOUT the append endpoint.
+
+    2026-07-12: switched from append_rows(table_range='A1') to explicit
+    insert_rows at last_data+1. Even with insert_data_option='INSERT_ROWS' the
+    append endpoint's table-detection still clobbered row 1 on 2026-07-12 (same
+    failure mode as the 2026-07-05 incident, and again on 2026-09-14 when a
+    one-off restore script reached for append_rows). Explicit positioning
+    bypasses table detection entirely. Returns the 1-indexed insertion row.
+    """
+    last_data = 1  # 1-indexed row of the last non-empty row
+    for i in range(len(all_data) - 1, 0, -1):
+        if all_data[i] and any(c.strip() for c in all_data[i]):
+            last_data = i + 1
+            break
+    insert_at = last_data + 1
+    # Google Sheets rejects insertDimension when the 0-indexed start
+    # (insert_at - 1) is >= the current grid size and inheritFromBefore is
+    # false — i.e. when the grid is exactly full (2026-07-26 incident, grid
+    # size 1087, "startIndex must be less than the grid size"). Grow the
+    # grid first so there's a row before the insertion point.
+    if sheet.row_count < insert_at:
+        sheet.add_rows(insert_at - sheet.row_count + len(rows_to_append))
+    sheet.insert_rows(rows_to_append, row=insert_at, value_input_option='RAW')
+    row1 = sheet.row_values(1)
+    if not row1 or row1[0].strip() != 'agam_id':
+        raise RuntimeError(
+            "Header row damaged by insert (row 1 no longer starts with "
+            "'agam_id') — restore it before the next scheduled sync."
+        )
+    print(f"  Inserted {len(rows_to_append)} rows at row {insert_at}.")
+    return insert_at
+
+
+def _clean_agam(v):
+    """agam_id is a float on the geojson side ('1005502314.0'); Mavat's ?mid=
+    404s on anything that is not a bare integer (see backfill_authority notes)."""
+    try:
+        return str(int(float(v)))
+    except (TypeError, ValueError):
+        return str(v or '')
+
+
+# Sheet header -> plans.geojson property, where the two disagree.
+_GJ_TO_SHEET_ALIAS = {'SUB_N': 'sub_neighborhood'}
+
+
+def resync_sheet_rows(missing):
+    """Re-add sheet rows for plans that only survive in plans.geojson.
+
+    Values come from the geojson feature, which update_mavat_ui keeps in step
+    with the sheet — so a row rebuilt from it carries the enrichment the plan
+    had when its row was lost. Returns the list of report dicts (same shape the
+    email section consumes), so the recovered plans are announced like new ones.
+    """
+    if not missing:
+        return []
+    print(f"\nRe-adding {len(missing)} desynced plan(s) to Google Sheets...")
+    sheet = get_sheet()
+    all_data = sheet.get_all_values()
+    headers = all_data[0] if all_data else []
+    if not headers or headers[0].strip() != 'agam_id':
+        raise RuntimeError(
+            f"Oranim_Taba row 1 is not the header row (got {headers[:4]}) — "
+            "refusing to resync with a bogus header mapping."
+        )
+    now_str = get_israel_time().strftime("%Y-%m-%d %H:%M:%S")
+
+    rows, reported = [], []
+    for norm, p in sorted(missing.items()):
+        row = [''] * len(headers)
+        for i, h in enumerate(headers):
+            key = h.strip()
+            v = p.get(key)
+            if v in (None, ''):
+                alias = _GJ_TO_SHEET_ALIAS.get(key)
+                v = p.get(alias) if alias else None
+            if v not in (None, ''):
+                row[i] = _clean_agam(v) if key == 'agam_id' else str(v)
+        h_idx = {h.strip().lower(): i for i, h in enumerate(headers)}
+        if 'last_modified' in h_idx:
+            row[h_idx['last_modified']] = now_str
+        rows.append(row)
+        reported.append({
+            'pl_number': p.get('plan_name', norm),
+            'name_he': p.get('plan_name_he', ''),
+            'status': p.get('status_mavat', ''),
+            'minahak': p.get('minahak', ''),
+            'authority': p.get('authority', ''),
+            'mavat_url': p.get('mavat_url', ''),
+            'units_in': p.get('units_in', ''),
+            'units_total': p.get('units_total', ''),
+            'commerce_out': p.get('commerce_out', ''),
+            'shavatz_out_sqm': p.get('shavatz_out_sqm', ''),
+            'shatzap_out': p.get('shatzap_out', ''),
+            'hafrash_sqm': p.get('hafrash_sqm', ''),
+            'High': p.get('High', ''),
+            'level_num': p.get('level_num', ''),
+            'first_detected': p.get('first_detected', ''),
+            'resynced': True,
+        })
+
+    _insert_rows_safely(sheet, all_data, rows)
+    return reported
 
 
 # ─── Step 5: Update plans.geojson ────────────────────────────────────────────
@@ -1292,9 +1407,17 @@ def send_email(new_plans):
 
 # ─── Step 7: Report ──────────────────────────────────────────────────────────
 
-def write_report(new_plans, sheets_added, geojson_added, email_sent):
-    """Write JSON report and text summary."""
+def write_report(new_plans, sheets_added, geojson_added, email_sent,
+                 resynced=None):
+    """Write JSON report and text summary.
+
+    `resynced` holds plans whose sheet row was missing and has been rebuilt from
+    plans.geojson. They are not new, but they were never announced either (the
+    run that first caught them died before the email), so update_mavat_ui folds
+    them into the same "תכניות חדשות" section.
+    """
     now_str = get_israel_time().strftime("%Y-%m-%d %H:%M:%S")
+    resynced = resynced or []
 
     # JSON report
     report = {
@@ -1303,6 +1426,8 @@ def write_report(new_plans, sheets_added, geojson_added, email_sent):
         'sheets_added': sheets_added,
         'geojson_added': geojson_added,
         'email_sent': email_sent,
+        'resynced_count': len(resynced),
+        'resynced': resynced,
         'plans': {}
     }
     # Enrich each plan with data useful for the consolidated email
@@ -1362,6 +1487,7 @@ def write_report(new_plans, sheets_added, geojson_added, email_sent):
         f"detect_new_plans.py | {now_str}",
         f"{'=' * 50}",
         f"New plans found: {len(new_plans)}",
+        f"Re-synced (row missing from Sheets): {len(resynced)}",
         f"Added to Sheets: {sheets_added}",
         f"Added to GeoJSON: {geojson_added}",
         f"Email sent: {'yes' if email_sent else 'no'}",
@@ -1372,6 +1498,8 @@ def write_report(new_plans, sheets_added, geojson_added, email_sent):
         _nm = md.get('name_he', '') or info.get('xplan_name', '') or '?'
         _st = md.get('status', '') or info.get('xplan_status', '') or '?'
         lines.append(f"  {info['pl_number']}: {_nm[:50]} | {_st}")
+    for r in resynced:
+        lines.append(f"  [resync] {r['pl_number']}: {r['name_he'][:50]} | {r['status']}")
 
     summary = '\n'.join(lines)
     with open(SUMMARY_FILE, 'w', encoding='utf-8') as f:
@@ -1417,8 +1545,18 @@ async def run(do_update=False, skip_mavat=False):
     print(f"\nUnique plans in XPLAN (inside boundary, excluding out-of-scope): {len(xplan_plans)}")
 
     # Step 2: Compare
-    existing = load_existing_plan_numbers()
+    existing, gs_norms, gj_props = load_existing_plan_numbers()
     print(f"Total existing plans: {len(existing)}")
+
+    # A plan can disappear from ONE store and survive in the other (2026-09-10:
+    # the sheet rows of four plans were deleted by a manual UI edit). The union
+    # above still calls such a plan "existing", so detection would skip it for
+    # good. Reconcile the two stores before looking for genuinely new plans.
+    desynced = find_desynced_plans(gj_props, gs_norms)
+    gs_only = gs_norms - set(gj_props)
+    if gs_only:
+        print(f"  WARNING: {len(gs_only)} plan(s) in Google Sheets but NOT in "
+              f"plans.geojson (invisible on the map): {sorted(gs_only)[:10]}")
 
     new_plans = find_new_plans(xplan_plans, existing)
     print(f"\n{'*' * 40}")
@@ -1426,8 +1564,9 @@ async def run(do_update=False, skip_mavat=False):
     print(f"{'*' * 40}")
 
     if not new_plans:
-        print("\nNo new plans detected. Everything is up to date!")
-        write_report({}, 0, 0, False)
+        print("\nNo new plans detected.")
+        resynced = resync_sheet_rows(desynced) if (do_update and desynced) else []
+        write_report({}, len(resynced), 0, False, resynced=resynced)
         return
 
     # Land-use designations per plan, from MapServer/4. Deliberately NOT inside
@@ -1460,8 +1599,9 @@ async def run(do_update=False, skip_mavat=False):
     else:
         print("\n--- Skipping Mavat enrichment (--no-mavat) ---")
 
-    # Step 4: Update Sheets
+    # Step 4: Update Sheets (new plans first, then the desync repair)
     sheets_added = update_sheets(new_plans)
+    resynced = resync_sheet_rows(desynced) if desynced else []
 
     # Step 5: Update GeoJSON
     push = bool(os.environ.get('GITHUB_TOKEN'))
@@ -1474,7 +1614,8 @@ async def run(do_update=False, skip_mavat=False):
     email_sent = False
 
     # Step 7: Report
-    write_report(new_plans, sheets_added, geojson_added, email_sent)
+    write_report(new_plans, sheets_added, geojson_added, email_sent,
+                 resynced=resynced)
 
     # Step 8: queue for deep enrichment (staging / hafrash-type / floors).
     # The enrichment itself needs a local browser session, so it can't run here
