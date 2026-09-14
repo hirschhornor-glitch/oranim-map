@@ -371,11 +371,31 @@
   // time and always reaches the network. At ~230 KB that is the same trade the SW's
   // own FRESH_DATA_FILES list makes. The tidier fix — adding this file to that list
   // and bumping CACHE_VERSION — is a change to the shared app worker.
+  // Loading the data by <script> tag instead of fetch. Needed on file:// URLs, where
+  // fetch is blocked outright and the page would otherwise show only "Failed to fetch".
+  function loadViaScript() {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      // No cache-buster on file://: there is no HTTP cache to bust, and a query
+      // string on a file: URL can be treated as part of the filename, which would
+      // turn the fallback itself into a 404.
+      s.src = DATA.replace(/\.json$/, ".js") +
+              (location.protocol === "file:" ? "" : "?t=" + Date.now());
+      s.onload = function () {
+        window.__HOUSING_TERMS__ ? resolve(window.__HOUSING_TERMS__)
+                                 : reject(new Error("no data in fallback"));
+      };
+      s.onerror = function () { reject(new Error("fallback script failed")); };
+      document.head.appendChild(s);
+    });
+  }
+
   fetch(DATA + "?t=" + Date.now(), { cache: "no-store" })
     .then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
     })
+    .catch(loadViaScript)
     .then(function (d) {
       D = d;
       readHash();
@@ -390,9 +410,19 @@
       });
     })
     .catch(function (e) {
+      // If even the script fallback failed and we are on file://, the data file is
+      // simply missing next to the page — say that, rather than repeating a browser
+      // error message that explains nothing to the reader.
+      var local = location.protocol === "file:";
       document.getElementById("root").innerHTML =
-        '<div style="padding:40px;text-align:center;color:#f0883e">' +
-        "לא ניתן לטעון את " + DATA + "<br><span style=\"color:#a6a2b5;font-size:13px\">" +
-        esc(e.message) + "</span></div>";
+        '<div style="padding:40px;text-align:center;color:#f0883e;line-height:1.9">' +
+        "לא ניתן לטעון את " + DATA +
+        '<div style="color:#a6a2b5;font-size:13px;margin-top:10px">' +
+        (local
+          ? "הדף נפתח ישירות מהדיסק, וקובץ הנתונים " +
+            esc(DATA.replace(/\.json$/, ".js")) + " לא נמצא לצידו.<br>" +
+            "הריצו את build_housing_reports_data.py, או פתחו את הדף דרך שרת."
+          : esc(e.message)) +
+        "</div></div>";
     });
 })();
