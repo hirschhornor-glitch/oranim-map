@@ -466,3 +466,25 @@
 {"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "employment", "old": 56000, "new": 65495}
 {"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "hafrash_sqm", "old": "", "new": 15790, "held": true}
 {"ts": "2026-09-13 07:55:21", "taba": 1587294, "plan_name": "101-1587294", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 803866, "plan_name": "101-0803866", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 867481, "plan_name": "101-0867481", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 854125, "plan_name": "101-0854125", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 922179, "plan_name": "101-0922179", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 914614, "plan_name": "101-0914614", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 825844, "plan_name": "101-0825844", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1022466, "plan_name": "101-1022466", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 976951, "plan_name": "101-0976951", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 861401, "plan_name": "101-0861401", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1019983, "plan_name": "101-1019983", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1046994, "plan_name": "101-1046994", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1019975, "plan_name": "101-1019975", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 881151, "plan_name": "101-0881151", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 921510, "plan_name": "101-0921510", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1234012, "plan_name": "101-1234012", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1259050, "plan_name": "101-1259050", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 995829, "plan_name": "101-0995829", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1258110, "plan_name": "101-1258110", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1137868, "plan_name": "101-1137868", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1356575, "plan_name": "101-1356575", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-09-14 10:04:12", "taba": 1623966, "plan_name": "101-1623966", "status": "תכנית עומדת בתנאי סף", "field": "SUB_N", "old": null, "new": "ארנונה"}
+{"ts": "2026-09-14 10:04:12", "taba": 1623966, "plan_name": "101-1623966", "status": "תכנית עומדת בתנאי סף", "field": "overlapping_plans", "old": 0.0, "new": ""}
