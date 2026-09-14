@@ -22,6 +22,7 @@ from git_sync import pull_before_read, commit_and_push_after_write, update_json_
 from scope_filter import is_blocklisted
 # Table 5 + quantity-balance re-check on status change (like the land-use check)
 from table5_status_check import scrape_plan as scrape_t5_balance, compute_changes as t5_compute_changes
+from mavat_auth_js import MAVAT_AUTH_JS
 import gspread
 import requests
 from requests.adapters import HTTPAdapter
@@ -919,6 +920,103 @@ YK_API_HEADERS = {
 }
 
 
+COL_MAVAT_URL = 5   # E  (mavat_url)
+
+# Mavat's free-text search. The SPA does NOT drop the query (the old note saying
+# so was wrong) — it posts `text` in the body. The reCAPTCHA token has to be in
+# the BODY as well as the Authorization header; a replayed one returns
+# {"CaptchaNotValid":true} with HTTP 401, so mint a fresh one per call.
+_MAVAT_SEARCH_JS = """async (q) => {""" + MAVAT_AUTH_JS + """
+    let key = null;
+    for (const sc of document.querySelectorAll('script[src*="recaptcha"]')) {
+        const m = sc.src.match(/render=([0-9A-Za-z_-]+)/);
+        if (m) key = m[1];
+    }
+    const token = (key && window.grecaptcha)
+        ? await grecaptcha.execute(key, { action: 'importantAction' }) : '';
+    const r = await fetch('/rest/api/sv3/Search', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, await mvHeaders()),
+        body: JSON.stringify({ freeSearchLut: { DESCRIPTION: 'הכל', CODE: -1 },
+                               searchName: '', favored: false, code: -1, text: q,
+                               fromResult: 1, toResult: 20, _page: 1, token: token }) });
+    const t = await r.text();
+    if (!t || t.trim()[0] !== '[') return { error: 'http ' + r.status + ' / ' + t.slice(0, 80) };
+    const rows = [];
+    for (const blk of JSON.parse(t)) {
+        for (const row of (((blk || {}).result || {}).dtResults || []))
+            rows.push({ num: row.ENTITY_NUMBER, mid: row.MP_ID, name: row.ENTITY_NAME });
+    }
+    return { rows: rows };
+}"""
+
+
+async def resolve_missing_mids(page, missing, sheet):
+    """Fill agam_id + mavat_url for rows that have none. Returns the rows that
+    got one, shaped like rows_to_check so the caller can sweep them right away."""
+    if not missing:
+        return []
+    log_msg(f"\n=== Resolving agam_id for {len(missing)} plan(s) with none ===")
+    resolved, batch = [], []
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    for item in missing:
+        plan = item["plan_name"]
+        taba = plan.split("-")[-1]
+        try:
+            res = await page.evaluate(_MAVAT_SEARCH_JS, taba)
+        except Exception as e:
+            res = {"error": str(e)[:80]}
+        if res.get("error"):
+            log_msg(f"  {plan}: search failed ({res['error']})")
+            continue
+        hit = next((r for r in res.get("rows", [])
+                    if str(r.get("num", "")).strip() == plan and r.get("mid")), None)
+        if not hit:
+            # Not published on Mavat yet — normal for a fresh local-committee file.
+            log_msg(f"  {plan}: not in Mavat search yet ({len(res.get('rows', []))} other hits)")
+            continue
+        mid = str(int(float(hit["mid"])))
+        log_msg(f"  {plan}: agam_id {mid} ({hit.get('name', '')})")
+        batch.append({"range": gspread.utils.rowcol_to_a1(item["row"], COL_AGAM_ID),
+                      "values": [[mid]]})
+        batch.append({"range": gspread.utils.rowcol_to_a1(item["row"], COL_MAVAT_URL),
+                      "values": [[f"https://mavat.iplan.gov.il/SV4/1/{mid}/310"]]})
+        batch.append({"range": gspread.utils.rowcol_to_a1(item["row"], COL_LAST_MODIFIED),
+                      "values": [[now]]})
+        item = dict(item, agam_id=mid)
+        resolved.append(item)
+        await asyncio.sleep(1.5)
+
+    if batch:
+        sheet.spreadsheet.values_batch_update(
+            {"valueInputOption": "USER_ENTERED", "data": batch})
+        log_msg(f"  wrote agam_id for {len(resolved)} plan(s) to Google Sheets")
+        by_plan = {r["plan_name"]: r["agam_id"] for r in resolved}
+
+        def _apply(gj):
+            n = 0
+            for ft in gj["features"]:
+                pr = ft["properties"]
+                mid = by_plan.get(pr.get("plan_name"))
+                if not mid:
+                    continue
+                pr["agam_id"] = float(mid)
+                pr["mavat_url"] = f"https://mavat.iplan.gov.il/SV4/1/{mid}/310"
+                pr["last_modified"] = now
+                n += 1
+            if n:
+                log_msg(f"  updated agam_id on {n} features in plans.geojson")
+            return n
+
+        try:
+            update_json_and_push(
+                "data/plans.geojson", _apply,
+                f"data: resolve agam_id for {len(resolved)} plans (update_mavat_ui)")
+        except Exception as e:
+            log_msg(f"  geojson agam_id update failed: {e}")
+    return resolved
+
+
 def _parse_dmy(s):
     if not s: return None
     try:
@@ -1659,6 +1757,10 @@ async def main():
         status_filter = TARGET_STATUSES
 
     rows_to_check = []
+    # Rows whose status IS in scope but that carry no mid yet — a plan added from
+    # YK before Mavat published it. The filter below ends in `and agam_id`, so
+    # without this they would be dropped silently, for good.
+    missing_mid = []
     for row_idx, row in enumerate(all_data[1:], start=2):
         if len(row) >= COL_MAVAT_DATE:
             status = row[COL_STATUS_MAVAT - 1].strip() if len(row) >= COL_STATUS_MAVAT else ""
@@ -1675,6 +1777,14 @@ async def main():
             # (terminal) status — exactly when Table 5 finalises — is not in
             # TARGET_STATUSES and would otherwise be skipped. The normal
             # scheduled run (PLANS_FILTER is None) keeps the status gate.
+            if (PLANS_FILTER is not None or status in status_filter) and not agam_id:
+                missing_mid.append({
+                    'row': row_idx, 'plan_name': plan_name_val,
+                    'plan_name_he': row[COL_PLAN_NAME_HE - 1].strip() if len(row) >= COL_PLAN_NAME_HE else "",
+                    'minhak': row[COL_MINHAK - 1].strip() if len(row) >= COL_MINHAK else "",
+                    'agam_id': '', 'current_status': status,
+                    'current_date': row[COL_MAVAT_DATE - 1].strip() if len(row) >= COL_MAVAT_DATE else "",
+                })
             if (PLANS_FILTER is not None or status in status_filter) and agam_id:
                 if agam_id.endswith('.0'):
                     agam_id = agam_id[:-2]
@@ -1691,6 +1801,9 @@ async def main():
     if ONLY_STATUS:
         log_msg(f"FILTER OVERRIDE: only checking status='{ONLY_STATUS}'")
     log_msg(f"Found {len(rows_to_check)} plans with target statuses (total).")
+    if missing_mid:
+        log_msg(f"{len(missing_mid)} of them have no agam_id yet — will try Mavat search: "
+                + ", ".join(m['plan_name'] for m in missing_mid[:10]))
 
     RETRY_ONLY = "--retry" in sys.argv
     
@@ -1709,13 +1822,13 @@ async def main():
         rows_to_check_final = rows_to_check
         
     log_msg(f"Proceeding to check {len(rows_to_check_final)} plans.")
-    if not rows_to_check_final:
+    if not rows_to_check_final and not missing_mid:
         log_msg("No plans to check. Exiting.")
         return
-        
+
     remaining = rows_to_check_final
-    
-    if remaining:
+
+    if remaining or missing_mid:
         log_msg("Starting Playwright UI scraper (Automated)...")
         async with async_playwright() as p:
             context = await p.chromium.launch_persistent_context(
@@ -1736,7 +1849,17 @@ async def main():
             log_msg("Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...")
             await asyncio.sleep(45)
             log_msg("Proceeding with scraping...")
-            
+
+            if missing_mid:
+                try:
+                    newly = await resolve_missing_mids(page, missing_mid, sheet)
+                    if newly:
+                        remaining = remaining + newly
+                        log_msg(f"Resolved {len(newly)} agam_id(s); now checking "
+                                f"{len(remaining)} plans.")
+                except Exception as e:
+                    log_msg(f"agam_id resolution step failed (continuing): {e}")
+
             for index, item in enumerate(remaining, start=1):
                 aid = item['agam_id']
                 log_msg(f"[{index}/{len(remaining)}] Checking AGAM {aid}...")
