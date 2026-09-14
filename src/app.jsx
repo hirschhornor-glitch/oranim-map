@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-13-permits';
+        const APP_VERSION = '2026-09-14-parklink';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -6390,7 +6390,8 @@
                 showPermitsGap, permitsGapDrilldown,
                 showFloorReport, flrFrom, flrTo, flrDoms,
                 showUseGaps,
-                showPublicNeeds, publicNeedsMinahak, reportScope,
+                showPublicNeeds, publicNeedsMinahak,
+                parkingReport, parkFilter, reportScope,
             ]);
 
             // On first load, if the hash names a report, re-open it (with its filters)
@@ -14740,6 +14741,9 @@
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
                         apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
+                    { key: 'parking', isOpen: () => parkingReport, open: () => setParkingReport(true),
+                        ser: () => ({ minahak: parkFilter.minahak, sub: parkFilter.sub, band: parkFilter.band, q: parkFilter.q }),
+                        apply: p => setParkFilter({ minahak: p.minahak || 'all', sub: p.sub || 'all', band: p.band || 'all', q: p.q || '' }) },
                 ];
             }
 
