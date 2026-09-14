@@ -12,8 +12,8 @@
  */
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-13b';
-const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-13b';
+const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-14a';
+const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-14a';
 const CENTER = [31.7767, 35.2245];
 const ZOOM = 12;
 
@@ -318,7 +318,19 @@ function CommerceApp() {
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10 }}>
       <div style={{ fontSize: 34 }}>⚠️</div>
       <div style={{ fontWeight: 700 }}>שגיאה בטעינת הנתונים</div>
-      <div style={{ color: '#c9a7d8', fontSize: 12 }}>{err}</div>
+      {location.protocol === 'file:' ? (
+        // fetch() is blocked on file://, so double-clicking the .html from
+        // Explorer fails with a bare "Failed to fetch" and no explanation.
+        // Say what actually went wrong instead of showing the raw TypeError.
+        <div style={{ color: '#c9a7d8', fontSize: 13, maxWidth: 460, textAlign: 'center', lineHeight: 1.7 }}>
+          הדף נפתח ישירות מהדיסק (<code>file://</code>), והדפדפן חוסם טעינת נתונים במצב הזה.<br />
+          יש להריץ דרך שרת מקומי — למשל מתוך תיקיית האתר:<br />
+          <code style={{ background: '#2a1b33', padding: '3px 8px', borderRadius: 4, display: 'inline-block', marginTop: 6 }}>python -m http.server 8091</code><br />
+          ואז לפתוח <code>http://localhost:8091/commerce.html</code>
+        </div>
+      ) : (
+        <div style={{ color: '#c9a7d8', fontSize: 12 }}>{err}</div>
+      )}
     </div>
   );
 
