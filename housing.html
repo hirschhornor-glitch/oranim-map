@@ -2,120 +2,24 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>דיור מותנה, קרן תחזוקה ודיור להשכרה — מיפוי עירוני</title>
-    <meta name="theme-color" content="#14141a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="תנאי דיור">
-    <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>עבר למיפוי הכלל עירוני</title>
+    <!-- The two housing reports moved into the citywide site at /citywide/, where they
+         sit beside the commerce/employment report with a shared map. This page stays
+         behind only so links and bookmarks that already point here keep working, and
+         it preserves the tab anchor (#fund / #rental) on the way. -->
+    <script>
+        var h = (location.hash || "").replace(/^#/, "");
+        location.replace("citywide/" + (h ? "#" + h : "#fund"));
+    </script>
+    <meta http-equiv="refresh" content="0; url=citywide/#fund">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg: #14141a; --panel: #1d1d26; --panel2: #23232e; --line: #33333f;
-            --ink: #eceaf2; --dim: #a6a2b5; --faint: #74707f;
-            /* gold = קרן תחזוקה, as in the existing fund layer; teal = השכרה */
-            --fund: #e0a800; --fund-dim: #8a6d00;
-            --rent: #22c1a6; --rent-dim: #11705f;
-            --warn: #f0883e;
-        }
-        html, body { height: 100%; }
-        body { font-family: 'Assistant', system-ui, sans-serif; background: var(--bg);
-               color: var(--ink); overflow: hidden; }
-        #root { height: 100vh; display: flex; flex-direction: column; }
-        .spin { width:34px;height:34px;border:3px solid #3a3a48;border-top-color:var(--fund);
-                border-radius:50%; animation:sp 1s linear infinite; }
-        @keyframes sp { to { transform: rotate(360deg); } }
-        ::-webkit-scrollbar { width:9px; height:9px; }
-        ::-webkit-scrollbar-track { background:#1a1a22; }
-        ::-webkit-scrollbar-thumb { background:#3d3d4b; border-radius:5px; }
-        ::-webkit-scrollbar-thumb:hover { background:#4e4e5f; }
-        button, input, select { font-family: inherit; color: inherit; }
-        a { color: inherit; }
-
-        header { padding: 14px 20px 0; border-bottom: 1px solid var(--line); background: var(--panel); }
-        h1 { font-size: 19px; font-weight: 800; letter-spacing: -.2px; }
-        .sub { color: var(--dim); font-size: 13px; margin-top: 2px; }
-        .tabs { display: flex; gap: 6px; margin-top: 12px; }
-        .tab { padding: 9px 16px; border: 1px solid var(--line); border-bottom: none;
-               background: var(--bg); color: var(--dim); border-radius: 9px 9px 0 0;
-               cursor: pointer; font-size: 14px; font-weight: 700; }
-        .tab.on { background: var(--panel2); color: var(--ink); }
-        .tab.fund.on { box-shadow: inset 0 3px 0 var(--fund); }
-        .tab.rent.on { box-shadow: inset 0 3px 0 var(--rent); }
-
-        main { flex: 1; overflow: auto; padding: 16px 20px 40px; }
-        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
-                gap: 10px; margin-bottom: 14px; }
-        .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 11px;
-               padding: 11px 13px; }
-        .kpi .n { font-size: 23px; font-weight: 800; line-height: 1.15; }
-        .kpi .l { color: var(--dim); font-size: 12px; margin-top: 3px; }
-        .kpi.gold .n { color: var(--fund); }
-        .kpi.teal .n { color: var(--rent); }
-
-        .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
-        .bar input, .bar select {
-            background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
-            padding: 7px 10px; font-size: 13px; }
-        .bar input { min-width: 210px; }
-        .btn { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
-               padding: 7px 12px; font-size: 13px; cursor: pointer; font-weight: 600; }
-        .btn:hover { background: #2c2c39; }
-        .spacer { flex: 1; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { padding: 8px 9px; text-align: right; border-bottom: 1px solid var(--line);
-                 vertical-align: top; }
-        th { position: sticky; top: 0; background: var(--panel); color: var(--dim);
-             font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; z-index: 2; }
-        th:hover { color: var(--ink); }
-        tbody tr:hover { background: #1b1b24; }
-        tr.open { background: #1b1b24; }
-        .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
-        .money { color: var(--fund); font-weight: 700; }
-        .dur { color: var(--rent); font-weight: 700; }
-        .pill { display: inline-block; padding: 1px 7px; border-radius: 999px;
-                font-size: 11px; font-weight: 700; border: 1px solid; white-space: nowrap; }
-        .pill.ocr { color: var(--warn); border-color: #5d3a1c; background: #2a1c10; }
-        .pill.rev { color: var(--warn); border-color: #5d3a1c; background: #2a1c10; }
-        .pill.stat { color: var(--dim); border-color: var(--line); background: var(--panel2); }
-        .detail { background: #191921; color: var(--dim); font-size: 12.5px; line-height: 1.65; }
-        .detail b { color: var(--ink); }
-        .quote { border-right: 3px solid var(--fund-dim); padding: 4px 10px; margin: 6px 0;
-                 background: #16161d; border-radius: 0 6px 6px 0; }
-        .quote.r { border-right-color: var(--rent-dim); }
-        .empty { color: var(--faint); }
-        .note { background: var(--panel); border: 1px solid var(--line);
-                border-right: 3px solid var(--warn); border-radius: 9px;
-                padding: 11px 14px; margin-bottom: 14px; font-size: 12.5px;
-                color: var(--dim); line-height: 1.7; }
-        .note b { color: var(--ink); }
-        .tblwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 11px; }
-
-        @media print {
-            body { background:#fff; color:#000; overflow:visible; }
-            #root { height:auto; display:block; }
-            main { overflow:visible; padding:0; }
-            .noprint, .tabs { display:none !important; }
-            th { background:#eee; color:#000; position:static; }
-            th, td { border-bottom:1px solid #ccc; }
-            .kpi { border:1px solid #bbb; }
-            .money { color:#7a5c00; } .dur { color:#0d5c4e; }
-            .detail { background:#f6f6f6; color:#333; }
-            .tblwrap { border:none; }
-        }
+        body { font-family: system-ui, sans-serif; background: #14141a; color: #eceaf2;
+               direction: rtl; display: flex; height: 100vh; margin: 0;
+               align-items: center; justify-content: center; }
+        a { color: #22c1a6; }
     </style>
 </head>
 <body>
-    <div id="root">
-        <div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
-            <div class="spin"></div>
-            <div style="color:var(--dim);font-weight:600;">טוען נתוני דיור מותנה והשכרה…</div>
-        </div>
-    </div>
-    <script src="housing.js?v=2026-09-14a"></script>
+    <div>הדוח עבר ל<a href="citywide/#fund">מיפוי הכלל עירוני</a>…</div>
 </body>
 </html>
