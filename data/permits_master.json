@@ -1,12 +1,12 @@
 {
- "generated_at": "2026-09-13T07:27:22",
- "count": 1313,
+ "generated_at": "2026-09-14T06:35:58",
+ "count": 1318,
  "bucket_counts": {
   "zchuyot": 351,
   "tava_gadol": 298,
   "ibuy": 43,
   "tama38": 472,
-  "acher": 112,
+  "acher": 117,
   "shimush_chorag": 37
  },
  "category_counts": {
@@ -19,7 +19,7 @@
   "chafira_milui": 37,
   "drachim": 40,
   "shimush_chorech": 37,
-  "acher": 82,
+  "acher": 87,
   "tachzukah": 8
  },
  "permits": {
@@ -626,12 +626,13 @@
    "address": "",
    "taba": "768119",
    "provenance": [
-    "all_permits"
+    "all_permits",
+    "committee"
    ],
    "in_tama38_registry": false,
    "lat": 31.743811,
    "lng": 35.207684,
-   "on_committee_agenda": false,
+   "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
@@ -29625,12 +29626,13 @@
    "address": "",
    "taba": "15256",
    "provenance": [
-    "tama38"
+    "tama38",
+    "committee"
    ],
    "in_tama38_registry": true,
    "lat": 31.765573,
    "lng": 35.213998,
-   "on_committee_agenda": false,
+   "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
@@ -31322,7 +31324,7 @@
    "lat": 31.769938,
    "lng": 35.210451,
    "on_committee_agenda": false,
-   "open_for_objections": true,
+   "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": true,
@@ -42824,6 +42826,166 @@
    "in_tama38_registry": false,
    "lat": 31.733683646998788,
    "lng": 35.205520879600556,
+   "on_committee_agenda": true,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": false,
+   "units_added": 0,
+   "urban_renewal": false,
+   "category": "acher",
+   "category_label": "אחר",
+   "bucket": "acher",
+   "bucket_label": "אחר"
+  },
+  "2024/367": {
+   "tik": "2024/367",
+   "file_number": "2024/0367.00",
+   "revisions": [
+    "2024/367.0"
+   ],
+   "status": "",
+   "status_date": "",
+   "request_type": "",
+   "request_description": "",
+   "units": null,
+   "tama_type": "",
+   "address": "רמבן 34, רחביה",
+   "taba": null,
+   "provenance": [
+    "committee"
+   ],
+   "in_tama38_registry": false,
+   "lat": 31.77452794037131,
+   "lng": 35.212351693433895,
+   "on_committee_agenda": true,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": false,
+   "units_added": 0,
+   "urban_renewal": false,
+   "category": "acher",
+   "category_label": "אחר",
+   "bucket": "acher",
+   "bucket_label": "אחר"
+  },
+  "2019/129": {
+   "tik": "2019/129",
+   "file_number": "2019/0129.02",
+   "revisions": [
+    "2019/129.2"
+   ],
+   "status": "",
+   "status_date": "",
+   "request_type": "",
+   "request_description": "",
+   "units": null,
+   "tama_type": "",
+   "address": "דרך עזה 30, רחביה",
+   "taba": null,
+   "provenance": [
+    "committee"
+   ],
+   "in_tama38_registry": false,
+   "lat": 31.772823322324683,
+   "lng": 35.21430453755421,
+   "on_committee_agenda": true,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": false,
+   "units_added": 0,
+   "urban_renewal": false,
+   "category": "acher",
+   "category_label": "אחר",
+   "bucket": "acher",
+   "bucket_label": "אחר"
+  },
+  "2006/100": {
+   "tik": "2006/100",
+   "file_number": "2006/0100.07",
+   "revisions": [
+    "2006/100.7"
+   ],
+   "status": "",
+   "status_date": "",
+   "request_type": "",
+   "request_description": "",
+   "units": null,
+   "tama_type": "",
+   "address": "אשר 14, גאולים - בקעה",
+   "taba": null,
+   "provenance": [
+    "committee"
+   ],
+   "in_tama38_registry": false,
+   "lat": 31.758267377359406,
+   "lng": 35.216614540495804,
+   "on_committee_agenda": true,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": false,
+   "units_added": 0,
+   "urban_renewal": false,
+   "category": "acher",
+   "category_label": "אחר",
+   "bucket": "acher",
+   "bucket_label": "אחר"
+  },
+  "2015/753": {
+   "tik": "2015/753",
+   "file_number": "2015/0753.05",
+   "revisions": [
+    "2015/753.5"
+   ],
+   "status": "",
+   "status_date": "",
+   "request_type": "",
+   "request_description": "",
+   "units": null,
+   "tama_type": "",
+   "address": "אנטיגנוס 31, גוננים",
+   "taba": null,
+   "provenance": [
+    "committee"
+   ],
+   "in_tama38_registry": false,
+   "lat": 31.755580456813636,
+   "lng": 35.20616498762,
+   "on_committee_agenda": true,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": false,
+   "units_added": 0,
+   "urban_renewal": false,
+   "category": "acher",
+   "category_label": "אחר",
+   "bucket": "acher",
+   "bucket_label": "אחר"
+  },
+  "1991/449": {
+   "tik": "1991/449",
+   "file_number": "1991/0449.14",
+   "revisions": [
+    "1991/449.14"
+   ],
+   "status": "",
+   "status_date": "",
+   "request_type": "",
+   "request_description": "",
+   "units": null,
+   "tama_type": "",
+   "address": "אנטיגנוס 30, גוננים",
+   "taba": null,
+   "provenance": [
+    "committee"
+   ],
+   "in_tama38_registry": false,
+   "lat": 31.755571447242243,
+   "lng": 35.205341717263025,
    "on_committee_agenda": true,
    "open_for_objections": false,
    "has_field_obs": false,
