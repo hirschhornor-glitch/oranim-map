@@ -230,30 +230,6 @@
    "sub_neighborhood": "המושבה היוונית",
    "status": "בהליך אישור"
   },
-  "123": {
-   "plan_name": "פינוי בינוי שלום יהודה 13-27",
-   "req_private": 492,
-   "req_residential": 472,
-   "guests": 43,
-   "bikes_req": 432,
-   "moto_req": 47,
-   "operational": 2,
-   "accessible": 9,
-   "standard": "1:1 לכל יח\"ד + 10% אורחים (החלטת ועדה 23.01.16 סעיף 22, אזור עתיר תח\"צ)",
-   "confidence": "high",
-   "notes": "95 יח\"ד קטנות + 334 גדולות. מסחר 800 מ\"ר=14. בי\"ס 12 כיתות ובית כנסת 250 מ\"ר ללא דרישת חניה (מפרץ הורדה). אין טבלת היצע בגיליון.",
-   "source": {
-    "crop": "crops/123/doc12_p0_k0.png",
-    "doc": "נספח תנועה"
-   },
-   "units": 429.0,
-   "units_basis": "appendix",
-   "ratio_req": 1.147,
-   "ratio_res_req": 1.1,
-   "minahak": "",
-   "sub_neighborhood": "",
-   "status": ""
-  },
   "1033869": {
    "plan_name": "מתחם 01 - בר יוחאי 1-3",
    "req_private": 412,
@@ -302,6 +278,30 @@
    "ratio_res_req": 1.06,
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
+   "status": "אישור"
+  },
+  "1010123": {
+   "plan_name": "פינוי בינוי שלום יהודה 13-27",
+   "req_private": 492,
+   "req_residential": 472,
+   "guests": 43,
+   "bikes_req": 432,
+   "moto_req": 47,
+   "operational": 2,
+   "accessible": 9,
+   "standard": "1:1 לכל יח\"ד + 10% אורחים (החלטת ועדה 23.01.16 סעיף 22, אזור עתיר תח\"צ)",
+   "confidence": "high",
+   "notes": "95 יח\"ד קטנות + 334 גדולות. מסחר 800 מ\"ר=14. בי\"ס 12 כיתות ובית כנסת 250 מ\"ר ללא דרישת חניה (מפרץ הורדה). אין טבלת היצע בגיליון.",
+   "source": {
+    "crop": "crops/123/doc12_p0_k0.png",
+    "doc": "נספח תנועה"
+   },
+   "units": 429.0,
+   "units_basis": "appendix",
+   "ratio_req": 1.147,
+   "ratio_res_req": 1.1,
+   "minahak": "בקעה רבתי",
+   "sub_neighborhood": "בקעה",
    "status": "אישור"
   },
   "1182146": {
@@ -574,7 +574,7 @@
    "ratio_res_req": 0.665,
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
-   "status": "בבדיקה תכנונית"
+   "status": "במילוי תנאים להפקדה"
   },
   "1133180": {
    "plan_name": "התחדשות עירונית דרך חברון 108-110",
@@ -1666,7 +1666,7 @@
    "ratio_res_req": 1.152,
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
-   "status": "בהליך אישור"
+   "status": "אישור"
   },
   "581850": {
    "plan_name": "פינוי בינוי פנמה 2 ו-6",
@@ -2197,7 +2197,7 @@
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
   },
-  "9157": {
+  "1019157": {
    "plan_name": "סן מרטין 19-21",
    "req_private": 200,
    "prov_private": 208,
@@ -2215,12 +2215,13 @@
    },
    "units": 155.0,
    "units_basis": "appendix",
+   "units_gap_vs_gs": 7,
    "ratio_req": 1.29,
    "ratio_prov": 1.342,
    "ratio_res_req": 1.103,
-   "minahak": "",
-   "sub_neighborhood": "",
-   "status": ""
+   "minahak": "גוננים",
+   "sub_neighborhood": "קטמונים ח-ט",
+   "status": "אישור"
   },
   "1225218": {
    "plan_name": "דינמומטר",
@@ -2421,7 +2422,7 @@
    "ratio_res_req": 1.201,
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים",
-   "status": "הכרעה בהתנגדויות / אישור"
+   "status": "אישור"
   },
   "1398130": {
    "plan_name": "מתחם עמים טאוורס (בלוק 8)",
@@ -2448,7 +2449,7 @@
    "ratio_res_req": 1.101,
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
-   "status": "במילוי תנאים להפקדה"
+   "status": "הפקדה להתנגדויות/השגות"
   },
   "397752": {
    "plan_name": "ברל לוקר 13",
@@ -3319,7 +3320,7 @@
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
   },
-  "6229": {
+  "1016229": {
    "plan_name": "אביטל 15",
    "req_private": 74,
    "prov_private": 78,
@@ -3339,9 +3340,9 @@
    "ratio_req": 1.014,
    "ratio_prov": 1.068,
    "ratio_res_req": 0.89,
-   "minahak": "",
-   "sub_neighborhood": "",
-   "status": ""
+   "minahak": "בקעה רבתי",
+   "sub_neighborhood": "מקור חיים",
+   "status": "אישור"
   },
   "1078476": {
    "plan_name": "שמעוני 30,32 - גבעת הורדים",

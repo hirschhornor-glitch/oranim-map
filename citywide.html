@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>מיפוי כלל עירוני — ירושלים</title>
+    <meta name="theme-color" content="#14141a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="מיפוי עירוני">
+    <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #14141a; --panel: #1d1d26; --line: #33333f;
+            --ink: #eceaf2; --dim: #a6a2b5; --faint: #74707f;
+            --ce: #c084fc;    /* סגול = מסחר, בעקבות שכבת המסחר הקיימת */
+            --fund: #e0a800;  /* זהב = קרן תחזוקה */
+            --rent: #22c1a6;  /* טורקיז = השכרה */
+        }
+        body { font-family: 'Assistant', system-ui, sans-serif; background: var(--bg);
+               color: var(--ink); min-height: 100vh; padding: 34px 20px 60px; }
+        .wrap { max-width: 1000px; margin: 0 auto; }
+        h1 { font-size: 25px; font-weight: 800; letter-spacing: -.3px; }
+        .lead { color: var(--dim); font-size: 14px; margin-top: 6px; line-height: 1.7; }
+        .grid { display: grid; gap: 14px; margin-top: 26px;
+                grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+        a.card { display: block; background: var(--panel); border: 1px solid var(--line);
+                 border-top: 3px solid var(--accent); border-radius: 13px; padding: 18px 19px;
+                 text-decoration: none; color: inherit; transition: border-color .15s, transform .15s; }
+        a.card:hover { transform: translateY(-2px); border-color: var(--accent); }
+        .card h2 { font-size: 17px; font-weight: 800; }
+        .card .desc { color: var(--dim); font-size: 13px; margin-top: 6px; line-height: 1.65;
+                      min-height: 44px; }
+        .figs { display: flex; gap: 16px; margin-top: 13px; padding-top: 12px;
+                border-top: 1px solid var(--line); flex-wrap: wrap; }
+        .fig .n { font-size: 20px; font-weight: 800; color: var(--accent);
+                  font-variant-numeric: tabular-nums; }
+        .fig .l { color: var(--faint); font-size: 11.5px; margin-top: 1px; }
+        .go { margin-top: 13px; color: var(--accent); font-size: 13px; font-weight: 700; }
+        .note { margin-top: 28px; background: var(--panel); border: 1px solid var(--line);
+                border-right: 3px solid var(--faint); border-radius: 11px; padding: 14px 16px;
+                color: var(--dim); font-size: 12.5px; line-height: 1.8; }
+        .note b { color: var(--ink); }
+        footer { margin-top: 22px; color: var(--faint); font-size: 12px; }
+        footer a { color: var(--dim); }
+        @media print {
+            body { background: #fff; color: #000; }
+            a.card { border: 1px solid #bbb; }
+            .go { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>מיפוי כלל עירוני — ירושלים</h1>
+    <div class="lead">
+        שלושה דוחות שנבנו מאותו מקור: <b>ארכיון הוראות התכניות</b> —
+        4,570 תכניות, מתוכן 3,749 נקראו משכבת טקסט ו-821 באמצעות OCR.
+    </div>
+
+    <div class="grid">
+        <a class="card" href="commerce.html" style="--accent: var(--ce)">
+            <h2>מסחר, תעסוקה ומשרדים</h2>
+            <div class="desc">שטחי מסחר ותעסוקה לפי תכנית, כולל פיצול בין השימושים ומצב היתרים.</div>
+            <div class="figs">
+                <div class="fig"><div class="n">657</div><div class="l">תכניות עם שטחי מסחר/תעסוקה</div></div>
+                <div class="fig"><div class="n">4.27M</div><div class="l">מ"ר מסחר + תעסוקה</div></div>
+            </div>
+            <div class="go">פתיחת הדוח ←</div>
+        </a>
+
+        <a class="card" href="housing.html#fund" style="--accent: var(--fund)">
+            <h2>קרן תחזוקה ודיור מותנה</h2>
+            <div class="desc">תכניות שבהן זכויות או יח"ד מותנות בהפקדת כספים לקרן תחזוקה ארוכת טווח.</div>
+            <div class="figs">
+                <div class="fig"><div class="n">104</div><div class="l">תכניות עם קרן</div></div>
+                <div class="fig"><div class="n">₪1.01 מיליארד</div><div class="l">סך הקרנות (77 עם סכום)</div></div>
+            </div>
+            <div class="go">פתיחת הדוח ←</div>
+        </a>
+
+        <a class="card" href="housing.html#rental" style="--accent: var(--rent)">
+            <h2>דיור להשכרה</h2>
+            <div class="desc">תכניות המחייבות דיור להשכרה, עם תקופת ההשכרה ומקורה — הוראות התכנית או התוספת השישית.</div>
+            <div class="figs">
+                <div class="fig"><div class="n">152</div><div class="l">תכניות עם חובת השכרה</div></div>
+                <div class="fig"><div class="n">116</div><div class="l">עם משך מפורש בהוראות</div></div>
+            </div>
+            <div class="go">פתיחת הדוח ←</div>
+        </a>
+    </div>
+
+    <div class="note">
+        <b>איך לקרוא את שלושתם:</b> היעדר תכנית מדוח פירושו <b>לא נמצא</b> ולא <b>אין</b> —
+        חלק מהמסמכים סרוקים, ומהם נקרא פחות מאשר ממסמך עם שכבת טקסט.
+        בדוחות הדיור כל מספר שמקורו ב-OCR אומת בקריאה ויזואלית של המסמך;
+        סכומי הקרן כולם מגיעים משכבת טקסט ולא מ-OCR.
+        <br>
+        <b>רזולוציות שונות:</b> דוח המסחר/תעסוקה מודד שטחים מטבלה 5, ודוחות הדיור מודדים
+        סעיפים מילוליים בהוראות. אלה מקורות שונים באותו מסמך, ולכן מספרי התכניות בין
+        הדוחות אינם אמורים להסתכם זה לזה.
+    </div>
+
+    <footer>
+        מקור הנתונים: מבא"ת (mavat.iplan.gov.il) · הארכיון והדוחות נבנים מקומית ·
+        <a href="index.html">חזרה לאפליקציית אורנים</a>
+    </footer>
+</div>
+</body>
+</html>
