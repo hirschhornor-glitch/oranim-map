@@ -7,11 +7,12 @@
  * (ce_citywide_plans.json, ce_citywide_parcels.geojson); their page keeps working
  * unchanged, and a structural change on their side is a change here, not a conflict.
  *
- * Geometry: the parcels layer covers 183 of the 239 housing-report plans, and
- * plans.geojson another 68 — 83% between them. The remaining plans are the reason
- * for the "ללא מיקום" counter: a map showing 199 of 239 while the eye reads it as
- * "all of them" would hide findings, so unmapped plans stay in the list, are
- * labelled, and are counted in the toolbar.
+ * Geometry comes from three layers. The two borrowed ones each cover only their own
+ * scope — ce_citywide_parcels the commerce plans, plans.geojson Oranim's neighbourhoods
+ * — which left 40 housing plans drawable by neither and labelled "ללא מיקום". Those are
+ * now fetched from XPLAN's blue line into housing_plan_boundaries.geojson (40/40 found).
+ * The counter and the label stay in the code: if a future plan is missing again, the
+ * map must say so rather than quietly drawing a subset the eye reads as "all of them".
  *
  * Plain DOM rather than React: commerce.js is a React app, but Leaflet is
  * framework-agnostic and the rest is three tables. Importing a framework to share
@@ -23,11 +24,15 @@
   var HOUSING = "../data/housing_terms.json";
   var CE = "../data/ce_citywide_plans.json";
   var PARCELS = "../data/ce_citywide_parcels.geojson";
+  // Blue-line boundaries for the housing plans that neither existing layer covers —
+  // they are in neither the commerce scope nor Oranim's, so they showed as
+  // "ללא מיקום" despite XPLAN publishing a boundary for every one of them.
+  var BOUNDS = "../data/housing_plan_boundaries.geojson";
   var CENTER = [31.7683, 35.2137], ZOOM = 12;
 
   var state = { tab: "ce", q: "", status: "", sub: "", src: "", sort: "", desc: true,
                 sel: null };
-  var D = { ce: null, housing: null, parcels: null };
+  var D = { ce: null, housing: null, parcels: null, bounds: null };
   var map = null, layer = null, geoByPlan = {}, mapNote = "";
 
   var esc = function (s) {
@@ -236,12 +241,14 @@
 
   function indexGeometry() {
     geoByPlan = {};
-    if (!D.parcels) return;
-    D.parcels.features.forEach(function (f) {
-      var key = f.properties && (f.properties.plan_name || f.properties.taba);
-      if (!key) return;
-      var p = pad7(key);
-      (geoByPlan[p] = geoByPlan[p] || []).push(f);
+    [D.parcels, D.bounds].forEach(function (src) {
+      if (!src || !src.features) return;
+      src.features.forEach(function (f) {
+        var key = f.properties && (f.properties.plan_name || f.properties.taba);
+        if (!key) return;
+        var p = pad7(key);
+        (geoByPlan[p] = geoByPlan[p] || []).push(f);
+      });
     });
   }
 
@@ -484,9 +491,9 @@
       });
   }
 
-  Promise.all([getJSON(HOUSING), getJSON(CE), getJSON(PARCELS, true)])
+  Promise.all([getJSON(HOUSING), getJSON(CE), getJSON(PARCELS, true), getJSON(BOUNDS, true)])
     .then(function (res) {
-      D.housing = res[0]; D.ce = res[1]; D.parcels = res[2];
+      D.housing = res[0]; D.ce = res[1]; D.parcels = res[2]; D.bounds = res[3];
       if (!D.parcels) {
         // Losing the map is survivable; losing it silently is not.
         mapNote = "<b>המפה אינה זמינה:</b> שכבת המגרשים לא נטענה — " +
