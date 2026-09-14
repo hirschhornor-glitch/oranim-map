@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-14-parklink';
+        const APP_VERSION = '2026-09-14-parkmap';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -936,7 +936,8 @@
                 layers: [
                     { id: 'plans', name: 'תב"ע', desc: 'תוכניות בניין עיר', on: true,
                       subLayers: [
-                          { id: 'landuse_xplan', name: 'ייעודי קרקע', desc: 'ייעודי קרקע לפי תכניות', on: false }
+                          { id: 'landuse_xplan', name: 'ייעודי קרקע', desc: 'ייעודי קרקע לפי תכניות', on: false },
+                          { id: 'parking_ratio', name: 'יחס חניה ליח"ד', desc: 'צביעת התב"עות לפי מקומות חניה למגורים לכל יח"ד, מטבלת מאזן החניה שבנספח התנועה. סקאלה סדרתית: בהיר = פחות חניות, כהה = יותר', on: false }
                       ]
                     },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
@@ -2930,6 +2931,54 @@
             { label: 'במילוי תנאים להפקדה', color: '#f56e05' },
             { label: 'פתיחת תיק / בבדיקה', color: '#eb0000' },
         ];
+
+        // ── יחס חניה ליח"ד — thematic re-colour of the plans layer ─────────────
+        // Sequential teal ramp (the colour of the "תנועה וחניה" report category).
+        // Deliberately sequential and NOT a red/green traffic light: a high ratio is not
+        // "bad" — it reflects the parking-standard zone the plan sits in — so the ramp only
+        // says "more spaces per unit" and leaves the judgement to the reader.
+        // The 0.85 and 1.45 breaks are the SAME cut points the parking report's "רמת יחס"
+        // filter uses, so colouring the map and filtering the report stay consistent; the
+        // 1.05 and 1.20 breaks (the latter is the citywide median) only subdivide the
+        // crowded middle so the map is readable. Plans per band: 17 / 52 / 69 / 82 / 52.
+        const PARK_RATIO_BANDS = [
+            { max: 0.85,     color: '#e0f2f1', label: 'עד 0.85' },
+            { max: 1.05,     color: '#80cbc4', label: '0.85–1.05' },
+            { max: 1.20,     color: '#26a69a', label: '1.05–1.20' },
+            { max: 1.45,     color: '#00796b', label: '1.20–1.45' },
+            { max: Infinity, color: '#004d40', label: '1.45 ומעלה' },
+        ];
+        const PARK_READ_NO_RATIO = '#6b7280';   // נקרא אך היחס אינו בר-חישוב
+        const PARK_NO_APPENDIX = '#3f4451';     // נבדק — אין נספח תנועה במבא"ת
+
+        // Residential-only spaces per unit — the only figure that is comparable between
+        // plans, because it excludes מסחר/תעסוקה/ציבור (a public garage in the mix would
+        // otherwise swamp the ratio). Prefers what the plan PROVIDES over what the standard
+        // demands, falling back to required when the sheet printed only a demand column.
+        function parkResRatio(rec) {
+            if (!rec) return null;
+            const units = Number(rec.units) || 0;
+            const spaces = rec.prov_residential || rec.req_residential || 0;
+            return (units > 0 && spaces > 0) ? spaces / units : null;
+        }
+
+        // Fill for one plan in the parking-ratio view, or null when the plan is outside the
+        // surveyed set entirely — those are drawn outline-only so the surveyed plans stand out.
+        // "נבדק ואין נספח" gets its own shade rather than being lumped with "לא נבדק":
+        // for 167 plans the absence of an appendix is a finding, not a gap in the survey.
+        function parkRatioFill(taba) {
+            const P = window.__parking || {};
+            const rec = (P.plans || {})[taba];
+            const r = parkResRatio(rec);
+            if (r != null) {
+                for (let i = 0; i < PARK_RATIO_BANDS.length; i++) {
+                    if (r < PARK_RATIO_BANDS[i].max) return { color: PARK_RATIO_BANDS[i].color, opacity: 0.75 };
+                }
+            }
+            if (rec) return { color: PARK_READ_NO_RATIO, opacity: 0.4 };
+            if ((P.no_traffic_appendix || []).indexOf(taba) >= 0) return { color: PARK_NO_APPENDIX, opacity: 0.3 };
+            return null;
+        }
 
         const PERMITS_LEGEND = [
             { label: 'ג-רישוי בתהליך', color: PERMITS_PALETTE.pre_licensing },
@@ -5282,7 +5331,13 @@
                     // Collect all layer IDs that existed when hash was created
                     const allKnownIds = [];
                     Object.values(LAYER_CONFIG).forEach(group => {
-                        group.layers.forEach(l => allKnownIds.push(l.id));
+                        group.layers.forEach(l => {
+                            allKnownIds.push(l.id);
+                            // Sub-layers (יעודי קרקע, יחס חניה) are serialized into the hash like
+                            // any other layer, so they have to be walked here too — otherwise a
+                            // shared link silently drops them.
+                            (l.subLayers || []).forEach(s => allKnownIds.push(s.id));
+                        });
                     });
                     setLayers(prev => {
                         const newLayers = { ...prev };
@@ -15552,6 +15607,15 @@
                             const withBuiltFade = s => _built
                                 ? { ...s, opacity: (s.opacity != null ? s.opacity : 1) * BUILT_FADE_OPACITY, fillOpacity: (s.fillOpacity || 0) * BUILT_FADE_OPACITY }
                                 : s;
+                            // Parking-ratio view: re-colour by חניות מגורים ליח"ד instead of by
+                            // status. The status colour is kept as the STROKE so the plan's stage is
+                            // still readable, the same way the landuse/שב"צ modes do it. Plans outside
+                            // the surveyed set get no fill at all, so the 444 surveyed ones stand out.
+                            if (layers['parking_ratio']) {
+                                const pf = parkRatioFill(String(f.properties.taba || '').trim());
+                                if (!pf) return withBuiltFade({ color: statusColor, weight: 0.8, fillColor: 'transparent', fillOpacity: 0, opacity: 0.45, dashArray: '' });
+                                return withBuiltFade({ color: statusColor, weight: 1.2, fillColor: pf.color, fillOpacity: pf.opacity, dashArray: '' });
+                            }
                             // When any master plan layer is on: hide plans inside an active
                             // master plan (drawn by that layer); show others as outline only
                             const activeMpKeys = ['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot'].filter(k => layers[k]);
@@ -26629,6 +26693,43 @@
                                 </div>
                             </div>
                         )}
+
+                        {/* Parking-ratio legend — shown while the plans sub-layer is on. */}
+                        {layers['parking_ratio'] && layers['plans'] && (() => {
+                            const P = window.__parking || { plans: {}, no_traffic_appendix: [] };
+                            const counts = PARK_RATIO_BANDS.map(() => 0);
+                            let noRatio = 0;
+                            Object.keys(P.plans || {}).forEach(t => {
+                                const r = parkResRatio(P.plans[t]);
+                                if (r == null) { noRatio++; return; }
+                                for (let i = 0; i < PARK_RATIO_BANDS.length; i++) {
+                                    if (r < PARK_RATIO_BANDS[i].max) { counts[i]++; break; }
+                                }
+                            });
+                            const row = (color, label, n) => (
+                                <div key={label} style={{display:'flex',alignItems:'center',gap:6,margin:'2px 0'}}>
+                                    <span style={{display:'inline-block',width:16,height:11,background:color,border:'0.5px solid #00838f',borderRadius:2}}></span>
+                                    <span style={{color:'#dfe6e9',fontSize:11}}>{label}</span>
+                                    <span style={{color:'#7f8c99',fontSize:10,marginRight:'auto'}}>{n}</span>
+                                </div>
+                            );
+                            return (
+                                <div style={{
+                                    position:'absolute', bottom:40, left:10, zIndex:1001,
+                                    background:'rgba(15,15,30,0.92)', backdropFilter:'blur(8px)',
+                                    borderRadius:10, padding:'12px 16px', direction:'rtl',
+                                    border:'1px solid #2a2a4a', maxWidth:280
+                                }}>
+                                    <div style={{color:'#00bcd4',fontWeight:'bold',fontSize:13,marginBottom:2}}>חניות מגורים ליח"ד</div>
+                                    <div style={{color:'#8a93a6',fontSize:10,marginBottom:8}}>מטבלת מאזן החניה שבנספח התנועה · מגורים ואורחים בלבד</div>
+                                    {PARK_RATIO_BANDS.map((bd, i) => row(bd.color, bd.label, counts[i]))}
+                                    <div style={{height:1,background:'#2a2a4a',margin:'7px 0'}}></div>
+                                    {noRatio > 0 && row(PARK_READ_NO_RATIO, 'נקרא — אין יחס בר-חישוב', noRatio)}
+                                    {row(PARK_NO_APPENDIX, 'אין נספח תנועה במבא"ת', (P.no_traffic_appendix || []).length)}
+                                    <div style={{color:'#7f8c99',fontSize:9,marginTop:6,whiteSpace:'normal',lineHeight:1.4}}>תכניות שלא נבדקו מצוירות בקו מתאר בלבד. צבע הקו מסמן את סטטוס התכנית.</div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Commerce heat map legend */}
                         {showCommerceHeatMap && (
