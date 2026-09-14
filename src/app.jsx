@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-14-parkmap';
+        const APP_VERSION = '2026-09-14-succession';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -23167,6 +23167,31 @@
                 }
                 html += '</div>';
 
+                // ── Succession — a plan re-filed as a different Mavat entity.
+                //    Mavat files ”הועברה לטיפול הועדה המקומית” under the status
+                //    "נדחתה", so without this line the district plan reads as simply
+                //    dead (101-1258110 -> 101-1623966, 2026-09-14).
+                const relEsc = (x) => String(x == null ? "" : x)
+                    .replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+                const successionBar = (label, icon, pn) => {
+                    const gd = geoDataRef.current;
+                    const f = gd && gd.plans && gd.plans.features.find(x => (x.properties || {}).plan_name === pn);
+                    const rp = f ? f.properties : null;
+                    const rName = rp ? (rp.plan_summary || rp.plan_name_he || "") : "";
+                    const rStat = rp ? (rp.status_mavat || "") : "";
+                    let b = '<div style="background:#1b2444;border-bottom:1px solid #2c3a66;padding:5px 10px;font-size:11px;color:#a9b8dd;display:flex;align-items:center;gap:7px;flex-wrap:wrap">';
+                    b += `<span>${icon} ${label}</span>`;
+                    if (rp) {
+                        b += `<button class="popup-btn-permit" data-action="open-related-plan" data-plan="${relEsc(pn)}" style="padding:1px 8px;font-size:11px">${relEsc(pn)}${rName ? " \u2014 " + relEsc(rName) : ""} \u2190</button>`;
+                        if (rStat) b += `<span style="color:#7f8db3">${relEsc(rStat)}</span>`;
+                    } else {
+                        b += `<b style="color:#cdd8f2">${relEsc(pn)}</b>`;
+                    }
+                    return b + '</div>';
+                };
+                if (props.superseded_by) html += successionBar("הוגשה מחדש כ־", "\u21aa", props.superseded_by);
+                if (props.supersedes) html += successionBar("ממשיכה את", "\u21a9", props.supersedes);
+
                 // ── Objection Banner ──
                 const isObjectionStatus = normalizeStatus(status) === 'הפקדה להתנגדויות/השגות';
                 const isDistrict = String(props.authority || '').includes('מחוזית');
@@ -24525,6 +24550,15 @@
                         if (navBtn.dataset.nav === 'next') currentIdx = (currentIdx + 1) % allFeatures.length;
                         else currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
                         popup.setContent(buildForIndex(currentIdx));
+                        return;
+                    }
+                    // Jump to the plan that replaced this one (or that it replaced).
+                    const relBtn = ev.target.closest('[data-action="open-related-plan"]');
+                    if (relBtn) {
+                        ev.stopPropagation();
+                        const pn = relBtn.dataset.plan;
+                        popup.close();
+                        if (pn) zoomToPlanByName(pn);
                         return;
                     }
                     // ── Toggle the full valency × recommendation table (inline, no re-render) ──
