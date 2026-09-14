@@ -1382,7 +1382,12 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     # Build subject
     parts = []
     if has_new_plans:
-        parts.append(f"{len(new_plans)} תכניות חדשות")
+        _sub_resync = sum(1 for _p in new_plans if _p.get('resynced'))
+        _sub_fresh = len(new_plans) - _sub_resync
+        if _sub_fresh:
+            parts.append(f"{_sub_fresh} תכניות חדשות")
+        if _sub_resync:
+            parts.append(f"{_sub_resync} תכניות שהושלמו")
     if has_updates:
         parts.append(f"{len(updates)} סטטוסים עודכנו")
     if has_objections:
