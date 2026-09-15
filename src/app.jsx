@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-balcony-filter';
+        const APP_VERSION = '2026-09-15-permit-hakala';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1396,6 +1396,58 @@
             const b = planUnitBonus(props);
             if (!b) return 0;
             return Math.round(planBonusBase(props) * b.pct / 100);
+        }
+        // ── הקלה שניתנה בהיתר (permit_hakalot.json) ────────────────────────
+        // The other way a permit may lawfully hold more יח״ד than טבלה 5: a §149 הקלה
+        // the LICENSING COMMITTEE approved on that specific permit, with no change to
+        // the plan. מתחם אגד: "פורסמה הקלה לשימוש בתקנת שב״ס להוספת 20%" — תא שטח 1
+        // went 232 → 280 and תא שטח 2 went 64 → 72, approved 26/02/2025.
+        // Same effect on the baseline as planUnitBonus, different fact and different
+        // wording: the plan granted nothing here, the committee did. Keyed by full
+        // permit number (2023/0107.02) — a decision belongs to a בקשה, not to a תיק.
+        function permitHakala(fileNumber) {
+            const o = window.__permitHakalot || {};
+            const r = o[String(fileNumber || '').trim()];
+            return (r && r.approved && (r.units || r.pct)) ? r : null;
+        }
+        // יח״ד the הקלה adds ON TOP of טבלה 5 for this permit. Uses the pair the committee
+        // itself stated (allowed vs טבלה 5); with only a percentage, derives the addition
+        // from the allowed count. Never negative — a permit below its טבלה 5 row is not
+        // a negative bonus, it is simply a smaller building.
+        function permitHakalaExtra(p) {
+            const r = permitHakala(p && p.file_number);
+            if (!r) return 0;
+            const allowed = Number(r.units) || 0;
+            if (allowed && r.table5_units) return Math.max(0, allowed - Number(r.table5_units));
+            if (allowed && r.pct) return Math.max(0, Math.round(allowed - allowed / (1 + r.pct / 100)));
+            return 0;
+        }
+        // Σ of the approved additions across a permit list — what the plan's יח״ד baseline
+        // has to grow by before the "permits vs plan" comparison means anything.
+        function permitsHakalaExtra(permits, included) {
+            if (!Array.isArray(permits)) return 0;
+            return permits.reduce((sum, p, i) => (included && !included[i]) ? sum : sum + permitHakalaExtra(p), 0);
+        }
+        // The הקלה records behind that number, for the wording shown to the user.
+        function permitsHakalaRecords(permits, included) {
+            const out = [];
+            (permits || []).forEach((p, i) => {
+                if (included && !included[i]) return;
+                const r = permitHakala(p && p.file_number);
+                if (r) out.push(Object.assign({ file_number: p.file_number, extra: permitHakalaExtra(p) }, r));
+            });
+            return out;
+        }
+        function hakalaSummaryText(recs) {
+            if (!recs || !recs.length) return '';
+            const pct = recs.map(r => r.pct).filter(Boolean);
+            const when = recs.map(r => r.decision_date).filter(Boolean)[0] || '';
+            const vaada = recs.map(r => r.vaada).filter(Boolean)[0] || '';
+            const bits = [];
+            if (pct.length) bits.push('עד ' + Math.max.apply(null, pct) + '%');
+            if (when) bits.push('אושרה ' + when);
+            if (vaada) bits.push(vaada);
+            return bits.join(' · ');
         }
         function effectiveStatus(props) {
             return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
@@ -5622,6 +5674,7 @@
                     ['__tama38MpCheck', 'data/tama38_master_plan_check.json'],
                     ['__pikuahStatus', 'data/pikuah_status.json'],
                     ['__unitBonus', 'data/unit_bonus.json'],
+                    ['__permitHakalot', 'data/permit_hakalot.json'],
                     ['__table5Units', 'data/table5_units.json'],
                     ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
                     ['__hafrashPermitUse', 'data/hafrash_permit_use.json'],
@@ -6169,6 +6222,7 @@
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__unitBonus') { window.__unitBonus = (data && data.by_plan) ? data.by_plan : {}; }
+                            else if (key === '__permitHakalot') { window.__permitHakalot = (data && data.by_permit) ? data.by_permit : {}; }
                             else if (key === '__table5Units') { window.__table5Units = data || {}; }
                             else if (key === '__muniCoSubmitter') { window.__muniCoSubmitter = data || {}; }
                             else if (key === '__pikuahStatus') {
@@ -22657,11 +22711,14 @@
             function updatePopupPermitTotal(rootEl) {
                 if (!rootEl) return;
                 const rows = rootEl.querySelectorAll('.permit-row');
-                let total = 0, count = 0;
+                let total = 0, count = 0, hakala = 0;
                 rows.forEach(r => {
                     const cb = r.querySelector('input[data-permit-include]');
                     if (cb && cb.checked) {
                         total += Number(r.dataset.permitUnits) || 0;
+                        // un-counting a permit un-counts the הקלה granted to it — the baseline
+                        // has to follow the checkboxes, or the comparison drifts on the first click
+                        hakala += Number(r.dataset.permitHakala) || 0;
                         count++;
                     }
                 });
@@ -22671,8 +22728,12 @@
                 if (totalEl) totalEl.textContent = total;
                 if (countEl) countEl.textContent = count;
                 if (totalLine) {
-                    const planU = parsePlanUnits(totalLine.dataset.planUnits);
+                    const planU = parsePlanUnits(totalLine.dataset.planBase) + hakala;
                     totalLine.style.color = permitTotalColor(total, planU);
+                    const hakEl = rootEl.querySelector('[data-permit-hakala-extra]');
+                    const sumEl = rootEl.querySelector('[data-permit-base-sum]');
+                    if (hakEl) hakEl.textContent = hakala;
+                    if (sumEl) sumEl.textContent = planU;
                 }
             }
             function buildPermitsSummaryHTML(permits, buttonDataAttr) {
@@ -22730,7 +22791,8 @@
                     const checked = inclusion[i];
                     const oKey = permitOverrideKey(p, i, scopeKey);
                     const u = Number(p.units) || 0;
-                    html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" data-permit-closed="${stage === PERMIT_STAGE_DONE ? '1' : '0'}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:${stage === PERMIT_STAGE_DONE ? 'none' : 'flex'};gap:6px;align-items:flex-start">`;
+                    const _rowHak = permitHakalaExtra(p);
+                    html += `<div class="permit-row" data-permit-units="${u}" data-permit-hakala="${_rowHak}" data-permit-stage="${stage}" data-permit-category="${cat}" data-permit-closed="${stage === PERMIT_STAGE_DONE ? '1' : '0'}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:${stage === PERMIT_STAGE_DONE ? 'none' : 'flex'};gap:6px;align-items:flex-start">`;
                     html += `<label style="display:flex;align-items:center;padding-top:2px;cursor:pointer" title="כלול בסה״כ יח״ד">`;
                     html += `<input type="checkbox" data-permit-include data-permit-key="${oKey}"${checked ? ' checked' : ''} style="cursor:pointer;margin:0;accent-color:#5dade2">`;
                     html += `</label>`;
@@ -22751,6 +22813,13 @@
                     if (_srcs.length > 1) {
                         const _slabel = _srcs.map(s => s === 'all_permits' ? 'תב"ע' : s === 'tama38' ? 'תמ"א' : 'משלים').join('+');
                         html += `<span class="popup-status-badge" style="background:#5a4b7a22;color:#b9a7dd;border:1px solid #5a4b7a;font-size:10px" title="ההיתר מופיע בכמה מקורות — הסטטוס המוצג הוא העדכני מביניהם">📚 ${_slabel}</span>`;
+                    }
+                    const _hak = permitHakala(p.file_number);
+                    if (_hak) {
+                        const _hx = permitHakalaExtra(p);
+                        const _ht = ((_hak.published || []).join(' ') + (_hak.decision ? ' | ' + _hak.decision : ''))
+                            .replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                        html += `<span class="popup-status-badge" style="background:#f5b04122;color:#f5b041;border:1px solid #f5b041;font-size:10px;font-weight:bold" title="${_ht}">📈 הקלה בהיתר${_hak.pct ? ' ' + _hak.pct + '%' : ''}${_hx ? ' (+' + _hx + ')' : ''}</span>`;
                     }
                     if (_occ) {
                         const _od = (_occ.form4_date || '').trim();
@@ -22788,15 +22857,33 @@
                 const totalAll = permits.reduce((sum, p) => sum + (Number(p.units) || 0), 0);
                 if (totalAll > 0 || (fallbackUnits && fallbackUnits > 0)) {
                     const displayTotal = totalIncluded || (totalAll === 0 && fallbackUnits ? fallbackUnits : 0);
-                    const totalColor = permitTotalColor(displayTotal, cmpPlanU);
+                    // A §149 הקלה the committee approved raises what this plan may lawfully
+                    // build, so it is the baseline — not the permits — that moves. Without it
+                    // מתחם אגד reads "350 מול 296" in red although both permits were issued on
+                    // an approved +20% שב״ס הקלה.
+                    const _hakRecs = permitsHakalaRecords(permits, inclusion);
+                    const _hakExtra = cmpPlanU > 0 ? permitsHakalaExtra(permits, inclusion) : 0;
+                    const _cmpWithHak = cmpPlanU + _hakExtra;
+                    const totalColor = permitTotalColor(displayTotal, _cmpWithHak);
                     const defaultMode = defaultsInfo.rules.length > 0
                         ? 'סינון אוטומטי: ' + defaultsInfo.rules.join(', ')
                         : 'ברירת מחדל: כל ההיתרים נספרים';
                     html += `<div style="padding:8px 12px;border-top:1px solid #2a2a4a;text-align:center">`;
                     if (cmpPlanU > 0) {
-                        html += `<div style="font-size:11px;color:#aaa;margin-bottom:4px">תב״ע: <span style="color:#fff;font-weight:bold">${cmpPlanU}</span> יח״ד</div>`;
+                        html += `<div style="font-size:11px;color:#aaa;margin-bottom:4px">תב״ע: <span style="color:#fff;font-weight:bold">${cmpPlanU}</span> יח״ד`;
+                        if (_hakExtra > 0) {
+                            const _hakTitle = _hakRecs.map(r => (r.file_number || '') + ': ' + (r.published || []).join(' ')).join(' | ')
+                                .replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                            html += ` <span style="color:#f5b041" title="${_hakTitle}">+ <span data-permit-hakala-extra>${_hakExtra}</span> הקלה בהיתר</span>`
+                                  + ` <span style="color:#fff;font-weight:bold">= <span data-permit-base-sum>${_cmpWithHak}</span></span>`;
+                        }
+                        html += `</div>`;
+                        if (_hakExtra > 0) {
+                            const _hakSum = hakalaSummaryText(_hakRecs);
+                            html += `<div style="font-size:10px;color:#f5b041;margin-bottom:4px">📈 הקלה שניתנה בהיתר${_hakSum ? ' — ' + _hakSum : ''}</div>`;
+                        }
                     }
-                    html += `<div data-permit-total-line data-plan-units="${cmpPlanU}" style="font-size:13px;font-weight:bold;color:${totalColor}">סה"כ <span data-permit-total-units>${displayTotal}</span> יח"ד בהיתרים</div>`;
+                    html += `<div data-permit-total-line data-plan-units="${_cmpWithHak}" data-plan-base="${cmpPlanU}" style="font-size:13px;font-weight:bold;color:${totalColor}">סה"כ <span data-permit-total-units>${displayTotal}</span> יח"ד בהיתרים</div>`;
                     html += `<div style="font-size:10px;color:#8888aa;margin-top:2px">נספרו <span data-permit-included-count>${countIncluded}</span> מתוך ${permits.length} היתרים <span style="opacity:0.7">(${defaultMode})</span></div>`;
                     html += `</div>`;
                 }
@@ -23809,6 +23896,25 @@
                         }
                         html += '</div>';
                     }
+                }
+                // The two ways a plan's יח״ד ceiling can legally move at permit stage, shown
+                // in the same place and deliberately worded apart: a טבלה 5 note is a right the
+                // PLAN grants in advance, a הקלה is a decision the LICENSING COMMITTEE made on a
+                // specific permit. A plan can carry either, and the comparison the permits popup
+                // draws uses whichever applies.
+                const _hakRecsPlan = permitsHakalaRecords(getPermitsForTaba(props.taba));
+                if (_hakRecsPlan.length) {
+                    const _hx = _hakRecsPlan.reduce((n, r) => n + (r.extra || 0), 0);
+                    const _esc2 = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    const _txt = _hakRecsPlan.map(r => (r.published || [])[0] || r.decision || '').filter(Boolean)[0] || '';
+                    html += '<div style="margin:4px 0 2px;padding:6px 8px;background:#241f14;border:1px solid #4a3f24;border-radius:6px;font-size:11px;color:#f0e2bf" title="' + _esc2(_txt) + '">';
+                    html += '<span style="color:#f5b041;font-weight:600">📈 הקלה שניתנה בהיתר'
+                          + (_hx ? ' — תוספת של ' + _hx.toLocaleString('he-IL') + ' יח"ד מעל טבלה 5' : '')
+                          + '</span>';
+                    const _sum = hakalaSummaryText(_hakRecsPlan);
+                    if (_sum) html += '<div style="margin-top:3px;color:#9ca3af;font-size:10px;line-height:1.35">' + _esc2(_sum) + '</div>';
+                    if (_txt) html += '<div style="margin-top:3px;color:#9ca3af;font-size:10px;line-height:1.35">' + _esc2(_txt) + '</div>';
+                    html += '</div>';
                 }
                 // Table 5 "unit bonus" note — permits MORE יח"ד at building-permit stage.
                 const _bonus = planUnitBonus(props);
@@ -29345,10 +29451,17 @@
                                 : false;
                             const unitsAdd = baseUnitsAdd + (includeConditional ? conditionalSum : 0) + (includeBonus ? bonusSum : 0);
                             const inclusion = getEffectivePermitInclusion(mergedPermits, scopeKey, unitsAdd);
+                            // הקלה שניתנה בהיתר — approved §149 variance for MORE יח״ד. Unlike the
+                            // טבלה 5 note it is not optional: it has already been granted on these
+                            // very permits, so it always joins the baseline they are judged against
+                            // (no checkbox). Counted only for permits that are themselves counted.
+                            const hakalaRecs = permitsHakalaRecords(mergedPermits, inclusion);
+                            const hakalaSum = permitsHakalaExtra(mergedPermits, inclusion);
+                            const unitsBaseline = unitsAdd + hakalaSum;
                             const unitsInPermits = mergedPermits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
                             const countedPermits = inclusion.filter(Boolean).length;
-                            const gap = unitsInPermits - unitsAdd;
-                            const pctDone = unitsAdd > 0 ? (unitsInPermits / unitsAdd * 100) : 0;
+                            const gap = unitsInPermits - unitsBaseline;
+                            const pctDone = unitsBaseline > 0 ? (unitsInPermits / unitsBaseline * 100) : 0;
                             const reasonFromGS = p.permit_growth_reason || p['סיבת חריגה'] || '';
                             const reasonLocal = (() => {
                                 try { return (JSON.parse(localStorage.getItem('oranim:permitGrowthReasons') || '{}'))[p.plan_name || primary.taba] || ''; }
@@ -29363,7 +29476,9 @@
                                 plan_summary: p.plan_summary || p.plan_name_he || '',
                                 status_mavat: p.status_mavat || '',
                                 minahak: p.minahak || '',
-                                unitsAdd, unitsInPermits, gap, pctDone,
+                                unitsAdd: unitsBaseline, unitsPlan: unitsAdd, unitsInPermits, gap, pctDone,
+                                hakala: hakalaSum,
+                                hakalaText: hakalaSummaryText(hakalaRecs),
                                 conditional: conditionalSum,
                                 includeConditional,
                                 bonus: bonusSum,
@@ -29447,7 +29562,7 @@
                                             <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
                                                 <div><strong style={{color:'#fff'}}>שם:</strong> {row.plan_summary || '—'}</div>
                                                 <div><strong style={{color:'#fff'}}>מינהל:</strong> {row.minahak || '—'}</div>
-                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}{row.bonus > 0 && <span style={{fontSize:11,color:'#5dade2',marginRight:6}} title={row.bonusNote}>{row.includeBonus ? '(כולל ' + fmt(row.bonus) + ' תוספת טבלה 5 ' + row.bonusPct + '%)' : '(+ ' + fmt(row.bonus) + ' תוספת טבלה 5 ' + row.bonusPct + '% לא נכלל)'}</span>}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}{row.bonus > 0 && <span style={{fontSize:11,color:'#5dade2',marginRight:6}} title={row.bonusNote}>{row.includeBonus ? '(כולל ' + fmt(row.bonus) + ' תוספת טבלה 5 ' + row.bonusPct + '%)' : '(+ ' + fmt(row.bonus) + ' תוספת טבלה 5 ' + row.bonusPct + '% לא נכלל)'}</span>}{row.hakala > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={'הקלה שאושרה בהיתר' + (row.hakalaText ? ' — ' + row.hakalaText : '') + ' · נכללת תמיד: היא כבר ניתנה להיתרים האלה, ולכן היא חלק ממה שמותר לבנות'}>{'(כולל ' + fmt(row.hakala) + ' הקלה בהיתר)'}</span>}</div>
                                                 <div><strong style={{color:'#fff'}}>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.unitsInPermits)}</span></div>
                                                 <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
