@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v55-rail-detach';
+const CACHE_VERSION = 'v56-permit-units';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

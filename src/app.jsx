@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-rail-detach';
+        const APP_VERSION = '2026-09-15-permit-units';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -22392,8 +22392,10 @@
             }
             // Permit-inclusion logic for "סה״כ יח״ד בהיתרים" total.
             // Sequential default rules (each operates on the survivors of the previous):
-            //   1. Revision dedup — permits sharing the same tik (year/num) keep only the highest
-            //      revision (.NN). E.g. 2020/0377.00 < .01 < .02 → keep .02.
+            //   1. Tik dedup — permits sharing the same tik (year/num) are normally stages of
+            //      ONE application (.00 = הריסה/חפירה, .01 = the main permit), so only one
+            //      survives. A tik whose sub-files carry DIFFERENT unit counts and no revision
+            //      wording is instead one project's separate scopes and each is counted.
             //   2. Infrastructure exclusion — drop permits whose request_description contains
             //      preparatory-work keywords (הריסה, דיפון, חפירה, ביסוס, עבודות מקדימות).
             //   3. Units dedup — only if the surviving sum still exceeds plan_units × 1.10:
@@ -22418,6 +22420,32 @@
                 const n = Number(v);
                 return isFinite(n) && n > 0 ? n : 0;
             }
+            // Wording that marks a sub-file as a REVISION of its siblings rather than a
+            // scope of its own: "תכנית שינויים", "היתר שינויים מהיתר 2021/0153.00",
+            // "שינוים בבניין... 42 יח\"ד במקום 45", "חידוש היתר". 'שינו' is a stem on
+            // purpose — YK text carries שינוי / שינויים / שינוים (typo) alike.
+            const PERMIT_REVISION_WORDS = ['שינו', 'חידוש היתר', 'הארכת היתר', 'תיקון היתר', 'במקום'];
+            function isRevisionWorded(p) {
+                const t = (p.request_type || '') + ' ' + (p.request_description || '');
+                return PERMIT_REVISION_WORDS.some(w => t.indexOf(w) !== -1);
+            }
+            // Preparatory stage of someone else's permit — הריסה/חפירה/דיפון/ביסוס with no
+            // building of its own. Its יח״ד are the SAME units the main permit will carry
+            // (often the whole site's, as in 2020/0355.01 "חפירה ודיפון ... עבור 361 יח\"ד"
+            // against a 105-unit plot permit), so it must never add to a tik's total.
+            const PERMIT_BUILD_KEYWORDS = ['הקמת', 'בניית', 'בניה חדשה', 'בנייה חדשה', 'בניין חדש', 'בנין חדש', 'היתר ראשי', 'תוספת בניה'];
+            function isPrepStagePermit(p) {
+                const t = (p.request_type || '') + ' ' + (p.request_description || '');
+                return PERMIT_INFRA_KEYWORDS.some(w => t.indexOf(w) !== -1)
+                    && !PERMIT_BUILD_KEYWORDS.some(w => t.indexOf(w) !== -1);
+            }
+            // A sub-file counts as its own scope only if it carries at least this share of the
+            // tik's largest unit count — 2023/0107.02 (70 of 280) is a second pair of buildings,
+            // 2022/0246.02 (7 of 210, "ניוד של 7 יח\"ד מכלל הפרויקט") is an amendment.
+            const PERMIT_SCOPE_MIN_SHARE = 0.2;
+            // …and the survivor of a revision chain must carry at least this share, so a partial
+            // amendment never replaces the full count it amends.
+            const PERMIT_SURVIVOR_MIN_SHARE = 0.5;
             function parsePermitFileNumber(fn) {
                 if (!fn) return { tik: '', revision: 0 };
                 const m = String(fn).match(/^(\d+\/\d+)\.(\d+)$/);
@@ -22428,7 +22456,23 @@
                 const planU = parsePlanUnits(planUnits);
                 const included = permits.map(() => true);
                 const rules = [];
-                // Rule 1: revision dedup within same tik
+                // Rule 1: one תיק, one application — except when it isn't.
+                // The .NN sub-files of a תיק are USUALLY stages of a single application
+                // (.00 = הריסה/חפירה/דיפון, .01 = the main permit) and counting them all
+                // double-counts the same יח״ד. But a big project's file can carry genuinely
+                // SEPARATE scopes: מתחם אגד 2023/0107 is .01 = 2 מגדלים / 280 יח״ד AND
+                // .02 = 2 בניינים / 70 יח״ד over shared parking — one project, 350 יח״ד.
+                // Telling them apart, in order:
+                //   1. a prep stage (הריסה/חפירה/דיפון with no building of its own) never counts
+                //      while a real building permit shares the tik — its יח״ד are that permit's
+                //   2. two or more survivors that each carry ≥20% of the tik's largest count,
+                //      and no revision wording anywhere → separate scopes → count each
+                //   3. otherwise one application → keep the LATEST revision that still states
+                //      ≥50% of the largest count, so a partial amendment ("ניוד של 7 יח״ד
+                //      מכלל הפרויקט") never replaces the 210 it amends, while a genuine
+                //      restatement ("42 יח״ד במקום 45") does
+                // Blindly keeping the highest revision is what made מתחם אגד read "0 יח״ד
+                // בהיתרים" — its .02 had no units extracted while its .01 states 280.
                 const tikGroups = new Map();
                 permits.forEach((p, i) => {
                     const parsed = parsePermitFileNumber(p.file_number || '');
@@ -22436,14 +22480,44 @@
                     if (!tikGroups.has(parsed.tik)) tikGroups.set(parsed.tik, []);
                     tikGroups.get(parsed.tik).push({ i: i, revision: parsed.revision });
                 });
-                let revisionDups = 0;
+                let revisionDups = 0, separateScopes = 0;
+                const unitsAt = i => Number(permits[i].units) || 0;
                 tikGroups.forEach(group => {
                     if (group.length <= 1) return;
-                    let maxRev = -1, maxIdx = -1;
-                    for (const g of group) { if (g.revision > maxRev) { maxRev = g.revision; maxIdx = g.i; } }
-                    for (const g of group) { if (g.i !== maxIdx) { included[g.i] = false; revisionDups++; } }
+                    const drop = g => { if (included[g.i]) { included[g.i] = false; revisionDups++; } };
+                    // prep stages never stand on their own while a real building permit shares
+                    // the tik (2023/0326: .00 = הריסה/חפירה for 210, .01 = the 426-unit permit)
+                    const built = group.filter(g => !isPrepStagePermit(permits[g.i]));
+                    const pool = built.length ? built : group;
+                    group.forEach(g => { if (pool.indexOf(g) === -1) drop(g); });
+                    const maxU = pool.reduce((m, g) => Math.max(m, unitsAt(g.i)), 0);
+                    const scopes = pool.filter(g => unitsAt(g.i) >= Math.max(1, maxU * PERMIT_SCOPE_MIN_SHARE));
+                    // Two sub-files stating the SAME count are the same thing restated (2024/0206:
+                    // .00 = הריסה+דיפון "עבור בנייה של 220 יח״ד", .01 = the 220-unit permit), so a
+                    // second scope has to bring a DIFFERENT count with it.
+                    const distinctScopeUnits = new Set(scopes.map(g => unitsAt(g.i)));
+                    if (distinctScopeUnits.size > 1 && !pool.some(g => isRevisionWorded(permits[g.i]))) {
+                        // separate scopes of one project — count each; anything below the share
+                        // (or unit-less) is a stage of one of them and would only double-count
+                        // one survivor per distinct count — the latest revision stating it
+                        const perCount = new Map();
+                        scopes.forEach(g => {
+                            const k = unitsAt(g.i), cur = perCount.get(k);
+                            if (!cur || g.revision > cur.revision) perCount.set(k, g);
+                        });
+                        const keep = Array.from(perCount.values());
+                        pool.forEach(g => { if (keep.indexOf(g) === -1) drop(g); });
+                        separateScopes++;
+                        return;
+                    }
+                    // one application: the latest revision that still states a full count
+                    const cands = maxU > 0 ? pool.filter(g => unitsAt(g.i) >= maxU * PERMIT_SURVIVOR_MIN_SHARE) : pool;
+                    let best = cands[0];
+                    cands.forEach(g => { if (g.revision > best.revision) best = g; });
+                    pool.forEach(g => { if (g.i !== best.i) drop(g); });
                 });
                 if (revisionDups > 0) rules.push('גרסאות תיק (' + revisionDups + ')');
+                if (separateScopes > 0) rules.push('בקשות נפרדות באותו תיק (' + separateScopes + ')');
                 // Rule 2: infrastructure exclusion — only for permits with no units assigned.
                 // Real prep-work permits (foundation, demo-only, light-rail prep) carry zero
                 // residential units; demo+rebuild permits with units > 0 are real construction
