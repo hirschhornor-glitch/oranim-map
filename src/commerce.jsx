@@ -12,8 +12,8 @@
  */
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-15a';
-const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-15a';
+const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-15b';
+const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-15b';
 const CENTER = [31.7767, 35.2245];
 const ZOOM = 12;
 
