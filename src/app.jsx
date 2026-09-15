@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-permit-hakala';
+        const APP_VERSION = '2026-09-15-permit-scope';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1552,6 +1552,42 @@
             }
             return '';
         }
+        // Roll the building-supervision files up per taba into a coarse plan stage, SKIPPING
+        // permits that do not execute the plan (permitPlanIrrelevance): 101-0511923's tennis
+        // centre has a closed תעודת גמר file, and rolling it up by taba is what handed the
+        // plan — and its הפרשה מבונה — a "גמר בנייה" it never earned.
+        // Runs twice on load: once when pikuah_status lands, and again after the permits are
+        // annotated, since either can arrive first.
+        function rebuildPikuahStageByTaba() {
+            const bp = window.__pikuahStatus || {};
+            const byBase = {};
+            Object.keys(window.__allPermits || {}).forEach(tb => {
+                const e = (window.__allPermits || {})[tb];
+                ((e && e.permits) || []).forEach(pp => {
+                    const k = permitBaseKey(pp.file_number);
+                    if (k && !byBase[k]) byBase[k] = pp;
+                });
+            });
+            const acc = {};
+            Object.values(bp).forEach(r => {
+                const t = String((r && r.taba) || '').trim();
+                if (!t) return;
+                const p = byBase[permitBaseKey(r.permit_tik || r.file_number || '')];
+                if (p && p.plan_irrelevant) return;
+                const st = pikuahConstructionState(r);
+                const a = acc[t] || (acc[t] = { construction: 0, built: 0 });
+                if (st === 'construction') a.construction++;
+                else if (st === 'built') a.built++;
+            });
+            const stageByTaba = {};
+            Object.keys(acc).forEach(t => {
+                const a = acc[t];
+                const st = a.construction > 0 ? 'ה-בבנייה' : (a.built > 0 ? 'ו-גמר בנייה' : '');
+                if (st) stageByTaba[t] = { stage: st, evidence: a };
+            });
+            window.__pikuahStageByTaba = stageByTaba;
+            return stageByTaba;
+        }
         // Did this permit reach תעודת גמר (construction finished)? Sourced from pikuah_status.json.
         function permitReachedGmar(fileNumber) {
             const g = window.__pikuahGmarByFile;
@@ -1657,6 +1693,62 @@
         // and the raw window.__allPermits loops alike) — plus `cross_attributed` as the
         // audit trail of WHY. Idempotent and order-independent: called both when the plans
         // land (rebuildPlanByTaba) and when the permit JSONs land, since either can be first.
+        // ── האם ההיתר בכלל מבצע את התכנית הזו? ────────────────────────────────
+        // YK lists every permit that ever touched the parcels, so a plan inherits two
+        // kinds of strangers:
+        //   • permits older than the plan — 101-0112557 (פינוי בינוי of 13 buildings,
+        //     approved 2015) carries 1977/1981/1987/1994/1996 apartment extensions on the
+        //     very buildings it means to demolish. A file opened before the plan existed
+        //     cannot be executing it, yet they added 28 יח"ד and made the plan read
+        //     "הוצאת היתר בנייה".
+        //   • permits for something else inside the area — 101-0511923's tennis centre
+        //     reached תעודת גמר and handed the plan (and, downstream, its הפרשה מבונה)
+        //     a "גמר בנייה" that has nothing to do with its housing.
+        // Evidence that THIS plan is being built means: the file was opened no earlier
+        // than the plan's approval, and the permit builds the plan's substance — יח"ד,
+        // the site works that precede them, or the public building the plan imposes.
+        // Failing permits stay visible (they are real permits on the parcel) but are
+        // marked, and every counter and stage ladder skips them.
+        const PERMIT_PROJECT_WORKS = ['הריסה', 'הריסת', 'חפירה', 'דיפון', 'ביסוס', 'עבודות עפר', 'רצפה ראשונה'];
+        const PERMIT_PUBLIC_USES = ['מבנה ציבור', 'מבני ציבור', 'לצרכי ציבור', 'כנסת', 'מעון', 'גן ילדים',
+                                    'גני ילדים', 'מתנ', 'מרכז קהילתי', 'כיתות', 'בית ספר', 'מקווה',
+                                    'רווחה', 'מרפאה'];
+        // Anything that describes a building going up. Wide on purpose: a plan with no
+        // יח"ד of its own (offices, commerce) is executed by permits that carry no unit
+        // count at all — "מגדל מס' 1 - 26 קומות לשימוש תעסוקה" has to read as construction.
+        const PERMIT_BUILD_WORDS = ['הקמת', 'בניית', 'בנית', 'בניה חדשה', 'בנייה חדשה', 'בניין', 'בנין',
+                                    'מבנה', 'מגדל', 'קומות', 'תוספת בניה', 'תוספת בנייה', 'הרחבה'];
+        // "ע"פ תב"ע 4627" / "מתכנית 511923" — the plan the permit itself names.
+        const PERMIT_PLAN_REF_RE = /(?:תב["״']?ע|תכנית|תוכנית)\s*(?:מס['׳.]?\s*)?((?:101-)?\d{3,7}[א-ת]?)/g;
+        // A permit whose file has been dormant since this long before the plan was approved
+        // was issued under the previous regime. A year of slack, because a project's permit
+        // and its plan are usually in flight together (101-0696104 was approved 10/2025 with
+        // its excavation permit already out in 08/2025 — that one IS the plan being built).
+        const PERMIT_PREDATES_MONTHS = 12;
+        function permitDateMonths(s) {
+            const m = String(s || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            return m ? parseInt(m[3], 10) * 12 + parseInt(m[2], 10) : 0;
+        }
+        // '' when the permit executes this plan, otherwise the reason it does not.
+        function permitPlanIrrelevance(p, planProps) {
+            if (!p || !planProps) return '';
+            const approved = permitDateMonths(planProps.mavat_date);
+            const acted = permitDateMonths(p.status_date);
+            if (approved && acted && approved - acted >= PERMIT_PREDATES_MONTHS) return 'קודם לתכנית';
+            const text = (p.request_type || '') + ' ' + (p.request_description || '');
+            const taba = String(planProps.taba || '').replace(/^0+/, '');
+            const refs = [];
+            let m;
+            PERMIT_PLAN_REF_RE.lastIndex = 0;
+            while ((m = PERMIT_PLAN_REF_RE.exec(text)) !== null) refs.push(m[1].replace('101-', '').replace(/^0+/, ''));
+            if (refs.length && taba && refs.indexOf(taba) === -1) return 'לפי תב"ע אחרת';
+            const planUnits = parseFloat(planProps.units_total) || parseFloat(planProps.units_add) || 0;
+            if (planUnits > 0 && (Number(p.units) || 0) > 0) return '';
+            if (PERMIT_PROJECT_WORKS.some(w => text.indexOf(w) !== -1)) return '';
+            if (PERMIT_PUBLIC_USES.some(w => text.indexOf(w) !== -1)) return '';
+            if (PERMIT_BUILD_WORDS.some(w => text.indexOf(w) !== -1)) return '';
+            return 'אינו מבצע את התכנית';
+        }
         function markCrossAttributedPermits() {
             const all = window.__allPermits, byTaba = window.__planByTaba;
             if (!all || !byTaba) return 0;
@@ -1668,6 +1760,9 @@
                 const ptype = normalizePlanType((props && props.plan_type) || '');
                 if (['תשתיות', 'מוסתר'].includes(ptype)) return;   // the rail/infra plan itself — keep
                 entry.permits.forEach(p => {
+                    // same pass, second question: does this permit execute the plan at all?
+                    // (annotation only — the permit stays in the list and in the popup)
+                    p.plan_irrelevant = permitPlanIrrelevance(p, props) || undefined;
                     if (p.cross_attributed) { n++; return; }
                     if (!isRailInfraPermit(p)) return;
                     p.cross_attributed = 'רק"ל';
@@ -6246,22 +6341,7 @@
                                 // permits map layer (see reconcilePermitStage). REAL construction
                                 // somewhere (טופס 2 / activity) → ה-בבנייה; else a completion → ו-גמר
                                 // בנייה. A merely-opened / enforcement file is NOT construction.
-                                const acc = {};
-                                Object.values(bp).forEach(r => {
-                                    const t = String((r && r.taba) || '').trim();
-                                    if (!t) return;
-                                    const st = pikuahConstructionState(r);
-                                    const a = acc[t] || (acc[t] = { construction: 0, built: 0 });
-                                    if (st === 'construction') a.construction++;
-                                    else if (st === 'built') a.built++;
-                                });
-                                const stageByTaba = {};
-                                Object.keys(acc).forEach(t => {
-                                    const a = acc[t];
-                                    const st = a.construction > 0 ? 'ה-בבנייה' : (a.built > 0 ? 'ו-גמר בנייה' : '');
-                                    if (st) stageByTaba[t] = { stage: st, evidence: a };
-                                });
-                                window.__pikuahStageByTaba = stageByTaba;
+                                rebuildPikuahStageByTaba();
                                 // Per-PERMIT record indexed by revision-agnostic base tik, so
                                 // getPermitStage() can refine a single permit from its OWN file.
                                 // Keep the strongest construction state across a permit's revisions
@@ -6320,6 +6400,7 @@
                         // Detach citywide rail works that YK filed under our plans, BEFORE any
                         // index is derived from the permits (stage index, licensing ladder…).
                         const _xattr = markCrossAttributedPermits();
+                        rebuildPikuahStageByTaba();   // now that off-plan permits are marked
                         if (_xattr) console.log('[Permits] detached', _xattr, 'rail-infrastructure permits misattributed to non-infra plans');
                         // Per-taba set of permit stages + global per-stage counts, for the
                         // permits-layer STAGE filter. Uses the same rule as getPermitStage() but
@@ -22150,6 +22231,9 @@
                 if (!t) return null;
                 let best = -1, stage = null;
                 getPermitsForTaba(t).forEach(p => {
+                    // only permits that execute the plan may speak for its stage: a 0-unit
+                    // tennis centre reaching תעודת גמר is not this plan reaching גמר בנייה
+                    if (p.plan_irrelevant) return;
                     const s = getPermitStage(p);
                     const pr = PERMIT_STAGE_PRIO[s] != null ? PERMIT_STAGE_PRIO[s] : 0;
                     if (pr > best) { best = pr; stage = s; }
@@ -22510,6 +22594,14 @@
                 const planU = parsePlanUnits(planUnits);
                 const included = permits.map(() => true);
                 const rules = [];
+                // Rule 0: a permit that does not execute this plan never counts toward it —
+                // an extension filed in 1977 on a building the 2015 פינוי בינוי will demolish,
+                // or a tennis centre inside the area. See permitPlanIrrelevance().
+                let offPlan = 0;
+                permits.forEach((p, i) => {
+                    if (p && p.plan_irrelevant) { included[i] = false; offPlan++; }
+                });
+                if (offPlan > 0) rules.push('לא מבצעים את התכנית (' + offPlan + ')');
                 // Rule 1: one תיק, one application — except when it isn't.
                 // The .NN sub-files of a תיק are USUALLY stages of a single application
                 // (.00 = הריסה/חפירה/דיפון, .01 = the main permit) and counting them all
@@ -22787,6 +22879,12 @@
                     const cat = classifyPermitCategory(p);
                     const catLabel = getPermitCategoryLabel(cat);
                     const unitsStr = p.units ? p.units + ' יח"ד' : '';
+                    // floors + existing/added split come from the permit's quantities table
+                    // (proc 242700454). Only shown when that table was actually read —
+                    // a description-scraped permit has neither.
+                    const floorsStr = (Number(p.floors) || 0) > 0 ? p.floors + ' קומות' : '';
+                    const unitsSplit = (p.units_source === 'yk_quantities' && (Number(p.units_existing) || 0) > 0)
+                        ? p.units_existing + '→' + p.units : '';
                     const tamaStr = p.tama_type ? ` | ${p.tama_type}` : '';
                     const checked = inclusion[i];
                     const oKey = permitOverrideKey(p, i, scopeKey);
@@ -22801,7 +22899,8 @@
                     const permitUrl = p.file_number ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(p.file_number) + '&SystemCode=26400046' : '';
                     html += permitUrl ? `<a href="${permitUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:bold;color:#5dade2;direction:ltr;text-decoration:none">${p.file_number}</a>` : `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
                     html += `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">`;
-                    if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
+                    if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff"${unitsSplit ? ' title="קיים→סה״כ: ' + unitsSplit + '"' : ''}>${unitsStr}</span>`;
+                    if (floorsStr) html += `<span style="font-size:11px;color:#9a9aba" title="מטבלת הכמויות של ההיתר">${floorsStr}</span>`;
                     // canonical bucket (from permits_master.json) — the derived classification
                     if (_mp && _mp.bucket) {
                         const _bc = PERMIT_BUCKET_COLOR[_mp.bucket] || '#7f8c8d';
@@ -22813,6 +22912,9 @@
                     if (_srcs.length > 1) {
                         const _slabel = _srcs.map(s => s === 'all_permits' ? 'תב"ע' : s === 'tama38' ? 'תמ"א' : 'משלים').join('+');
                         html += `<span class="popup-status-badge" style="background:#5a4b7a22;color:#b9a7dd;border:1px solid #5a4b7a;font-size:10px" title="ההיתר מופיע בכמה מקורות — הסטטוס המוצג הוא העדכני מביניהם">📚 ${_slabel}</span>`;
+                    }
+                    if (p.plan_irrelevant) {
+                        html += `<span class="popup-status-badge" style="background:#5a5a6a22;color:#9a9aba;border:1px solid #5a5a6a;font-size:10px" title="ההיתר נמצא בתחום התכנית אך אינו מבצע אותה — אינו נספר ביח״ד ואינו קובע את שלב התכנית">⊘ ${p.plan_irrelevant}</span>`;
                     }
                     const _hak = permitHakala(p.file_number);
                     if (_hak) {

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v58-permit-hakala';
+const CACHE_VERSION = 'v59-permit-scope';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
