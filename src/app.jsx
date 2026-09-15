@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-alloc-stage';
+        const APP_VERSION = '2026-09-15-alloc-filter';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -10682,17 +10682,37 @@
                 });
                 rows.sort((a, b) => (b.outSqm + b.hafSqm) - (a.outSqm + a.hafSqm));
 
-                // Aggregate by facility use (from the program free text)
-                const useCounts = {}; PARSER_KEYS.forEach(k => useCounts[k] = 0);
-                let totalOut = 0, totalHaf = 0;
-                rows.forEach(r => {
-                    totalOut += r.outSqm; totalHaf += r.hafSqm;
-                    const parsed = parseFacilitiesFromText([r.outPrg, r.hafPrg].filter(Boolean).join('; '));
-                    PARSER_KEYS.forEach(k => { useCounts[k] += parsed.counts[k] || 0; });
-                });
-                const useRows = PARSER_KEYS.filter(k => useCounts[k] > 0)
-                    .map(k => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#e8d9c8">' + ALLOC_LBLS[k] + '</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + useCounts[k] + '</td></tr>')
-                    .join('');
+                // -- Status / permit-stage filter -----------------------------------------
+                // Filters on the SAME label the status column shows, so the option list follows
+                // the "פירוט שלב ההיתר" toggle: one "היתרים" bucket while it is off, the
+                // individual stages while it is on. '__permit__' keeps "every plan holding a
+                // permit" reachable in both modes. One filter drives the KPIs, the use table, the
+                // detail table, the CSV and the map marking together - no view can disagree with
+                // another.
+                let stageFilter = 'all';
+                function rowPasses(r) {
+                    if (stageFilter === 'all') return true;
+                    if (stageFilter === '__permit__') return planHasPermit(r.taba);
+                    return statusCell(r.taba, r.status).label === stageFilter;
+                }
+                function filteredRows() { return rows.filter(rowPasses); }
+                function filteredDetailRows() { return detailRows.filter(rowPasses); }
+                function useCountsFor(rs) {
+                    const c = {}; PARSER_KEYS.forEach(k => c[k] = 0);
+                    rs.forEach(r => {
+                        const parsed = parseFacilitiesFromText([r.outPrg, r.hafPrg].filter(Boolean).join('; '));
+                        PARSER_KEYS.forEach(k => { c[k] += parsed.counts[k] || 0; });
+                    });
+                    return c;
+                }
+                function sumSqm(rs) {
+                    let out = 0, haf = 0;
+                    rs.forEach(r => { out += r.outSqm; haf += r.hafSqm; });
+                    return { out, haf };
+                }
+                function filterLabel() {
+                    return stageFilter === 'all' ? '' : stageFilter === '__permit__' ? 'כל התכניות עם היתר' : stageFilter;
+                }
 
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
                 // Explode each plan into one row per facility use × source (שב"צ עתידי / הפרשה מבונה),
@@ -10738,7 +10758,7 @@
                 });
                 detailRows.sort((a, b) => (a.use < b.use ? -1 : a.use > b.use ? 1 : (a.taba < b.taba ? -1 : a.taba > b.taba ? 1 : 0)));
                 function buildPlanRows() {
-                    return detailRows.map(r => {
+                    return filteredDetailRows().map(r => {
                         const sc = statusCell(r.taba, r.status);
                         const statusStyle = sc.permit ? 'color:' + sc.color + ';font-weight:bold' : 'color:#999';
                         const stage = sc.permit ? planPermitStage(r.taba) : null;
@@ -10766,11 +10786,107 @@
                     if (!showStageDetail) return '<span style="color:#777">' + permitted.length + ' מתוך ' + rows.length + ' התכניות מדווחות "היתרים" — סמן לפירוט השלב</span>';
                     const byStage = {};
                     permitted.forEach(r => { const s = planPermitStage(r.taba) || 'unknown'; byStage[s] = (byStage[s] || 0) + 1; });
+                    // Each chip is also a one-click filter - the fastest way to ask "show me only
+                    // the allocations that are actually under construction".
                     return Object.keys(byStage)
                         .sort((a, b) => (PERMIT_STAGE_PRIO[b] != null ? PERMIT_STAGE_PRIO[b] : -1) - (PERMIT_STAGE_PRIO[a] != null ? PERMIT_STAGE_PRIO[a] : -1))
-                        .map(s => '<span style="display:inline-block;margin-left:10px;white-space:nowrap">' +
-                            '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + getPermitStageColor(s) + ';margin-left:4px"></span>' +
-                            esc(getPermitStageLabel(s)) + ': <b style="color:#e8d9c8">' + byStage[s] + '</b></span>').join('');
+                        .map(st => {
+                            const lbl = getPermitStageLabel(st);
+                            const on = stageFilter === lbl;
+                            const col = getPermitStageColor(st);
+                            return '<span class="alloc-stage-chip" data-stage="' + esc(lbl) + '" title="סנן לשלב זה" ' +
+                                'style="display:inline-block;margin-left:8px;white-space:nowrap;cursor:pointer;padding:1px 6px;border-radius:9px;' +
+                                (on ? 'background:' + col + '33;outline:1px solid ' + col : '') + '">' +
+                                '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + col + ';margin-left:4px"></span>' +
+                                esc(lbl) + ': <b style="color:#e8d9c8">' + byStage[st] + '</b></span>';
+                        }).join('');
+                }
+                // Every filter-dependent part of the modal, rebuilt from the same two predicates.
+                function buildKpis() {
+                    const fr = filteredRows();
+                    const t = sumSqm(fr);
+                    const of = (v) => stageFilter === 'all' ? String(v) : v + '<span style="font-size:12px;color:#8a7a6a"> / ' + rows.length + '</span>';
+                    return kpi('תכניות תורמות', of(fr.length), '#d4a373') +
+                        kpi('שב"צ עתידי (מ"ר)', Math.round(t.out).toLocaleString(), '#c9a227') +
+                        kpi('הפרשה מבונה (מ"ר)', Math.round(t.haf).toLocaleString(), '#b5651d') +
+                        kpi('סה"כ שטח ציבור (מ"ר)', Math.round(t.out + t.haf).toLocaleString(), '#e8d9c8') +
+                        kpi('מסירה בפועל (תכניות)', fr.filter(r => deliveryLabel(r.taba)).length, '#86b89a');
+                }
+                function buildUseSection() {
+                    const c = useCountsFor(filteredRows());
+                    const ur = PARSER_KEYS.filter(k => c[k] > 0)
+                        .map(k => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#e8d9c8">' + ALLOC_LBLS[k] + '</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + c[k] + '</td></tr>')
+                        .join('');
+                    return ur
+                        ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' +
+                          '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373">מספר מתקנים</th></tr></thead><tbody>' + ur + '</tbody></table>'
+                        : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>';
+                }
+                function buildDetailSection() {
+                    const fd = filteredDetailRows();
+                    return '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + fd.length +
+                            (stageFilter === 'all' ? '' : ' מתוך ' + detailRows.length) + ')</h4>' +
+                        (fd.length
+                            ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody id="alloc-tbody">' + buildPlanRows() + '</tbody></table>'
+                            : '<div style="color:#999;font-size:13px;padding:10px">' +
+                              (stageFilter === 'all' ? 'לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.' : 'אין הפרשות בסטטוס "' + esc(filterLabel()) + '" בתחום הנבחר.') + '</div>');
+                }
+                function buildFilterOptions() {
+                    const counts = {};
+                    rows.forEach(r => {
+                        const sc = statusCell(r.taba, r.status);
+                        const k = sc.label || '—';
+                        if (!counts[k]) counts[k] = { n: 0, permit: sc.permit };
+                        counts[k].n++;
+                    });
+                    const permitted = rows.filter(r => planHasPermit(r.taba)).length;
+                    const keys = Object.keys(counts).sort((x, y) => counts[y].n - counts[x].n);
+                    const opt = (v, l) => '<option value="' + esc(v) + '"' + (stageFilter === v ? ' selected' : '') + '>' + esc(l) + '</option>';
+                    let h = opt('all', '— כל הסטטוסים (' + rows.length + ') —');
+                    const permKeys = keys.filter(k => counts[k].permit);
+                    if (permitted) {
+                        h += '<optgroup label="היתרים">' + opt('__permit__', 'כל התכניות עם היתר (' + permitted + ')');
+                        permKeys.forEach(k => { h += opt(k, k + ' (' + counts[k].n + ')'); });
+                        h += '</optgroup>';
+                    }
+                    const statKeys = keys.filter(k => !counts[k].permit);
+                    if (statKeys.length) {
+                        h += '<optgroup label="סטטוס סטטוטורי">';
+                        statKeys.forEach(k => { h += opt(k, k + ' (' + counts[k].n + ')'); });
+                        h += '</optgroup>';
+                    }
+                    return h;
+                }
+                // A stage label picked before the toggle flipped no longer exists afterwards
+                // ("היתרים" <-> "בביצוע"), so fall back to the identical plan set rather than
+                // silently widening the report back to everything.
+                function reconcileFilter() {
+                    if (stageFilter === 'all' || stageFilter === '__permit__') return;
+                    if (!rows.some(r => statusCell(r.taba, r.status).label === stageFilter)) stageFilter = '__permit__';
+                }
+                function wireStageChips() {
+                    document.querySelectorAll('#alloc-stage-sum .alloc-stage-chip').forEach(el => {
+                        el.addEventListener('click', () => {
+                            const lbl = el.getAttribute('data-stage');
+                            stageFilter = (stageFilter === lbl) ? 'all' : lbl;
+                            refreshAlloc();
+                        });
+                    });
+                }
+                function refreshAlloc() {
+                    const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+                    set('alloc-kpis', buildKpis());
+                    set('alloc-uses', buildUseSection());
+                    set('alloc-detail', buildDetailSection());
+                    set('alloc-stage-sum', buildStageSummary());
+                    wireStageChips();
+                    const sel = document.getElementById('alloc-filter');
+                    if (sel) sel.innerHTML = buildFilterOptions();
+                    if (window.__allocMarkLayer) {
+                        const n = drawAllocMarks();   // re-mark the new subset; keep the count honest
+                        const b = document.getElementById('alloc-mark');
+                        if (b) b.textContent = n ? '🗺️ הסר סימון (' + n + ')' : '🗺️ סמן על המפה';
+                    }
                 }
 
                 // ── Map marking ──────────────────────────────────────────────────────────────
@@ -10832,7 +10948,7 @@
                     const legendRows = {};   // label → { color, plans }
                     let marked = 0;
                     const bounds = L.latLngBounds([]);
-                    rows.forEach(r => {
+                    filteredRows().forEach(r => {
                         const sc = statusCell(r.taba, r.status);
                         const feats = (lots[r.taba] && lots[r.taba].length) ? lots[r.taba] : (planGeoms[r.taba] || []);
                         if (!feats.length) return;
@@ -10875,7 +10991,8 @@
                         '<b style="color:#5c4636">🏛️ הפרשות לפי סטטוס</b>' +
                         '<button id="alloc-mark-legend-x" style="background:none;border:none;color:#888;font-size:16px;line-height:1;cursor:pointer" title="הסר סימון">&times;</button></div>' +
                         '<div style="font-size:10px;color:#666;margin-bottom:5px">' + esc(scopeLabel) + ' · ' + marked + ' תכניות' +
-                        (showStageDetail ? ' · פירוט שלב ההיתר' : '') + '</div>' +
+                        (showStageDetail ? ' · פירוט שלב ההיתר' : '') +
+                        (stageFilter === 'all' ? '' : ' · סינון: ' + esc(filterLabel())) + '</div>' +
                         // Many statuses (a quarter-wide run can hit 16) - two columns keep the
                         // legend from running off the map and out of the printed snapshot.
                         '<div style="' + (legendKeys.length > 8 ? 'column-count:2;column-gap:12px' : '') + '">' +
@@ -10910,26 +11027,18 @@
                         '<h3 id="alloc-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e8d9c8;font-size:16px;outline:none;border-bottom:1px dashed #5c4636;padding-bottom:2px;cursor:text">🏛️ הפרשות מבונות ומבני ציבור עתידיים — ' + esc(scopeLabel) + '</h3>' +
                         '<button id="alloc-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                     '</div>' +
-                    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">' +
-                        kpi('תכניות תורמות', rows.length, '#d4a373') +
-                        kpi('שב"צ עתידי (מ"ר)', Math.round(totalOut).toLocaleString(), '#c9a227') +
-                        kpi('הפרשה מבונה (מ"ר)', Math.round(totalHaf).toLocaleString(), '#b5651d') +
-                        kpi('סה"כ שטח ציבור (מ"ר)', Math.round(totalOut + totalHaf).toLocaleString(), '#e8d9c8') +
-                        kpi('מסירה בפועל (תכניות)', rows.filter(r => deliveryLabel(r.taba)).length, '#86b89a') +
-                    '</div>' +
-                    (useRows
-                        ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' +
-                          '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373">מספר מתקנים</th></tr></thead><tbody>' + useRows + '</tbody></table>'
-                        : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>') +
+                    '<div id="alloc-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">' + buildKpis() + '</div>' +
+                    '<div id="alloc-uses">' + buildUseSection() + '</div>' +
                     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#241c16;border:1px solid #3a2e26;border-radius:8px;padding:7px 10px;margin-bottom:10px">' +
                         '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#e8d9c8;white-space:nowrap" title="&quot;היתרים&quot; היא קטגוריה כללית — סמן כדי לראות את השלב בפועל של ההיתר המתקדם ביותר בתכנית">' +
                             '<input type="checkbox" id="alloc-stage-detail" style="accent-color:#4ba1f0"> פירוט שלב ההיתר</label>' +
+                        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#e8d9c8;white-space:nowrap" title="מצמצם את כל הדוח — מדדים, שימושים, פירוט, ייצוא וסימון על המפה">' +
+                            'סינון:' +
+                            '<select id="alloc-filter" style="background:#2a2118;color:#e8d9c8;border:1px solid #5c4636;border-radius:5px;padding:3px 6px;font-family:inherit;font-size:12px;max-width:230px">' + buildFilterOptions() + '</select>' +
+                        '</label>' +
                         '<div id="alloc-stage-sum" style="font-size:11px;color:#bbb;flex:1;min-width:180px">' + buildStageSummary() + '</div>' +
                     '</div>' +
-                    '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + detailRows.length + ')</h4>' +
-                    (detailRows.length
-                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody id="alloc-tbody">' + buildPlanRows() + '</tbody></table>'
-                        : '<div style="color:#999;font-size:13px;padding:10px">לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.</div>') +
+                    '<div id="alloc-detail">' + buildDetailSection() + '</div>' +
                     '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start;flex-wrap:wrap">' +
                         '<button id="alloc-csv" style="background:#5c4636;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                         '<button id="alloc-mark" title="צובע את ההפרשות על המפה לפי הסטטוס המוצג בטבלה — ומופיע גם בהדפסה" style="background:#3a2e26;border:1px solid #5c4636;color:#e8d9c8;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🗺️ סמן על המפה</button>' +
@@ -10939,16 +11048,18 @@
                 document.body.appendChild(div);
                 document.getElementById('alloc-close').addEventListener('click', () => div.remove());
 
-                // Toggle: re-render the status column, the bucket breakdown and — if the marking is
-                // already on the map — the marking, so the three never disagree.
+                // Toggle: the status column, the bucket breakdown, the filter options and — if the
+                // marking is on the map — the marking all re-render together, so no two can disagree.
                 document.getElementById('alloc-stage-detail').addEventListener('change', (e) => {
                     showStageDetail = !!e.target.checked;
-                    const tb = document.getElementById('alloc-tbody');
-                    if (tb) tb.innerHTML = buildPlanRows();
-                    const ss = document.getElementById('alloc-stage-sum');
-                    if (ss) ss.innerHTML = buildStageSummary();
-                    if (window.__allocMarkLayer) drawAllocMarks();
+                    reconcileFilter();
+                    refreshAlloc();
                 });
+                document.getElementById('alloc-filter').addEventListener('change', (e) => {
+                    stageFilter = e.target.value || 'all';
+                    refreshAlloc();
+                });
+                wireStageChips();
 
                 const markBtn = document.getElementById('alloc-mark');
                 async function markOnMap() {
@@ -10968,19 +11079,24 @@
                     const title = document.getElementById('alloc-title')?.textContent || 'הפרשות_מבונות';
                     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
                     const lines = [];
+                    // The export mirrors what is on screen, filter included — an export that
+                    // silently held more rows than the report would be read as a different answer.
+                    const fr = filteredRows(), fd = filteredDetailRows(), t = sumSqm(fr), fc = useCountsFor(fr);
                     lines.push(['מדד', 'ערך'].join(','));
-                    lines.push(['תכניות תורמות', rows.length].join(','));
-                    lines.push([q('שב"צ עתידי (מ"ר)'), Math.round(totalOut)].join(','));
-                    lines.push([q('הפרשה מבונה (מ"ר)'), Math.round(totalHaf)].join(','));
-                    lines.push([q('סה"כ שטח ציבור (מ"ר)'), Math.round(totalOut + totalHaf)].join(','));
+                    lines.push([q('סינון סטטוס/שלב'), q(stageFilter === 'all' ? 'הכל' : filterLabel())].join(','));
+                    lines.push(['תכניות תורמות', fr.length].join(','));
+                    if (stageFilter !== 'all') lines.push([q('מתוך סה"כ תכניות בתחום'), rows.length].join(','));
+                    lines.push([q('שב"צ עתידי (מ"ר)'), Math.round(t.out)].join(','));
+                    lines.push([q('הפרשה מבונה (מ"ר)'), Math.round(t.haf)].join(','));
+                    lines.push([q('סה"כ שטח ציבור (מ"ר)'), Math.round(t.out + t.haf)].join(','));
                     lines.push('');
                     lines.push([q('שימוש'), q('מספר מתקנים')].join(','));
-                    PARSER_KEYS.filter(k => useCounts[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), useCounts[k]].join(',')));
+                    PARSER_KEYS.filter(k => fc[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), fc[k]].join(',')));
                     lines.push('');
                     // "שלב היתר" is always exported, whatever the on-screen toggle says — the export
                     // is the analysable copy, so the detail behind the "היתרים" bucket goes with it.
                     lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('שלב היתר'), q('מסירה בפועל'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
-                    detailRows.forEach(r => {
+                    fd.forEach(r => {
                         const st = planHasPermit(r.taba) ? planPermitStage(r.taba) : null;
                         lines.push([q(r.taba), q(r.name), q(statusCell(r.taba, r.status).label), q(st ? getPermitStageLabel(st) : ''), q(deliveryLabel(r.taba)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(','));
                     });
@@ -11008,8 +11124,9 @@
                     } catch (e) { console.warn('[Allocations] map capture failed', e); }
                     const win = window.open('', '_blank');
                     win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
-                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#8d6e63;margin:0 0 8px}h4{color:#5c4636;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#f0e8e0;color:#5c4636}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button{display:none!important}input{display:none!important}</style></head><body>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#8d6e63;margin:0 0 8px}h4{color:#5c4636;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#f0e8e0;color:#5c4636}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button{display:none!important}input,select{display:none!important}</style></head><body>');
                     win.document.write('<h3>' + esc(title) + '</h3>');
+                    if (stageFilter !== 'all') win.document.write('<div style="color:#5c4636;font-size:12px;margin:0 0 8px"><b>סינון:</b> ' + esc(filterLabel()) + '</div>');
                     if (mapImg) win.document.write('<img class="map-snapshot" src="' + mapImg + '"/>');
                     win.document.write(div.innerHTML);
                     win.document.close();
