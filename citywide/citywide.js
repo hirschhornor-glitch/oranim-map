@@ -28,11 +28,16 @@
   // they are in neither the commerce scope nor Oranim's, so they showed as
   // "ללא מיקום" despite XPLAN publishing a boundary for every one of them.
   var BOUNDS = "../data/housing_plan_boundaries.geojson";
+  // Per-plan realization, built for the commerce report but plan-level and so
+  // useful to all three: it already covers 56 of the 104 maintenance-fund plans
+  // and 73 of the 152 rental ones. "Is the fund money actually coming?" and "are
+  // the rental units being built?" are the same question as "did it get a permit".
+  var PERMITS = "../data/ce_permit_status_citywide.json";
   var CENTER = [31.7683, 35.2137], ZOOM = 12;
 
   var state = { tab: "ce", q: "", status: "", sub: "", src: "", sort: "", desc: true,
                 sel: null };
-  var D = { ce: null, housing: null, parcels: null, bounds: null };
+  var D = { ce: null, housing: null, parcels: null, bounds: null, permits: null };
   var map = null, layer = null, geoByPlan = {}, mapNote = "";
 
   var esc = function (s) {
@@ -49,6 +54,35 @@
     if (v >= 1e3) return Math.round(v / 1e3) + "K";
     return String(Math.round(v));
   };
+  // Realization, shared by all three reports. Keyed by the same padded plan number.
+  var realOf = function (plan) { return (D.permits || {})[plan] || null; };
+  var yn = function (v) {
+    return v ? '<span class="hi">✓</span>' : '<span class="empty">—</span>';
+  };
+  // Stage columns, appended to every report's table. A plan that is not in the
+  // realization file is left blank rather than shown as "no" -- absence there
+  // means "not checked", and the two must not read the same.
+  var REAL_COLS = [
+    { k: "rfile", t: "תיק רישוי", get: function (r) { var v = realOf(r.plan); return v ? (v.has_licensing_file ? 1 : 0) : null; },
+      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } },
+    { k: "rissued", t: "היתר", get: function (r) { var v = realOf(r.plan); return v ? (v.any_issued ? 1 : 0) : null; },
+      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } },
+    { k: "rbuild", t: "בביצוע", get: function (r) { var v = realOf(r.plan); return v ? (v.in_construction ? 1 : 0) : null; },
+      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } },
+    { k: "rdone", t: "גמר", get: function (r) { var v = realOf(r.plan); return v ? (v.completed ? 1 : 0) : null; },
+      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } }
+  ];
+  var realDetail = function (plan) {
+    var v = realOf(plan);
+    if (!v) return '<div class="empty">מצב המימוש לא נבדק לתכנית זו.</div>';
+    var bits = [];
+    if (v.permit_count) bits.push("תיקי רישוי: " + v.permit_count);
+    if (v.stage) bits.push("שלב: " + esc(v.stage));
+    if (v.form4_date) bits.push("טופס 4: " + esc(v.form4_date));
+    if (v.occupied) bits.push("מאוכלס");
+    return bits.length ? "<div><b>מימוש:</b> " + bits.join(" · ") + "</div>" : "";
+  };
+
   var pad7 = function (t) {
     return "101-" + String(t).split("-").pop().replace(/\D/g, "").padStart(7, "0");
   };
@@ -76,23 +110,50 @@
         { k: "emp", t: "תעסוקה (מ\"ר)", n: true, get: function (r) { return r.ce.employment_sqm || 0; },
           fmt: function (v) { return v ? '<span class="hi">' + n0(v) + "</span>" : '<span class="empty">—</span>'; } },
         { k: "uns", t: "לא מפוצל", n: true, get: function (r) { return r.ce.ce_unsplit_sqm || 0; },
+          fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } },
+        // Government offices. Table 5 designates these "מבנים ומוסדות ציבור
+        // למינהל ציבורי" -- a PUBLIC designation -- so they are their own column
+        // and are never added into תעסוקה.
+        { k: "adm", t: "מינהל ציבורי", n: true, get: function (r) { return r.ce.public_admin_sqm || 0; },
+          fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } },
+        // CE combined with a use that is neither (residential/public/tourism):
+        // reported so the gap is visible, never attributed to either side.
+        { k: "mix", t: "מעורב", n: true, get: function (r) { return r.ce.mixed_other_sqm || 0; },
           fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } }
-      ],
+      ].concat(REAL_COLS),
       detail: function (r) {
         var h = "";
         if (r.ce.split_source) h += "<div><b>מקור הפיצול:</b> " + esc(r.ce.split_source) + "</div>";
         if (r.ce.split_note) h += '<div class="quote">' + esc(r.ce.split_note) + "</div>";
-        if (r.ce.stage) h += "<div><b>שלב ביצוע:</b> " + esc(r.ce.stage) + "</div>";
+        if (r.ce.t5_status && r.ce.t5_status !== "success")
+          h += '<div class="empty">טבלה 5: ' + esc(r.ce.t5_status) + "</div>";
+        h += realDetail(r.plan);
+        h += realDetail(r.plan);
         return h || '<div class="empty">אין פירוט נוסף.</div>';
       },
       kpis: function (rows) {
         var com = rows.reduce(function (a, r) { return a + (r.ce.commerce_sqm || 0); }, 0);
         var emp = rows.reduce(function (a, r) { return a + (r.ce.employment_sqm || 0); }, 0);
-        return [
+        var uns = rows.reduce(function (a, r) { return a + (r.ce.ce_unsplit_sqm || 0); }, 0);
+        var mix = rows.reduce(function (a, r) { return a + (r.ce.mixed_other_sqm || 0); }, 0);
+        var adm = rows.reduce(function (a, r) { return a + (r.ce.public_admin_sqm || 0); }, 0);
+        var appr = rows.filter(function (r) { return r.status === "אישור"; });
+        var cnt = function (f) {
+          return appr.filter(function (r) { var v = realOf(r.plan); return v && v[f]; }).length;
+        };
+        var k = [
           { n: n0(rows.length), l: "תכניות עם שטחי מסחר/תעסוקה" },
           { n: short(com) + ' מ"ר', l: "סך מסחר" },
           { n: short(emp) + ' מ"ר', l: "סך תעסוקה" }
         ];
+        if (adm) k.push({ n: short(adm) + ' מ"ר', l: "מינהל ציבורי (ייעוד ציבורי)" });
+        if (uns) k.push({ n: short(uns) + ' מ"ר', l: "מסחר+תעסוקה יחד, לא מפוצל" });
+        if (mix) k.push({ n: short(mix) + ' מ"ר', l: "מעורב עם שימוש שאינו CE" });
+        k.push({ n: n0(appr.length), l: "מאושרות" });
+        k.push({ n: n0(cnt("has_licensing_file")), l: "בעלות תיק רישוי" });
+        k.push({ n: n0(cnt("in_construction")), l: "בביצוע" });
+        k.push({ n: n0(cnt("completed")), l: "גמר בנייה" });
+        return k;
       }
     },
     fund: {
@@ -112,11 +173,12 @@
         { k: "amount", t: "גובה הקרן", n: true, get: function (r) { return r.fund.amount_ils; },
           fmt: function (v) { return v ? '<span class="hi">' + ils(v) + "</span>" : '<span class="empty">לא צוין</span>'; } },
         { k: "section", t: "סעיף", get: function (r) { return r.fund.section || ""; } }
-      ],
+      ].concat(REAL_COLS),
       detail: function (r) {
         var h = "";
         if (r.fund.mechanism) h += '<div class="quote"><b>המנגנון:</b> ' + esc(r.fund.mechanism) + "</div>";
         if (r.fund.amount_text) h += '<div class="quote"><b>ציטוט הסכום:</b> ' + esc(r.fund.amount_text) + "</div>";
+        h += realDetail(r.plan);
         return h || '<div class="empty">אין ציטוט שנשמר.</div>';
       },
       kpis: function (rows) {
@@ -149,7 +211,7 @@
         { k: "dsrc", t: "מקור המשך", get: function (r) { return r.rental.duration_source || ""; } },
         { k: "flag", t: "לבדיקה", get: function (r) { return r.rental.review ? 1 : 0; },
           fmt: function (v) { return v ? '<span class="pill ocr">שימוש מותר?</span>' : ""; } }
-      ],
+      ].concat(REAL_COLS),
       detail: function (r) {
         var h = "";
         (r.rental.evidence || []).forEach(function (e) {
@@ -161,6 +223,7 @@
           }
           h += '<div class="quote">' + (lab ? "<b>" + lab + ":</b> " : "") + esc(e) + "</div>";
         });
+        h += realDetail(r.plan);
         return h || '<div class="empty">אין ציטוט שנשמר.</div>';
       },
       kpis: function (rows) {
@@ -491,9 +554,11 @@
       });
   }
 
-  Promise.all([getJSON(HOUSING), getJSON(CE), getJSON(PARCELS, true), getJSON(BOUNDS, true)])
+  Promise.all([getJSON(HOUSING), getJSON(CE), getJSON(PARCELS, true), getJSON(BOUNDS, true),
+               getJSON(PERMITS, true)])
     .then(function (res) {
       D.housing = res[0]; D.ce = res[1]; D.parcels = res[2]; D.bounds = res[3];
+      D.permits = (res[4] && res[4].by_plan) || {};
       if (!D.parcels) {
         // Losing the map is survivable; losing it silently is not.
         mapNote = "<b>המפה אינה זמינה:</b> שכבת המגרשים לא נטענה — " +
