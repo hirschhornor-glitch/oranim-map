@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-15T20:51:41",
+ "generated_at": "2026-09-15T21:27:07",
  "scope": "כלל עירוני — ירושלים",
  "totals": {
   "archive_plans": 4571,
@@ -10,10 +10,10 @@
   "fund_with_amount": 77,
   "fund_total_ils": 1008453445,
   "rental": 152,
-  "fund_with_units": 91,
+  "fund_with_units": 92,
   "rental_with_units": 39,
   "rental_units_total": 4823,
-  "conditional_units_total": 1735,
+  "conditional_units_total": 1742,
   "rental_review": 0
  },
  "rows": [
@@ -28,7 +28,7 @@
    "in_oranim": false,
    "source": "ocr",
    "pages": 58,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000247779/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -53,7 +53,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 35,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000262173/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -128,7 +128,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 26,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000351135/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -201,7 +201,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 25,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000417527/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -273,7 +273,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 23,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000922115/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -491,7 +491,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 22,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000975317/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -586,7 +586,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 14,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001007835/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -611,10 +611,10 @@
    "in_oranim": false,
    "source": "text",
    "pages": 29,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001009395/310",
    "rental": {
     "units_t5": null,
-    "units_state": "no_export",
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -707,7 +707,7 @@
    "in_oranim": false,
    "source": "ocr",
    "pages": 17,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001018959/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -755,7 +755,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 17,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001022491/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -780,7 +780,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 23,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001022843/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -902,7 +902,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 24,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001031577/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -1081,7 +1081,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 17,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005055404/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -1647,7 +1647,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 15,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005118768/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -1695,10 +1695,10 @@
    "in_oranim": false,
    "source": "text",
    "pages": 24,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005122048/310",
    "rental": {
     "units_t5": null,
-    "units_state": "no_export",
+    "units_state": "none_in_table",
     "duration": "7",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1768,7 +1768,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 15,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005128452/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -1793,10 +1793,10 @@
    "in_oranim": false,
    "source": "text",
    "pages": 32,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005129200/310",
    "rental": {
     "units_t5": null,
-    "units_state": "no_export",
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2604,7 +2604,7 @@
    "in_oranim": false,
    "source": "text",
    "pages": 14,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005209390/310",
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
@@ -2723,10 +2723,10 @@
    "in_oranim": false,
    "source": "text",
    "pages": 40,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005213798/310",
    "rental": {
     "units_t5": null,
-    "units_state": "no_export",
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2842,10 +2842,10 @@
    "in_oranim": false,
    "source": "text",
    "pages": 24,
-   "mavat_url": null,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005219496/310",
    "fund": {
-    "conditional_units_t5": null,
-    "conditional_units_state": "no_export",
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": 6945287,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,945,287 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.17",
