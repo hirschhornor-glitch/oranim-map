@@ -96,15 +96,18 @@
   // which figures rest on a machine-readable table and which on a reading.
   var SRC_MARK = {
     visual: ["†", "נקרא ידנית מעמוד טבלה 5 ב-PDF — מבא\"ת לא מייצא טבלה לתכנית זו"],
-    prose:  ["‡", "נאמר במפורש בהוראות התכנית — בטבלה 5 אין שורת מגורים להשכרה"]
+    prose:  ["‡", "נאמר במפורש בהוראות התכנית — בטבלה 5 אין שורת מגורים להשכרה"],
+    pct:    ["*", "מחושב: אחוז ההשכרה שבהוראות כפול סך יח\"ד המגורים בטבלה 5. מספר גזור, לא מספר שהתכנית נוקבת בו"]
   };
-  var unitCell = function (v, state, read, note) {
+  var unitCell = function (v, state, read, note, dispute) {
     if (v) {
       var mk = SRC_MARK[read];
       return '<span class="hi">' + n0(v) + "</span>" +
         (mk ? '<sup class="vis" title="' + mk[1] + '">' + mk[0] + "</sup>" : "") +
-        (note ? '<sup class="vis dup" title="' + note + '">*</sup>' : "");
+        (note ? '<sup class="vis dup" title="' + note + '">≡</sup>' : "");
     }
+    if (dispute)
+      return '<span class="empty dup" title="' + dispute + '">—</span>';
     if (state === "no_export")
       return '<span class="empty" title="מבא\"ת לא מייצא טבלה 5 לתכנית זו">?</span>';
     var t = read === "visual" ? "נבדק ידנית בטבלה 5 — אין שורה כזו" : "אין שורה כזו בטבלה 5";
@@ -274,7 +277,8 @@
           get: function (r) { return r.rental.units_t5; },
           fmt: function (v, r) { return unitCell(v, r.rental.units_state, r.rental.units_read,
               r.rental.restates_plan && ("אותן יח\"ד נקבעו כבר בתכנית " +
-                r.rental.restates_plan + " — לא נספרות פעמיים במניין העירוני")); } },
+                r.rental.restates_plan + " — לא נספרות פעמיים במניין העירוני"),
+              r.rental.units_disputed); } },
         { k: "dur", t: "משך ההשכרה", get: function (r) { return r.rental.duration; },
           fmt: function (v) {
             return v ? '<span class="hi">' + (isNaN(+v) ? esc(v) : v + " שנים") + "</span>"
@@ -288,8 +292,18 @@
       detail: function (r) {
         var h = "";
         if (r.rental.units_quote)
-          h += '<div class="quote"><b>הציטוט שממנו נקבע מספר היח"ד:</b> ' +
-               esc(r.rental.units_quote) + "</div>";
+          h += '<div class="quote"><b>' +
+               (r.rental.units_read === "pct" ? "הציטוט שממנו חושב מספר היח\"ד"
+                                             : "הציטוט שממנו נקבע מספר היח\"ד") +
+               ':</b> ' + esc(r.rental.units_quote) +
+               (r.rental.units_read === "pct"
+                 ? ' <span class="empty">(' + r.rental.units_pct + "% × " +
+                   n0(r.rental.units_base) + ' יח"ד מגורים בטבלה 5 = ' +
+                   n0(r.rental.units_t5) + ")</span>"
+                 : "") + "</div>";
+        if (r.rental.units_disputed)
+          h += '<div class="quote"><b>למה אין כאן מספר:</b> ' +
+               esc(r.rental.units_disputed) + "</div>";
         if (r.rental.restates_plan)
           h += '<div class="quote"><b>שימו לב:</b> התכנית מחלקת מחדש את יחידות ההשכרה ' +
                'שנקבעו בתכנית ' + esc(r.rental.restates_plan) +
@@ -317,6 +331,14 @@
           { n: n0(rows.reduce(function (a, r) {
               return a + (r.rental.restates_plan ? 0 : (r.rental.units_t5 || 0)); }, 0)),
             l: 'יח"ד להשכרה (' + rows.filter(function (r) { return r.rental.units_t5; }).length + " תכניות)" },
+          // Derived figures shown apart as well as inside the sum: a third of the
+          // citywide total is arithmetic on a percentage, and a reader deciding what to
+          // rely on needs to see how much of the number that is.
+          { n: n0(rows.reduce(function (a, r) {
+              return a + (r.rental.units_read === "pct" ? (r.rental.units_t5 || 0) : 0); }, 0)),
+            l: "מתוכם מחושבים מאחוז (" +
+               rows.filter(function (r) { return r.rental.units_read === "pct"; }).length +
+               " תכניות)" },
           { n: n0(expl.length), l: "משך מפורש בהוראות" },
           { n: n0(stat.length), l: "משך מהתוספת השישית" }
         ];
