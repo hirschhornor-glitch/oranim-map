@@ -89,9 +89,22 @@
   // Three states, never collapsed: a count, a table with no such row, and a plan
   // Mavat refuses to export. A value read off the PDF by eye carries a dagger, so a
   // hand read is never mistaken for the export's own sum across the whole table.
-  var unitCell = function (v, state, read) {
-    if (v) return '<span class="hi">' + n0(v) + "</span>" +
-      (read === "visual" ? '<sup class="vis" title="נקרא ידנית מעמוד טבלה 5 ב-PDF — מבא\"ת לא מייצא טבלה לתכנית זו">†</sup>' : "");
+  // Where a count came from, marked in the cell itself. Three sources of decreasing
+  // authority: Mavat's own xlsx export of Table 5 (unmarked), a hand read of the table
+  // page for the plans it will not export (†), and an explicit sentence in the הוראות
+  // for plans whose table has no rental row at all (‡). A reader must be able to see
+  // which figures rest on a machine-readable table and which on a reading.
+  var SRC_MARK = {
+    visual: ["†", "נקרא ידנית מעמוד טבלה 5 ב-PDF — מבא\"ת לא מייצא טבלה לתכנית זו"],
+    prose:  ["‡", "נאמר במפורש בהוראות התכנית — בטבלה 5 אין שורת מגורים להשכרה"]
+  };
+  var unitCell = function (v, state, read, note) {
+    if (v) {
+      var mk = SRC_MARK[read];
+      return '<span class="hi">' + n0(v) + "</span>" +
+        (mk ? '<sup class="vis" title="' + mk[1] + '">' + mk[0] + "</sup>" : "") +
+        (note ? '<sup class="vis dup" title="' + note + '">*</sup>' : "");
+    }
     if (state === "no_export")
       return '<span class="empty" title="מבא\"ת לא מייצא טבלה 5 לתכנית זו">?</span>';
     var t = read === "visual" ? "נבדק ידנית בטבלה 5 — אין שורה כזו" : "אין שורה כזו בטבלה 5";
@@ -259,7 +272,9 @@
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
         { k: "runits", t: 'יח"ד להשכרה', n: true,
           get: function (r) { return r.rental.units_t5; },
-          fmt: function (v, r) { return unitCell(v, r.rental.units_state, r.rental.units_read); } },
+          fmt: function (v, r) { return unitCell(v, r.rental.units_state, r.rental.units_read,
+              r.rental.restates_plan && ("אותן יח\"ד נקבעו כבר בתכנית " +
+                r.rental.restates_plan + " — לא נספרות פעמיים במניין העירוני")); } },
         { k: "dur", t: "משך ההשכרה", get: function (r) { return r.rental.duration; },
           fmt: function (v) {
             return v ? '<span class="hi">' + (isNaN(+v) ? esc(v) : v + " שנים") + "</span>"
@@ -272,6 +287,13 @@
       ].concat(REAL_COLS),
       detail: function (r) {
         var h = "";
+        if (r.rental.units_quote)
+          h += '<div class="quote"><b>הציטוט שממנו נקבע מספר היח"ד:</b> ' +
+               esc(r.rental.units_quote) + "</div>";
+        if (r.rental.restates_plan)
+          h += '<div class="quote"><b>שימו לב:</b> התכנית מחלקת מחדש את יחידות ההשכרה ' +
+               'שנקבעו בתכנית ' + esc(r.rental.restates_plan) +
+               ' — אותן יחידות, ולכן הן נספרות פעם אחת בלבד במניין העירוני.</div>';
         (r.rental.evidence || []).forEach(function (e) {
           var m = /^([RPD])(\[[^\]]*\])?:/.exec(e), lab = "";
           if (m) {
@@ -289,7 +311,11 @@
         var stat = rows.filter(function (r) { return r.rental.duration_source === "תוספת שישית"; });
         return [
           { n: n0(rows.length), l: "תכניות עם חובת השכרה" },
-          { n: n0(rows.reduce(function (a, r) { return a + (r.rental.units_t5 || 0); }, 0)),
+          // Units of a plan that only re-divides another plan's rental quota are left
+          // out of the sum: 101-1122241 splits the same 120 units 101-0969162 already
+          // fixed, and adding both would invent 120 rental units in the city.
+          { n: n0(rows.reduce(function (a, r) {
+              return a + (r.rental.restates_plan ? 0 : (r.rental.units_t5 || 0)); }, 0)),
             l: 'יח"ד להשכרה (' + rows.filter(function (r) { return r.rental.units_t5; }).length + " תכניות)" },
           { n: n0(expl.length), l: "משך מפורש בהוראות" },
           { n: n0(stat.length), l: "משך מהתוספת השישית" }
