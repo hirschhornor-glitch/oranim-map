@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v52-succession';
+const CACHE_VERSION = 'v53-alloc-stage';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
