@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-exec-permits';
+        const APP_VERSION = '2026-09-15-umbrella-works';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -22688,6 +22688,30 @@
                     }
                 });
                 if (infraExcluded > 0) rules.push('עבודות תשתית (' + infraExcluded + ')');
+                // Rule 2b: the same works one תיק up. A חפירה/דיפון permit taken out for the
+                // WHOLE project carries the project's unit count, and the building permits that
+                // follow it carry the same units again — 101-0454553 read 463 יח״ד because
+                // "חפירה ודיפון עבור 232 יח״ד" was added to the 116 + 115 of its two buildings.
+                // Once the buildings are on the table the umbrella permit is double counting;
+                // while they are not, it stays, as the only evidence of what was permitted.
+                const isPrepPermit = p => {
+                    const t = (p.request_type || '') + ' ' + (p.request_description || '');
+                    return PERMIT_PROJECT_WORKS.some(w => t.indexOf(w) !== -1)
+                        && !PERMIT_BUILD_WORDS.some(w => t.indexOf(w) !== -1);
+                };
+                let umbrella = 0;
+                const builtSum = permits.reduce((sum, p, i) =>
+                    (included[i] && !isPrepPermit(p)) ? sum + (Number(p.units) || 0) : sum, 0);
+                permits.forEach((p, i) => {
+                    if (!included[i] || !isPrepPermit(p)) return;
+                    const u = Number(p.units) || 0;
+                    // only when the buildings cover the SAME scope the works permit names.
+                    // 101-0560110 has a separate "עבודות עפר, חפירה ודיפון עבור 62 יח״ד" per
+                    // building — against 992 יח״ד of other buildings. A one-sided ">= 80%" test
+                    // swallowed those: they are the only evidence their own building was permitted.
+                    if (u > 0 && builtSum >= u * 0.8 && builtSum <= u * 1.25) { included[i] = false; umbrella++; }
+                });
+                if (umbrella > 0) rules.push('היתר עבודות שכבר מיוצג בבנייה (' + umbrella + ')');
                 // Rule 3: units dedup only if remaining sum still exceeds plan
                 const sumAfter12 = permits.reduce((s, p, i) => s + (included[i] ? (Number(p.units) || 0) : 0), 0);
                 const triggerUnitsDedup = !(planU > 0 && sumAfter12 <= planU * PERMIT_PLAN_TOLERANCE);
