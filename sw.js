@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v61-umbrella-works';
+const CACHE_VERSION = 'v62-plan-override';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

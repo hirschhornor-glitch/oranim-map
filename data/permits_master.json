@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-15T21:39:12",
+ "generated_at": "2026-09-15T22:18:11",
  "count": 1318,
  "bucket_counts": {
   "ibuy": 94,
@@ -1146,7 +1146,7 @@
    "units": 287,
    "tama_type": "",
    "address": "",
-   "taba": "666032",
+   "taba": "855668",
    "provenance": [
     "all_permits"
    ],
@@ -1159,6 +1159,10 @@
    "open_for_objections": false,
    "has_field_obs": true,
    "unassigned": false,
+   "cross_attributed": true,
+   "cross_attributed_from": [
+    "666032"
+   ],
    "is_tama38": false,
    "units_added": 287,
    "urban_renewal": true,

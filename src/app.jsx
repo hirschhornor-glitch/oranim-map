@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-umbrella-works';
+        const APP_VERSION = '2026-09-15-plan-override';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1732,6 +1732,14 @@
         // '' when the permit executes this plan, otherwise the reason it does not.
         function permitPlanIrrelevance(p, planProps) {
             if (!p || !planProps) return '';
+            // A hand-made attribution wins over every heuristic below: YK files a permit under
+            // every plan covering its parcels, and two neighbouring renewal plans share parcels
+            // without overlapping enough to merge into one report row — so the same permit is
+            // counted twice. data/permit_plan_overrides.json names the one plan it belongs to.
+            const ov = (window.__permitPlanOverrides || {})[permitBaseKey(p.file_number)];
+            if (ov && ov.taba && String(ov.taba) !== String(planProps.taba || '')) {
+                return 'שויך לתב"ע ' + ov.taba;
+            }
             const approved = permitDateMonths(planProps.mavat_date);
             const acted = permitDateMonths(p.status_date);
             if (approved && acted && approved - acted >= PERMIT_PREDATES_MONTHS) return 'קודם לתכנית';
@@ -5770,6 +5778,7 @@
                     ['__pikuahStatus', 'data/pikuah_status.json'],
                     ['__unitBonus', 'data/unit_bonus.json'],
                     ['__permitHakalot', 'data/permit_hakalot.json'],
+                    ['__permitPlanOverrides', 'data/permit_plan_overrides.json'],
                     ['__table5Units', 'data/table5_units.json'],
                     ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
                     ['__hafrashPermitUse', 'data/hafrash_permit_use.json'],
@@ -6318,6 +6327,14 @@
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__unitBonus') { window.__unitBonus = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__permitHakalot') { window.__permitHakalot = (data && data.by_permit) ? data.by_permit : {}; }
+                            else if (key === '__permitPlanOverrides') {
+                                // the file is written the human way ("2024/0568"); every lookup
+                                // here speaks permitBaseKey ("2024/568")
+                                const _raw = (data && data.by_tik) || {};
+                                const _norm = {};
+                                Object.keys(_raw).forEach(k => { _norm[permitBaseKey(k) || k] = _raw[k]; });
+                                window.__permitPlanOverrides = _norm;
+                            }
                             else if (key === '__table5Units') { window.__table5Units = data || {}; }
                             else if (key === '__muniCoSubmitter') { window.__muniCoSubmitter = data || {}; }
                             else if (key === '__pikuahStatus') {
