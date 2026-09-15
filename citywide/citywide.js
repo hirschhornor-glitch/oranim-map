@@ -92,6 +92,42 @@
                                  : '<span class="empty" title="אין שורה כזו בטבלה 5">—</span>';
   };
 
+  // Status colours MIRROR the single source in src/app.jsx (STATUS_GROUP_DEFS).
+  // Kept as a copy only because this is a separate site that does not load the app
+  // bundle — the keys, labels and colours must not drift from it, and a report must
+  // never invent its own status map. If the app's groups change, change them here too.
+  var STATUS_GROUPS = [
+    { key: "approved",    label: "אישור / מאושרת",      color: "#50d25a",
+      match: ["אישור", "מאושרת", "תבע מאושרת", "תחילת תוקף"] },
+    { key: "in_approval", label: "בהליך אישור",         color: "#50d25a",
+      match: ["בהליך אישור", "תבע - טרום אישור"] },
+    { key: "objections",  label: "התנגדויות",           color: "#fafa3c",
+      match: ["דיון בהתנגדויות ותיקונים", "הכרעה בהתנגדויות / אישור"] },
+    { key: "deposit",     label: "הפקדה",               color: "#fafa3c",
+      match: ["הפקדה להתנגדויות/השגות"] },
+    { key: "conditions",  label: "במילוי תנאים להפקדה", color: "#f56e05",
+      match: ["במילוי תנאים להפקדה"] },
+    { key: "open",        label: "פתיחת תיק / בבדיקה",  color: "#eb0000",
+      match: ["נפתח תיק למתכנן", "נפתח תיק תב\"ע", "נפתח תיק תבע", "בבדיקה תכנונית",
+              "נקלטה מקובץ מבאת", "נקלטה", "תכנית עומדת בתנאי סף", "בבדיקת תנאי סף",
+              "הכנת הודעה 77/78"] },
+    { key: "rejected",    label: "נגנזה / נדחתה",       color: "#888888",
+      match: ["נגנזה", "נדחתה", "נגנזה/נדחתה"] },
+    { key: "other",       label: "אחר",                 color: "#b0b0b0", match: [] }
+  ];
+  var _STATUS_IDX = (function () {
+    var m = {};
+    STATUS_GROUPS.forEach(function (g) {
+      g.match.forEach(function (x) { m[x] = g; m[x.replace(/\s+/g, "")] = g; });
+    });
+    return m;
+  })();
+  var statusGroup = function (st) {
+    if (!st) return STATUS_GROUPS[STATUS_GROUPS.length - 1];
+    return _STATUS_IDX[st] || _STATUS_IDX[String(st).replace(/\s+/g, "")] ||
+           STATUS_GROUPS[STATUS_GROUPS.length - 1];
+  };
+
   var pad7 = function (t) {
     return "101-" + String(t).split("-").pop().replace(/\D/g, "").padStart(7, "0");
   };
@@ -342,23 +378,59 @@
     rows.forEach(function (r) {
       (geoByPlan[r.plan] || []).forEach(function (f) {
         feats.push({ type: "Feature", geometry: f.geometry,
-                     properties: { plan: r.plan, name: r.name || "", st: r.status || "" } });
+                     properties: { plan: r.plan, name: r.name || "", st: r.status || "",
+                                   stColor: statusGroup(r.status).color,
+                                   stLabel: statusGroup(r.status).label } });
       });
     });
     if (!feats.length) return;
+    drawLegend(rows);
     layer = L.geoJSON({ type: "FeatureCollection", features: feats }, {
       style: function (f) {
+        // Outline carries the plan's STATUS, fill keeps the tab's own colour. Two
+        // independent facts, two independent channels: which report you are reading,
+        // and how far along the plan is.
         var on = state.sel === f.properties.plan;
-        return { color: color, weight: on ? 3 : 1, opacity: on ? 1 : .75,
-                 fillColor: color, fillOpacity: on ? .45 : .18 };
+        return { color: f.properties.stColor, weight: on ? 4 : 2, opacity: on ? 1 : .9,
+                 fillColor: color, fillOpacity: on ? .45 : .16 };
       },
       onEachFeature: function (f, lyr) {
         lyr.bindPopup('<div style="font-weight:700">' + esc(f.properties.name || f.properties.plan) +
-                      "</div><div>" + esc(f.properties.plan) +
-                      (f.properties.st ? " · " + esc(f.properties.st) : "") + "</div>");
+                      "</div><div>" + esc(f.properties.plan) + "</div>" +
+                      (f.properties.st ? '<div style="margin-top:3px"><span style="display:inline-block;' +
+                        'width:9px;height:9px;border-radius:2px;background:' + f.properties.stColor +
+                        ';margin-left:5px"></span>' + esc(f.properties.st) + "</div>" : ""));
         lyr.on("click", function () { select(f.properties.plan, false); });
       }
     }).addTo(map);
+  }
+
+
+  var legendCtl = null;
+  function drawLegend(rows) {
+    if (!map) return;
+    if (legendCtl) { map.removeControl(legendCtl); legendCtl = null; }
+    var present = [], seen = {};
+    rows.forEach(function (r) {
+      if (!geoByPlan[r.plan]) return;           // only what is actually drawn
+      var g = statusGroup(r.status);
+      if (!seen[g.key]) { seen[g.key] = 1; present.push(g); }
+    });
+    if (!present.length) return;
+    var order = {};
+    STATUS_GROUPS.forEach(function (g, i) { order[g.key] = i; });
+    present.sort(function (a, b) { return order[a.key] - order[b.key]; });
+    legendCtl = L.control({ position: "bottomright" });
+    legendCtl.onAdd = function () {
+      var d = L.DomUtil.create("div", "maplegend");
+      d.innerHTML = '<div style="font-weight:700;margin-bottom:4px">קו המתאר — סטטוס</div>' +
+        present.map(function (g) {
+          return '<div><span style="display:inline-block;width:14px;height:0;border-top:3px solid ' +
+                 g.color + ';vertical-align:middle;margin-left:6px"></span>' + esc(g.label) + "</div>";
+        }).join("");
+      return d;
+    };
+    legendCtl.addTo(map);
   }
 
   function select(plan, zoom) {
