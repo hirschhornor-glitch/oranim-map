@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-15T21:27:07",
+ "generated_at": "2026-09-15T21:35:52",
  "scope": "כלל עירוני — ירושלים",
  "totals": {
   "archive_plans": 4571,
@@ -11,10 +11,11 @@
   "fund_total_ils": 1008453445,
   "rental": 152,
   "fund_with_units": 92,
-  "rental_with_units": 39,
-  "rental_units_total": 4823,
+  "rental_with_units": 46,
+  "rental_units_total": 5284,
   "conditional_units_total": 1742,
-  "rental_review": 0
+  "rental_review": 0,
+  "rental_units_visual": 7
  },
  "rows": [
   {
@@ -32,6 +33,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -57,6 +59,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -82,6 +85,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -107,6 +111,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -132,6 +137,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -157,6 +163,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.2",
@@ -180,6 +187,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -205,6 +213,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -229,6 +238,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -254,6 +264,7 @@
    "fund": {
     "conditional_units_t5": 17,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 13000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות13,000,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.9",
@@ -277,6 +288,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -302,6 +314,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -327,6 +340,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -352,6 +366,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -376,6 +391,7 @@
    "fund": {
     "conditional_units_t5": 18,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6.4 . מליון ש\"ח .",
     "section": "6.8",
@@ -399,6 +415,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "12",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -424,6 +441,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -449,6 +467,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 3450000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,450,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.11",
@@ -472,6 +491,7 @@
    "fund": {
     "conditional_units_t5": 44,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 24000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות24,000,000 ש\"ח",
     "section": "6",
@@ -495,6 +515,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -519,6 +540,7 @@
    "fund": {
     "conditional_units_t5": 8,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח , צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -542,6 +564,7 @@
    "fund": {
     "conditional_units_t5": 22,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -563,8 +586,9 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000997885/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "no_export",
+    "units_t5": 7,
+    "units_state": "value",
+    "units_read": "visual",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -590,6 +614,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -615,6 +640,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -640,6 +666,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.2",
@@ -661,8 +688,9 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001013977/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "no_export",
+    "units_t5": 129,
+    "units_state": "value",
+    "units_read": "visual",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -688,6 +716,7 @@
    "fund": {
     "conditional_units_t5": 75,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כפי שייקבע ע\"פ מפתח משרד השיכון, כפי שבא 137 ,135 ,133 ,131 ,127 ודרך בית לחם160 ,150 ,148",
     "section": "",
@@ -711,6 +740,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -736,6 +766,7 @@
    "fund": {
     "conditional_units_t5": 18,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 10840000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח עבור המגדל הצפוני בתא שטח מספר2 - ו4,790,000 ' ש\"ח עבור המגדל הדרומי בתא שטח מס2 צמוד למדד המחירים .לצרכן .",
     "section": "6.12",
@@ -757,8 +788,9 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001022491/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "no_export",
+    "units_t5": 75,
+    "units_state": "value",
+    "units_read": "visual",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -784,6 +816,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -809,6 +842,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -832,8 +866,9 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001029795/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "no_export",
+    "units_t5": 47,
+    "units_state": "value",
+    "units_read": "visual",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -859,6 +894,7 @@
    "fund": {
     "conditional_units_t5": 3,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 4790000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4,790,000 . צמוד למדד המחירים לצרכן",
     "section": "6.13",
@@ -882,6 +918,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -906,6 +943,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -931,6 +969,7 @@
    "fund": {
     "conditional_units_t5": 5,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6050000 . צמוד למדד המחירים לצרכן 8.",
     "section": "6",
@@ -954,6 +993,7 @@
    "rental": {
     "units_t5": 257,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -979,6 +1019,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1004,6 +1045,7 @@
    "fund": {
     "conditional_units_t5": 9,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 5600000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות5.6 מיליון )לקבוע מספר בהתאם .(להחלטת הוועדה המחוזית, אם קיימים מספר מתחמים לציין כמה יופקד בכל בניין/מתחם .",
     "section": "6.1",
@@ -1027,6 +1069,7 @@
    "fund": {
     "conditional_units_t5": 18,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 3000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,000,000 ש\"ח צמוד למדד המחירים .לצרכן 8.",
     "section": "6.12",
@@ -1037,6 +1080,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1062,6 +1106,7 @@
    "fund": {
     "conditional_units_t5": 43,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 30250000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 לכל תא שטח ועבור כל אחד מחמשת המגדלים בתכנית זו, צמוד למדד המחירים לצרכן. יובהר כי סה\"כ קרן התחזוקה :בתכנית תעמוד על סכום מינימלי של30,250,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -1083,8 +1128,9 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005055404/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "no_export",
+    "units_t5": 10,
+    "units_state": "value",
+    "units_read": "visual",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1110,6 +1156,7 @@
    "fund": {
     "conditional_units_t5": 30,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 36300000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6.05 מיליון ש\"ח צמוד למדד המחירים לצרכן, לכל אחד מהמגדלים )סה\"כ ואם ימומשו הזכויות המותנות עבור כלל המגדלים36.3 מיליון צמוד למדד המחירים לצרכן(.",
     "section": "6.16",
@@ -1133,6 +1180,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1158,6 +1206,7 @@
    "fund": {
     "conditional_units_t5": 23,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 18000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה18 מיליון ש\"ח סה\"כ.",
     "section": "6.6",
@@ -1181,6 +1230,7 @@
    "fund": {
     "conditional_units_t5": 22,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 18600000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה18.6 מיליון ש\"ח סה\"כ.",
     "section": "6.2",
@@ -1204,6 +1254,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1229,6 +1280,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -1253,6 +1305,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1278,6 +1331,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -1301,6 +1355,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": 8500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כפי שיוסכם עם מהנדס העיר וזאת עד לסך של 8,500,000 .",
     "section": "6.2",
@@ -1324,6 +1379,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1349,6 +1405,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1374,6 +1431,7 @@
    "fund": {
     "conditional_units_t5": 18,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 14353805,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות14,353,805 ש\"ח צמוד למדד המחירים .לצרכן 8 . יובהר כי הסכום האמור יופקד לטובת מגדליםA - וB המוצעים בתכנית, מחצית מהסכום .עבור כל מגדל",
     "section": "6",
@@ -1397,6 +1455,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1422,6 +1481,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1447,6 +1507,7 @@
    "rental": {
     "units_t5": 200,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1471,7 +1532,8 @@
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005095284/310",
    "rental": {
     "units_t5": null,
-    "units_state": "no_export",
+    "units_state": "none_in_table",
+    "units_read": "visual",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1497,6 +1559,7 @@
    "fund": {
     "conditional_units_t5": 20,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 18150000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,100,000 ש\"ח צמוד למדד המחירים לצרכן. יובהר כי עבור כל מגדל יופקד סכום של6,050,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -1520,6 +1583,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1545,6 +1609,7 @@
    "fund": {
     "conditional_units_t5": 8,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 10000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות10,000,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.5",
@@ -1555,6 +1620,7 @@
    "rental": {
     "units_t5": 20,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1580,6 +1646,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.11",
@@ -1603,6 +1670,7 @@
    "rental": {
     "units_t5": 80,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1628,6 +1696,7 @@
    "fund": {
     "conditional_units_t5": 22,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות ... מיליון )לקבוע מספר בהתאם .(להחלטת הוועדה המחוזית, אם קיימים מספר מתחמים לציין כמה יופקד בכל בניין/מתחם .",
     "section": "",
@@ -1651,6 +1720,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1676,6 +1746,7 @@
    "fund": {
     "conditional_units_t5": 19,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 16503800,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה16,503,800 ש\"ח סה\"כ.",
     "section": "6.8",
@@ -1699,6 +1770,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "7",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1724,6 +1796,7 @@
    "fund": {
     "conditional_units_t5": 50,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 45905000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות21,195,000 ש\"ח עבור הבינוי בתא שטח מספר12 - ו11,290,000 ' ש\"ח עבור הבינוי בתא שטח מס13 . צמוד למדד המחירים לצרכן 8 . יובהר כי עבור כל מגדל בגובה של38 קומות יופקד סכום של7,775,000 ש\"ח, ועבור כל מגדל בגובה של28 קומות יופקד סכום של5,645,000 . ש\"ח, הצמו",
     "section": "6.15",
@@ -1747,6 +1820,7 @@
    "rental": {
     "units_t5": 90,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1772,6 +1846,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1797,6 +1872,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1822,6 +1898,7 @@
    "fund": {
     "conditional_units_t5": 4,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 4741070,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4,741,070 מיליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.3",
@@ -1832,6 +1909,7 @@
    "rental": {
     "units_t5": 46,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1857,6 +1935,7 @@
    "fund": {
     "conditional_units_t5": 14,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 8563055,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות8,563,055 . מיליון",
     "section": "6.7",
@@ -1880,6 +1959,7 @@
    "fund": {
     "conditional_units_t5": 4,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 צמוד למדד המחירים . לצרכן",
     "section": "6",
@@ -1903,6 +1983,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1928,6 +2009,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1953,6 +2035,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1978,6 +2061,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -2003,6 +2087,7 @@
    "fund": {
     "conditional_units_t5": 5,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 3500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה3.5 מיליון ש\"ח סה\"כ.",
     "section": "6.4.1",
@@ -2026,6 +2111,7 @@
    "fund": {
     "conditional_units_t5": 15,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.10",
@@ -2049,6 +2135,7 @@
    "fund": {
     "conditional_units_t5": 20,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 18150000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,100,000 ש\"ח צמוד למדד המחירים לצרכן. יובהר כי עבור כל מגדל יופקד סכום של6,050,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -2072,6 +2159,7 @@
    "fund": {
     "conditional_units_t5": 69,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 41000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות41 . מיליון צמוד למדד המחירים לצרכן 8.",
     "section": "6.1",
@@ -2095,6 +2183,7 @@
    "fund": {
     "conditional_units_t5": 8,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 11664203,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות11,664,203 מיליון ש\"ח תנאי בהליך .הרישוי יהיה קביעת שיעור הכספים האמור בהסכם הנאמנות ז.",
     "section": "6.12",
@@ -2118,6 +2207,7 @@
    "rental": {
     "units_t5": 150,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -2142,6 +2232,7 @@
    "fund": {
     "conditional_units_t5": 6,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 5860000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות5,860,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -2165,6 +2256,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -2190,6 +2282,7 @@
    "fund": {
     "conditional_units_t5": 30,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 17287710,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות17,287,710 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -2213,6 +2306,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2238,6 +2332,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -2263,6 +2358,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -2287,6 +2383,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2312,6 +2409,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 7401984,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות7,401,984 מליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.13",
@@ -2335,6 +2433,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.6",
@@ -2358,6 +2457,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.15",
@@ -2381,6 +2481,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2406,6 +2507,7 @@
    "fund": {
     "conditional_units_t5": 10,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 15699079,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות8,536,506 - מיליון ש\"ח למתחם א' ו 7,162,573 . מיליון ש\"ח למתחם ב', צמוד למדד המחירים לצרכן .סעיף זה תהיה סטייה ניכרת מהתכנית-ח.",
     "section": "6.1",
@@ -2429,6 +2531,7 @@
    "fund": {
     "conditional_units_t5": 4,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 4360000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4,360,000 צמוד למדד המחירים .לצרכן",
     "section": "6.12",
@@ -2452,6 +2555,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2477,6 +2581,7 @@
    "fund": {
     "conditional_units_t5": 16,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 12600000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,600,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.9",
@@ -2500,6 +2605,7 @@
    "fund": {
     "conditional_units_t5": 19,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 16400000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה16.4 מיליון ש\"ח סה\"כ.",
     "section": "",
@@ -2523,6 +2629,7 @@
    "rental": {
     "units_t5": 38,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2548,6 +2655,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2573,6 +2681,7 @@
    "fund": {
     "conditional_units_t5": 10,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות14 מליון ש\"ח.",
     "section": "6.12",
@@ -2583,6 +2692,7 @@
    "rental": {
     "units_t5": 97,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2606,8 +2716,9 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005209390/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "no_export",
+    "units_t5": 64,
+    "units_state": "value",
+    "units_read": "visual",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2633,6 +2744,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 מיליון ש\"ח צמוד למדד .המחירים לצרכן 8.",
     "section": "6.11",
@@ -2656,6 +2768,7 @@
    "rental": {
     "units_t5": 100,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -2681,6 +2794,7 @@
    "fund": {
     "conditional_units_t5": 20,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 14408686,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות14,408,686מליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.12",
@@ -2704,6 +2818,7 @@
    "fund": {
     "conditional_units_t5": 13,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 11500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3.4 ' מיליון עבור תא שטח מס2 - ו8.1 'מיליון ש\"ח עבור תא שטח מס3 ., צמוד למדד המחירים לצרכן",
     "section": "6.13",
@@ -2727,6 +2842,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2752,6 +2868,7 @@
    "fund": {
     "conditional_units_t5": 24,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 18150000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות18,150,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.12",
@@ -2775,6 +2892,7 @@
    "fund": {
     "conditional_units_t5": 16,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 12100000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12.1 . מיליון ש\"ח .",
     "section": "",
@@ -2798,6 +2916,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 4790000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4.79 מיליון ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -2821,6 +2940,7 @@
    "rental": {
     "units_t5": 40,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2846,6 +2966,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6945287,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,945,287 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.17",
@@ -2869,6 +2990,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2894,6 +3016,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2919,6 +3042,7 @@
    "fund": {
     "conditional_units_t5": 26,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 22384152,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות22,384,152 . ש\"ח ח.",
     "section": "6.13",
@@ -2942,6 +3066,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2967,6 +3092,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": 4000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה ע\"ס4 . מיליון ש\"ח צמוד למדד המחירים לצרכן 8.",
     "section": "",
@@ -2990,6 +3116,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3015,6 +3142,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3040,6 +3168,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3065,6 +3194,7 @@
    "fund": {
     "conditional_units_t5": 13,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 10695749,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה10,695,749 מיליוון ש\"ח סה\"כ. תנאי בהליך .הרישוי יהיה קביעת שיעור הכספים האמור בהסכם הנאמנות ז.",
     "section": "6.3",
@@ -3088,6 +3218,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3113,6 +3244,7 @@
    "fund": {
     "conditional_units_t5": 33,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 22416000,
     "amount_text": "שיעור הכספים שיופקד הכולל שיופקד בקרנות התחזוקה יהיה לפחות22,416,000 מיליון :צמוד למדד המחירים לצרכן על פי הפירוט הבא א.למגדל בתא שטח1 קרן תחזוקה בשווי של לפחות- 6,050,000 . צמוד למדד המחירים לצרכן ב. למגדל בתא שטח2 קרן תחזוקה בשווי של לפחות- 8,183,000 . צמוד למדד המחירים לצרכן ג. למגדל בתא",
     "section": "6.3",
@@ -3136,6 +3268,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3161,6 +3294,7 @@
    "fund": {
     "conditional_units_t5": 12,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 10151078,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות10,151,078 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -3171,6 +3305,7 @@
    "rental": {
     "units_t5": 29,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3196,6 +3331,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -3220,6 +3356,7 @@
    "rental": {
     "units_t5": 484,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3245,6 +3382,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3270,6 +3408,7 @@
    "fund": {
     "conditional_units_t5": 8,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 9331817,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות9,331,817 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "",
@@ -3293,6 +3432,7 @@
    "rental": {
     "units_t5": 520,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3318,6 +3458,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3343,6 +3484,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3368,6 +3510,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3393,6 +3536,7 @@
    "fund": {
     "conditional_units_t5": 44,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.11",
@@ -3416,6 +3560,7 @@
    "rental": {
     "units_t5": 68,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3441,6 +3586,7 @@
    "rental": {
     "units_t5": 24,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3466,6 +3612,7 @@
    "rental": {
     "units_t5": 5,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3491,6 +3638,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3516,6 +3664,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3541,6 +3690,7 @@
    "fund": {
     "conditional_units_t5": 4,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 3725430,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,725,430 ש\"ח צמוד למדד המחירים . לצרכן",
     "section": "6",
@@ -3564,6 +3714,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3589,6 +3740,7 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה בהתאם לסיכום עם שמאי הוועדה לעת הפקדת .התכנית ובהנחייתו",
     "section": "6",
@@ -3599,6 +3751,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3624,6 +3777,7 @@
    "fund": {
     "conditional_units_t5": 6,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 8800000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות8,800,000 מיליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.4",
@@ -3634,6 +3788,7 @@
    "rental": {
     "units_t5": 28,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3659,6 +3814,7 @@
    "fund": {
     "conditional_units_t5": 11,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 8009206,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה8,009,206 ש\"ח סה\"כ.",
     "section": "6.1",
@@ -3682,6 +3838,7 @@
    "fund": {
     "conditional_units_t5": 10,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 7543100,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה7,543,100 . צמוד למדד המחירים לצרכן 6 .. לא יותר ניוד זכויות הבניה ה\"מותנות\" למגורים לשימושים אחרים 7.",
     "section": "",
@@ -3705,6 +3862,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3730,6 +3888,7 @@
    "rental": {
     "units_t5": 60,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3755,6 +3914,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3780,6 +3940,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3805,6 +3966,7 @@
    "fund": {
     "conditional_units_t5": 39,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 20922900,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות20,922,900 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -3828,6 +3990,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3853,6 +4016,7 @@
    "rental": {
     "units_t5": 6,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3878,6 +4042,7 @@
    "rental": {
     "units_t5": 38,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3903,6 +4068,7 @@
    "rental": {
     "units_t5": 32,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3928,6 +4094,7 @@
    "fund": {
     "conditional_units_t5": 30,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 21349500,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות21,349,500 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.8",
@@ -3951,6 +4118,7 @@
    "fund": {
     "conditional_units_t5": 22,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 24000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות24 מיליון ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.1",
@@ -3961,6 +4129,7 @@
    "rental": {
     "units_t5": 162,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3986,6 +4155,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4011,6 +4181,7 @@
    "fund": {
     "conditional_units_t5": 12,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 8183000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה סך של8,183,000 צמוד למדד מחירים לצרכן הידוע ליום28.8.23 . 8.",
     "section": "6.3.4",
@@ -4034,6 +4205,7 @@
    "rental": {
     "units_t5": 200,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4059,6 +4231,7 @@
    "fund": {
     "conditional_units_t5": 22,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 16366000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות16,366,000 ש\"ח צמוד למדד המחירים .לצרכן .",
     "section": "6.12",
@@ -4082,6 +4255,7 @@
    "fund": {
     "conditional_units_t5": 6,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 3500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,500,000 )שלושה וחצי מיליון שקלים .חדשים( צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -4105,6 +4279,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -4130,6 +4305,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4155,6 +4331,7 @@
    "fund": {
     "conditional_units_t5": 5,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6200000,
     "amount_text": "סכום הכספים שיופקד בקרן התחזוקה יהיה6.2 . מלש\"ח צמוד למדד המחירים לצרכן",
     "section": "6.10",
@@ -4165,6 +4342,7 @@
    "rental": {
     "units_t5": 80,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -4190,6 +4368,7 @@
    "fund": {
     "conditional_units_t5": 10,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -4213,6 +4392,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4237,6 +4417,7 @@
    "fund": {
     "conditional_units_t5": 12,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 12000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12 מיליון ש\"ח צמוד למדד המחירים . לצרכן",
     "section": "6.1",
@@ -4247,6 +4428,7 @@
    "rental": {
     "units_t5": 200,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4272,6 +4454,7 @@
    "fund": {
     "conditional_units_t5": 17,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 12000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12 מיליון ש\"ח צמוד למדד המחירים . לצרכן",
     "section": "6.1",
@@ -4282,6 +4465,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4307,6 +4491,7 @@
    "fund": {
     "conditional_units_t5": 16,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 16366376,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות16,366,376 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "",
@@ -4330,6 +4515,7 @@
    "rental": {
     "units_t5": 40,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4355,6 +4541,7 @@
    "fund": {
     "conditional_units_t5": 12,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 11636000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות11.636 מיליון ש\"ח צמוד למדד המחירים .לצרכן 8.",
     "section": "6",
@@ -4378,6 +4565,7 @@
    "fund": {
     "conditional_units_t5": 12,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 12095948,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,095,948 ש\"ח, צמוד למדד המחירים .לצרכן",
     "section": "6.12",
@@ -4401,6 +4589,7 @@
    "fund": {
     "conditional_units_t5": 10,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 9335554,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות9,335,554 ש\"ח צמוד למדד המחירים .לצרכן .",
     "section": "6.4.2",
@@ -4424,6 +4613,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4449,6 +4639,7 @@
    "fund": {
     "conditional_units_t5": 44,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות29.5 מליון ש\"ח.",
     "section": "6.18",
@@ -4472,6 +4663,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4497,6 +4689,7 @@
    "fund": {
     "conditional_units_t5": 20,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 10151078,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות10,151,078 ש\"ח צמוד למדד המחירים .לצרכן .8",
     "section": "6.4.1",
@@ -4520,6 +4713,7 @@
    "fund": {
     "conditional_units_t5": 66,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 9500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כדלקמן א. במגדל יחיד של18 קומות לפחות3,500,000 )שישה שקלים חדשים( צמוד למדד המחירים .לצרכן א. במגדל יחיד של30 קומות לפחות6,000,000 )שלושה וחצי מיליון שקלים חדשים( צמוד .למדד המחירים לצרכן",
     "section": "6.4.3",
@@ -4530,6 +4724,7 @@
    "rental": {
     "units_t5": 464,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4555,6 +4750,7 @@
    "fund": {
     "conditional_units_t5": 31,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -4578,6 +4774,7 @@
    "rental": {
     "units_t5": 45,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4603,6 +4800,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4628,6 +4826,7 @@
    "fund": {
     "conditional_units_t5": 31,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות20.4 מליון ש\"ח.",
     "section": "6.4.1",
@@ -4651,6 +4850,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4676,6 +4876,7 @@
    "fund": {
     "conditional_units_t5": 10,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות ______ מיליון צמוד למדד המחירים .לצרכן 8.",
     "section": "6",
@@ -4699,6 +4900,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4723,6 +4925,7 @@
    "fund": {
     "conditional_units_t5": 15,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 22237047,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה22,237,047 ש\"ח סה\"כ. תנאי בהליך רישוי יהיה .קביעת שיעור הכספים המדויק שיכתב בהסכם הנאמנות 7.",
     "section": "",
@@ -4746,6 +4949,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -4768,8 +4972,9 @@
    "pages": 12,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005370126/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "no_export",
+    "units_t5": 129,
+    "units_state": "value",
+    "units_read": "visual",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -4794,6 +4999,7 @@
    "rental": {
     "units_t5": 350,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4819,6 +5025,7 @@
    "fund": {
     "conditional_units_t5": 14,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 19900000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות19,900,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -4829,6 +5036,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -4854,6 +5062,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -4877,6 +5086,7 @@
    "rental": {
     "units_t5": 10,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -4901,6 +5111,7 @@
    "fund": {
     "conditional_units_t5": 24,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 15832368,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות15,832,368 מיליון ש\"ח. תנאי בהליך הרישוי יהיה .קביעת שיעור הכספים האמור בהסכם הנאמנות 19,21,23,25",
     "section": "6",
@@ -4911,6 +5122,7 @@
    "rental": {
     "units_t5": 100,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4936,6 +5148,7 @@
    "fund": {
     "conditional_units_t5": 24,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 17292000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות17,292,000 מיליון ש\"ח צמוד למדד .המחירים לצרכן 8.",
     "section": "6",
@@ -4959,6 +5172,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -4982,6 +5196,7 @@
    "rental": {
     "units_t5": 44,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -5007,6 +5222,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5032,6 +5248,7 @@
    "rental": {
     "units_t5": 15,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": "שימוש מותר",
     "review": false,
@@ -5057,6 +5274,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5082,6 +5300,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -5105,6 +5324,7 @@
    "fund": {
     "conditional_units_t5": 37,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -5128,6 +5348,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5153,6 +5374,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5178,6 +5400,7 @@
    "fund": {
     "conditional_units_t5": 10,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6900000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה סך של6,900,000 ש\"ח צמוד למדד המחירים .לצרכן ח.",
     "section": "6.4.1",
@@ -5201,6 +5424,7 @@
    "fund": {
     "conditional_units_t5": 15,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 15007620,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות15,007,620 צמוד למדד המחירים .לצרכן",
     "section": "",
@@ -5224,6 +5448,7 @@
    "fund": {
     "conditional_units_t5": 20,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.11",
@@ -5247,6 +5472,7 @@
    "fund": {
     "conditional_units_t5": 38,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 24727899,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות24,727,899",
     "section": "",
@@ -5270,6 +5496,7 @@
    "rental": {
     "units_t5": 24,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5295,6 +5522,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -5318,6 +5546,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5343,6 +5572,7 @@
    "fund": {
     "conditional_units_t5": 40,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 21200000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה21,200,000 . ש\"ח צמוד למדד המחירים לצרכן 6 .. לא יותר ניוד זכויות הבניה ה\"מותנות\" למגורים לשימושים אחרים 7.",
     "section": "",
@@ -5353,6 +5583,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5378,6 +5609,7 @@
    "fund": {
     "conditional_units_t5": 5,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6029894,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,029,894 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -5388,6 +5620,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5413,6 +5646,7 @@
    "fund": {
     "conditional_units_t5": 5,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": 6000050,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,000,050 ש\"ח צמוד למדד . המחירים לצרכן",
     "section": "6",
@@ -5436,6 +5670,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5461,6 +5696,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5486,6 +5722,7 @@
    "fund": {
     "conditional_units_t5": null,
     "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -5509,6 +5746,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5534,6 +5772,7 @@
    "rental": {
     "units_t5": 175,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -5558,6 +5797,7 @@
    "fund": {
     "conditional_units_t5": 6,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.20",
@@ -5581,6 +5821,7 @@
    "rental": {
     "units_t5": 3,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5606,6 +5847,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5631,6 +5873,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -5655,6 +5898,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5680,6 +5924,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5705,6 +5950,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5730,6 +5976,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5755,6 +6002,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "no_export",
+    "units_read": null,
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5780,6 +6028,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5804,7 +6053,8 @@
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005484168/310",
    "fund": {
     "conditional_units_t5": null,
-    "conditional_units_state": "no_export",
+    "conditional_units_state": "none_in_table",
+    "conditional_units_read": "visual",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.3.1",
@@ -5828,6 +6078,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5853,6 +6104,7 @@
    "rental": {
     "units_t5": 399,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5878,6 +6130,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5903,6 +6156,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5928,6 +6182,7 @@
    "fund": {
     "conditional_units_t5": 40,
     "conditional_units_state": "value",
+    "conditional_units_read": "xlsx",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כפי שיוסכם עם מהנדס העיר. תנאי בהליך הרישוי לזכויות הבנייה ה\"מותנות\" למגורים יהיה הצגת כתב התחייבות למינוי נאמן והפקדת .הסכום כאמור 7.",
     "section": "6",
@@ -5938,6 +6193,7 @@
    "rental": {
     "units_t5": 100,
     "units_state": "value",
+    "units_read": "xlsx",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5963,6 +6219,7 @@
    "rental": {
     "units_t5": null,
     "units_state": "none_in_table",
+    "units_read": "xlsx",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,

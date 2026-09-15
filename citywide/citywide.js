@@ -86,10 +86,16 @@
   // Table-5 unit counts have three outcomes and they must stay distinguishable:
   // a number, "the export has no such row" (—), and "Mavat never exported a table"
   // (?). Collapsing the last two into 0 would state a fact the data does not carry.
-  var unitCell = function (v, state) {
-    if (v) return '<span class="hi">' + n0(v) + "</span>";
-    return state === "no_export" ? '<span class="empty" title="מבא\"ת לא מייצא טבלה 5 לתכנית זו">?</span>'
-                                 : '<span class="empty" title="אין שורה כזו בטבלה 5">—</span>';
+  // Three states, never collapsed: a count, a table with no such row, and a plan
+  // Mavat refuses to export. A value read off the PDF by eye carries a dagger, so a
+  // hand read is never mistaken for the export's own sum across the whole table.
+  var unitCell = function (v, state, read) {
+    if (v) return '<span class="hi">' + n0(v) + "</span>" +
+      (read === "visual" ? '<sup class="vis" title="נקרא ידנית מעמוד טבלה 5 ב-PDF — מבא\"ת לא מייצא טבלה לתכנית זו">†</sup>' : "");
+    if (state === "no_export")
+      return '<span class="empty" title="מבא\"ת לא מייצא טבלה 5 לתכנית זו">?</span>';
+    var t = read === "visual" ? "נבדק ידנית בטבלה 5 — אין שורה כזו" : "אין שורה כזו בטבלה 5";
+    return '<span class="empty" title="' + t + '">—</span>';
   };
 
   // Status colours MIRROR the single source in src/app.jsx (STATUS_GROUP_DEFS).
@@ -216,7 +222,7 @@
         { k: "floors", t: "קומות", n: true, get: function (r) { return r.fund.floors; } },
         { k: "cond", t: 'יח"ד מותנות', n: true,
           get: function (r) { return r.fund.conditional_units_t5; },
-          fmt: function (v, r) { return unitCell(v, r.fund.conditional_units_state); } },
+          fmt: function (v, r) { return unitCell(v, r.fund.conditional_units_state, r.fund.conditional_units_read); } },
         { k: "amount", t: "גובה הקרן", n: true, get: function (r) { return r.fund.amount_ils; },
           fmt: function (v) { return v ? '<span class="hi">' + ils(v) + "</span>" : '<span class="empty">לא צוין</span>'; } },
         { k: "section", t: "סעיף", get: function (r) { return r.fund.section || ""; } }
@@ -253,7 +259,7 @@
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
         { k: "runits", t: 'יח"ד להשכרה', n: true,
           get: function (r) { return r.rental.units_t5; },
-          fmt: function (v, r) { return unitCell(v, r.rental.units_state); } },
+          fmt: function (v, r) { return unitCell(v, r.rental.units_state, r.rental.units_read); } },
         { k: "dur", t: "משך ההשכרה", get: function (r) { return r.rental.duration; },
           fmt: function (v) {
             return v ? '<span class="hi">' + (isNaN(+v) ? esc(v) : v + " שנים") + "</span>"
