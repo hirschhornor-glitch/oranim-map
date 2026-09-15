@@ -12,8 +12,8 @@
  */
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-15b';
-const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-15b';
+const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-15c';
+const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-15c';
 const CENTER = [31.7767, 35.2245];
 const ZOOM = 12;
 
@@ -118,6 +118,11 @@ function CommerceApp() {
         plan: pn, name: p.pl_name || '', taba: p.taba,
         st: p.station_desc || '', commerce: p.commerce_sqm || 0,
         employment: p.employment_sqm || 0, mixed: p.mixed_other_sqm || 0,
+        // Government offices. Table 5 designates these "מבנים ומוסדות ציבור
+        // למינהל ציבורי" — a PUBLIC designation — so they are shown as their own
+        // figure and never folded into תעסוקה. 186,205 מ"ר citywide, 185,505 of it
+        // Kiryat HaMemshala alone.
+        admin: p.public_admin_sqm || 0,
         // Commerce+employment the plan grants as one figure without resolving the
         // mix. Kept out of `commerce` on purpose — folding it in would overstate
         // commerce by the whole combined amount.
@@ -155,10 +160,11 @@ function CommerceApp() {
   }, [rows, q, fStatus, fSrc, fReal, sort]);
 
   const totals = useMemo(() => {
-    const t = { c: 0, e: 0, m: 0, u: 0, plans: filtered.length, withData: 0,
+    const t = { c: 0, e: 0, m: 0, u: 0, adm: 0, plans: filtered.length, withData: 0,
                 file: 0, issued: 0, building: 0, done: 0, approved: 0 };
     for (const r of filtered) {
       t.c += r.commerce; t.e += r.employment; t.m += r.mixed; t.u += r.unsplit;
+      t.adm += r.admin;
       if (r.commerce || r.employment || r.unsplit) t.withData++;
       if (r.st === 'אישור') {
         t.approved++;
@@ -263,6 +269,7 @@ function CommerceApp() {
           '<div>מסחר: <b style="color:' + COL.commerce + '">' + fmt(p.commerce_sqm) + '</b> מ"ר</div>' +
           '<div>תעסוקה: <b style="color:' + COL.employment + '">' + fmt(p.employment_sqm) + '</b> מ"ר</div>' +
           (p.ce_unsplit_sqm ? '<div style="color:' + COL.unresolved + '">מסחר+תעסוקה יחד (לא מפוצל): <b>' + fmt(p.ce_unsplit_sqm) + '</b> מ"ר</div>' : '') +
+          (p.public_admin_sqm ? '<div style="color:#9ec5fe">מינהל ציבורי (ייעוד ציבורי): ' + fmt(p.public_admin_sqm) + ' מ"ר</div>' : '') +
           (p.mixed_other_sqm ? '<div style="color:#c9a7d8">מעורב עם שימוש אחר: ' + fmt(p.mixed_other_sqm) + ' מ"ר</div>' : '') +
           '<div style="margin-top:5px;color:#9f86ab;font-size:11px">מקור: ' + esc(p.split_source || '—') + '</div>' +
           '</div></div>');
@@ -354,6 +361,7 @@ function CommerceApp() {
         {kpi('תכניות', fmt(totals.plans))}
         {kpi('מסחר מ"ר', fmt(totals.c), COL.commerce)}
         {kpi('תעסוקה מ"ר', fmt(totals.e), COL.employment)}
+        {totals.adm > 0 && kpi('מינהל ציבורי מ"ר', fmt(totals.adm), '#9ec5fe')}
         {totals.u > 0 && kpi('מסחר+תעסוקה יחד', fmt(totals.u), '#e0b0ff')}
         {totals.m > 0 && kpi('מעורב מ"ר', fmt(totals.m), '#c9a7d8')}
         {kpi('מאושרות', fmt(totals.approved), '#4ade80')}

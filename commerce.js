@@ -17,8 +17,8 @@ const {
   useMemo,
   useCallback
 } = React;
-const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-15b';
-const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-15b';
+const PARCELS_URL = 'data/ce_citywide_parcels.geojson?v=2026-09-15c';
+const PLANS_URL = 'data/ce_citywide_plans.json?v=2026-09-15c';
 const CENTER = [31.7767, 35.2245];
 const ZOOM = 12;
 
@@ -170,6 +170,11 @@ function CommerceApp() {
         commerce: p.commerce_sqm || 0,
         employment: p.employment_sqm || 0,
         mixed: p.mixed_other_sqm || 0,
+        // Government offices. Table 5 designates these "מבנים ומוסדות ציבור
+        // למינהל ציבורי" — a PUBLIC designation — so they are shown as their own
+        // figure and never folded into תעסוקה. 186,205 מ"ר citywide, 185,505 of it
+        // Kiryat HaMemshala alone.
+        admin: p.public_admin_sqm || 0,
         // Commerce+employment the plan grants as one figure without resolving the
         // mix. Kept out of `commerce` on purpose — folding it in would overstate
         // commerce by the whole combined amount.
@@ -215,6 +220,7 @@ function CommerceApp() {
       e: 0,
       m: 0,
       u: 0,
+      adm: 0,
       plans: filtered.length,
       withData: 0,
       file: 0,
@@ -228,6 +234,7 @@ function CommerceApp() {
       t.e += r.employment;
       t.m += r.mixed;
       t.u += r.unsplit;
+      t.adm += r.admin;
       if (r.commerce || r.employment || r.unsplit) t.withData++;
       if (r.st === 'אישור') {
         t.approved++;
@@ -338,7 +345,7 @@ function CommerceApp() {
       onEachFeature: (f, lyr) => {
         const p = f.properties;
         lyr.on('click', () => setSel(p.plan_name));
-        lyr.bindPopup('<div class="ce-pop" style="min-width:230px">' + '<div style="font-weight:800;font-size:14px;margin-bottom:2px">' + esc(p.pl_name || p.plan_name) + '</div>' + '<div style="color:#c9a7d8;font-size:11px;margin-bottom:6px">' + esc(p.plan_name) + ' · מגרש ' + esc(p.parcel) + '</div>' + '<div style="font-size:12px;line-height:1.7">' + '<div>ייעוד: <b>' + esc(p.mavat_name) + '</b></div>' + '<div>מסחר: <b style="color:' + COL.commerce + '">' + fmt(p.commerce_sqm) + '</b> מ"ר</div>' + '<div>תעסוקה: <b style="color:' + COL.employment + '">' + fmt(p.employment_sqm) + '</b> מ"ר</div>' + (p.ce_unsplit_sqm ? '<div style="color:' + COL.unresolved + '">מסחר+תעסוקה יחד (לא מפוצל): <b>' + fmt(p.ce_unsplit_sqm) + '</b> מ"ר</div>' : '') + (p.mixed_other_sqm ? '<div style="color:#c9a7d8">מעורב עם שימוש אחר: ' + fmt(p.mixed_other_sqm) + ' מ"ר</div>' : '') + '<div style="margin-top:5px;color:#9f86ab;font-size:11px">מקור: ' + esc(p.split_source || '—') + '</div>' + '</div></div>');
+        lyr.bindPopup('<div class="ce-pop" style="min-width:230px">' + '<div style="font-weight:800;font-size:14px;margin-bottom:2px">' + esc(p.pl_name || p.plan_name) + '</div>' + '<div style="color:#c9a7d8;font-size:11px;margin-bottom:6px">' + esc(p.plan_name) + ' · מגרש ' + esc(p.parcel) + '</div>' + '<div style="font-size:12px;line-height:1.7">' + '<div>ייעוד: <b>' + esc(p.mavat_name) + '</b></div>' + '<div>מסחר: <b style="color:' + COL.commerce + '">' + fmt(p.commerce_sqm) + '</b> מ"ר</div>' + '<div>תעסוקה: <b style="color:' + COL.employment + '">' + fmt(p.employment_sqm) + '</b> מ"ר</div>' + (p.ce_unsplit_sqm ? '<div style="color:' + COL.unresolved + '">מסחר+תעסוקה יחד (לא מפוצל): <b>' + fmt(p.ce_unsplit_sqm) + '</b> מ"ר</div>' : '') + (p.public_admin_sqm ? '<div style="color:#9ec5fe">מינהל ציבורי (ייעוד ציבורי): ' + fmt(p.public_admin_sqm) + ' מ"ר</div>' : '') + (p.mixed_other_sqm ? '<div style="color:#c9a7d8">מעורב עם שימוש אחר: ' + fmt(p.mixed_other_sqm) + ' מ"ר</div>' : '') + '<div style="margin-top:5px;color:#9f86ab;font-size:11px">מקור: ' + esc(p.split_source || '—') + '</div>' + '</div></div>');
       }
     }).addTo(map);
     layerRef.current = layer;
@@ -517,7 +524,7 @@ function CommerceApp() {
       fontSize: 16,
       marginLeft: 6
     }
-  }, "\uD83C\uDFEA \u05DE\u05E1\u05D7\u05E8, \u05EA\u05E2\u05E1\u05D5\u05E7\u05D4 \u05D5\u05DE\u05E9\u05E8\u05D3\u05D9\u05DD \u2014 \u05DE\u05D9\u05E4\u05D5\u05D9 \u05E2\u05D9\u05E8\u05D5\u05E0\u05D9"), kpi('תכניות', fmt(totals.plans)), kpi('מסחר מ"ר', fmt(totals.c), COL.commerce), kpi('תעסוקה מ"ר', fmt(totals.e), COL.employment), totals.u > 0 && kpi('מסחר+תעסוקה יחד', fmt(totals.u), '#e0b0ff'), totals.m > 0 && kpi('מעורב מ"ר', fmt(totals.m), '#c9a7d8'), kpi('מאושרות', fmt(totals.approved), '#4ade80'), kpi('ברישוי', fmt(totals.file), '#7fb3e8'), kpi('בביצוע', fmt(totals.building), '#f0824b'), kpi('גמר בנייה', fmt(totals.done), '#0d9488'), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83C\uDFEA \u05DE\u05E1\u05D7\u05E8, \u05EA\u05E2\u05E1\u05D5\u05E7\u05D4 \u05D5\u05DE\u05E9\u05E8\u05D3\u05D9\u05DD \u2014 \u05DE\u05D9\u05E4\u05D5\u05D9 \u05E2\u05D9\u05E8\u05D5\u05E0\u05D9"), kpi('תכניות', fmt(totals.plans)), kpi('מסחר מ"ר', fmt(totals.c), COL.commerce), kpi('תעסוקה מ"ר', fmt(totals.e), COL.employment), totals.adm > 0 && kpi('מינהל ציבורי מ"ר', fmt(totals.adm), '#9ec5fe'), totals.u > 0 && kpi('מסחר+תעסוקה יחד', fmt(totals.u), '#e0b0ff'), totals.m > 0 && kpi('מעורב מ"ר', fmt(totals.m), '#c9a7d8'), kpi('מאושרות', fmt(totals.approved), '#4ade80'), kpi('ברישוי', fmt(totals.file), '#7fb3e8'), kpi('בביצוע', fmt(totals.building), '#f0824b'), kpi('גמר בנייה', fmt(totals.done), '#0d9488'), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
