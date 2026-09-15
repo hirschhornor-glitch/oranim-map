@@ -83,6 +83,15 @@
     return bits.length ? "<div><b>מימוש:</b> " + bits.join(" · ") + "</div>" : "";
   };
 
+  // Table-5 unit counts have three outcomes and they must stay distinguishable:
+  // a number, "the export has no such row" (—), and "Mavat never exported a table"
+  // (?). Collapsing the last two into 0 would state a fact the data does not carry.
+  var unitCell = function (v, state) {
+    if (v) return '<span class="hi">' + n0(v) + "</span>";
+    return state === "no_export" ? '<span class="empty" title="מבא\"ת לא מייצא טבלה 5 לתכנית זו">?</span>'
+                                 : '<span class="empty" title="אין שורה כזו בטבלה 5">—</span>';
+  };
+
   var pad7 = function (t) {
     return "101-" + String(t).split("-").pop().replace(/\D/g, "").padStart(7, "0");
   };
@@ -159,7 +168,7 @@
     fund: {
       title: "קרן תחזוקה ודיור מותנה", tag: "fund", color: "var(--fund)", file: "קרן_תחזוקה",
       note: "<b>סך הקרנות הוא תקרה, לא סכום מחויב.</b> ההוראות קובעות במפורש ש\"מימוש זכויות הבנייה ה'מותנות' נתון לבחירת מגיש הבקשה להיתר ומימושן אינו מחייב\" — כלומר הסכום מתממש רק ככל שהיזם בוחר לממש את הזכויות המותנות. " +
-            "היעדר תכנית פירושו <b>לא נמצא</b> ולא <b>אין</b>, וסכומי הקרן כולם מגיעים משכבת טקסט ולא מ-OCR.",
+            "היעדר תכנית פירושו <b>לא נמצא</b> ולא <b>אין</b>, וסכומי הקרן כולם מגיעים משכבת טקסט ולא מ-OCR. מספרי יח\"ד מגיעים מייצוא האקסל של טבלה 5: <b>—</b> = אין שורה כזו בטבלה (החובה מנוסחת באחוזים בהוראות), <b>?</b> = מבא\"ת לא מייצא טבלה 5 לתכנית זו.",
       rows: function () {
         return D.housing.rows.filter(function (r) { return r.fund; });
       },
@@ -169,7 +178,9 @@
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
         { k: "sub", t: "שכונה", get: function (r) { return r.sub_neighborhood || ""; } },
         { k: "floors", t: "קומות", n: true, get: function (r) { return r.fund.floors; } },
-        { k: "cond", t: 'יח"ד מותנות', n: true, get: function (r) { return r.fund.conditional_units; } },
+        { k: "cond", t: 'יח"ד מותנות', n: true,
+          get: function (r) { return r.fund.conditional_units_t5; },
+          fmt: function (v, r) { return unitCell(v, r.fund.conditional_units_state); } },
         { k: "amount", t: "גובה הקרן", n: true, get: function (r) { return r.fund.amount_ils; },
           fmt: function (v) { return v ? '<span class="hi">' + ils(v) + "</span>" : '<span class="empty">לא צוין</span>'; } },
         { k: "section", t: "סעיף", get: function (r) { return r.fund.section || ""; } }
@@ -188,13 +199,15 @@
         return [
           { n: n0(rows.length), l: "תכניות עם קרן תחזוקה" },
           { n: "₪" + short(tot), l: "סך הקרנות (" + w.length + " עם סכום)" },
-          { n: s.length ? "₪" + short(s[Math.floor(s.length / 2)]) : "—", l: "חציון גובה הקרן" }
+          { n: s.length ? "₪" + short(s[Math.floor(s.length / 2)]) : "—", l: "חציון גובה הקרן" },
+          { n: n0(rows.reduce(function (a, r) { return a + (r.fund.conditional_units_t5 || 0); }, 0)),
+            l: 'יח"ד מותנות (' + rows.filter(function (r) { return r.fund.conditional_units_t5; }).length + " תכניות)" }
         ];
       }
     },
     rental: {
       title: "דיור להשכרה", tag: "rent", color: "var(--rent)", file: "דיור_להשכרה",
-      note: "<b>איך לקרוא:</b> היעדר תכנית פירושו <b>לא נמצא</b> ולא <b>אין</b>. הרשימה כוללת רק תכניות המחייבות השכרה — 15 תכניות שבהן ההשכרה היא שימוש מותר בלבד הוצאו בסקירה ידנית. כל משך שמקורו ב-OCR אומת בקריאה ויזואלית של המסמך.",
+      note: "<b>איך לקרוא:</b> היעדר תכנית פירושו <b>לא נמצא</b> ולא <b>אין</b>. הרשימה כוללת רק תכניות המחייבות השכרה — 15 תכניות שבהן ההשכרה היא שימוש מותר בלבד הוצאו בסקירה ידנית. כל משך שמקורו ב-OCR אומת בקריאה ויזואלית של המסמך. מספרי יח\"ד מגיעים מייצוא האקסל של טבלה 5: <b>—</b> = אין שורה כזו בטבלה (החובה מנוסחת באחוזים בהוראות), <b>?</b> = מבא\"ת לא מייצא טבלה 5 לתכנית זו.",
       rows: function () {
         return D.housing.rows.filter(function (r) { return r.rental; });
       },
@@ -202,6 +215,9 @@
         { k: "plan", t: "תכנית", get: function (r) { return r.plan; } },
         { k: "name", t: "שם התכנית", get: function (r) { return r.name || ""; } },
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
+        { k: "runits", t: 'יח"ד להשכרה', n: true,
+          get: function (r) { return r.rental.units_t5; },
+          fmt: function (v, r) { return unitCell(v, r.rental.units_state); } },
         { k: "dur", t: "משך ההשכרה", get: function (r) { return r.rental.duration; },
           fmt: function (v) {
             return v ? '<span class="hi">' + (isNaN(+v) ? esc(v) : v + " שנים") + "</span>"
@@ -231,6 +247,8 @@
         var stat = rows.filter(function (r) { return r.rental.duration_source === "תוספת שישית"; });
         return [
           { n: n0(rows.length), l: "תכניות עם חובת השכרה" },
+          { n: n0(rows.reduce(function (a, r) { return a + (r.rental.units_t5 || 0); }, 0)),
+            l: 'יח"ד להשכרה (' + rows.filter(function (r) { return r.rental.units_t5; }).length + " תכניות)" },
           { n: n0(expl.length), l: "משך מפורש בהוראות" },
           { n: n0(stat.length), l: "משך מהתוספת השישית" }
         ];
@@ -418,7 +436,10 @@
     var body = rows.map(function (r) {
       var tds = R.cols.map(function (c) {
         var v = c.get(r);
-        return '<td class="' + (c.n ? "num" : "") + '">' + (c.fmt ? c.fmt(v) : esc(v)) + "</td>";
+        // Pass the row too: a cell may need sibling fields to render honestly (the
+        // unit counts distinguish "no such row" from "no export", which the value
+        // alone cannot express).
+        return '<td class="' + (c.n ? "num" : "") + '">' + (c.fmt ? c.fmt(v, r) : esc(v)) + "</td>";
       }).join("");
       tds += "<td>" + (r.source === "ocr" ? '<span class="pill ocr">OCR</span>'
                                           : '<span class="pill stat">טקסט</span>') +

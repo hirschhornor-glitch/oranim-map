@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-14T08:47:05",
+ "generated_at": "2026-09-15T19:31:39",
  "scope": "כלל עירוני — ירושלים",
  "totals": {
   "archive_plans": 4571,
@@ -10,6 +10,10 @@
   "fund_with_amount": 77,
   "fund_total_ils": 1008453445,
   "rental": 152,
+  "fund_with_units": 91,
+  "rental_with_units": 39,
+  "rental_units_total": 4823,
+  "conditional_units_total": 1735,
   "rental_review": 0
  },
  "rows": [
@@ -26,6 +30,8 @@
    "pages": 58,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -49,6 +55,8 @@
    "pages": 35,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -72,6 +80,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000313189/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -95,6 +105,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000344553/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -118,6 +130,8 @@
    "pages": 26,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -141,6 +155,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000402571/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.2",
@@ -162,6 +178,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000413603/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -185,6 +203,8 @@
    "pages": 25,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -207,6 +227,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000887983/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -230,6 +252,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000903747/310",
    "fund": {
+    "conditional_units_t5": 17,
+    "conditional_units_state": "value",
     "amount_ils": 13000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות13,000,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.9",
@@ -251,6 +275,8 @@
    "pages": 23,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -274,6 +300,8 @@
    "pages": 28,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000947247/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -297,6 +325,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000949109/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -320,6 +350,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000950825/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -342,6 +374,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000959627/310",
    "fund": {
+    "conditional_units_t5": 18,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6.4 . מליון ש\"ח .",
     "section": "6.8",
@@ -363,6 +397,8 @@
    "pages": 27,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000960817/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "12",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -386,6 +422,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000964365/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -409,6 +447,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000971947/310",
    "fund": {
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": 3450000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,450,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.11",
@@ -430,6 +470,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000973217/310",
    "fund": {
+    "conditional_units_t5": 44,
+    "conditional_units_state": "value",
     "amount_ils": 24000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות24,000,000 ש\"ח",
     "section": "6",
@@ -451,6 +493,8 @@
    "pages": 22,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -473,6 +517,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000980721/310",
    "fund": {
+    "conditional_units_t5": 8,
+    "conditional_units_state": "value",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח , צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -494,6 +540,8 @@
    "pages": 28,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000996145/310",
    "fund": {
+    "conditional_units_t5": 22,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -515,6 +563,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1000997885/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -538,6 +588,8 @@
    "pages": 14,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -561,6 +613,8 @@
    "pages": 29,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -584,6 +638,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001012763/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.2",
@@ -605,6 +661,8 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001013977/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -628,6 +686,8 @@
    "pages": 37,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001017747/310",
    "fund": {
+    "conditional_units_t5": 75,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כפי שייקבע ע\"פ מפתח משרד השיכון, כפי שבא 137 ,135 ,133 ,131 ,127 ודרך בית לחם160 ,150 ,148",
     "section": "",
@@ -649,6 +709,8 @@
    "pages": 17,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -672,6 +734,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001022041/310",
    "fund": {
+    "conditional_units_t5": 18,
+    "conditional_units_state": "value",
     "amount_ils": 10840000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח עבור המגדל הצפוני בתא שטח מספר2 - ו4,790,000 ' ש\"ח עבור המגדל הדרומי בתא שטח מס2 צמוד למדד המחירים .לצרכן .",
     "section": "6.12",
@@ -693,6 +757,8 @@
    "pages": 17,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -716,6 +782,8 @@
    "pages": 23,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -739,6 +807,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001028607/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -762,6 +832,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001029795/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -785,6 +857,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001030381/310",
    "fund": {
+    "conditional_units_t5": 3,
+    "conditional_units_state": "value",
     "amount_ils": 4790000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4,790,000 . צמוד למדד המחירים לצרכן",
     "section": "6.13",
@@ -806,6 +880,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001030653/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -828,6 +904,8 @@
    "pages": 24,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -851,6 +929,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005033538/310",
    "fund": {
+    "conditional_units_t5": 5,
+    "conditional_units_state": "value",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6050000 . צמוד למדד המחירים לצרכן 8.",
     "section": "6",
@@ -872,6 +952,8 @@
    "pages": 35,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005040426/310",
    "rental": {
+    "units_t5": 257,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -895,6 +977,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005040548/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -918,6 +1002,8 @@
    "pages": 18,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005041902/310",
    "fund": {
+    "conditional_units_t5": 9,
+    "conditional_units_state": "value",
     "amount_ils": 5600000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות5.6 מיליון )לקבוע מספר בהתאם .(להחלטת הוועדה המחוזית, אם קיימים מספר מתחמים לציין כמה יופקד בכל בניין/מתחם .",
     "section": "6.1",
@@ -939,6 +1025,8 @@
    "pages": 31,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005045634/310",
    "fund": {
+    "conditional_units_t5": 18,
+    "conditional_units_state": "value",
     "amount_ils": 3000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,000,000 ש\"ח צמוד למדד המחירים .לצרכן 8.",
     "section": "6.12",
@@ -947,6 +1035,8 @@
     "mechanism": "זכויות מותנות שטחי בניה נוספים אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה כמפורט בסעיף6.12"
    },
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -970,6 +1060,8 @@
    "pages": 28,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005050634/310",
    "fund": {
+    "conditional_units_t5": 43,
+    "conditional_units_state": "value",
     "amount_ils": 30250000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 לכל תא שטח ועבור כל אחד מחמשת המגדלים בתכנית זו, צמוד למדד המחירים לצרכן. יובהר כי סה\"כ קרן התחזוקה :בתכנית תעמוד על סכום מינימלי של30,250,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -991,6 +1083,8 @@
    "pages": 17,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1014,6 +1108,8 @@
    "pages": 34,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005056616/310",
    "fund": {
+    "conditional_units_t5": 30,
+    "conditional_units_state": "value",
     "amount_ils": 36300000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6.05 מיליון ש\"ח צמוד למדד המחירים לצרכן, לכל אחד מהמגדלים )סה\"כ ואם ימומשו הזכויות המותנות עבור כלל המגדלים36.3 מיליון צמוד למדד המחירים לצרכן(.",
     "section": "6.16",
@@ -1035,6 +1131,8 @@
    "pages": 18,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005060166/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1058,6 +1156,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005067670/310",
    "fund": {
+    "conditional_units_t5": 23,
+    "conditional_units_state": "value",
     "amount_ils": 18000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה18 מיליון ש\"ח סה\"כ.",
     "section": "6.6",
@@ -1079,6 +1179,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005067692/310",
    "fund": {
+    "conditional_units_t5": 22,
+    "conditional_units_state": "value",
     "amount_ils": 18600000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה18.6 מיליון ש\"ח סה\"כ.",
     "section": "6.2",
@@ -1100,6 +1202,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005068158/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1123,6 +1227,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005068572/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -1145,6 +1251,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005080772/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1168,6 +1276,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005081390/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -1189,6 +1299,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005084796/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": 8500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כפי שיוסכם עם מהנדס העיר וזאת עד לסך של 8,500,000 .",
     "section": "6.2",
@@ -1210,6 +1322,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005088236/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1233,6 +1347,8 @@
    "pages": 30,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005088242/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1256,6 +1372,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005089738/310",
    "fund": {
+    "conditional_units_t5": 18,
+    "conditional_units_state": "value",
     "amount_ils": 14353805,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות14,353,805 ש\"ח צמוד למדד המחירים .לצרכן 8 . יובהר כי הסכום האמור יופקד לטובת מגדליםA - וB המוצעים בתכנית, מחצית מהסכום .עבור כל מגדל",
     "section": "6",
@@ -1277,6 +1395,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005090638/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1300,6 +1420,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005092122/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1323,6 +1445,8 @@
    "pages": 38,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005092146/310",
    "rental": {
+    "units_t5": 200,
+    "units_state": "value",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1346,6 +1470,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005095284/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1369,6 +1495,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005099766/310",
    "fund": {
+    "conditional_units_t5": 20,
+    "conditional_units_state": "value",
     "amount_ils": 18150000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,100,000 ש\"ח צמוד למדד המחירים לצרכן. יובהר כי עבור כל מגדל יופקד סכום של6,050,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -1390,6 +1518,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005102734/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1413,6 +1543,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005107088/310",
    "fund": {
+    "conditional_units_t5": 8,
+    "conditional_units_state": "value",
     "amount_ils": 10000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות10,000,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.5",
@@ -1421,6 +1553,8 @@
     "mechanism": "זכויות מותנות\" שהקמת תהיה מותנית בהקמת קרן תחזוקה, ומימושן יהיה בכפוף להנחיות המיוחדות המפורטות בסעיף6.5"
    },
    "rental": {
+    "units_t5": 20,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1444,6 +1578,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005109268/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.11",
@@ -1465,6 +1601,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005109548/310",
    "rental": {
+    "units_t5": 80,
+    "units_state": "value",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1488,6 +1626,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005111370/310",
    "fund": {
+    "conditional_units_t5": 22,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות ... מיליון )לקבוע מספר בהתאם .(להחלטת הוועדה המחוזית, אם קיימים מספר מתחמים לציין כמה יופקד בכל בניין/מתחם .",
     "section": "",
@@ -1509,6 +1649,8 @@
    "pages": 15,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1532,6 +1674,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005121260/310",
    "fund": {
+    "conditional_units_t5": 19,
+    "conditional_units_state": "value",
     "amount_ils": 16503800,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה16,503,800 ש\"ח סה\"כ.",
     "section": "6.8",
@@ -1553,6 +1697,8 @@
    "pages": 24,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "7",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1576,6 +1722,8 @@
    "pages": 30,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005123446/310",
    "fund": {
+    "conditional_units_t5": 50,
+    "conditional_units_state": "value",
     "amount_ils": 45905000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות21,195,000 ש\"ח עבור הבינוי בתא שטח מספר12 - ו11,290,000 ' ש\"ח עבור הבינוי בתא שטח מס13 . צמוד למדד המחירים לצרכן 8 . יובהר כי עבור כל מגדל בגובה של38 קומות יופקד סכום של7,775,000 ש\"ח, ועבור כל מגדל בגובה של28 קומות יופקד סכום של5,645,000 . ש\"ח, הצמו",
     "section": "6.15",
@@ -1597,6 +1745,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005127600/310",
    "rental": {
+    "units_t5": 90,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1620,6 +1770,8 @@
    "pages": 15,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1643,6 +1795,8 @@
    "pages": 32,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1666,6 +1820,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005130930/310",
    "fund": {
+    "conditional_units_t5": 4,
+    "conditional_units_state": "value",
     "amount_ils": 4741070,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4,741,070 מיליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.3",
@@ -1674,6 +1830,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, מעבר לשטח הכולל המותר לבנייה למגורים שמוסד התכנון היה מאשר בתכנית במצב הדברים הרגיל, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.3"
    },
    "rental": {
+    "units_t5": 46,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1697,6 +1855,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005134070/310",
    "fund": {
+    "conditional_units_t5": 14,
+    "conditional_units_state": "value",
     "amount_ils": 8563055,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות8,563,055 . מיליון",
     "section": "6.7",
@@ -1718,6 +1878,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005134268/310",
    "fund": {
+    "conditional_units_t5": 4,
+    "conditional_units_state": "value",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 צמוד למדד המחירים . לצרכן",
     "section": "6",
@@ -1739,6 +1901,8 @@
    "pages": 28,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005135424/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1762,6 +1926,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005141442/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1785,6 +1951,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005142348/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -1808,6 +1976,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005143432/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -1831,6 +2001,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005146174/310",
    "fund": {
+    "conditional_units_t5": 5,
+    "conditional_units_state": "value",
     "amount_ils": 3500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה3.5 מיליון ש\"ח סה\"כ.",
     "section": "6.4.1",
@@ -1852,6 +2024,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005146800/310",
    "fund": {
+    "conditional_units_t5": 15,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.10",
@@ -1873,6 +2047,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005149986/310",
    "fund": {
+    "conditional_units_t5": 20,
+    "conditional_units_state": "value",
     "amount_ils": 18150000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,100,000 ש\"ח צמוד למדד המחירים לצרכן. יובהר כי עבור כל מגדל יופקד סכום של6,050,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -1894,6 +2070,8 @@
    "pages": 27,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005150996/310",
    "fund": {
+    "conditional_units_t5": 69,
+    "conditional_units_state": "value",
     "amount_ils": 41000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות41 . מיליון צמוד למדד המחירים לצרכן 8.",
     "section": "6.1",
@@ -1915,6 +2093,8 @@
    "pages": 18,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005151226/310",
    "fund": {
+    "conditional_units_t5": 8,
+    "conditional_units_state": "value",
     "amount_ils": 11664203,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות11,664,203 מיליון ש\"ח תנאי בהליך .הרישוי יהיה קביעת שיעור הכספים האמור בהסכם הנאמנות ז.",
     "section": "6.12",
@@ -1936,6 +2116,8 @@
    "pages": 32,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005152184/310",
    "rental": {
+    "units_t5": 150,
+    "units_state": "value",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -1958,6 +2140,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005157874/310",
    "fund": {
+    "conditional_units_t5": 6,
+    "conditional_units_state": "value",
     "amount_ils": 5860000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות5,860,000 . צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -1979,6 +2163,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005160238/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -2002,6 +2188,8 @@
    "pages": 26,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005162078/310",
    "fund": {
+    "conditional_units_t5": 30,
+    "conditional_units_state": "value",
     "amount_ils": 17287710,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות17,287,710 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -2023,6 +2211,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005171782/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2046,6 +2236,8 @@
    "pages": 28,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005180880/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -2069,6 +2261,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005181596/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -2091,6 +2285,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005183158/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2114,6 +2310,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005183160/310",
    "fund": {
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": 7401984,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות7,401,984 מליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.13",
@@ -2135,6 +2333,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005183484/310",
    "fund": {
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.6",
@@ -2156,6 +2356,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005184392/310",
    "fund": {
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.15",
@@ -2177,6 +2379,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005184458/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2200,6 +2404,8 @@
    "pages": 30,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005185990/310",
    "fund": {
+    "conditional_units_t5": 10,
+    "conditional_units_state": "value",
     "amount_ils": 15699079,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות8,536,506 - מיליון ש\"ח למתחם א' ו 7,162,573 . מיליון ש\"ח למתחם ב', צמוד למדד המחירים לצרכן .סעיף זה תהיה סטייה ניכרת מהתכנית-ח.",
     "section": "6.1",
@@ -2221,6 +2427,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005186454/310",
    "fund": {
+    "conditional_units_t5": 4,
+    "conditional_units_state": "value",
     "amount_ils": 4360000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4,360,000 צמוד למדד המחירים .לצרכן",
     "section": "6.12",
@@ -2242,6 +2450,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005186564/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2265,6 +2475,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005189618/310",
    "fund": {
+    "conditional_units_t5": 16,
+    "conditional_units_state": "value",
     "amount_ils": 12600000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,600,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.9",
@@ -2286,6 +2498,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005191924/310",
    "fund": {
+    "conditional_units_t5": 19,
+    "conditional_units_state": "value",
     "amount_ils": 16400000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה16.4 מיליון ש\"ח סה\"כ.",
     "section": "",
@@ -2307,6 +2521,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005192376/310",
    "rental": {
+    "units_t5": 38,
+    "units_state": "value",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2330,6 +2546,8 @@
    "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005200776/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2353,6 +2571,8 @@
    "pages": 28,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005208800/310",
    "fund": {
+    "conditional_units_t5": 10,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות14 מליון ש\"ח.",
     "section": "6.12",
@@ -2361,6 +2581,8 @@
     "mechanism": "זכויות מותנות\" שהקמת תהיה מותנית בהקמת קרן תחזוקה, ומימושן יהיה בכפוף להנחיות המיוחדות המפורטות בסעיף6.12"
    },
    "rental": {
+    "units_t5": 97,
+    "units_state": "value",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2384,6 +2606,8 @@
    "pages": 14,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2407,6 +2631,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005209594/310",
    "fund": {
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": 6050000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,050,000 מיליון ש\"ח צמוד למדד .המחירים לצרכן 8.",
     "section": "6.11",
@@ -2428,6 +2654,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005209620/310",
    "rental": {
+    "units_t5": 100,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -2451,6 +2679,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005210654/310",
    "fund": {
+    "conditional_units_t5": 20,
+    "conditional_units_state": "value",
     "amount_ils": 14408686,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות14,408,686מליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.12",
@@ -2472,6 +2702,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005213134/310",
    "fund": {
+    "conditional_units_t5": 13,
+    "conditional_units_state": "value",
     "amount_ils": 11500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3.4 ' מיליון עבור תא שטח מס2 - ו8.1 'מיליון ש\"ח עבור תא שטח מס3 ., צמוד למדד המחירים לצרכן",
     "section": "6.13",
@@ -2493,6 +2725,8 @@
    "pages": 40,
    "mavat_url": null,
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2516,6 +2750,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005214716/310",
    "fund": {
+    "conditional_units_t5": 24,
+    "conditional_units_state": "value",
     "amount_ils": 18150000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות18,150,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.12",
@@ -2537,6 +2773,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005216752/310",
    "fund": {
+    "conditional_units_t5": 16,
+    "conditional_units_state": "value",
     "amount_ils": 12100000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12.1 . מיליון ש\"ח .",
     "section": "",
@@ -2558,6 +2796,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005219264/310",
    "fund": {
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": 4790000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות4.79 מיליון ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -2579,6 +2819,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005219384/310",
    "rental": {
+    "units_t5": 40,
+    "units_state": "value",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2602,6 +2844,8 @@
    "pages": 24,
    "mavat_url": null,
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "no_export",
     "amount_ils": 6945287,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,945,287 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.17",
@@ -2623,6 +2867,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005222278/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2646,6 +2892,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005227322/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2669,6 +2917,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005228636/310",
    "fund": {
+    "conditional_units_t5": 26,
+    "conditional_units_state": "value",
     "amount_ils": 22384152,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות22,384,152 . ש\"ח ח.",
     "section": "6.13",
@@ -2690,6 +2940,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005229192/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2713,6 +2965,8 @@
    "pages": 62,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005230198/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": 4000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה ע\"ס4 . מיליון ש\"ח צמוד למדד המחירים לצרכן 8.",
     "section": "",
@@ -2734,6 +2988,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005236692/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2757,6 +3013,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005236856/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2780,6 +3038,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005240214/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2803,6 +3063,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005240378/310",
    "fund": {
+    "conditional_units_t5": 13,
+    "conditional_units_state": "value",
     "amount_ils": 10695749,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה10,695,749 מיליוון ש\"ח סה\"כ. תנאי בהליך .הרישוי יהיה קביעת שיעור הכספים האמור בהסכם הנאמנות ז.",
     "section": "6.3",
@@ -2824,6 +3086,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005244304/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2847,6 +3111,8 @@
    "pages": 26,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005245172/310",
    "fund": {
+    "conditional_units_t5": 33,
+    "conditional_units_state": "value",
     "amount_ils": 22416000,
     "amount_text": "שיעור הכספים שיופקד הכולל שיופקד בקרנות התחזוקה יהיה לפחות22,416,000 מיליון :צמוד למדד המחירים לצרכן על פי הפירוט הבא א.למגדל בתא שטח1 קרן תחזוקה בשווי של לפחות- 6,050,000 . צמוד למדד המחירים לצרכן ב. למגדל בתא שטח2 קרן תחזוקה בשווי של לפחות- 8,183,000 . צמוד למדד המחירים לצרכן ג. למגדל בתא",
     "section": "6.3",
@@ -2868,6 +3134,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005245388/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2891,6 +3159,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005247866/310",
    "fund": {
+    "conditional_units_t5": 12,
+    "conditional_units_state": "value",
     "amount_ils": 10151078,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות10,151,078 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -2899,6 +3169,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6"
    },
    "rental": {
+    "units_t5": 29,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -2922,6 +3194,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005251338/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -2944,6 +3218,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005251936/310",
    "rental": {
+    "units_t5": 484,
+    "units_state": "value",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2967,6 +3243,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005252616/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -2990,6 +3268,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005252656/310",
    "fund": {
+    "conditional_units_t5": 8,
+    "conditional_units_state": "value",
     "amount_ils": 9331817,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות9,331,817 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "",
@@ -3011,6 +3291,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005258438/310",
    "rental": {
+    "units_t5": 520,
+    "units_state": "value",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3034,6 +3316,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005263060/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3057,6 +3341,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005267674/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3080,6 +3366,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005269518/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3103,6 +3391,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005271312/310",
    "fund": {
+    "conditional_units_t5": 44,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.11",
@@ -3124,6 +3414,8 @@
    "pages": 18,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005275954/310",
    "rental": {
+    "units_t5": 68,
+    "units_state": "value",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3147,6 +3439,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005276996/310",
    "rental": {
+    "units_t5": 24,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3170,6 +3464,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005278248/310",
    "rental": {
+    "units_t5": 5,
+    "units_state": "value",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3193,6 +3489,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005278412/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3216,6 +3514,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005284972/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3239,6 +3539,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005285324/310",
    "fund": {
+    "conditional_units_t5": 4,
+    "conditional_units_state": "value",
     "amount_ils": 3725430,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,725,430 ש\"ח צמוד למדד המחירים . לצרכן",
     "section": "6",
@@ -3260,6 +3562,8 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005287056/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3283,6 +3587,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005287110/310",
    "fund": {
+    "conditional_units_t5": 7,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה בהתאם לסיכום עם שמאי הוועדה לעת הפקדת .התכנית ובהנחייתו",
     "section": "6",
@@ -3291,6 +3597,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6 להוראות התכנית לעניין הנחיות תחזוקה תחזוקה ארוכת טווח תחזוקה חזויה כולל חידוש והחלפת מערכות, כהגדרתה במסמך הערכת עלויות התחזוקה של הרשות להתחדשות עירונית כל מונח אשר לא הוגדר בתכנית זו ,תהיה נודעת לו המשמעות הנתונה לו בחוק התכנון והבניה התשכ\" – ה1965 ) להלן\"החוק ( \"או בתקנות שהותקנו מכוחו ,וזאת בהיעדר כוונה אחרת"
    },
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3314,6 +3622,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005287546/310",
    "fund": {
+    "conditional_units_t5": 6,
+    "conditional_units_state": "value",
     "amount_ils": 8800000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות8,800,000 מיליון ש\"ח צמוד למדד .המחירים לצרכן",
     "section": "6.4",
@@ -3322,6 +3632,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.4"
    },
    "rental": {
+    "units_t5": 28,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3345,6 +3657,8 @@
    "pages": 18,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005291050/310",
    "fund": {
+    "conditional_units_t5": 11,
+    "conditional_units_state": "value",
     "amount_ils": 8009206,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה8,009,206 ש\"ח סה\"כ.",
     "section": "6.1",
@@ -3366,6 +3680,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005302908/310",
    "fund": {
+    "conditional_units_t5": 10,
+    "conditional_units_state": "value",
     "amount_ils": 7543100,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה7,543,100 . צמוד למדד המחירים לצרכן 6 .. לא יותר ניוד זכויות הבניה ה\"מותנות\" למגורים לשימושים אחרים 7.",
     "section": "",
@@ -3387,6 +3703,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005303088/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3410,6 +3728,8 @@
    "pages": 18,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005303280/310",
    "rental": {
+    "units_t5": 60,
+    "units_state": "value",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3433,6 +3753,8 @@
    "pages": 33,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005304252/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3456,6 +3778,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005305636/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3479,6 +3803,8 @@
    "pages": 26,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005305734/310",
    "fund": {
+    "conditional_units_t5": 39,
+    "conditional_units_state": "value",
     "amount_ils": 20922900,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות20,922,900 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -3500,6 +3826,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005308852/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3523,6 +3851,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005308972/310",
    "rental": {
+    "units_t5": 6,
+    "units_state": "value",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3546,6 +3876,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005310720/310",
    "rental": {
+    "units_t5": 38,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3569,6 +3901,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005313586/310",
    "rental": {
+    "units_t5": 32,
+    "units_state": "value",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3592,6 +3926,8 @@
    "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005314058/310",
    "fund": {
+    "conditional_units_t5": 30,
+    "conditional_units_state": "value",
     "amount_ils": 21349500,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות21,349,500 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.8",
@@ -3613,6 +3949,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005315824/310",
    "fund": {
+    "conditional_units_t5": 22,
+    "conditional_units_state": "value",
     "amount_ils": 24000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות24 מיליון ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6.1",
@@ -3621,6 +3959,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, מעבר לשטח הכולל המותר לבנייה למגורים שמוסד התכנון היה מאשר בתכנית במצב הדברים הרגיל, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.1"
    },
    "rental": {
+    "units_t5": 162,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3644,6 +3984,8 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005316122/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3667,6 +4009,8 @@
    "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005318078/310",
    "fund": {
+    "conditional_units_t5": 12,
+    "conditional_units_state": "value",
     "amount_ils": 8183000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה סך של8,183,000 צמוד למדד מחירים לצרכן הידוע ליום28.8.23 . 8.",
     "section": "6.3.4",
@@ -3688,6 +4032,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005318156/310",
    "rental": {
+    "units_t5": 200,
+    "units_state": "value",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3711,6 +4057,8 @@
    "pages": 26,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005322832/310",
    "fund": {
+    "conditional_units_t5": 22,
+    "conditional_units_state": "value",
     "amount_ils": 16366000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות16,366,000 ש\"ח צמוד למדד המחירים .לצרכן .",
     "section": "6.12",
@@ -3732,6 +4080,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005324004/310",
    "fund": {
+    "conditional_units_t5": 6,
+    "conditional_units_state": "value",
     "amount_ils": 3500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות3,500,000 )שלושה וחצי מיליון שקלים .חדשים( צמוד למדד המחירים לצרכן",
     "section": "6",
@@ -3753,6 +4103,8 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005324850/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3776,6 +4128,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005325982/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3799,6 +4153,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005326412/310",
    "fund": {
+    "conditional_units_t5": 5,
+    "conditional_units_state": "value",
     "amount_ils": 6200000,
     "amount_text": "סכום הכספים שיופקד בקרן התחזוקה יהיה6.2 . מלש\"ח צמוד למדד המחירים לצרכן",
     "section": "6.10",
@@ -3807,6 +4163,8 @@
     "mechanism": "זכויות מותנות\" שהקמת תהיה מותנית בהקמת קרן תחזוקה, ומימושן יהיה בכפוף להנחיות המיוחדות המפורטות בסעיף6.10"
    },
    "rental": {
+    "units_t5": 80,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -3830,6 +4188,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005326778/310",
    "fund": {
+    "conditional_units_t5": 10,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -3851,6 +4211,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005328054/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3873,6 +4235,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005328242/310",
    "fund": {
+    "conditional_units_t5": 12,
+    "conditional_units_state": "value",
     "amount_ils": 12000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12 מיליון ש\"ח צמוד למדד המחירים . לצרכן",
     "section": "6.1",
@@ -3881,6 +4245,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, מעבר לשטח הכולל המותר לבנייה למגורים שמוסד התכנון היה מאשר בתכנית במצב הדברים הרגיל, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.1"
    },
    "rental": {
+    "units_t5": 200,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3904,6 +4270,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005328244/310",
    "fund": {
+    "conditional_units_t5": 17,
+    "conditional_units_state": "value",
     "amount_ils": 12000000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12 מיליון ש\"ח צמוד למדד המחירים . לצרכן",
     "section": "6.1",
@@ -3912,6 +4280,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, מעבר לשטח הכולל המותר לבנייה למגורים שמוסד התכנון היה מאשר בתכנית במצב הדברים הרגיל, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.1"
    },
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3935,6 +4305,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005330832/310",
    "fund": {
+    "conditional_units_t5": 16,
+    "conditional_units_state": "value",
     "amount_ils": 16366376,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות16,366,376 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "",
@@ -3956,6 +4328,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005331360/310",
    "rental": {
+    "units_t5": 40,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -3979,6 +4353,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005331550/310",
    "fund": {
+    "conditional_units_t5": 12,
+    "conditional_units_state": "value",
     "amount_ils": 11636000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות11.636 מיליון ש\"ח צמוד למדד המחירים .לצרכן 8.",
     "section": "6",
@@ -4000,6 +4376,8 @@
    "pages": 31,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005332842/310",
    "fund": {
+    "conditional_units_t5": 12,
+    "conditional_units_state": "value",
     "amount_ils": 12095948,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות12,095,948 ש\"ח, צמוד למדד המחירים .לצרכן",
     "section": "6.12",
@@ -4021,6 +4399,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005336814/310",
    "fund": {
+    "conditional_units_t5": 10,
+    "conditional_units_state": "value",
     "amount_ils": 9335554,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות9,335,554 ש\"ח צמוד למדד המחירים .לצרכן .",
     "section": "6.4.2",
@@ -4042,6 +4422,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005342134/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4065,6 +4447,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005342332/310",
    "fund": {
+    "conditional_units_t5": 44,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות29.5 מליון ש\"ח.",
     "section": "6.18",
@@ -4086,6 +4470,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005345650/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4109,6 +4495,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005347588/310",
    "fund": {
+    "conditional_units_t5": 20,
+    "conditional_units_state": "value",
     "amount_ils": 10151078,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות10,151,078 ש\"ח צמוד למדד המחירים .לצרכן .8",
     "section": "6.4.1",
@@ -4130,6 +4518,8 @@
    "pages": 33,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005347698/310",
    "fund": {
+    "conditional_units_t5": 66,
+    "conditional_units_state": "value",
     "amount_ils": 9500000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כדלקמן א. במגדל יחיד של18 קומות לפחות3,500,000 )שישה שקלים חדשים( צמוד למדד המחירים .לצרכן א. במגדל יחיד של30 קומות לפחות6,000,000 )שלושה וחצי מיליון שקלים חדשים( צמוד .למדד המחירים לצרכן",
     "section": "6.4.3",
@@ -4138,6 +4528,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.4.3"
    },
    "rental": {
+    "units_t5": 464,
+    "units_state": "value",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4161,6 +4553,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005347908/310",
    "fund": {
+    "conditional_units_t5": 31,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -4182,6 +4576,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005355990/310",
    "rental": {
+    "units_t5": 45,
+    "units_state": "value",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4205,6 +4601,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005357112/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4228,6 +4626,8 @@
    "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005358836/310",
    "fund": {
+    "conditional_units_t5": 31,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות20.4 מליון ש\"ח.",
     "section": "6.4.1",
@@ -4249,6 +4649,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005360218/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4272,6 +4674,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005362622/310",
    "fund": {
+    "conditional_units_t5": 10,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות ______ מיליון צמוד למדד המחירים .לצרכן 8.",
     "section": "6",
@@ -4293,6 +4697,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005363528/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4315,6 +4721,8 @@
    "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005367352/310",
    "fund": {
+    "conditional_units_t5": 15,
+    "conditional_units_state": "value",
     "amount_ils": 22237047,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה22,237,047 ש\"ח סה\"כ. תנאי בהליך רישוי יהיה .קביעת שיעור הכספים המדויק שיכתב בהסכם הנאמנות 7.",
     "section": "",
@@ -4336,6 +4744,8 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005367434/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -4358,6 +4768,8 @@
    "pages": 12,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005370126/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -4380,6 +4792,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005371692/310",
    "rental": {
+    "units_t5": 350,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4403,6 +4817,8 @@
    "pages": 23,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005372996/310",
    "fund": {
+    "conditional_units_t5": 14,
+    "conditional_units_state": "value",
     "amount_ils": 19900000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות19,900,000 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -4411,6 +4827,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6 להוראות התכנית לעניין תחזוקה חזית פעילה,החלק בקומות הקרקע בחזית המבנה, אשר פונה אל המרחב הציבורי: רחוב ,שצ\"פ, שפ\"פ ומעברים, וקיימים בו שימושי מסחר וכניסות לשימושי התעסוקה"
    },
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -4434,6 +4852,8 @@
    "pages": 27,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005381098/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -4455,6 +4875,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005384302/310",
    "rental": {
+    "units_t5": 10,
+    "units_state": "value",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -4477,6 +4899,8 @@
    "pages": 27,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005388818/310",
    "fund": {
+    "conditional_units_t5": 24,
+    "conditional_units_state": "value",
     "amount_ils": 15832368,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות15,832,368 מיליון ש\"ח. תנאי בהליך הרישוי יהיה .קביעת שיעור הכספים האמור בהסכם הנאמנות 19,21,23,25",
     "section": "6",
@@ -4485,6 +4909,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6"
    },
    "rental": {
+    "units_t5": 100,
+    "units_state": "value",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4508,6 +4934,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005389480/310",
    "fund": {
+    "conditional_units_t5": 24,
+    "conditional_units_state": "value",
     "amount_ils": 17292000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות17,292,000 מיליון ש\"ח צמוד למדד .המחירים לצרכן 8.",
     "section": "6",
@@ -4529,6 +4957,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005391984/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -4550,6 +4980,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005396978/310",
    "rental": {
+    "units_t5": 44,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "תוספת שישית",
     "review": false,
@@ -4573,6 +5005,8 @@
    "pages": 31,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005399772/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4596,6 +5030,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005399858/310",
    "rental": {
+    "units_t5": 15,
+    "units_state": "value",
     "duration": null,
     "duration_source": "שימוש מותר",
     "review": false,
@@ -4619,6 +5055,8 @@
    "pages": 20,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005403082/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4642,6 +5080,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005403824/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -4663,6 +5103,8 @@
    "pages": 29,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005407164/310",
    "fund": {
+    "conditional_units_t5": 37,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6",
@@ -4684,6 +5126,8 @@
    "pages": 26,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005410300/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4707,6 +5151,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005414838/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4730,6 +5176,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005419352/310",
    "fund": {
+    "conditional_units_t5": 10,
+    "conditional_units_state": "value",
     "amount_ils": 6900000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה סך של6,900,000 ש\"ח צמוד למדד המחירים .לצרכן ח.",
     "section": "6.4.1",
@@ -4751,6 +5199,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005420360/310",
    "fund": {
+    "conditional_units_t5": 15,
+    "conditional_units_state": "value",
     "amount_ils": 15007620,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות15,007,620 צמוד למדד המחירים .לצרכן",
     "section": "",
@@ -4772,6 +5222,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005423182/310",
    "fund": {
+    "conditional_units_t5": 20,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.11",
@@ -4793,6 +5245,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005429418/310",
    "fund": {
+    "conditional_units_t5": 38,
+    "conditional_units_state": "value",
     "amount_ils": 24727899,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות24,727,899",
     "section": "",
@@ -4814,6 +5268,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005430774/310",
    "rental": {
+    "units_t5": 24,
+    "units_state": "value",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4837,6 +5293,8 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005431026/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -4858,6 +5316,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005434196/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4881,6 +5341,8 @@
    "pages": 21,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005436902/310",
    "fund": {
+    "conditional_units_t5": 40,
+    "conditional_units_state": "value",
     "amount_ils": 21200000,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה21,200,000 . ש\"ח צמוד למדד המחירים לצרכן 6 .. לא יותר ניוד זכויות הבניה ה\"מותנות\" למגורים לשימושים אחרים 7.",
     "section": "",
@@ -4889,6 +5351,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, מעבר לשטח הכולל המותר לבנייה למגורים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בפרק6"
    },
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4912,6 +5376,8 @@
    "pages": 16,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005437178/310",
    "fund": {
+    "conditional_units_t5": 5,
+    "conditional_units_state": "value",
     "amount_ils": 6029894,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,029,894 ש\"ח צמוד למדד המחירים .לצרכן",
     "section": "6",
@@ -4920,6 +5386,8 @@
     "mechanism": "זכויות מותנות שטחי בניה נוספים בקומת בנין נוספת, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6 להוראות התוכנית לענין תחזוקה תחזוקה ארוכת טווח תחזוקה חזויה כולל חידוש והחלפת מערכות, כהגדרתה במסמך הערכת עלויות התחזוקה של הרשות להתחדשות עירונית כל מונח אשר לא הוגדר בתכנית זו ,תהיה נודעת לו המשמעות הנתונה לו בחוק התכנון והבניה התשכ\" – ה1965 ) להלן\"החוק ( \"או בתקנות שהותקנו מכוחו ,וזאת בהיעדר כ"
    },
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4943,6 +5411,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005439304/310",
    "fund": {
+    "conditional_units_t5": 5,
+    "conditional_units_state": "value",
     "amount_ils": 6000050,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה לפחות6,000,050 ש\"ח צמוד למדד . המחירים לצרכן",
     "section": "6",
@@ -4964,6 +5434,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005441062/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -4987,6 +5459,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005442802/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5010,6 +5484,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005444270/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
     "amount_ils": null,
     "amount_text": "",
     "section": "",
@@ -5031,6 +5507,8 @@
    "pages": 15,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005448776/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5054,6 +5532,8 @@
    "pages": 32,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005449540/310",
    "rental": {
+    "units_t5": 175,
+    "units_state": "value",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -5076,6 +5556,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005449724/310",
    "fund": {
+    "conditional_units_t5": 6,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.20",
@@ -5097,6 +5579,8 @@
    "pages": 17,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005451712/310",
    "rental": {
+    "units_t5": 3,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5120,6 +5604,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005464612/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5143,6 +5629,8 @@
    "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005468130/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": null,
     "duration_source": null,
     "review": false,
@@ -5165,6 +5653,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005470036/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5188,6 +5678,8 @@
    "pages": 14,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005470152/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5211,6 +5703,8 @@
    "pages": 12,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005477652/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "5",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5234,6 +5728,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005478106/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5257,6 +5753,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005480012/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "no_export",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5280,6 +5778,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005484094/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5303,6 +5803,8 @@
    "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005484168/310",
    "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "no_export",
     "amount_ils": null,
     "amount_text": "",
     "section": "6.3.1",
@@ -5324,6 +5826,8 @@
    "pages": 13,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005484452/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5347,6 +5851,8 @@
    "pages": 27,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005491720/310",
    "rental": {
+    "units_t5": 399,
+    "units_state": "value",
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5370,6 +5876,8 @@
    "pages": 12,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005505796/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5393,6 +5901,8 @@
    "pages": 25,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005508700/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "צמיתות",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5416,6 +5926,8 @@
    "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005520878/310",
    "fund": {
+    "conditional_units_t5": 40,
+    "conditional_units_state": "value",
     "amount_ils": null,
     "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה כפי שיוסכם עם מהנדס העיר. תנאי בהליך הרישוי לזכויות הבנייה ה\"מותנות\" למגורים יהיה הצגת כתב התחייבות למינוי נאמן והפקדת .הסכום כאמור 7.",
     "section": "6",
@@ -5424,6 +5936,8 @@
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט"
    },
    "rental": {
+    "units_t5": 100,
+    "units_state": "value",
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
@@ -5447,6 +5961,8 @@
    "pages": 12,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005525550/310",
    "rental": {
+    "units_t5": null,
+    "units_state": "none_in_table",
     "duration": "10",
     "duration_source": "הוראות התכנית",
     "review": false,
