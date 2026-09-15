@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-permit-scope';
+        const APP_VERSION = '2026-09-15-exec-permits';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -8708,7 +8708,7 @@
                     const c = polyCentroid(f.geometry);
                     if (!c) return;
                     if (radiusCenter.distanceTo(c) > radiusMeters) return;
-                    const permits = getPermitsForTaba(taba);
+                    const permits = getPlanExecutingPermits(taba);
                     if (permits.length === 0) return;
                     seenTaba.add(taba);
                     const planUnits = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add);
@@ -10805,7 +10805,7 @@
                 function planHasPermit(taba) {
                     const t = String(taba || '').trim();
                     if (!t) return false;
-                    if (_hasPermitCache[t] === undefined) _hasPermitCache[t] = getPermitsForTaba(t).length > 0;
+                    if (_hasPermitCache[t] === undefined) _hasPermitCache[t] = getPlanExecutingPermits(t).length > 0;
                     return _hasPermitCache[t];
                 }
                 const _stageCache = {};
@@ -11377,7 +11377,7 @@
                     seen.add(taba);
                     const p = propsByTaba[taba] || cp;
                     const planU = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add) || 0;
-                    const permits = getPermitsForTaba(taba);   // already drops תשתיות/מוסתר plans
+                    const permits = getPlanExecutingPermits(taba);   // already drops תשתיות/מוסתר plans
                     // Group revisions under their base tik BEFORE counting: all_permits lists
                     // 2022/0246.00/.01/.02 as three records, but permits_master merges them into
                     // ONE record carrying the units — summing per revision would triple-count.
@@ -13189,7 +13189,7 @@
                 plansInside.forEach(x => {
                     const taba = String(x.props.taba || '').trim();
                     if (!taba || seenTaba.has(taba)) return; seenTaba.add(taba);
-                    const permits = getPermitsForTaba(taba);
+                    const permits = getPlanExecutingPermits(taba);
                     if (!permits.length) return;
                     const planUnits = parsePlanUnits(x.props.units_total) || parsePlanUnits(x.props.units_add);
                     const inclusion = getEffectivePermitInclusion(permits, 'plan:' + taba, planUnits);
@@ -21742,6 +21742,15 @@
                 if (planProps && ['תשתיות', 'מוסתר'].includes(normalizePlanType(planProps.plan_type || ''))) return [];
                 return entry.permits.filter(_includePermit);
             }
+
+            // The permits that are evidence of THIS plan being executed — the list above minus
+            // the strangers YK attached to the parcel (permitPlanIrrelevance: older than the
+            // plan, filed under another תב"ע, or building something the plan never proposed).
+            // Reports that ask "is the plan being built / how much of it" use this one;
+            // the popup keeps showing everything, marked.
+            function getPlanExecutingPermits(taba) {
+                return getPermitsForTaba(taba).filter(p => !p.plan_irrelevant);
+            }
             function getPermitsForTama38(fid) {
                 const data = window.__tama38Permits || {};
                 const entry = data[String(fid)];
@@ -29461,7 +29470,7 @@
                             seenTaba.add(taba);
                             const planType = (p.plan_type || '').trim();
                             if (planType === 'תשתיות' || planType === 'מוסתר') return;
-                            const permits = getPermitsForTaba(taba);
+                            const permits = getPlanExecutingPermits(taba);
                             if (permits.length === 0) return;
                             // Use units_total (סה״כ יח״ד מתוכננות בתב״ע) as the basis for permit comparison —
                             // permits are issued for the full project (especially in התחדשות עירונית/פינוי-בינוי
@@ -29995,7 +30004,7 @@
                             if (!taba || seenTaba.has(taba)) return;
                             const planType = (p.plan_type || '').trim();
                             if (planType === 'תשתיות' || planType === 'מוסתר') return;
-                            const permits = getPermitsForTaba(taba);
+                            const permits = getPlanExecutingPermits(taba);
                             if (permits.length === 0) return;
                             seenTaba.add(taba);
                             const subRaw = (p.sub_neighborhood || p.neighborhood || 'לא ידוע').trim() || 'לא ידוע';
@@ -35416,7 +35425,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const grp = getFilterStatusGroup(st);
                             if (grp === 'approved' || grp === 'in_approval') {
                                 const taba = String(p.taba || '');
-                                if (taba && getPermitsForTaba(taba).length > 0) return 'ברישוי/היתר';
+                                if (taba && getPlanExecutingPermits(taba).length > 0) return 'ברישוי/היתר';
                                 return 'מאושרת';
                             }
                             if (grp === 'deposit' || grp === 'objections') return 'בהפקדה';
