@@ -1866,7 +1866,7 @@
   "2017/1080": {
    "permit_tik": "2017/1080",
    "file_number": "2017/1080.00",
-   "taba": "252379",
+   "taba": null,
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2017/1080.00",
@@ -4787,7 +4787,7 @@
   "2022/311": {
    "permit_tik": "2022/311",
    "file_number": "2022/0311.00",
-   "taba": "560805",
+   "taba": "178129",
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2022/0311.00",
@@ -5426,7 +5426,7 @@
   "2021/479": {
    "permit_tik": "2021/479",
    "file_number": "2021/0479.00",
-   "taba": "98251",
+   "taba": "178129",
    "units_added": 0,
    "permit_status": "הופק-הוצא היתר בניה",
    "pikuah_tik": "2021/0479.00",
@@ -15794,7 +15794,7 @@
   "2025/225": {
    "permit_tik": "2025/225",
    "file_number": "2025/0225.00",
-   "taba": "771600",
+   "taba": null,
    "units_added": 0,
    "permit_status": "התקבל ערר",
    "pikuah_tik": "2025/0225.00",
@@ -17582,7 +17582,7 @@
   "2025/102": {
    "permit_tik": "2025/102",
    "file_number": "2025/0102.00",
-   "taba": "1048347",
+   "taba": null,
    "units_added": 0,
    "permit_status": "נדונה בוועדת המשנה",
    "pikuah_tik": "2025/0102.00",

@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-alloc-filter';
+        const APP_VERSION = '2026-09-15-rail-detach';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1582,6 +1582,49 @@
             'תוספתזכויותתבעהתחדשותעירונית': 'תוספת זכויות תבע התחדשות עירונית',
         };
         function normalizePlanType(s) { return PLAN_TYPE_NORMALIZE[s] || s; }
+
+        // ── עבודות תשתית כלל-עירוניות שהתגלגלו לתב"ע שלנו (רק"ל) ──────────────
+        // YK files a permit under EVERY plan whose area its works touch, so the light
+        // rail's works (עבודות הכנה/מקדימות, חדר מיישרים, חניון חנה וסע) surface under
+        // ordinary plans the line merely crosses — e.g. "עבודות הכנה לרכבת הקלה - הקו
+        // הירוק - קטע פת דרום" sits under 101-0252379 (מתחם אגד). That permit is not
+        // that plan being executed: it inflates the plan's permit count and, through
+        // its פיקוח file, hands the plan a bogus "גמר בנייה". Such works belong to the
+        // rail plan itself (101-0209593 / 101-0178129 …, plan_type=תשתיות, whose permits
+        // are hidden anyway), so we detach them from every other plan.
+        // Mirrored by is_rail_infra() in build_permits_master.py — keep the two in sync.
+        // NOTE: matching needs an explicit rail token. "הקו הכחול" alone is NOT enough —
+        // it is also how permits refer to a plan's own blue line (גבול הקו הכחול).
+        const RAIL_INFRA_RE = /רכבת\s*ה?קלה|רק["״']ל|חדר\s*מיישרים|תחנת\s*מיישרים|חניון\s*חנה\s*וסע/;
+        function isRailInfraPermit(p) {
+            if (!p) return false;
+            return RAIL_INFRA_RE.test((p.request_type || '') + ' ' + (p.request_description || ''));
+        }
+        // Flag every rail-infrastructure permit attributed to a non-infrastructure plan.
+        // Marks `filtered` — the flag every permit consumer already honours (_includePermit
+        // and the raw window.__allPermits loops alike) — plus `cross_attributed` as the
+        // audit trail of WHY. Idempotent and order-independent: called both when the plans
+        // land (rebuildPlanByTaba) and when the permit JSONs land, since either can be first.
+        function markCrossAttributedPermits() {
+            const all = window.__allPermits, byTaba = window.__planByTaba;
+            if (!all || !byTaba) return 0;
+            let n = 0;
+            Object.keys(all).forEach(taba => {
+                const entry = all[taba];
+                if (!entry || !entry.permits) return;
+                const props = byTaba[String(taba).trim()];
+                const ptype = normalizePlanType((props && props.plan_type) || '');
+                if (['תשתיות', 'מוסתר'].includes(ptype)) return;   // the rail/infra plan itself — keep
+                entry.permits.forEach(p => {
+                    if (p.cross_attributed) { n++; return; }
+                    if (!isRailInfraPermit(p)) return;
+                    p.cross_attributed = 'רק"ל';
+                    p.filtered = true;
+                    n++;
+                });
+            });
+            return n;
+        }
 
         // ---- מוסדות חינוך בקרבת התחדשות עירונית מאושרת (edu_renewal_proximity) ----
         const RENEWAL_PLAN_TYPES = ['התחדשות עירונית', 'פינוי בינוי', 'עיבוי'];
@@ -5674,6 +5717,9 @@
                         });
                     }
                     window.__planByTaba = planByTaba;
+                    // plan_type is now known per taba → re-apply the rail-infra detach
+                    // (no-op until the permit JSONs land; then the permit loader re-runs it)
+                    markCrossAttributedPermits();
                     return planByTaba;
                 }
                 // Lot prefix accepts alphanumeric codes incl. "+" combos: "מגרש 201", "מגרש 1+2", "מגרש r505"
@@ -6217,6 +6263,10 @@
                             cur.permit_count = cur.permits.length;
                         }
                         window.__permitsByNorm = null; // stores changed — rebuild canonical-key index lazily
+                        // Detach citywide rail works that YK filed under our plans, BEFORE any
+                        // index is derived from the permits (stage index, licensing ladder…).
+                        const _xattr = markCrossAttributedPermits();
+                        if (_xattr) console.log('[Permits] detached', _xattr, 'rail-infrastructure permits misattributed to non-infra plans');
                         // Per-taba set of permit stages + global per-stage counts, for the
                         // permits-layer STAGE filter. Uses the same rule as getPermitStage() but
                         // with literal stage ids — this runs at load, outside the component's

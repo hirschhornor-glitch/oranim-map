@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-14T06:35:58",
+ "generated_at": "2026-09-15T18:45:43",
  "count": 1318,
  "bucket_counts": {
   "zchuyot": 351,
@@ -1778,7 +1778,7 @@
    "units": null,
    "tama_type": "",
    "address": "",
-   "taba": "771600",
+   "taba": null,
    "provenance": [
     "all_permits"
    ],
@@ -1789,6 +1789,10 @@
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
+   "cross_attributed": true,
+   "cross_attributed_from": [
+    "771600"
+   ],
    "is_tama38": false,
    "units_added": 0,
    "urban_renewal": false,
@@ -1978,7 +1982,7 @@
    "units": null,
    "tama_type": "",
    "address": "",
-   "taba": "560805",
+   "taba": "178129",
    "provenance": [
     "all_permits"
    ],
@@ -1989,6 +1993,11 @@
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
+   "cross_attributed": true,
+   "cross_attributed_from": [
+    "560805",
+    "547992"
+   ],
    "is_tama38": false,
    "units_added": 0,
    "urban_renewal": false,
@@ -3155,7 +3164,7 @@
    "units": null,
    "tama_type": "",
    "address": "",
-   "taba": "98251",
+   "taba": "178129",
    "provenance": [
     "all_permits"
    ],
@@ -3166,6 +3175,11 @@
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
+   "cross_attributed": true,
+   "cross_attributed_from": [
+    "98251",
+    "383109"
+   ],
    "is_tama38": false,
    "units_added": 0,
    "urban_renewal": false,
@@ -4678,7 +4692,7 @@
    "units": null,
    "tama_type": "",
    "address": "",
-   "taba": "1021344",
+   "taba": "800771",
    "provenance": [
     "all_permits"
    ],
@@ -4689,6 +4703,10 @@
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
+   "cross_attributed": true,
+   "cross_attributed_from": [
+    "1021344"
+   ],
    "is_tama38": false,
    "units_added": 0,
    "urban_renewal": false,
@@ -5982,7 +6000,7 @@
    "units": null,
    "tama_type": "",
    "address": "",
-   "taba": "1048347",
+   "taba": null,
    "provenance": [
     "all_permits"
    ],
@@ -5993,6 +6011,10 @@
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
+   "cross_attributed": true,
+   "cross_attributed_from": [
+    "1048347"
+   ],
    "is_tama38": false,
    "units_added": 0,
    "urban_renewal": false,
@@ -11675,7 +11697,7 @@
    "units": null,
    "tama_type": "",
    "address": "",
-   "taba": "252379",
+   "taba": null,
    "provenance": [
     "all_permits"
    ],
@@ -11686,6 +11708,10 @@
    "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
+   "cross_attributed": true,
+   "cross_attributed_from": [
+    "252379"
+   ],
    "is_tama38": false,
    "units_added": 0,
    "urban_renewal": false,
