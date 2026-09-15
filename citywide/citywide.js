@@ -356,17 +356,26 @@
     }
   }
 
+  // Two indexes, not one merged bag. The blue line IS the plan; a parcel is a piece
+  // inside it, and the parcels layer only holds the pieces the commerce pipeline
+  // extracted. Merging them let 101-1284223 — a 195-dunam plan — draw as three small
+  // parcels covering a third of its width, which reads as a different plan entirely.
+  // So: blue line wherever we have one, parcels only as a fallback.
+  var boundsByPlan = {}, parcelsByPlan = {};
   function indexGeometry() {
-    geoByPlan = {};
-    [D.parcels, D.bounds].forEach(function (src) {
+    boundsByPlan = {}; parcelsByPlan = {}; geoByPlan = {};
+    function add(bag, src) {
       if (!src || !src.features) return;
       src.features.forEach(function (f) {
         var key = f.properties && (f.properties.plan_name || f.properties.taba);
         if (!key) return;
-        var p = pad7(key);
-        (geoByPlan[p] = geoByPlan[p] || []).push(f);
+        (bag[pad7(key)] = bag[pad7(key)] || []).push(f);
       });
-    });
+    }
+    add(boundsByPlan, D.bounds);
+    add(parcelsByPlan, D.parcels);
+    Object.keys(parcelsByPlan).forEach(function (k) { geoByPlan[k] = parcelsByPlan[k]; });
+    Object.keys(boundsByPlan).forEach(function (k) { geoByPlan[k] = boundsByPlan[k]; });
   }
 
   function drawMap(rows) {
