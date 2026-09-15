@@ -283,14 +283,18 @@
         // rental count. The two are different commitments that share a zone in
         // Jerusalem, and folding them together is exactly what put 929 units in the
         // rental figure on no basis.
+        // Disjoint from the rental column by construction: a row whose use is rental
+        // is counted as rental, and a zone the הוראות define as rental moves there
+        // whole. The two columns can therefore be added without counting a flat twice.
         { k: "spec", t: 'יח"ד דיור מיוחד', n: true,
           get: function (r) { return r.rental.special_units; },
           fmt: function (v, r) {
-            if (!v) return '<span class="empty" title="אין שורת דיור מיוחד בטבלה 5">—</span>';
-            return '<span class="hi">' + n0(v) + "</span>" +
-              (r.rental.special_is_rental
-                ? '<sup class="vis dup" title="בתכנית זו השימוש בתוך ייעוד דיור מיוחד הוא &quot;מגורים להשכרה&quot; — אלו אותן יח&quot;ד שבעמודת ההשכרה">◦</sup>'
-                : "");
+            if (!v)
+              return '<span class="empty" title="' +
+                (r.rental.special_moved_to_rental
+                   ? 'יח\"ד הדיור המיוחד בתכנית זו הן יחידות ההשכרה עצמן, ולכן נספרות בעמודת ההשכרה בלבד'
+                   : "אין שורת דיור מיוחד בטבלה 5") + '">—</span>';
+            return '<span class="hi">' + n0(v) + "</span>";
           } },
         { k: "dur", t: "משך ההשכרה", get: function (r) { return r.rental.duration; },
           fmt: function (v) {
@@ -317,6 +321,10 @@
         if (r.rental.units_disputed)
           h += '<div class="quote"><b>למה אין כאן מספר:</b> ' +
                esc(r.rental.units_disputed) + "</div>";
+        if (r.rental.special_moved_to_rental)
+          h += '<div class="quote"><b>דיור מיוחד = דיור להשכרה בתכנית זו:</b> ' +
+               esc(r.rental.special_moved_to_rental) +
+               ' — לכן היח"ד נספרות בעמודת ההשכרה ולא בעמודת הדיור המיוחד.</div>';
         if ((r.rental.special_rows || []).length)
           h += '<div class="quote"><b>שורות דיור מיוחד בטבלה 5:</b> ' +
                esc(r.rental.special_rows.join("  |  ")) + "</div>";
@@ -355,6 +363,13 @@
             l: "מתוכם מחושבים מאחוז (" +
                rows.filter(function (r) { return r.rental.units_read === "pct"; }).length +
                " תכניות)" },
+          // Rental and special housing never share a unit, so this addition is safe —
+          // and it is stated as its own KPI precisely so nobody adds the two columns by
+          // hand and wonders whether they overlap.
+          { n: n0(rows.reduce(function (a, r) {
+              return a + (r.rental.restates_plan ? 0 : (r.rental.units_t5 || 0))
+                       + (r.rental.special_units || 0); }, 0)),
+            l: 'סה"כ יח"ד להשכרה + דיור מיוחד (ללא כפילות)' },
           { n: n0(expl.length), l: "משך מפורש בהוראות" },
           { n: n0(stat.length), l: "משך מהתוספת השישית" }
         ];
