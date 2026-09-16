@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-shared3';
+        const APP_VERSION = '2026-09-16-alloc-units2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -607,7 +607,11 @@
                     ['al_yesodi', /(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/],
                     ['maon', /(מעון|מעונות|פעוטון)/],
                     ['gan', /(גן ילדים|גני ילדים|גנון|גן חינוך)|(?:^|[^א-ת])(?:כיתות?\s+)?גן(?:[^א-ת]|$)/],
-                    ['yesodi', /(יסודי|בית ספר|בי"ס|בי״ס|ביה"ס|ביה״ס|בית-ספר)/],
+                    // "בתי ספר" (plural) and unpunctuated "ביהס" matched nothing, so
+                    // 101-0935189's "מגרש 2 - בתי ספר (10203)" and 101-0565317's
+                    // "ביהס רמת גונן (13541)" were filed as unclassified public building.
+                    // "בתי ספר על" is caught by al_yesodi above, which is tested first.
+                    ['yesodi', /(יסודי|בית ספר|בתי ספר|בי"ס|בי״ס|ביה"ס|ביה״ס|ביהס|בית-ספר)/],
                     ['synagogue', /(בית כנסת|ביכ"נ|ביכ״נ|בית-כנסת|בתי כנסת)/],
                     ['mikve', /(מקווה|מקוואות)/],
                     ['matnas', /(מתנ"ס|מתנ״ס|מרכז קהילתי|שלוחת מתנס|מועדון קהילתי)/],
@@ -645,8 +649,12 @@
                         // thousands of m², so a small parenthetical (≤ cap) can only be classes.
                         count = sqm; isClasses = true; itemSqm = 0;
                     }
-                    else if (key === 'yesodi') {
-                        // בי"ס יסודי with no class count anywhere → standard 12-class assumption.
+                    else if (key === 'yesodi' && !/בתי ספר/.test(t)) {
+                        // ONE בי"ס יסודי with no class count anywhere → standard 12-class
+                        // assumption. Not for a plural "בתי ספר": 101-0935189's
+                        // "מגרש 2 - בתי ספר (10203)" is more than one school, so claiming
+                        // 12 classrooms there states a number the plan never gave — it falls
+                        // through to a facility count with its area, like any other use.
                         count = DEFAULT_YESODI_CLASSES; isClasses = true;
                     }
                     else { count = leadCount || 1; isClasses = false; }
@@ -11017,13 +11025,22 @@
                 }
                 function filteredRows() { return rows.filter(rowPasses); }
                 function filteredDetailRows() { return detailRows.filter(rowPasses); }
+                // Classes and facilities are different units and must not be added:
+                // "מעון יום (600); 3 כיתות מעון (440)" is one facility plus three
+                // classrooms, and summing them printed "4 מתקנים" under a header that
+                // says exactly that. parseFacilitiesFromText() adds them, so the report
+                // keeps its own split (the popup still uses the plain counts).
                 function useCountsFor(rs) {
-                    const c = {}; PARSER_KEYS.forEach(k => c[k] = 0);
+                    const cls = {}, fac = {};
+                    PARSER_KEYS.forEach(k => { cls[k] = 0; fac[k] = 0; });
                     rs.forEach(r => {
-                        const parsed = parseFacilitiesFromText([r.outPrg, r.hafPrg].filter(Boolean).join('; '));
-                        PARSER_KEYS.forEach(k => { c[k] += parsed.counts[k] || 0; });
+                        parseFacilitiesDetailed([r.outPrg, r.hafPrg].filter(Boolean).join('; '))
+                            .items.forEach(it => {
+                                if (PARSER_KEYS.indexOf(it.key) === -1) return;
+                                (it.isClasses ? cls : fac)[it.key] += it.count;
+                            });
                     });
-                    return c;
+                    return { cls, fac };
                 }
                 function sumSqm(rs) {
                     let out = 0, haf = 0;
@@ -11159,13 +11176,16 @@
                         })(), '#86b89a');
                 }
                 function buildUseSection() {
-                    const c = useCountsFor(filteredRows());
-                    const ur = PARSER_KEYS.filter(k => c[k] > 0)
-                        .map(k => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#e8d9c8">' + ALLOC_LBLS[k] + '</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + c[k] + '</td></tr>')
+                    const { cls, fac } = useCountsFor(filteredRows());
+                    const ur = PARSER_KEYS.filter(k => cls[k] > 0 || fac[k] > 0)
+                        .map(k => '<tr style="border-bottom:1px solid #222">' +
+                            '<td style="padding:5px 8px;color:#e8d9c8">' + ALLOC_LBLS[k] + '</td>' +
+                            '<td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + (cls[k] > 0 ? cls[k] : '—') + '</td>' +
+                            '<td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + (fac[k] > 0 ? fac[k] : '—') + '</td></tr>')
                         .join('');
                     return ur
                         ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' +
-                          '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373">מספר מתקנים</th></tr></thead><tbody>' + ur + '</tbody></table>'
+                          '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373" title="כשהתכנית נוקבת מספר כיתות">כיתות</th><th style="padding:6px 8px;color:#d4a373" title="כשהתכנית מונה מתקן ולא כיתות">מתקנים</th></tr></thead><tbody>' + ur + '</tbody></table>'
                         : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>';
                 }
                 function buildDetailSection() {
@@ -11467,8 +11487,9 @@
                     lines.push([q('הפרשה מבונה (מ"ר)'), Math.round(t.haf)].join(','));
                     lines.push([q('סה"כ שטח ציבור (מ"ר)'), Math.round(t.out + t.haf)].join(','));
                     lines.push('');
-                    lines.push([q('שימוש'), q('מספר מתקנים')].join(','));
-                    PARSER_KEYS.filter(k => fc[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), fc[k]].join(',')));
+                    lines.push([q('שימוש'), q('כיתות'), q('מתקנים')].join(','));
+                    PARSER_KEYS.filter(k => fc.cls[k] > 0 || fc.fac[k] > 0)
+                        .forEach(k => lines.push([q(ALLOC_LBLS[k]), fc.cls[k] || '', fc.fac[k] || ''].join(',')));
                     lines.push('');
                     // "שלב היתר" is always exported, whatever the on-screen toggle says — the export
                     // is the analysable copy, so the detail behind the "היתרים" bucket goes with it.
@@ -22835,18 +22856,6 @@
                 tikGroups.forEach(group => {
                     if (group.length <= 1) return;
                     const drop = g => { if (included[g.i]) { included[g.i] = false; revisionDups++; } };
-                    // The authority's own quantities table says which sub-file superseded which:
-                    // 2008/0282.02 records קיים=4 — exactly the 4 יח״ד of 2008/0282.01 — and adds 3.
-                    // Counting both makes 11 out of a 7-unit building. A member whose count IS
-                    // another member's "existing" is that building before the addition.
-                    group.forEach(g => {
-                        const u = unitsAt(g.i);
-                        if (!u) return;
-                        const superseded = group.some(o => o.i !== g.i
-                            && (Number(permits[o.i].units_existing) || 0) === u
-                            && (Number(permits[o.i].units) || 0) > u);
-                        if (superseded) drop(g);
-                    });
                     // prep stages never stand on their own while a real building permit shares
                     // the tik (2023/0326: .00 = הריסה/חפירה for 210, .01 = the 426-unit permit)
                     const built = group.filter(g => !isPrepStagePermit(permits[g.i]));
