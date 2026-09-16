@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v81-book-built-sqm';
+const CACHE_VERSION = 'v82-per-lot-rows';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

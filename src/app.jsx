@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-book-built-sqm';
+        const APP_VERSION = '2026-09-17-per-lot-rows';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1623,18 +1623,21 @@
                 .map(k => Object.assign({ file_number: k }, o[k]));
         }
         function hakalaExtraOfTik(fileNumber) {
-            let top = 0, floor = 0, loose = 0;
+            // Σ of the additions, not max(allowed) − min(טבלה 5): one תיק can carry two
+            // SCOPES rather than two states of one. מתחם אגד's 2023/0107 is .01 = תא שטח 1
+            // (232 → 280) and .02 = תא שטח 2 (64 → 72); collapsing them reads 280 − 64 = 216
+            // instead of 48 + 8 = 56. Summing is also right for a chain — סן מרטין 3 published
+            // 104 → 126 on .00 and 126 → 130 on .02, which sums to the 26 the permits show.
+            // Deduped on the grant itself, so a revision that only restates it adds nothing.
+            const seen = new Set();
+            let total = 0;
             hakalaRecordsOfTik(fileNumber).forEach(r => {
-                const allowed = Number(r.units) || 0;
-                const t5 = Number(r.table5_units) || 0;
-                if (allowed && t5) {
-                    if (allowed > top) top = allowed;
-                    if (!floor || t5 < floor) floor = t5;
-                } else {
-                    loose += permitHakalaExtra({ file_number: r.file_number });
-                }
+                const key = (r.units || '') + '|' + (r.table5_units || '') + '|' + (r.pct || '');
+                if (seen.has(key)) return;
+                seen.add(key);
+                total += permitHakalaExtra({ file_number: r.file_number });
             });
-            return Math.max(0, top - floor) + loose;
+            return total;
         }
         function permitsHakalaExtra(permits, included) {
             if (!Array.isArray(permits)) return 0;
@@ -11185,6 +11188,18 @@
                 function prgSegments(text) {
                     return String(text || '').split(';').map(x => x.trim()).filter(Boolean);
                 }
+                // "מגרש 9 - …", "מגרש 30199/40 - …", "תא שטח 7 - …", "בניין 3 / תא שטח 7 - …".
+                // Returns '' when the segment names no lot.
+                function segLot(seg) {
+                    // HAFRASH_LOT_PREFIX_RE is the layer's; the others are forms it does not cover
+                    const m = String(seg || '').match(/^(מגרש|תא שטח|תא|בניין|מתחם)\s+([\dא-תA-Za-z/+]+)\s*[-–—]/);
+                    return m ? (m[1] + ' ' + m[2]) : '';
+                }
+                // Strip that prefix — the lot has its own column, so repeating it in the use
+                // label just makes the column narrower.
+                function stripLot(seg) {
+                    return String(seg || '').replace(/^(?:מגרש|תא שטח|תא|בניין|מתחם)\s+[^\s\-–—,(]+\s*[-–—]\s*/, '');
+                }
                 // Refinement from the muni property book: where the statutory text says nothing
                 // but "מבנים ומוסדות ציבור", the assets the city actually opened say what the
                 // space becomes (גן / בית כנסת / מעון / דירות לבעלי מוגבלויות…). הפרשה source
@@ -11197,12 +11212,14 @@
                     return { use: 'מבני ציבור — לפי ספר הנכסים: ' + cats.join(', '),
                              doms: hafrashUseDomainsAll(cats.join(', ')) };
                 }
-                // …and HOW MUCH of each. The assets carry a measured built_sqm, so when a plan's
-                // assets fall into more than one category set they say the proportions — the
-                // sheet still supplies the total, because that is what the KPIs add up.
-                // Returns [{use, doms, sqm}] summing to `figure`, or null when there is nothing
-                // to split: no assets, one category set (deliveryUseFor already names it), or no
-                // measured area at all.
+                // …and HOW MUCH of each — as MEASURED, not as a share of the sheet's figure.
+                // 101-0175232's book holds גן ילדים 260 · תרבות ואמנות 280 · בית כנסת 250 = 790
+                // while hafrash_sqm says 250; pro-rating those into 250 printed a 82 מ"ר
+                // kindergarten and a 79 מ"ר synagogue, sizes no such building has. The measured
+                // area is the better evidence, so it is reported as it stands and the gap against
+                // the sheet is surfaced rather than scaled away.
+                // Returns {rows:[{use,doms,sqm}], total} or null when there is nothing to split:
+                // no assets, one category set (deliveryUseFor already names it), or nothing measured.
                 function deliveryRowsFor(taba, source, figure) {
                     if (source !== 'הפרשה מבונה' || !(figure > 0)) return null;
                     const groups = {};
@@ -11218,11 +11235,11 @@
                     if (list.length < 2) return null;
                     const total = list.reduce((acc, g) => acc + g.sqm, 0);
                     if (!(total > 0)) return null;
-                    return list.map(g => ({
+                    return { total, rows: list.map(g => ({
                         use: 'מבני ציבור — לפי ספר הנכסים: ' + g.label,
                         doms: hafrashUseDomainsAll(g.label),
-                        sqm: figure * (g.sqm / total),
-                    }));
+                        sqm: g.sqm,
+                    })) };
                 }
                 const detailRows = [];
                 // Rows where the מ"ר written next to the individual uses add up to MORE than the
@@ -11233,10 +11250,28 @@
                 // Rows where the text states a figure but the sheet's מ"ר column is blank, so the
                 // area is real, appears in the split, and is missing from the KPI totals.
                 const blankColumn = [];
+                // Rows where the property book has MEASURED more built area than the sheet's מ"ר
+                // column holds — the book is the later, physical record, so these are sheet rows
+                // to correct, not book entries to doubt.
+                const bookExcess = [];
                 rows.forEach(r => {
                     [['שב"צ עתידי', r.outPrg, r.outSqm], ['הפרשה מבונה', r.hafPrg, r.hafSqm]].forEach(([source, prg, totalSqm]) => {
                         if (!prg && !(totalSqm > 0)) return;
-                        const { items, uncategorizedSqm } = parseFacilitiesDetailed(prg || '');
+                        // Parsed per ";"-segment rather than over the whole string, so every item
+                        // keeps the lot it was written under AND a single figure is shared only
+                        // inside its own segment — across the plan it never was one allocation.
+                        const items = [];
+                        let uncategorizedSqm = 0;
+                        // A segment that does not restate the lot belongs to the previous one —
+                        // the same carry-over parsePrgByLot() uses to build the layer's lot table.
+                        let carriedLot = '';
+                        prgSegments(prg).forEach(seg => {
+                            const lot = segLot(seg) || carriedLot;
+                            carriedLot = lot;
+                            const parsed = parseFacilitiesDetailed(seg);
+                            uncategorizedSqm += parsed.uncategorizedSqm;
+                            parsed.items.forEach(it => { it.lot = lot; items.push(it); });
+                        });
                         // A figure that covers several named uses: give each the area the guide
                         // says it takes, and never more. Scaling UP to fill the figure would be
                         // wrong — 101-0098251's "(900)" also covers "רווחה/קהילה", which is not a
@@ -11278,11 +11313,29 @@
                         // ("מעון יום (600)"), and the unit used to be chosen from the KEY alone —
                         // so that printed as "1 כיתות", asserting a classroom count the plan never
                         // gave, next to a 600 מ"ר figure that plainly covers about four of them.
+                        // מעון/גן are counted in כיתות, never in מתקנים. Where the text gave an
+                        // area but no count, the guide's per-classroom area recovers it.
+                        items.forEach(it => {
+                            if (it.isClasses || !(it.sqm > 0)) return;
+                            // גן 130 and מעון 147 are tight standards. A school's area per class
+                            // runs 181–1,128 in our own corpus, so dividing by its median would be
+                            // guessing, not reading.
+                            if (it.key !== 'gan' && it.key !== 'maon') return;
+                            const per = (PUBLIC_BUILT_SQM[it.key] || {}).perClass;
+                            if (!per) return;
+                            const cls = Math.round(it.sqm / per);
+                            if (cls < 1) return;
+                            it.statedCount = it.count;   // "2 גני ילדים" — kept for the tooltip
+                            it.count = cls; it.isClasses = true; it.derivedClasses = true;
+                        });
                         const agg = {};
                         items.forEach(it => {
-                            const ak = it.key + '|' + (it.isClasses ? 'c' : 'f');
-                            if (!agg[ak]) agg[ak] = { key: it.key, isClasses: it.isClasses, count: 0, sqm: 0, shared: [] };
+                            const ak = it.key + '|' + (it.isClasses ? 'c' : 'f') + '|' + (it.lot || '');
+                            if (!agg[ak]) agg[ak] = { key: it.key, isClasses: it.isClasses, lot: it.lot || '',
+                                                      count: 0, sqm: 0, shared: [] };
                             agg[ak].count += it.count; agg[ak].sqm += it.sqm;
+                            if (it.derivedClasses) agg[ak].derivedClasses = true;
+                            if (it.statedCount) agg[ak].statedCount = (agg[ak].statedCount || 0) + it.statedCount;
                             (it.sharedWith || []).forEach(k => { if (agg[ak].shared.indexOf(k) === -1) agg[ak].shared.push(k); });
                         });
                         const keys = Object.keys(agg);
@@ -11290,8 +11343,10 @@
                             const a = agg[ak];
                             detailRows.push({
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                                lot: a.lot, derivedClasses: a.derivedClasses, statedCount: a.statedCount,
                                 key: a.key, use: ALLOC_LBLS[a.key], count: a.count,
-                                unit: a.isClasses ? 'כיתות' : (a.count > 1 ? 'מתקנים' : 'מתקן'),
+                                unit: a.isClasses ? (a.count === 1 ? 'כיתה' : 'כיתות')
+                                    : (a.count > 1 ? 'מתקנים' : 'מתקן'),
                                 sqm: a.sqm, shared: a.shared,
                             });
                         });
@@ -11323,23 +11378,38 @@
                         // is exactly one such segment threw the evidence away. The assets cannot
                         // say WHICH lot, so the answer is given once for their combined area.
                         const genericSegs = [];
+                        let segCarriedLot = '';
                         prgSegments(prg).forEach(seg => {
                             const v = segFigure(seg);
                             if (!(v > 0)) return;
                             if (parseFacilitiesDetailed(seg).items.length) return;   // already a named key
-                            const label = seg.replace(/\([^)]*\)/, '').replace(/[\s,;\-–—]+$/, '').trim() || seg;
+                            const label = stripLot(seg).replace(/\([^)]*\)/, '')
+                                .replace(/[\s,;\-–—]+$/, '').trim() || seg;
+                            const lot = segLot(seg) || segCarriedLot;
+                            segCarriedLot = lot;
                             const segDoms = hafrashUseDomainsAll(seg);
-                            if (segDoms.length) segRows.push({ use: label, sqm: v, doms: segDoms });
-                            else genericSegs.push({ use: label, sqm: v });
+                            if (segDoms.length) segRows.push({ use: label, sqm: v, doms: segDoms, lot });
+                            else genericSegs.push({ use: label, sqm: v, lot });
                         });
                         const genericSqm = genericSegs.reduce((acc, x) => acc + x.sqm, 0);
-                        const dlvSplit = deliveryRowsFor(r.taba, source, genericSqm);
+                        // Only where the text names no use at all. The book covers the plan's
+                        // allocations as a whole, so letting it answer one anonymous segment of an
+                        // otherwise-detailed text printed its full 961 מ"ר next to 101-0511923's
+                        // own per-lot rows — the same allocations, counted twice.
+                        const dlvSplit = keys.length ? null : deliveryRowsFor(r.taba, source, genericSqm);
                         if (dlvSplit) {
-                            dlvSplit.forEach(x => segRows.push(x));
+                            dlvSplit.rows.forEach(x => segRows.push(x));
+                            // measured less than the sheet says → the rest is still unnamed
+                            const gap = genericSqm - dlvSplit.total;
+                            if (gap > 1) segRows.push({ use: 'מבני ציבור (כללי / לא מסווג)', sqm: gap, doms: [] });
+                            else if (gap < -1) bookExcess.push({ taba: r.taba, source, excess: -gap });
                         } else {
-                            const dlvU = genericSegs.length ? deliveryUseFor(r.taba, source) : null;
+                            // same rule as the split above: the book answers a source whose text
+                            // names nothing, not one unrecognised segment inside a detailed text
+                            // (101-0511923's "מרכז הוליסטי" is what the plan says — keep it)
+                            const dlvU = (genericSegs.length && !keys.length) ? deliveryUseFor(r.taba, source) : null;
                             genericSegs.forEach(g => segRows.push({
-                                use: dlvU ? dlvU.use : g.use,
+                                use: dlvU ? dlvU.use : g.use, lot: g.lot,
                                 sqm: g.sqm, doms: dlvU ? dlvU.doms : [],
                             }));
                         }
@@ -11363,7 +11433,10 @@
                                 Object.keys(byDom).forEach(d => {
                                     detailRows.push({
                                         taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                                        use: 'שטחי שירות ותנועה (פרו-רטה) — ' + (HAFRASH_DOM_HE[d] || d),
+                                        use: 'שטחי שירות ותנועה — ' + (HAFRASH_DOM_HE[d] || d),
+                                        note: 'התכנית נוקבת בפרוגרמה מפורטת (' + Math.round(attributedSqm).toLocaleString() +
+                                            ' מ"ר עיקרי) ובסה"כ גדול יותר (' + Math.round(baseSqm).toLocaleString() +
+                                            ' מ"ר). ההפרש הוא שטחי שירות ותנועה של אותם שימושים, ומחולק ביניהם לפי חלקם בשטח העיקרי',
                                         doms: [d], count: 0, unit: '',
                                         sqm: residualSqm * (byDom[d] / domTotal),
                                     });
@@ -11376,7 +11449,7 @@
                         }
                         segRows.forEach(x => detailRows.push({
                             taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                            use: x.use, doms: x.doms, count: 0, unit: '', sqm: x.sqm,
+                            lot: x.lot || '', use: x.use, doms: x.doms, count: 0, unit: '', sqm: x.sqm,
                         }));
                         if (!(totalSqm > 0) && (baseSqm > 0 || attributedSqm + segSqm > 0)) {
                             blankColumn.push({ taba: r.taba, source, sqm: Math.max(baseSqm, attributedSqm + segSqm) });
@@ -11414,9 +11487,12 @@
                                 // so they must override it for the area split too - otherwise the row
                                 // would read "בית כנסת" on screen and be counted under whatever domain
                                 // the plan text happened to name.
-                                const dlvRows = deliveryRowsFor(r.taba, source, envelopeSqm);
-                                if (dlvRows) {
-                                    dlvRows.forEach(x => detailRows.push({
+                                const dlvSplitE = deliveryRowsFor(r.taba, source, envelopeSqm);
+                                if (dlvSplitE) {
+                                    const gapE = envelopeSqm - dlvSplitE.total;
+                                    if (gapE > 1) dlvSplitE.rows.push({ use: 'מבני ציבור (כללי / לא מסווג)', sqm: gapE, doms: [] });
+                                    else if (gapE < -1) bookExcess.push({ taba: r.taba, source, excess: -gapE });
+                                    dlvSplitE.rows.forEach(x => detailRows.push({
                                         taba: r.taba, name: r.name, status: r.status, sub: r.sub,
                                         source, use: x.use, doms: x.doms, count: 0, unit: '', sqm: x.sqm,
                                     }));
@@ -11439,7 +11515,9 @@
                         }
                     });
                 });
-                detailRows.sort((a, b) => (a.use < b.use ? -1 : a.use > b.use ? 1 : (a.taba < b.taba ? -1 : a.taba > b.taba ? 1 : 0)));
+                detailRows.sort((a, b) => (a.taba < b.taba ? -1 : a.taba > b.taba ? 1
+                    : ((a.lot || '') < (b.lot || '') ? -1 : (a.lot || '') > (b.lot || '') ? 1
+                    : (a.use < b.use ? -1 : a.use > b.use ? 1 : 0))));
                 function buildPlanRows() {
                     return filteredDetailRows().map(r => {
                         const sc = statusCell(r.taba, r.status);
@@ -11456,7 +11534,12 @@
                         '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + dlvStyle + '" title="' + escAttr(dlvI ? dlvI.title : 'אין נכס מתאים בספר הנכסים העירוני') + '">' + (dlv ? esc(dlv) : '—') + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' +
-                        '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' +
+                        '<td style="padding:5px 6px;font-size:11px;color:#c9b8a8;white-space:nowrap">' + (r.lot ? esc(r.lot) : '—') + '</td>' +
+                        '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:' + (r.derivedClasses ? '#c9a227' : '#d4a373') + '"' +
+                            (r.derivedClasses ? ' title="' + escAttr('מספר הכיתות חושב מהשטח לפי התדריך (' +
+                                ((PUBLIC_BUILT_SQM[r.key] || {}).perClass || '') + ' מ"ר לכיתה) — התכנית נקבה בשטח בלבד' +
+                                (r.statedCount ? ', וציינה ' + r.statedCount + ' מתקנים' : '')) + '"' : '') + '>' +
+                            (r.count ? (r.derivedClasses ? '~' : '') + r.count + ' ' + r.unit : '—') + '</td>' +
                         '<td style="padding:5px 6px;text-align:center;color:#bbb">' +
                             (r.sqm > 0
                                 ? ((r.shared && r.shared.length)
@@ -11465,7 +11548,8 @@
                                         ' — לא שטח השימוש הזה בלבד') + '">' + Math.round(r.sqm).toLocaleString() + ' ⚯</span>'
                                     : Math.round(r.sqm).toLocaleString())
                                 : '—') + '</td>' +
-                        '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.use) + '</td>' +
+                        '<td style="padding:5px 6px;color:#e8d9c8"' + (r.note ? ' title="' + escAttr(r.note) + '"' : '') + '>' +
+                            esc(r.use) + (r.note ? ' <span style="color:#8a7a6a;cursor:help">ⓘ</span>' : '') + '</td>' +
                         '</tr>';
                     }).join('');
                 }
@@ -11572,12 +11656,15 @@
                     const ovSqm = ov.reduce((acc, o) => acc + o.excess, 0);
                     const bc = blankColumn.filter(o => passing.has(o.taba));
                     const bcSqm = bc.reduce((acc, o) => acc + o.sqm, 0);
+                    const bx = bookExcess.filter(o => passing.has(o.taba));
+                    const bxSqm = bx.reduce((acc, o) => acc + o.excess, 0);
                     const foot = 'בלעדי: <b style="color:#d4a373">' + num(soleTotal) + '</b>' +
                         (b.mixedSqm ? ' · שטח משותף לכמה תחומים שלא ניתן לפצל: <b style="color:#e0c08a">' + num(b.mixedSqm) + '</b> (' + b.mixedPlans.size + ' תכניות)' : '') +
                         (b.noneSqm ? ' · ללא סיווג: <b style="color:#999">' + num(b.noneSqm) + '</b> (' + b.noneRows + ' שורות)' : '') +
                         ' · סה"כ מפורט ' + num(accounted) + ' מתוך ' + num(t.out + t.haf) + ' מ"ר בדוח' +
                         (ov.length ? '<br><span style="color:#e0c08a" title="' + escAttr('העמודה בגיליון מחזיקה שטחים מעל הכניסה בלבד, והטקסט לעיתים מונה גם שטחי שירות מתחת לכניסה הקבילה') + '">⚠ ' + (ov.length === 1 ? 'בשורה אחת' : 'ב-' + ov.length + ' שורות') + ' סכום המ"ר שליד השימושים עולה על השדה בגיליון ב-' + num(ovSqm) + ' מ"ר (' + esc(ov.map(o => o.taba).join(', ')) + ')</span>' : '') +
-                        (bc.length ? '<br><span style="color:#e0c08a" title="' + escAttr('השטח נכנס לפילוח לפי הטקסט, אך חסר במדדים שלמעלה שסוכמים את עמודת המ"ר בגיליון') + '">⚠ ' + (bc.length === 1 ? 'בשורה אחת' : 'ב-' + bc.length + ' שורות') + ' הטקסט נוקב במ"ר אך עמודת המ"ר בגיליון ריקה — ' + num(bcSqm) + ' מ"ר (' + esc(bc.map(o => o.taba).join(', ')) + ')</span>' : '');
+                        (bc.length ? '<br><span style="color:#e0c08a" title="' + escAttr('השטח נכנס לפילוח לפי הטקסט, אך חסר במדדים שלמעלה שסוכמים את עמודת המ"ר בגיליון') + '">⚠ ' + (bc.length === 1 ? 'בשורה אחת' : 'ב-' + bc.length + ' שורות') + ' הטקסט נוקב במ"ר אך עמודת המ"ר בגיליון ריקה — ' + num(bcSqm) + ' מ"ר (' + esc(bc.map(o => o.taba).join(', ')) + ')</span>' : '') +
+                        (bx.length ? '<br><span style="color:#86b89a" title="' + escAttr('ספר הנכסים הוא הרישום הפיזי המאוחר יותר — אלה שורות לתקן בגיליון, לא נתונים לפקפק בהם') + '">⚑ ' + (bx.length === 1 ? 'בשורה אחת' : 'ב-' + bx.length + ' שורות') + ' ספר הנכסים מודד יותר מהשדה בגיליון ב-' + num(bxSqm) + ' מ"ר (' + esc(bx.map(o => o.taba).join(', ')) + ')</span>' : '');
                     return '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">שטח לפי תחום (מ"ר)</h4>' +
                         '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16">' +
                         '<th style="padding:6px 8px;text-align:right;color:#d4a373">תחום</th>' +
@@ -11606,7 +11693,7 @@
                     return '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + fd.length +
                             (stageFilter === 'all' ? '' : ' מתוך ' + detailRows.length) + ')</h4>' +
                         (fd.length
-                            ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody id="alloc-tbody">' + buildPlanRows() + '</tbody></table>'
+                            ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373" title="מגרש / תא שטח כפי שנכתב בתכנית — כמה הפרשות באותה תכנית יושבות על מגרשים שונים">מגרש</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody id="alloc-tbody">' + buildPlanRows() + '</tbody></table>'
                             : '<div style="color:#999;font-size:13px;padding:10px">' +
                               (stageFilter === 'all' ? 'לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.' : 'אין הפרשות בסטטוס "' + esc(filterLabel()) + '" בתחום הנבחר.') + '</div>') +
                         buildLegend();
@@ -11917,10 +12004,10 @@
                     lines.push('');
                     // "שלב היתר" is always exported, whatever the on-screen toggle says — the export
                     // is the analysable copy, so the detail behind the "היתרים" bucket goes with it.
-                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('שלב היתר'), q('מסירה בפועל'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש'), q('תחום')].join(','));
+                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('שלב היתר'), q('מסירה בפועל'), q('תת-שכונה'), q('מקור'), q('מגרש'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש'), q('תחום')].join(','));
                     fd.forEach(r => {
                         const st = planHasPermit(r.taba) ? planPermitStage(r.taba) : null;
-                        lines.push([q(r.taba), q(r.name), q(statusCell(r.taba, r.status).label), q(st ? getPermitStageLabel(st) : ''), q(deliveryLabel(r.taba)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use), q(rowDomains(r).map(d => HAFRASH_DOM_HE[d] || d).join(' + '))].join(','));
+                        lines.push([q(r.taba), q(r.name), q(statusCell(r.taba, r.status).label), q(st ? getPermitStageLabel(st) : ''), q(deliveryLabel(r.taba)), q(r.sub), q(r.source), q(r.lot || ''), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use), q(rowDomains(r).map(d => HAFRASH_DOM_HE[d] || d).join(' + '))].join(','));
                     });
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
