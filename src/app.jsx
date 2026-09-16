@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-seg-delivery';
+        const APP_VERSION = '2026-09-16-shared-standard';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -493,6 +493,35 @@
         // than run through the domain regexes on the label, because the labels are written
         // for people ('מתנ"ס/מרכז קהילתי') and a regex miss would silently move floor
         // area from one domain to another in the report's area split.
+        // Built floor area per unit, for reading a figure that covers several uses at once.
+        // NOT a programme standard — PUBLIC_NEEDS_SERVICES/NEIGHBORHOOD_PROGRAM_SERVICES hold
+        // those, and they measure LAND (dunamPerClass) or population coefficients, never built
+        // מ"ר. These are the מדריך 2018 built-area figures where it states one, checked against
+        // the medians of our own corpus (segments naming exactly one use and stating its area);
+        // `n` is how many such segments back each number, so a caller can tell 55 observations
+        // from 5. Only keys with real support are listed: a key missing here makes the split
+        // bail out rather than invent a number.
+        const PUBLIC_BUILT_SQM = {
+            maon:      { perClass: 147, minUnits: 3, n: 33 },   // מדריך: 440 מ"ר ל-3 כיתות = 146.7
+            gan:       { perClass: 130, minUnits: 1, n: 40 },
+            yesodi:    { perClass: 460, minUnits: 12, n: 16 },  // wide spread — school areas carry shared space
+            al_yesodi: { perClass: 270, minUnits: 12, n: 4 },
+            synagogue: { perFacility: 390, n: 55 },
+            matnas:    { perFacility: 500, n: 5 },
+            noar_club: { perFacility: 800, n: 4 },
+            sport_hall:{ perFacility: 2500, n: 1 },
+        };
+        // What ONE parsed item should take, by the table above. 0 = no defensible figure.
+        function standardBuiltSqm(it) {
+            const std = PUBLIC_BUILT_SQM[it && it.key];
+            if (!std) return 0;
+            if (std.perClass) {
+                // a stated class count is evidence; otherwise the guide's entry size
+                const units = (it.isClasses && it.count > 0) ? it.count : std.minUnits;
+                return units * std.perClass;
+            }
+            return Math.max(1, it.count || 1) * (std.perFacility || 0);
+        }
         const PARSER_KEY_DOMAIN = {
             maon: 'education', gan: 'education', yesodi: 'education', al_yesodi: 'education',
             tipat_chalav: 'health', clinic: 'health',
@@ -628,7 +657,7 @@
                     ['mikve', /(מקווה|מקוואות)/],
                     ['matnas', /(מתנ"ס|מתנ״ס|מרכז קהילתי|שלוחת מתנס|מועדון קהילתי)/],
                     ['library', /(ספרייה|ספריה)/],
-                    ['sport_hall', /(אולם ספורט|מגרש ספורט|בריכת שחייה|בריכה ציבורית|מרכז ספורט|מתקני ספורט|מבנים ומתקנים לפעילויות ספורט|פעילויות ספורט|פנאי וספורט|אולם)/],
+                    ['sport_hall', /(אולם ספורט|מגרש ספורט|בריכת שחי[יי]?ה|בריכת שחיה|בריכה ציבורית|מרכז ספורט|מתקני ספורט|מבנים ומתקנים לפעילויות ספורט|פעילויות ספורט|פנאי וספורט|אולם)/],
                     ['tipat_chalav', /(טיפת חלב|תחנת בריאות)/],
                     ['clinic', /(מרפאה|קופת חולים)/],
                     ['welfare_dept', /(לשכת רווחה|מחלקת רווחה|מחלקה לשירותים חברתיים)/],
@@ -11181,6 +11210,42 @@
                     [['שב"צ עתידי', r.outPrg, r.outSqm], ['הפרשה מבונה', r.hafPrg, r.hafSqm]].forEach(([source, prg, totalSqm]) => {
                         if (!prg && !(totalSqm > 0)) return;
                         const { items, uncategorizedSqm } = parseFacilitiesDetailed(prg || '');
+                        // A figure that covers several named uses: give each the area the guide
+                        // says it takes, and never more. Scaling UP to fill the figure would be
+                        // wrong — 101-0098251's "(900)" also covers "רווחה/קהילה", which is not a
+                        // parser key at all, so the slack belongs to a use we cannot name. What is
+                        // left over becomes its own joint row instead of inflating a use.
+                        const sharedLeftovers = [];
+                        items.forEach(it => {
+                            const figure = it.sqm;
+                            if (!(figure > 0) || !(it.sharedWith && it.sharedWith.length)) return;
+                            // A key named in sharedWith normally has NO item: the parser emits one
+                            // item per sub-segment and records the rest of that segment's uses here.
+                            // Reuse a bare item when there is one (it may carry a class count), and
+                            // otherwise add the use to the list so it gets its own row.
+                            const mates = it.sharedWith.map(k => {
+                                const found = items.find(x => x.key === k && !(x.sqm > 0));
+                                if (found) return found;
+                                const made = { key: k, count: 1, isClasses: false, sqm: 0, sharedWith: [] };
+                                items.push(made);
+                                return made;
+                            });
+                            if (!mates.length) return;
+                            const parts = [it].concat(mates);
+                            const want = parts.map(standardBuiltSqm);
+                            // one participant we have no figure for → the whole thing stays joint,
+                            // because a partial split would silently hand it the remainder
+                            if (want.some(v => !(v > 0))) return;
+                            const total = want.reduce((a, b) => a + b, 0);
+                            const scale = Math.min(1, figure / total);
+                            parts.forEach((x, i) => { x.sqm = want[i] * scale; x.byStandard = true; });
+                            const left = figure - total * scale;
+                            if (left > 1) sharedLeftovers.push({
+                                sqm: left,
+                                uses: parts.map(x => ALLOC_LBLS[x.key] || x.key),
+                                doms: [...new Set(parts.map(x => PARSER_KEY_DOMAIN[x.key]).filter(Boolean))],
+                            });
+                        });
                         // Stated class counts are kept apart from facility counts. The parser
                         // falls back to count=1 / isClasses=false when the text gives no number
                         // ("מעון יום (600)"), and the unit used to be chosen from the KEY alone —
@@ -11211,7 +11276,13 @@
                         // any area split built from these rows would describe a quarter of the stock
                         // and present it as the whole. It is kept as its own row, carrying the
                         // domains the text names, and marked unsplit when there is more than one.
-                        const attributedSqm = keys.reduce((acc, ak) => acc + (agg[ak].sqm || 0), 0);
+                        sharedLeftovers.forEach(x => detailRows.push({
+                            taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                            use: 'יתרה משותפת — ' + x.uses.join(' + '), doms: x.doms,
+                            count: 0, unit: '', sqm: x.sqm,
+                        }));
+                        const attributedSqm = keys.reduce((acc, ak) => acc + (agg[ak].sqm || 0), 0)
+                            + sharedLeftovers.reduce((acc, x) => acc + x.sqm, 0);
                         // The KPIs total the sheet's מ"ר column, so the split has to be measured
                         // against that same figure or it cannot be reconciled with them; the text's
                         // own number only stands in where the column is blank.
