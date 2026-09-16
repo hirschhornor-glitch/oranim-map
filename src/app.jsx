@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-per-lot-rows';
+        const APP_VERSION = '2026-09-17-permit-use';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11205,6 +11205,33 @@
                 // space becomes (גן / בית כנסת / מעון / דירות לבעלי מוגבלויות…). הפרשה source
                 // only — delivery evidence IS the hafrasha process by definition. Returns
                 // {use, doms} or null.
+                // What the PERMIT says this space becomes, from the gramoshka reading.
+                // Outranks the property book and the plan text. Returns {use, doms, note} or null.
+                // use_specified === false is an ANSWER, not a gap: the permit was read and it
+                // deliberately leaves the use open, so no further reading will sharpen it.
+                function permitUseFor(taba, lot) {
+                    const pr = (typeof planPermitHafrashUse === 'function') ? planPermitHafrashUse(taba) : null;
+                    if (!pr) return null;
+                    // the reading was taken off ONE lot; it says nothing about the others
+                    const prLot = String(pr.lot || '').trim();
+                    const rowLot = String(lot || '').replace(/^\S+\s+/, '').trim();
+                    if (prLot && rowLot && prLot !== rowLot) return null;
+                    const pm = pr.permit || {};
+                    const src = 'נקרא מ' + (pm.doc_descr || 'גרמושקת ההיתר') +
+                        (pm.tik ? ', תיק ' + pm.tik : '') + (pm.doc_date ? ', ' + pm.doc_date : '') +
+                        (pm.panel ? ' · ' + pm.panel : '') +
+                        (pr.quote_he ? ' · "' + String(pr.quote_he).slice(0, 300) + '"' : '');
+                    if (pr.use_specified === false) {
+                        return { use: 'לפי ההיתר: השימוש נותר פתוח', doms: [], open: true,
+                                 note: 'ההיתר נקרא והוא אינו מייחד שימוש — ' + src };
+                    }
+                    const uses = (pr.uses || []).filter(Boolean);
+                    if (!uses.length) return null;
+                    const short = uses.slice(0, 4).join(', ') + (uses.length > 4 ? ' ועוד' : '');
+                    return { use: 'לפי ההיתר: ' + short,
+                             doms: hafrashUseDomainsAll(uses.join(', ')),
+                             note: (uses.length > 4 ? uses.join(' · ') + ' — ' : '') + src };
+                }
                 function deliveryUseFor(taba, source) {
                     if (source !== 'הפרשה מבונה') return null;
                     const cats = [...new Set((_dlvByTaba[taba] || []).flatMap(a => a.cats || []))];
@@ -11396,6 +11423,8 @@
                         // allocations as a whole, so letting it answer one anonymous segment of an
                         // otherwise-detailed text printed its full 961 מ"ר next to 101-0511923's
                         // own per-lot rows — the same allocations, counted twice.
+                        // The book MEASURES what the permit only names, so where it can split the
+                        // area into more than one measured use it is the better answer.
                         const dlvSplit = keys.length ? null : deliveryRowsFor(r.taba, source, genericSqm);
                         if (dlvSplit) {
                             dlvSplit.rows.forEach(x => segRows.push(x));
@@ -11408,10 +11437,14 @@
                             // names nothing, not one unrecognised segment inside a detailed text
                             // (101-0511923's "מרכז הוליסטי" is what the plan says — keep it)
                             const dlvU = (genericSegs.length && !keys.length) ? deliveryUseFor(r.taba, source) : null;
-                            genericSegs.forEach(g => segRows.push({
-                                use: dlvU ? dlvU.use : g.use, lot: g.lot,
-                                sqm: g.sqm, doms: dlvU ? dlvU.doms : [],
-                            }));
+                            genericSegs.forEach(g => {
+                                const pU = keys.length ? null : permitUseFor(r.taba, g.lot);
+                                segRows.push({
+                                    use: pU ? pU.use : dlvU ? dlvU.use : g.use, lot: g.lot,
+                                    note: pU ? pU.note : undefined,
+                                    sqm: g.sqm, doms: pU ? pU.doms : dlvU ? dlvU.doms : [],
+                                });
+                            });
                         }
                         const segSqm = segRows.reduce((acc, x) => acc + x.sqm, 0);
                         const residualSqm = Math.max(0, baseSqm - attributedSqm - segSqm);
@@ -11449,7 +11482,8 @@
                         }
                         segRows.forEach(x => detailRows.push({
                             taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                            lot: x.lot || '', use: x.use, doms: x.doms, count: 0, unit: '', sqm: x.sqm,
+                            lot: x.lot || '', use: x.use, doms: x.doms, note: x.note,
+                            count: 0, unit: '', sqm: x.sqm,
                         }));
                         if (!(totalSqm > 0) && (baseSqm > 0 || attributedSqm + segSqm > 0)) {
                             blankColumn.push({ taba: r.taba, source, sqm: Math.max(baseSqm, attributedSqm + segSqm) });
@@ -11466,7 +11500,7 @@
                                 if (d && _doms.indexOf(d) === -1) _doms.push(d);
                             });
                             hafrashUseDomainsAll(prg || '').forEach(d => { if (_doms.indexOf(d) === -1) _doms.push(d); });
-                            let use;
+                            let use, _note;
                             if (!keys.length && !segRows.length) {
                                 // No specific facility is named, but the text almost always says
                                 // what KIND of public use it is - "תרבות ואמנות", "קהילה ורווחה",
@@ -11487,7 +11521,14 @@
                                 // so they must override it for the area split too - otherwise the row
                                 // would read "בית כנסת" on screen and be counted under whatever domain
                                 // the plan text happened to name.
-                                const dlvSplitE = deliveryRowsFor(r.taba, source, envelopeSqm);
+                                const permitE = deliveryRowsFor(r.taba, source, envelopeSqm)
+                                    ? null : permitUseFor(r.taba, '');
+                                if (permitE) {
+                                    use = permitE.use;
+                                    _note = permitE.note;
+                                    _doms = permitE.doms.length ? permitE.doms : _doms;
+                                }
+                                const dlvSplitE = permitE ? null : deliveryRowsFor(r.taba, source, envelopeSqm);
                                 if (dlvSplitE) {
                                     const gapE = envelopeSqm - dlvSplitE.total;
                                     if (gapE > 1) dlvSplitE.rows.push({ use: 'מבני ציבור (כללי / לא מסווג)', sqm: gapE, doms: [] });
@@ -11499,7 +11540,7 @@
                                     envelopeSqm = 0;
                                     return;   // nothing follows in this source's callback
                                 }
-                                const dlvU = deliveryUseFor(r.taba, source);
+                                const dlvU = permitE ? null : deliveryUseFor(r.taba, source);
                                 if (dlvU) {
                                     use = dlvU.use;
                                     if (dlvU.doms.length) _doms = dlvU.doms;
@@ -11510,7 +11551,7 @@
                             }
                             detailRows.push({
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                                use, doms: _doms, count: 0, unit: '', sqm: envelopeSqm,
+                                use, doms: _doms, note: _note, count: 0, unit: '', sqm: envelopeSqm,
                             });
                         }
                     });
