@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-domains';
+        const APP_VERSION = '2026-09-16-alloc-domain-split';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -489,6 +489,18 @@
 
         // Granular parser keys aligned with PUBLIC_NEEDS_SERVICES (edu) + NEIGHBORHOOD_PROGRAM_SERVICES (other).
         const PARSER_KEYS = ['maon','gan','yesodi','al_yesodi','tipat_chalav','clinic','matnas','welfare_dept','noar_club','elderly_club','elderly_day','synagogue','mikve','sport_hall','library'];
+        // Which HAFRASH_DOMAIN_RX family each parser key belongs to. Stated outright rather
+        // than run through the domain regexes on the label, because the labels are written
+        // for people ('מתנ"ס/מרכז קהילתי') and a regex miss would silently move floor
+        // area from one domain to another in the report's area split.
+        const PARSER_KEY_DOMAIN = {
+            maon: 'education', gan: 'education', yesodi: 'education', al_yesodi: 'education',
+            tipat_chalav: 'health', clinic: 'health',
+            matnas: 'culture', library: 'culture',
+            welfare_dept: 'welfare', noar_club: 'welfare', elderly_club: 'welfare', elderly_day: 'welfare',
+            synagogue: 'religion', mikve: 'religion',
+            sport_hall: 'sport',
+        };
 
         // Map MOCH `type` field → PARSER_KEY. Only non-education types (edu uses class-count from shanaton).
         // NULL = no mapping (we don't count it in the program balance).
@@ -11064,6 +11076,14 @@
                 // so a plan repeats across its uses and the detail can be filtered by use like the
                 // summary table. Counts of the same use within a source are aggregated.
                 const detailRows = [];
+                // Rows where the מ"ר written next to the individual uses add up to MORE than the
+                // plan's own figure in the sheet - usually the text lists area bands (below-grade
+                // service space) that the GS column, which holds above-grade only, does not. Left
+                // visible in the footer instead of clamped away.
+                const overAttributed = [];
+                // Rows where the text states a figure but the sheet's מ"ר column is blank, so the
+                // area is real, appears in the split, and is missing from the KPI totals.
+                const blankColumn = [];
                 rows.forEach(r => {
                     [['שב"צ עתידי', r.outPrg, r.outSqm], ['הפרשה מבונה', r.hafPrg, r.hafSqm]].forEach(([source, prg, totalSqm]) => {
                         if (!prg && !(totalSqm > 0)) return;
@@ -11085,42 +11105,79 @@
                             const a = agg[ak];
                             detailRows.push({
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                                use: ALLOC_LBLS[a.key], count: a.count,
+                                key: a.key, use: ALLOC_LBLS[a.key], count: a.count,
                                 unit: a.isClasses ? 'כיתות' : (a.count > 1 ? 'מתקנים' : 'מתקן'),
                                 sqm: a.sqm, shared: a.shared,
                             });
                         });
-                        // No recognized facility — keep ONLY if it carries actual מ"ר; a generic
-                        // designation with no m² (e.g. "שטחים פתוחים ומבנים ומוסדות ציבור" with a
-                        // blank hafrash_sqm) is a land-use label, not a quantified allocation, so it
-                        // is dropped rather than shown as an empty "—" row.
-                        if (!keys.length) {
-                            const genericSqm = uncategorizedSqm || totalSqm || 0;
-                            // Refinement from the muni property book: when the statutory text is
-                            // generic ("מבנים ומוסדות ציבור"), the delivered assets say what the
-                            // space actually becomes (גן/בית כנסת/מעון…). הפרשה source only —
-                            // delivery evidence is by definition the hafrasha process.
-                            let use = 'מבני ציבור (כללי / לא מסווג)';
-                            // No specific facility is named, but the text almost always says
-                            // what KIND of public use it is — "תרבות ואמנות", "קהילה ורווחה",
-                            // "מבנה דת", "דיור מיוחד". Those cannot become PARSER_KEYS: every
-                            // key there carries a planning standard in
-                            // NEIGHBORHOOD_PROGRAM_SERVICES (basis, per-N residents, entry
-                            // threshold), and a key with no standard is supply the programme
-                            // model can never match against demand. The coarse domain
-                            // classifier already has exactly these families, so it names the
-                            // row without touching the supply/demand model.
-                            const _doms = hafrashUseDomainsAll(prg || '');
-                            if (_doms.length) {
-                                use = 'מבני ציבור — ' + _doms.map(d => HAFRASH_DOM_HE[d] || d).join(', ');
+                        // Everything the plan's own מ"ר figure covers BEYOND the uses that carry a
+                        // number of their own. A plan normally states one envelope and lists the
+                        // uses inside it without splitting it, so this is most of the floor area in
+                        // the report - 965,512 מ"ר against 330,093 that sit next to a named use. The
+                        // report used to drop it unless nothing at all was recognised, which meant
+                        // any area split built from these rows would describe a quarter of the stock
+                        // and present it as the whole. It is kept as its own row, carrying the
+                        // domains the text names, and marked unsplit when there is more than one.
+                        const attributedSqm = keys.reduce((acc, ak) => acc + (agg[ak].sqm || 0), 0);
+                        // The KPIs total the sheet's מ"ר column, so the split has to be measured
+                        // against that same figure or it cannot be reconciled with them; the text's
+                        // own number only stands in where the column is blank.
+                        const baseSqm = totalSqm > 0 ? totalSqm : (uncategorizedSqm || 0);
+                        const residualSqm = Math.max(0, baseSqm - attributedSqm);
+                        if (attributedSqm > baseSqm && baseSqm > 0) {
+                            overAttributed.push({ taba: r.taba, source, excess: attributedSqm - baseSqm });
+                        }
+                        if (!(totalSqm > 0) && (baseSqm > 0 || attributedSqm > 0)) {
+                            blankColumn.push({ taba: r.taba, source, sqm: Math.max(baseSqm, attributedSqm) });
+                        }
+                        // A generic designation with no m² at all (e.g. "שטחים פתוחים ומבנים
+                        // ומוסדות ציבור" with a blank hafrash_sqm) is a land-use label, not a
+                        // quantified allocation, so it stays out rather than showing as an empty row.
+                        if (residualSqm > 0) {
+                            // Domains already implied by the itemised uses, plus whatever else the
+                            // free text names. The residual belongs to all of them jointly.
+                            let _doms = [];
+                            keys.forEach(ak => {
+                                const d = PARSER_KEY_DOMAIN[agg[ak].key];
+                                if (d && _doms.indexOf(d) === -1) _doms.push(d);
+                            });
+                            hafrashUseDomainsAll(prg || '').forEach(d => { if (_doms.indexOf(d) === -1) _doms.push(d); });
+                            let use;
+                            if (!keys.length) {
+                                // No specific facility is named, but the text almost always says
+                                // what KIND of public use it is - "תרבות ואמנות", "קהילה ורווחה",
+                                // "מבנה דת", "דיור מיוחד". Those cannot become PARSER_KEYS: every key
+                                // there carries a planning standard in NEIGHBORHOOD_PROGRAM_SERVICES
+                                // (basis, per-N residents, entry threshold), and a key with no
+                                // standard is supply the programme model can never match against
+                                // demand. The coarse domain classifier already has exactly these
+                                // families, so it names the row without touching that model.
+                                use = _doms.length
+                                    ? 'מבני ציבור — ' + _doms.map(d => HAFRASH_DOM_HE[d] || d).join(', ')
+                                    : 'מבני ציבור (כללי / לא מסווג)';
+                                // Refinement from the muni property book: when the statutory text is
+                                // generic ("מבנים ומוסדות ציבור"), the delivered assets say what
+                                // the space actually becomes (גן/בית כנסת/מעון…). הפרשה source
+                                // only - delivery evidence is by definition the hafrasha process.
+                                if (source === 'הפרשה מבונה') {
+                                    const dlvCats = [...new Set((_dlvByTaba[r.taba] || []).flatMap(a => a.cats || []))];
+                                    if (dlvCats.length) {
+                                        use = 'מבני ציבור — לפי ספר הנכסים: ' + dlvCats.join(', ');
+                                        // The delivered assets override the statutory text for the
+                                        // label, so they must override it for the area split too -
+                                        // otherwise the row would read "בית כנסת" on screen and be
+                                        // counted under whatever domain the plan text happened to name.
+                                        const _dd = hafrashUseDomainsAll(dlvCats.join(', '));
+                                        if (_dd.length) _doms = _dd;
+                                    }
+                                }
+                            } else {
+                                use = 'שטח שלא פולח בין השימושים' +
+                                    (_doms.length ? ' — ' + _doms.map(d => HAFRASH_DOM_HE[d] || d).join(', ') : '');
                             }
-                            if (source === 'הפרשה מבונה') {
-                                const dlvCats = [...new Set((_dlvByTaba[r.taba] || []).flatMap(a => a.cats || []))];
-                                if (dlvCats.length) use = 'מבני ציבור — לפי ספר הנכסים: ' + dlvCats.join(', ');
-                            }
-                            if (genericSqm > 0) detailRows.push({
+                            detailRows.push({
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                                use, count: 0, unit: '', sqm: genericSqm,
+                                use, doms: _doms, count: 0, unit: '', sqm: residualSqm,
                             });
                         }
                     });
@@ -11192,6 +11249,87 @@
                             const reg = withAssets.filter(r => deliveryInfo(r.taba).text.indexOf('נרשם (') === 0).length;
                             return withAssets.length + '<span style="font-size:11px;color:#8a7a6a"> · נרשמו ' + reg + '</span>';
                         })(), '#86b89a');
+                }
+                // -- שטח לפי תחום ----------------------------------------------------
+                // "כמה תרבות, כמה חינוך". Most rows name one domain and their מ"ר is
+                // simply theirs. But a row that lists several domains under ONE figure -
+                // 101-0682849's "תרבות חברה קהילה, גני ילדים ומעונות, בית כנסת" for
+                // 8,817 מ"ר - cannot be split, because the plan never said how much of it is
+                // which. Dividing it evenly would invent numbers and adding the whole figure
+                // to every domain would inflate the report, so it gets its own column, which
+                // deliberately does not sum into the total.
+                function rowDomains(r) {
+                    return r.key ? [PARSER_KEY_DOMAIN[r.key]].filter(Boolean) : (r.doms || []);
+                }
+                function domainBreakdown(rs) {
+                    const agg = {}, mixedPlans = new Set();
+                    let mixedSqm = 0, noneSqm = 0, noneRows = 0;
+                    const at = (d) => (agg[d] || (agg[d] = { sole: 0, joint: 0, noSqm: 0, plans: new Set() }));
+                    rs.forEach(r => {
+                        const doms = rowDomains(r);
+                        const sqm = r.sqm > 0 ? r.sqm : 0;
+                        if (!doms.length) { noneSqm += sqm; noneRows++; return; }
+                        doms.forEach(d => {
+                            const a = at(d);
+                            a.plans.add(r.taba);
+                            // A use named without a figure ("בית כנסת", no מ"ר) still belongs to
+                            // the domain - counted as a plan and flagged as area-less, never as 0.
+                            if (!sqm) a.noSqm++;
+                            else if (doms.length === 1) a.sole += sqm;
+                            else a.joint += sqm;
+                        });
+                        if (doms.length > 1 && sqm) { mixedSqm += sqm; mixedPlans.add(r.taba); }
+                    });
+                    return { agg, mixedSqm, mixedPlans, noneSqm, noneRows };
+                }
+                function sortedDomains(b) {
+                    return Object.keys(b.agg).sort((x, y) =>
+                        (b.agg[y].sole + b.agg[y].joint) - (b.agg[x].sole + b.agg[x].joint));
+                }
+                function buildDomainSection() {
+                    const b = domainBreakdown(filteredDetailRows());
+                    const doms = sortedDomains(b);
+                    if (!doms.length && !b.noneSqm) return '';
+                    const num = (v) => v > 0 ? Math.round(v).toLocaleString() : '—';
+                    const soleTotal = doms.reduce((acc, d) => acc + b.agg[d].sole, 0);
+                    const max = Math.max.apply(null, doms.map(d => b.agg[d].sole + b.agg[d].joint).concat([1]));
+                    const jointTip = 'מ"ר שנאמרו בשורה אחת יחד עם תחומים נוספים — נספרים בכל אחד מהם, ולכן לא מתחברים לסכום';
+                    const body = doms.map(d => {
+                        const a = b.agg[d];
+                        const pct = Math.max(2, Math.round((a.sole + a.joint) / max * 100));
+                        return '<tr style="border-bottom:1px solid #222">' +
+                            '<td style="padding:5px 8px;color:#e8d9c8;white-space:nowrap">' + esc(HAFRASH_DOM_HE[d] || d) + '</td>' +
+                            '<td style="padding:5px 8px;width:30%">' +
+                                '<div style="background:#2a2118;border-radius:3px;height:9px">' +
+                                '<div style="width:' + pct + '%;height:9px;border-radius:3px;background:#d4a373"></div></div></td>' +
+                            '<td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + num(a.sole) + '</td>' +
+                            '<td style="padding:5px 8px;text-align:center;color:#e0c08a" title="' + escAttr(jointTip) + '">' + num(a.joint) + '</td>' +
+                            '<td style="padding:5px 8px;text-align:center;color:#bbb">' + a.plans.size +
+                                (a.noSqm ? '<span style="color:#8a7a6a;font-size:11px" title="' + escAttr(a.noSqm + ' שורות מציינות את השימוש בלי מ"ר') + '"> · ' + a.noSqm + ' ללא מ"ר</span>' : '') +
+                            '</td></tr>';
+                    }).join('');
+                    const t = sumSqm(filteredRows());
+                    const accounted = soleTotal + b.mixedSqm + b.noneSqm;
+                    const passing = new Set(filteredRows().map(x => x.taba));
+                    const ov = overAttributed.filter(o => passing.has(o.taba));
+                    const ovSqm = ov.reduce((acc, o) => acc + o.excess, 0);
+                    const bc = blankColumn.filter(o => passing.has(o.taba));
+                    const bcSqm = bc.reduce((acc, o) => acc + o.sqm, 0);
+                    const foot = 'בלעדי: <b style="color:#d4a373">' + num(soleTotal) + '</b>' +
+                        (b.mixedSqm ? ' · שטח משותף לכמה תחומים שלא ניתן לפצל: <b style="color:#e0c08a">' + num(b.mixedSqm) + '</b> (' + b.mixedPlans.size + ' תכניות)' : '') +
+                        (b.noneSqm ? ' · ללא סיווג: <b style="color:#999">' + num(b.noneSqm) + '</b> (' + b.noneRows + ' שורות)' : '') +
+                        ' · סה"כ מפורט ' + num(accounted) + ' מתוך ' + num(t.out + t.haf) + ' מ"ר בדוח' +
+                        (ov.length ? '<br><span style="color:#e0c08a" title="' + escAttr('העמודה בגיליון מחזיקה שטחים מעל הכניסה בלבד, והטקסט לעיתים מונה גם שטחי שירות מתחת לכניסה הקבילה') + '">⚠ ' + (ov.length === 1 ? 'בשורה אחת' : 'ב-' + ov.length + ' שורות') + ' סכום המ"ר שליד השימושים עולה על השדה בגיליון ב-' + num(ovSqm) + ' מ"ר (' + esc(ov.map(o => o.taba).join(', ')) + ')</span>' : '') +
+                        (bc.length ? '<br><span style="color:#e0c08a" title="' + escAttr('השטח נכנס לפילוח לפי הטקסט, אך חסר במדדים שלמעלה שסוכמים את עמודת המ"ר בגיליון') + '">⚠ ' + (bc.length === 1 ? 'בשורה אחת' : 'ב-' + bc.length + ' שורות') + ' הטקסט נוקב במ"ר אך עמודת המ"ר בגיליון ריקה — ' + num(bcSqm) + ' מ"ר (' + esc(bc.map(o => o.taba).join(', ')) + ')</span>' : '');
+                    return '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">שטח לפי תחום (מ"ר)</h4>' +
+                        '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16">' +
+                        '<th style="padding:6px 8px;text-align:right;color:#d4a373">תחום</th>' +
+                        '<th style="padding:6px 8px"></th>' +
+                        '<th style="padding:6px 8px;color:#d4a373" title="' + escAttr('מ"ר שהתחום הזה הוא השימוש היחיד שנאמר עליהם — רק אלה מתחברים לסכום') + '">מ"ר בלעדי</th>' +
+                        '<th style="padding:6px 8px;color:#d4a373" title="' + escAttr(jointTip) + '">בשטח משותף</th>' +
+                        '<th style="padding:6px 8px;color:#d4a373">תכניות</th>' +
+                        '</tr></thead><tbody>' + body + '</tbody></table>' +
+                        '<div style="font-size:11px;color:#8a7a6a;margin:6px 0 14px">' + foot + '</div>';
                 }
                 function buildUseSection() {
                     const { cls, fac } = useCountsFor(filteredRows());
@@ -11291,6 +11429,7 @@
                 function refreshAlloc() {
                     const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
                     set('alloc-kpis', buildKpis());
+                    set('alloc-domains', buildDomainSection());
                     set('alloc-uses', buildUseSection());
                     set('alloc-detail', buildDetailSection());
                     set('alloc-stage-sum', buildStageSummary());
@@ -11443,6 +11582,7 @@
                         '<button id="alloc-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                     '</div>' +
                     '<div id="alloc-kpis" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">' + buildKpis() + '</div>' +
+                    '<div id="alloc-domains">' + buildDomainSection() + '</div>' +
                     '<div id="alloc-uses">' + buildUseSection() + '</div>' +
                     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#241c16;border:1px solid #3a2e26;border-radius:8px;padding:7px 10px;margin-bottom:10px">' +
                         '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#e8d9c8;white-space:nowrap" title="&quot;היתרים&quot; היא קטגוריה כללית — סמן כדי לראות את השלב בפועל של ההיתר המתקדם ביותר בתכנית">' +
@@ -11509,12 +11649,21 @@
                     PARSER_KEYS.filter(k => fc.cls[k] > 0 || fc.fac[k] > 0)
                         .forEach(k => lines.push([q(ALLOC_LBLS[k]), fc.cls[k] || '', fc.fac[k] || ''].join(',')));
                     lines.push('');
+                    const bd = domainBreakdown(fd);
+                    lines.push([q('תחום'), q('מ"ר בלעדי'), q('מ"ר בשטח משותף'), q('תכניות'), q('שורות ללא מ"ר')].join(','));
+                    sortedDomains(bd).forEach(d => {
+                        const a = bd.agg[d];
+                        lines.push([q(HAFRASH_DOM_HE[d] || d), Math.round(a.sole) || '', Math.round(a.joint) || '', a.plans.size, a.noSqm || ''].join(','));
+                    });
+                    lines.push([q('שטח משותף לכמה תחומים (נספר פעם אחת)'), '', Math.round(bd.mixedSqm) || '', bd.mixedPlans.size, ''].join(','));
+                    lines.push([q('ללא סיווג'), Math.round(bd.noneSqm) || '', '', '', bd.noneRows || ''].join(','));
+                    lines.push('');
                     // "שלב היתר" is always exported, whatever the on-screen toggle says — the export
                     // is the analysable copy, so the detail behind the "היתרים" bucket goes with it.
-                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('שלב היתר'), q('מסירה בפועל'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
+                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('שלב היתר'), q('מסירה בפועל'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש'), q('תחום')].join(','));
                     fd.forEach(r => {
                         const st = planHasPermit(r.taba) ? planPermitStage(r.taba) : null;
-                        lines.push([q(r.taba), q(r.name), q(statusCell(r.taba, r.status).label), q(st ? getPermitStageLabel(st) : ''), q(deliveryLabel(r.taba)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(','));
+                        lines.push([q(r.taba), q(r.name), q(statusCell(r.taba, r.status).label), q(st ? getPermitStageLabel(st) : ''), q(deliveryLabel(r.taba)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use), q(rowDomains(r).map(d => HAFRASH_DOM_HE[d] || d).join(' + '))].join(','));
                     });
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
