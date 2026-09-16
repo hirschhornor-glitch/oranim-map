@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-domain-split';
+        const APP_VERSION = '2026-09-16-hakala-notices';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1520,12 +1520,17 @@
         // A הקלה whose §149 publication ran but whose decision never stated a number.
         // It cannot move a baseline — we have no count — but it is the difference between
         // "we don't know where these units came from" and "a variance was published and
-        // nobody wrote down how many": 101-0666032's 2022/0418.00 published §149 in
-        // 02-03/2023 and its decision is a page of design conditions with no figure.
+        // nobody wrote down how many".
+        // It is only that, though, while the notice is UNREAD. Reading the notices of
+        // permit_hakalot_manual.json showed most of them are about נסיגות, קומת חניה,
+        // כניסות or שלביות and say nothing about יח״ד at all — 2022/0418.00's single
+        // publication is "ביטול נסיגות בעומק 2 מ'". A checked notice with no units
+        // (no_unit_hakala) must not soften the gap: there, the §149 is not the answer.
         function permitHakalaPublished(fileNumber) {
             const o = window.__permitHakalot || {};
+            const usable = r => r && r.published_149 && !r.no_unit_hakala;
             const exact = o[String(fileNumber || '').trim()];
-            if (exact && exact.published_149) return exact;
+            if (exact && exact.published_149) return usable(exact) ? exact : null;
             // fall back to the תיק: the §149 notice is published for the APPLICATION, and the
             // revision we count is often not the one the notice sits on (101-0365767 counts
             // 2018/0020.01 while the publication is recorded on .00).
@@ -1533,7 +1538,7 @@
             if (!base) return null;
             const keys = Object.keys(o);
             for (let i = 0; i < keys.length; i++) {
-                if (permitBaseKey(keys[i]) === base && o[keys[i]].published_149) return o[keys[i]];
+                if (permitBaseKey(keys[i]) === base && usable(o[keys[i]])) return o[keys[i]];
             }
             return null;
         }
@@ -1562,17 +1567,59 @@
         }
         // Σ of the approved additions across a permit list — what the plan's יח״ד baseline
         // has to grow by before the "permits vs plan" comparison means anything.
+        // הקלות chain across the revisions of one תיק, and the revision we end up counting
+        // is usually the last one — so summing over the surviving permits alone loses the
+        // earlier grants. סן מרטין 3 published +22 on 2020/0361.00 (104 → 126) and +4 more
+        // on .02 (126 → 130); only .02 survives the revision rule, and the report credited
+        // 4 of the 26. Take the תיק as a whole: the highest approved total against the
+        // lowest טבלה 5 figure any of its notices measured from.
+        function hakalaRecordsOfTik(fileNumber) {
+            const o = window.__permitHakalot || {};
+            const base = permitBaseKey(fileNumber);
+            if (!base) return [];
+            return Object.keys(o)
+                .filter(k => permitBaseKey(k) === base && permitHakala(k))
+                .map(k => Object.assign({ file_number: k }, o[k]));
+        }
+        function hakalaExtraOfTik(fileNumber) {
+            let top = 0, floor = 0, loose = 0;
+            hakalaRecordsOfTik(fileNumber).forEach(r => {
+                const allowed = Number(r.units) || 0;
+                const t5 = Number(r.table5_units) || 0;
+                if (allowed && t5) {
+                    if (allowed > top) top = allowed;
+                    if (!floor || t5 < floor) floor = t5;
+                } else {
+                    loose += permitHakalaExtra({ file_number: r.file_number });
+                }
+            });
+            return Math.max(0, top - floor) + loose;
+        }
         function permitsHakalaExtra(permits, included) {
             if (!Array.isArray(permits)) return 0;
-            return permits.reduce((sum, p, i) => (included && !included[i]) ? sum : sum + permitHakalaExtra(p), 0);
+            const seen = new Set();
+            let total = 0;
+            permits.forEach((p, i) => {
+                if (included && !included[i]) return;
+                const base = permitBaseKey(p && p.file_number);
+                if (!base || seen.has(base)) return;
+                seen.add(base);
+                total += hakalaExtraOfTik(p.file_number);
+            });
+            return total;
         }
         // The הקלה records behind that number, for the wording shown to the user.
         function permitsHakalaRecords(permits, included) {
             const out = [];
+            const seen = new Set();
             (permits || []).forEach((p, i) => {
                 if (included && !included[i]) return;
-                const r = permitHakala(p && p.file_number);
-                if (r) out.push(Object.assign({ file_number: p.file_number, extra: permitHakalaExtra(p) }, r));
+                const base = permitBaseKey(p && p.file_number);
+                if (!base || seen.has(base)) return;
+                seen.add(base);
+                hakalaRecordsOfTik(p.file_number).forEach(r => {
+                    out.push(Object.assign({ extra: permitHakalaExtra({ file_number: r.file_number }) }, r));
+                });
             });
             return out;
         }
@@ -23023,6 +23070,18 @@
                 tikGroups.forEach(group => {
                     if (group.length <= 1) return;
                     const drop = g => { if (included[g.i]) { included[g.i] = false; revisionDups++; } };
+                    // The authority's own quantities table says which sub-file superseded which:
+                    // 2008/0282.02 records קיים=4 — exactly the 4 יח״ד of 2008/0282.01 — and
+                    // adds 3. Counting both makes 11 out of a 7-unit building. A member whose
+                    // count IS another member's "existing" is that building before the addition.
+                    group.forEach(g => {
+                        const u = unitsAt(g.i);
+                        if (!u) return;
+                        const superseded = group.some(o => o.i !== g.i
+                            && (Number(permits[o.i].units_existing) || 0) === u
+                            && (Number(permits[o.i].units) || 0) > u);
+                        if (superseded) drop(g);
+                    });
                     // prep stages never stand on their own while a real building permit shares
                     // the tik (2023/0326: .00 = הריסה/חפירה for 210, .01 = the 426-unit permit)
                     const built = group.filter(g => !isPrepStagePermit(permits[g.i]));
@@ -23033,6 +23092,23 @@
                     // Two sub-files stating the SAME count are the same thing restated (2024/0206:
                     // .00 = הריסה+דיפון "עבור בנייה של 220 יח״ד", .01 = the 220-unit permit), so a
                     // second scope has to bring a DIFFERENT count with it.
+                    // Successive states of ONE standing building, not two buildings: every
+                    // scope member records קיים > 0, i.e. each adds to something already there.
+                    // 1974/0734 has .02 (קיים 1 → 4 יח״ד) and .04 (קיים 3 → 5) on the same
+                    // house, and the licensing decision says so outright — "סה״כ מס' יח״ד קיים
+                    // ומוצע 5 יח״ד, מותר 6 יח״ד" — while counting both makes it 9 against a
+                    // plan of 6. New buildings sharing a תיק (מתחם אגד .01/.02) keep קיים = 0
+                    // and are untouched by this.
+                    const additions = scopes.filter(g => (Number(permits[g.i].units_existing) || 0) > 0);
+                    if (scopes.length > 1 && additions.length === scopes.length) {
+                        let top = scopes[0];
+                        scopes.forEach(g => {
+                            if (unitsAt(g.i) > unitsAt(top.i)
+                                || (unitsAt(g.i) === unitsAt(top.i) && g.revision > top.revision)) top = g;
+                        });
+                        pool.forEach(g => { if (g.i !== top.i) drop(g); });
+                        return;
+                    }
                     const distinctScopeUnits = new Set(scopes.map(g => unitsAt(g.i)));
                     if (distinctScopeUnits.size > 1 && !pool.some(g => isRevisionWorded(permits[g.i]))) {
                         // separate scopes of one project — count each; anything below the share
@@ -23055,6 +23131,40 @@
                     pool.forEach(g => { if (g.i !== best.i) drop(g); });
                 });
                 if (revisionDups > 0) rules.push('גרסאות תיק (' + revisionDups + ')');
+                // Rule 1b: a permit that names ANOTHER permit we hold as the one it changes
+                // supersedes it — the revision rule above only looks inside a single תיק.
+                // אפרתה 23: 2022/0495.00 is "תכנית שינוים מהיתר מס' 1999/0699.04" and its
+                // quantities record קיים 1,627 מ״ר עיקרי — the building 1999/0699.04 put up —
+                // so its 19 יח״ד already contain that permit's 8, and the plan read 27 against
+                // a planned 18. Only when the citing permit is at least as large, so a partial
+                // amendment can never erase the permit it amends.
+                const permitFileKey = f => {
+                    const m = String(f || '').match(/(\d{4})\s*\/\s*(\d{3,4})\s*\.\s*(\d{1,2})/);
+                    return m ? m[1] + '/' + m[2].slice(-4).padStart(4, '0') + '.' + m[3].padStart(2, '0') : '';
+                };
+                const byFileKey = new Map();
+                permits.forEach((p, i) => {
+                    const k = permitFileKey(p.file_number);
+                    if (k && !byFileKey.has(k)) byFileKey.set(k, i);
+                });
+                let citedDups = 0;
+                permits.forEach((p, i) => {
+                    if (!included[i]) return;
+                    const txt = (p.request_description || '') + ' ' + (p.request_type || '');
+                    const mine = permitFileKey(p.file_number);
+                    const re = /(\d{4})\s*\/\s*(\d{3,4})\s*\.\s*(\d{1,2})/g;
+                    let m;
+                    while ((m = re.exec(txt))) {
+                        const cited = m[1] + '/' + m[2].slice(-4).padStart(4, '0') + '.' + m[3].padStart(2, '0');
+                        if (cited === mine) continue;
+                        const j = byFileKey.get(cited);
+                        if (j == null || !included[j]) continue;
+                        if ((Number(p.units) || 0) < (Number(permits[j].units) || 0)) continue;
+                        included[j] = false;
+                        citedDups++;
+                    }
+                });
+                if (citedDups > 0) rules.push('היתר ששונה בהיתר מאוחר (' + citedDups + ')');
                 if (separateScopes > 0) rules.push('בקשות נפרדות באותו תיק (' + separateScopes + ')');
                 // Rule 2: infrastructure exclusion — only for permits with no units assigned.
                 // Real prep-work permits (foundation, demo-only, light-rail prep) carry zero
@@ -37819,6 +37929,22 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const condUnits = planConditionalUnits(p);
                             const raiser = findRaiser(p, base);
                             const raiseUnits = raiser ? Math.max(0, (parseFloat(raiser.units_total) || 0) - base) : 0;
+                            // תמ"א 38 grants units of its own — a permit taken out under it (or
+                            // under a plan's §13 track) is not asking the local טבלה 5 for them, so
+                            // the difference it opens against the plan is not an undocumented gap.
+                            // שמעוני 23: "22 יחידות דיור מכח תב"ע 101-1008390 ולפי סעיף 13 תמ"א 38",
+                            // against a plan of 16. Credited only up to the excess actually realized.
+                            const tamaTiks = new Set();
+                            permits.forEach(x => {
+                                if (!x) return;
+                                if (x.is_tama38 || x.tama_type || classifyPermitCategory(x) === PERMIT_CAT_TAMA38) {
+                                    const bk = permitBaseKey(x.file_number);
+                                    if (bk) tamaTiks.add(bk);
+                                }
+                            });
+                            const bearers = permits.filter((x, i) => inclusion[i] && (Number(x.units) || 0) > 0);
+                            const allTama = bearers.length > 0
+                                && bearers.every(x => tamaTiks.has(permitBaseKey(x.file_number)));
                             const hakRecs = permitsHakalaRecords(permits, inclusion);
                             const hakExtra = permitsHakalaExtra(permits, inclusion);
                             // a published §149 with no number: cannot move the baseline, but it
@@ -37831,7 +37957,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const realized = base > 0 ? Math.max(0, permitUnits - base) : 0;
                             // what the plan or a committee decision already accounts for. A טבלה 5 note
                             // is an ALLOWANCE (may never be used); a הקלה is a decision already taken.
-                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits);
+                            const tamaUnits = allTama ? Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits) : 0;
+                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits);
                             if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits) return;
                             rows.push({
                                 taba, plan_name: p.plan_name || ('101-' + taba),
@@ -37839,7 +37966,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 minahak: p.minahak || '', sub: p.sub_neighborhood || '',
                                 status: p.status_mavat || '', base, permitUnits, realized,
                                 bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: bonus ? bonus.note : '', condUnits,
-                                raiseUnits, raiserName: raiser ? (raiser.plan_name || '') : '',
+                                raiseUnits, tamaUnits, raiserName: raiser ? (raiser.plan_name || '') : '',
                                 raiserTitle: raiser ? (raiser.plan_summary || raiser.plan_name_he || '') : '',
                                 hakExtra, hakPct: hakRecs.map(r => r.pct).filter(Boolean)[0] || 0,
                                 pubOnly: pubRecs.length > 0,
@@ -37861,6 +37988,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (F.src === 'realized' && !r.realized) return false;
                             if (F.src === 'conditional' && !r.condUnits) return false;
                             if (F.src === 'raise' && !r.raiseUnits) return false;
+                            if (F.src === 'tama' && !r.tamaUnits) return false;
                             if (F.src === 'published' && !(r.pubOnly && r.unexplained)) return false;
                             if (F.src === 'unexplained' && !r.unexplained) return false;
                             if (F.src === 'nosource' && !(r.unexplained && !r.pubOnly)) return false;
@@ -37869,7 +37997,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         }).sort((a, b) => (b.realized - a.realized) || (b.bonusUnits + b.hakExtra) - (a.bonusUnits + a.hakExtra));
                         const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
                         const T = { base: sum(view, 'base'), bonus: sum(view, 'bonusUnits'), hak: sum(view, 'hakExtra'),
-                            cond: sum(view, 'condUnits'), raise: sum(view, 'raiseUnits'),
+                            cond: sum(view, 'condUnits'), raise: sum(view, 'raiseUnits'), tama: sum(view, 'tamaUnits'),
                             realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
                         const nBonus = view.filter(r => r.bonusUnits).length;
                         const nHak = view.filter(r => r.hakExtra).length;
@@ -37894,13 +38022,15 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             </div>
                         );
                         const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'יח"ד בתב"ע',
-                            'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'תכנית מאוחרת מגדילה', 'יח"ד בהיתרים',
+                            'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'תכנית מאוחרת מגדילה',
+                            'מכוח תמ"א 38', 'יח"ד בהיתרים',
                             'תוספת בפועל', 'ללא מקור מתועד', 'המקור'];
                         // every channel that covers this row, and what is left over. A row is
                         // rarely one story: משתלת חוות הנוער is 45 from a later plan and 1 beyond it.
                         const srcLabel = r => {
                             const parts = [];
                             if (r.raiseUnits) parts.push('תכנית מאוחרת מגדילה · ' + r.raiserName);
+                            if (r.tamaUnits) parts.push('מכוח תמ"א 38 — היתר חיזוק, לא מטבלה 5');
                             if (r.hakExtra) parts.push('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''));
                             if (r.condUnits) parts.push('יח"ד מותנות');
                             if (r.bonusUnits) parts.push('הערת טבלה 5 · עד ' + r.bonusPct + '%');
@@ -37913,7 +38043,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const exportCsv = () => {
                             const lines = [COLS.map(csvEscape).join(',')].concat(view.map(r => [
                                 r.plan_name, r.name, r.minahak, r.status, r.base, r.condUnits || '', r.bonusUnits || '', r.hakExtra || '',
-                                r.raiseUnits ? (r.raiseUnits + ' (' + r.raiserName + ')') : '',
+                                r.raiseUnits ? (r.raiseUnits + ' (' + r.raiserName + ')') : '', r.tamaUnits || '',
                                 r.permitUnits || '', r.realized || '', r.unexplained || '',
                                 srcLabel(r) + (r.hakTiks ? ' (' + r.hakTiks + ')' : '')].map(csvEscape).join(',')));
                             const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -37929,6 +38059,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 r.condUnits ? nf(r.condUnits) : '—',
                                 r.bonusUnits ? nf(r.bonusUnits) : '—', r.hakExtra ? nf(r.hakExtra) : '—',
                                 r.raiseUnits ? (nf(r.raiseUnits) + ' ' + r.raiserName) : '—',
+                                r.tamaUnits ? nf(r.tamaUnits) : '—',
                                 r.permitUnits ? nf(r.permitUnits) : '—', r.realized ? nf(r.realized) : '—',
                                 r.unexplained ? nf(r.unexplained) : '—', srcLabel(r)]
                                 .map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>').join('');
@@ -37942,6 +38073,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 + '<div class="sum">' + view.length + ' תכניות · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
                                 + ' · יח"ד מותנות: ' + nf(T.cond)
                                 + ' · תכנית מאוחרת מגדילה: ' + nf(T.raise)
+                                + ' · מכוח תמ"א 38: ' + nf(T.tama)
                                 + ' · הקלות שאושרו בהיתר: ' + nf(T.hak) + ' · תוספת בפועל בהיתרים: ' + nf(T.realized)
                                 + ' · ללא מקור מתועד: ' + nf(T.unexplained) + '</div>'
                                 + '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
@@ -37968,6 +38100,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         <b style={{ color: '#f5b041' }}>הקלה שאושרה בהיתר</b> — החלטת ועדת רישוי על בקשה מסוימת;{' '}
                                         <b style={{ color: '#b39ddb' }}>יח"ד מותנות</b> — יחידות שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) ויושבות מחוץ ל-יח"ד שבתב"ע;{' '}
                                         <b style={{ color: '#80cbc4' }}>תכנית מאוחרת שמגדילה</b> — הגדלת זכויות שאושרה מעל התכנית ומרימה את התקרה בפועל;{' '}
+                                        <b style={{ color: '#c5a3ff' }}>מכוח תמ"א 38</b> — היתר חיזוק שמקבל את היח"ד שלו מהתמ"א ולא מטבלה 5 של התכנית;{' '}
                                         <b style={{ color: '#ff9aa8' }}>תוספת בפועל</b> — ההפרש בין היח"ד בהיתרים לבין התב"ע, גם כשאין לו מקור מתועד אצלנו.
                                         התוספת בפועל אינה סכום של השניים הראשונים אלא מה שההיתרים מראים.
                                     </p>
@@ -37981,6 +38114,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 <option value="hakala">הקלה שאושרה בהיתר</option>
                                                 <option value="conditional">יח"ד מותנות</option>
                                                 <option value="raise">תכנית מאוחרת שמגדילה</option>
+                                                <option value="tama">מכוח תמ"א 38</option>
                                                 <option value="realized">תוספת בפועל בהיתרים</option>
                                                 <option value="published">הקלה פורסמה — בלי מספר</option>
                                                 <option value="unexplained">תוספת ללא מקור מתועד</option>
@@ -38009,6 +38143,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         {tile('תכנית מאוחרת מגדילה', nf(T.raise),
                                             (window.__planRaisers && Object.keys(window.__planRaisers).length) || overlapReady
                                                 ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4')}
+                                        {tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff')}
                                         {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
                                         {tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c')}
                                         {tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')}
@@ -38038,6 +38173,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{ ...TD, color: r.raiseUnits ? '#80cbc4' : '#55617a' }}
                                                         title={r.raiserTitle ? r.raiserName + ' — ' + r.raiserTitle : ''}>
                                                         {r.raiseUnits ? nf(r.raiseUnits) + ' · ' + r.raiserName : '—'}</td>
+                                                    <td style={{ ...TD, color: r.tamaUnits ? '#c5a3ff' : '#55617a' }}
+                                                        title="יח״ד שההיתר מקבל מכוח תמ״א 38 (חיזוק/הריסה ובנייה), לא מטבלה 5 של התכנית">
+                                                        {r.tamaUnits ? nf(r.tamaUnits) : '—'}</td>
                                                     <td style={TD}>{r.permitUnits ? nf(r.permitUnits) : '—'}</td>
                                                     <td style={{ ...TD, fontWeight: 700, color: r.realized ? '#7fc98a' : '#55617a' }}>
                                                         {r.realized ? nf(r.realized) : '—'}</td>
