@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-units2';
+        const APP_VERSION = '2026-09-16-alloc-domains';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -703,7 +703,7 @@
             ['sport',     /(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)/],
             ['health',    /(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/],
             ['emergency', /(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/],
-            ['welfare',   /(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|גיל שלישי|אזרחים ותיקים|תשוש|מרכז יום|נכים|מוגבלויות|שיקום|דיר(?:ת|ות) קלט|דיור ציבורי|דיור מוגן)/],
+            ['welfare',   /(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|גיל שלישי|אזרחים ותיקים|תשוש|מרכז יום|נכים|מוגבלויות|שיקום|דיר(?:ת|ות) קלט|דיור ציבורי|דיור מוגן|דיור מיוחד)/],
             ['culture',   /(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/],
         ];
         // Education sub-topic classifier (מעון / גן / יסודי / על-יסודי) for the future
@@ -722,6 +722,11 @@
             for (const [k, rx] of EDU_SUB_RX) if (rx.test(s)) return k;
             return null; // education use with no identifiable sub-type
         }
+        // Hebrew labels for those domains. One map — the report, the programme
+        // drilldown and anything else read from here rather than keeping a private copy.
+        const HAFRASH_DOM_HE = { education: 'חינוך', religion: 'דת', sport: 'ספורט',
+                                 health: 'בריאות', welfare: 'רווחה', culture: 'קהילה ותרבות',
+                                 emergency: 'חירום', other: 'כללי' };
         // First matching domain only (kept for callers that want a single label).
         function hafrashUseDomain(t) {
             if (!t || !t.trim()) return null;
@@ -11096,6 +11101,19 @@
                             // space actually becomes (גן/בית כנסת/מעון…). הפרשה source only —
                             // delivery evidence is by definition the hafrasha process.
                             let use = 'מבני ציבור (כללי / לא מסווג)';
+                            // No specific facility is named, but the text almost always says
+                            // what KIND of public use it is — "תרבות ואמנות", "קהילה ורווחה",
+                            // "מבנה דת", "דיור מיוחד". Those cannot become PARSER_KEYS: every
+                            // key there carries a planning standard in
+                            // NEIGHBORHOOD_PROGRAM_SERVICES (basis, per-N residents, entry
+                            // threshold), and a key with no standard is supply the programme
+                            // model can never match against demand. The coarse domain
+                            // classifier already has exactly these families, so it names the
+                            // row without touching the supply/demand model.
+                            const _doms = hafrashUseDomainsAll(prg || '');
+                            if (_doms.length) {
+                                use = 'מבני ציבור — ' + _doms.map(d => HAFRASH_DOM_HE[d] || d).join(', ');
+                            }
                             if (source === 'הפרשה מבונה') {
                                 const dlvCats = [...new Set((_dlvByTaba[r.taba] || []).flatMap(a => a.cats || []))];
                                 if (dlvCats.length) use = 'מבני ציבור — לפי ספר הנכסים: ' + dlvCats.join(', ');
@@ -11980,7 +11998,7 @@
                     if (k && !nameByTaba[k]) nameByTaba[k] = p.plan_summary || p.plan_name_he || p.plan_name || '';
                 });
                 const confHe = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' };
-                const DOM_HE = { education: 'חינוך', religion: 'דת', sport: 'ספורט', health: 'בריאות', welfare: 'רווחה', culture: 'קהילה ותרבות', emergency: 'חירום', other: 'כללי' };
+                const DOM_HE = HAFRASH_DOM_HE;
                 // floor_start → numeric floor (קרקע/פודיום=0; "5-8"→5; integers as-is; else '' unknown)
                 const floorNum = (fs) => { if (fs == null) return ''; const s = String(fs).trim(); if (s === 'קרקע' || s === 'פודיום') return 0; const m = s.match(/^(-?\d+)/); return m ? parseInt(m[1]) : ''; };
                 const fmtFloor = (fs) => { if (fs == null || fs === '') return ''; const s = String(fs); if (s === 'קרקע') return 'קרקע'; if (/^-?\d+$/.test(s)) return 'קומה ' + s; return s; };
