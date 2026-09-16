@@ -199,47 +199,79 @@ def main():
 
     for feat in plans:
         p = feat["properties"]
-        prg = str(p.get("hafrash_prg") or "").strip()
-        sqm = num(p.get("hafrash_sqm"))
-        if not (sqm > 0 or (prg and prg != "0")):
+        # A plan can describe its public space in EITHER column, and the שב"צ side
+        # was ignored entirely until 09/2026 — so 101-0682849's 8,817 מ"ר of
+        # "תרבות חברה קהילה, גני ילדים ומעונות, בית כנסת", generic and sitting in
+        # shavatz_out_prog, never reached the queue and was never read off a
+        # gramoshka. 11 of the 30 readable-today unknowns are on that side.
+        haf_prg = str(p.get("hafrash_prg") or "").strip()
+        haf_sqm = num(p.get("hafrash_sqm"))
+        shv_prg = str(p.get("shavatz_out_prog") or "").strip()
+        shv_sqm = num(p.get("shavatz_out_sqm"))
+        has_haf = haf_sqm > 0 or (haf_prg and haf_prg != "0")
+        has_shv = shv_sqm > 0 or (shv_prg and shv_prg != "0")
+        if not (has_haf or has_shv):
             continue
         status = str(p.get("status_mavat") or "").strip()
         if approved_only and status not in APPROVED:
             continue
 
         taba = eq.norm_taba(p.get("taba") or p.get("plan_name"))
+        # hafrash_sqm/_prg stay the primary pair so the audit totals, prep and the
+        # merge step keep reading what they always read; the שב"צ figures ride
+        # alongside and `sides` says which of the two still needs an answer.
         row = {"taba": taba, "plan_name": p.get("plan_name"),
                "sub_neighborhood": p.get("sub_neighborhood") or p.get("minahak") or "",
-               "status": status, "hafrash_sqm": sqm, "hafrash_prg": prg}
+               "status": status, "hafrash_sqm": haf_sqm, "hafrash_prg": haf_prg,
+               "shavatz_out_sqm": shv_sqm, "shavatz_out_prog": shv_prg}
 
-        # 0. the same obligation is already counted on the plan in force here
-        sup = superseded_map.get(taba)
+        def _named(t):
+            return any(has_known_use(u.strip()) for u in re.split(r";", t) if u.strip())
+
+        # Which columns still describe public space without naming a use?
+        unknown = []
+        if has_haf and not _named(haf_prg):
+            unknown.append("hafrash")
+        if has_shv and not _named(shv_prg):
+            unknown.append("shavatz")
+
+        # Tests 0-2 answer the HAFRASH column specifically — containment is measured
+        # on hafrash_sqm, delivery evidence IS the hafrasha process, and a public lot
+        # of the same size means the row was never a built allocation. Each settles
+        # that side alone; a שב"צ left open still has to be read.
+        verdict = None
+        # Containment is about DOUBLE COUNTING, not about knowing the use, so it
+        # applies even when the text names one — in the original single-column flow
+        # it was tested before known_text. Delivery evidence and a matching public
+        # lot only stand in for a text that names nothing, as they did before.
+        sup = superseded_map.get(taba) if has_haf else None
         if sup:
             row["superseded_by"] = sup.get("superseded_by")
             row["containment"] = sup.get("containment")
-            buckets["superseded"].append(row)
-            continue
+            verdict = "superseded"
+        elif "hafrash" in unknown:
+            ans = delivery_answer(delivery.get(taba))
+            plot = public_lot_matching(taba, haf_sqm, public_lots)
+            if ans:
+                row["delivery"] = ans
+                verdict = "known_delivery"
+            elif plot:
+                row["public_lot"] = plot
+                verdict = "plot_not_hafrasha"
+        if verdict and "hafrash" in unknown:
+            unknown.remove("hafrash")
 
-        # 1. the statutory text already names a use
-        uses = [u.strip() for u in re.split(r";", prg) if u.strip()]
-        if any(has_known_use(u) for u in uses):
-            row["domains"] = sorted({d for u in uses for d in domains(u)})
-            buckets["known_text"].append(row)
+        # nothing left open — file it under whatever answered
+        if not unknown:
+            if verdict:
+                buckets[verdict].append(row)
+            else:
+                row["domains"] = sorted({d for t in (haf_prg, shv_prg)
+                                         for u in re.split(r";", t) if u.strip()
+                                         for d in domains(u.strip())})
+                buckets["known_text"].append(row)
             continue
-
-        # 2. the property book already opened a concrete asset there
-        ans = delivery_answer(delivery.get(taba))
-        if ans:
-            row["delivery"] = ans
-            buckets["known_delivery"].append(row)
-            continue
-
-        # 3. not actually a built allocation — the plan has a public LOT of that size
-        plot = public_lot_matching(taba, sqm, public_lots)
-        if plot:
-            row["public_lot"] = plot
-            buckets["plot_not_hafrasha"].append(row)
-            continue
+        row["sides"] = unknown
 
         # 4./5. generic — is there a permit file to read a גרמושקה from?
         py = plan_year(p)
@@ -266,6 +298,17 @@ def main():
                     c["score"] += 20      # the analyst-recorded file wins ties
         cands.sort(key=lambda c: -c["score"])
 
+        # A file that is only infrastructure cannot answer this question, and the
+        # authority attaches light-rail permits to whatever plan covers the ground —
+        # 101-1048347's sole candidate is "הקמת חדר מיישרים RR215 לשימוש הרכבת הקלה",
+        # which has nothing to do with its 4,660 מ"ר on מגרשים 140/141. Demoting it by
+        # score still left the plan queued and a reader would burn a pass on it, so
+        # when EVERY candidate is infrastructure the plan has no permit to read.
+        if cands and all(RX_INFRA.search(str(c.get("descr") or "")) for c in cands):
+            row["only_infrastructure"] = [c["tik"] for c in cands]
+            buckets["no_permit"].append(row)
+            continue
+
         if not cands:
             buckets["no_permit"].append(row)
             continue
@@ -273,11 +316,22 @@ def main():
         row["low_prospect"] = max(c["score"] for c in cands) <= 5
         buckets["queued"].append(row)
         queue_items.append({"taba": taba, "plan_name": row["plan_name"],
-                            "hafrash_sqm": sqm, "hafrash_prg": prg,
+                            "hafrash_sqm": haf_sqm, "hafrash_prg": haf_prg,
+                            "shavatz_out_sqm": shv_sqm, "shavatz_out_prog": shv_prg,
+                            "sides": unknown,
                             "candidates": cands, "low_prospect": row["low_prospect"],
                             "queued_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
     eq.enqueue_hafrash(queue_items)
+    # enqueue only ever ADDS, so a plan that stops qualifying — answered since, or
+    # ruled out as infrastructure-only — stayed in the queue for good and a reader
+    # would still be handed it. Prune to exactly what this run says needs reading.
+    still = {it["taba"] for it in queue_items}
+    stale = [t for t in (eq._load(eq.HAFRASH_QUEUE_PATH) or {}) if t not in still]
+    if stale:
+        eq.dequeue_hafrash(stale)
+        print("הוסרו מהתור %d תכניות שכבר אינן דורשות קריאה: %s"
+              % (len(stale), ", ".join(sorted(stale)[:12])))
 
     gross = sum(r["hafrash_sqm"] for v in buckets.values() for r in v)
     dropped = sum(r["hafrash_sqm"] for r in buckets["superseded"])
