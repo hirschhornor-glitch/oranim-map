@@ -38227,7 +38227,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{ ...TD, color: r.condUnits ? '#b39ddb' : '#55617a' }}
                                                         title="יח״ד שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) — מחוץ ל-units_total">
                                                         {r.condUnits ? nf(r.condUnits) : '—'}</td>
-                                                    <td style={{ ...TD, color: r.bonusUnits ? '#5dade2' : '#55617a' }}>
+                                                    <td style={{ ...TD, color: r.bonusUnits ? '#5dade2' : '#55617a' }}
+                                                        title={r.bonusNote || ''}>
                                                         {r.bonusUnits ? nf(r.bonusUnits) + (r.bonusPct ? ' (' + r.bonusPct + '%)' : ' (עד ' + nf(r.bonusCap) + ')') : '—'}</td>
                                                     <td style={{ ...TD, color: r.hakExtra ? '#f5b041' : '#55617a' }} title={r.hakText}>
                                                         {r.hakExtra ? nf(r.hakExtra) + (r.hakPct ? ' (' + r.hakPct + '%)' : '') : '—'}</td>
