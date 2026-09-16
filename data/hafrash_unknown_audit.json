@@ -1,13 +1,13 @@
 {
- "built_at": "2026-09-16 10:21:01",
+ "built_at": "2026-09-16 15:35:38",
  "scope": "approved plans carrying a הפרשה מבונה",
  "counts": {
   "known_text": 152,
   "known_delivery": 7,
   "plot_not_hafrasha": 0,
   "superseded": 5,
-  "no_permit": 37,
-  "queued": 25
+  "no_permit": 39,
+  "queued": 23
  },
  "hafrash_sqm": {
   "gross": 218423,
@@ -678,7 +678,7 @@
     "sub_neighborhood": "רסקו",
     "status": "תבע מאושרת",
     "hafrash_sqm": 890.0,
-    "hafrash_prg": "שלוחת מתנ\"ס, ספריה, מבנה קהילתי ובית כנסת (890)",
+    "hafrash_prg": "בניין B - מעונות יום (440); בניין 3 / תא שטח 7 - שלוחת מתנ\"ס, ספריה, בית כנסת (450)",
     "shavatz_out_sqm": 0.0,
     "shavatz_out_prog": "",
     "domains": [
@@ -747,7 +747,7 @@
     "status": "אישור",
     "hafrash_sqm": 0.0,
     "hafrash_prg": "",
-    "shavatz_out_sqm": 1005.3,
+    "shavatz_out_sqm": 1530.0,
     "shavatz_out_prog": "מגרש 1 - מקווה, 2 בתי כנסת (1530)",
     "domains": [
      "religion"
@@ -2777,6 +2777,38 @@
     ]
    },
    {
+    "taba": "1048347",
+    "plan_name": "101-1048347",
+    "sub_neighborhood": "מקור חיים",
+    "status": "אישור",
+    "hafrash_sqm": 4660.0,
+    "hafrash_prg": "מגרש 140 - מבנים ומוסדות ציבור (2060); מגרש 141 - מבנים ומוסדות ציבור (2600)",
+    "shavatz_out_sqm": 37302.0,
+    "shavatz_out_prog": "בי\"ס יסודי חדש ; בית כנסת ; שטחי חינוך, תרבות ופנאי",
+    "sides": [
+     "hafrash"
+    ],
+    "only_infrastructure": [
+     "2025/0102.00"
+    ]
+   },
+   {
+    "taba": "800771",
+    "plan_name": "101-0800771",
+    "sub_neighborhood": "גוננים",
+    "status": "אישור",
+    "hafrash_sqm": 15.0,
+    "hafrash_prg": "מגרש 401 - מבנה ציבור בשצ\"פ (15)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
+    "only_infrastructure": [
+     "2025/0258.00"
+    ]
+   },
+   {
     "taba": "973958",
     "plan_name": "101-0973958",
     "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
@@ -3567,29 +3599,6 @@
     "low_prospect": false
    },
    {
-    "taba": "1048347",
-    "plan_name": "101-1048347",
-    "sub_neighborhood": "מקור חיים",
-    "status": "אישור",
-    "hafrash_sqm": 4660.0,
-    "hafrash_prg": "מגרש 140 - מבנים ומוסדות ציבור (2060); מגרש 141 - מבנים ומוסדות ציבור (2600)",
-    "shavatz_out_sqm": 37302.0,
-    "shavatz_out_prog": "בי\"ס יסודי חדש ; בית כנסת ; שטחי חינוך, תרבות ופנאי",
-    "sides": [
-     "hafrash"
-    ],
-    "candidates": [
-     {
-      "tik": "2025/0102.00",
-      "descr": "הקמת חדר מיישרים RR215 לשימוש הרכבת הקלה ברחוב פייר קניג/מקור חיים ,תלפיות (מקטע T4)",
-      "permit_status": "נדונה בוועדת המשנה",
-      "status_date": "15/07/2026",
-      "score": -45
-     }
-    ],
-    "low_prospect": true
-   },
-   {
     "taba": "1198613",
     "plan_name": "101-1198613",
     "sub_neighborhood": "מקור חיים",
@@ -3608,29 +3617,6 @@
       "permit_status": "נדונה ברשות הרישוי",
       "status_date": "29/06/2026",
       "score": -50
-     }
-    ],
-    "low_prospect": true
-   },
-   {
-    "taba": "800771",
-    "plan_name": "101-0800771",
-    "sub_neighborhood": "גוננים",
-    "status": "אישור",
-    "hafrash_sqm": 15.0,
-    "hafrash_prg": "מגרש 401 - מבנה ציבור בשצ\"פ (15)",
-    "shavatz_out_sqm": 0.0,
-    "shavatz_out_prog": "",
-    "sides": [
-     "hafrash"
-    ],
-    "candidates": [
-     {
-      "tik": "2025/0258.00",
-      "descr": "עבודות מקדימות עבור הרכבת הקלה - הקו הסגול",
-      "permit_status": "נדונה בוועדת המשנה",
-      "status_date": "01/07/2026",
-      "score": -120
      }
     ],
     "low_prospect": true
