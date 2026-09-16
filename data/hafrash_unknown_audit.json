@@ -1,18 +1,18 @@
 {
- "built_at": "2026-08-18 15:31:35",
+ "built_at": "2026-09-16 10:21:01",
  "scope": "approved plans carrying a הפרשה מבונה",
  "counts": {
-  "known_text": 130,
-  "known_delivery": 6,
-  "plot_not_hafrasha": 1,
+  "known_text": 152,
+  "known_delivery": 7,
+  "plot_not_hafrasha": 0,
   "superseded": 5,
-  "no_permit": 22,
-  "queued": 10
+  "no_permit": 37,
+  "queued": 25
  },
  "hafrash_sqm": {
-  "gross": 142668,
+  "gross": 218423,
   "double_counted": 2573,
-  "net": 140095
+  "net": 215850
  },
  "buckets": {
   "known_text": [
@@ -23,6 +23,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 250.0,
     "hafrash_prg": "מגרש 30285/79 - 2כיתות גן ילדים (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -34,6 +36,8 @@
     "status": "אישור",
     "hafrash_sqm": 100.0,
     "hafrash_prg": "מגרש 1 - דירה לאנשים עם מוגבלויות (100)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -45,6 +49,8 @@
     "status": "אישור",
     "hafrash_sqm": 900.0,
     "hafrash_prg": "מגרש 30187/35 - גן ילדים, מעון יום +רווחה/קהילה (900)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -58,9 +64,38 @@
     "status": "אישור",
     "hafrash_sqm": 120.0,
     "hafrash_prg": "קהילה ורווחה (120 מ\"ר)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
+    ]
+   },
+   {
+    "taba": "163154",
+    "plan_name": "101-0163154",
+    "sub_neighborhood": "בית צפאפא",
+    "status": "מאושרת",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 6200.4,
+    "shavatz_out_prog": "מגרש 201 - מבנים ומוסדות ציבור (1993); מגרש 202 - מבנים ומוסדות ציבור (794); מגרש 203 - מבנים ומוסדות ציבור (897); בריאות/ חברה/ קהילה/ תרבות",
+    "domains": [
+     "culture",
+     "health"
+    ]
+   },
+   {
+    "taba": "218677",
+    "plan_name": "101-0218677",
+    "sub_neighborhood": "צפון תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2652.0,
+    "shavatz_out_prog": "מבנים ומוסדות לדת ציבור (2652)",
+    "domains": [
+     "religion"
     ]
    },
    {
@@ -69,10 +104,30 @@
     "sub_neighborhood": "קטמונים ח-ט",
     "status": "אישור",
     "hafrash_sqm": 0.0,
-    "hafrash_prg": "מגרש 30169/153 - 3כיתות מעון יום, 2 גני ילדים, בית כנסת",
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2955.0,
+    "shavatz_out_prog": "מגרש 3 - 3 כיתות מעון, 2 כיתות גן, בית כנסת, לשכת רווחה, שלוחת מתנ\"ס, אולם רב תכליתי",
     "domains": [
+     "culture",
      "education",
-     "religion"
+     "religion",
+     "welfare"
+    ]
+   },
+   {
+    "taba": "250563",
+    "plan_name": "101-0250563",
+    "sub_neighborhood": "גוננים א-ו",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 13193.0,
+    "shavatz_out_prog": "בית כנסת; בית ספר; גני ילדים; מעונות יום; מרכז קהילתי; חניה תת-קרקעית; מבנים ומתקנים לפעילויות ספורט; מעבר תשתיות תת קרקעיות; חדר שנאים תת קרקעיים; נטיעות וגינון, שבילים ודרכי גישה",
+    "domains": [
+     "culture",
+     "education",
+     "religion",
+     "sport"
     ]
    },
    {
@@ -82,19 +137,9 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 90.0,
     "hafrash_prg": "מגרש 1 - 2 יחידות דיור ציבורי (90)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
-     "welfare"
-    ]
-   },
-   {
-    "taba": "275636",
-    "plan_name": "101-0275636",
-    "sub_neighborhood": "א.ת. תלפיות",
-    "status": "אישור",
-    "hafrash_sqm": 0.0,
-    "hafrash_prg": "קהילה ורווחה (1200 מ\"ר)",
-    "domains": [
-     "culture",
      "welfare"
     ]
    },
@@ -103,8 +148,10 @@
     "plan_name": "101-0350173",
     "sub_neighborhood": "א.ת. תלפיות",
     "status": "אישור",
-    "hafrash_sqm": 0.0,
-    "hafrash_prg": "תפעול/חירום (400 מ\"ר)",
+    "hafrash_sqm": 400.0,
+    "hafrash_prg": "תפעול/חירום (400)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "emergency"
     ]
@@ -116,6 +163,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - גן ילדים בקומת הקרקע (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -127,6 +176,8 @@
     "status": "אישור",
     "hafrash_sqm": 110.0,
     "hafrash_prg": "קהילה ורווחה (110)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -139,8 +190,24 @@
     "status": "אישור",
     "hafrash_sqm": 1492.0,
     "hafrash_prg": "מגרש 100 - טיפת חלב (300); מרכז לגיל הרך (150); מועדון נוער (150)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "health",
+     "welfare"
+    ]
+   },
+   {
+    "taba": "383109",
+    "plan_name": "101-0383109",
+    "sub_neighborhood": "שיכוני תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 3051.8,
+    "shavatz_out_prog": "מגרש 1 - מעון לבעלי מוגבלויות (2182); מגרש 2 - מעון לבעלי מוגבלויות (890); מגרש 3 - מעון לבעלי מוגבלויות (2072)",
+    "domains": [
+     "education",
      "welfare"
     ]
    },
@@ -151,8 +218,11 @@
     "status": "אישור",
     "hafrash_sqm": 390.0,
     "hafrash_prg": "מגרש 1 - כיתת גן ילדים (130); מגרש 2 - 2 כיתות גן (260)",
+    "shavatz_out_sqm": 1290.0,
+    "shavatz_out_prog": "מגרש 5 - 3 כיתות מעון יום (441); בית כנסת (849)",
     "domains": [
-     "education"
+     "education",
+     "religion"
     ]
    },
    {
@@ -162,6 +232,8 @@
     "status": "אישור",
     "hafrash_sqm": 230.0,
     "hafrash_prg": "מגרש 1 - רווחה וקהילה (230)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -174,6 +246,8 @@
     "status": "אישור",
     "hafrash_sqm": 110.0,
     "hafrash_prg": "מועדון לקשיש (110)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -185,6 +259,8 @@
     "status": "אישור",
     "hafrash_sqm": 230.0,
     "hafrash_prg": "מגרש 1 - גן ילדים (130); דירת רווחה (100)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "welfare"
@@ -197,6 +273,8 @@
     "status": "אישור",
     "hafrash_sqm": 50.0,
     "hafrash_prg": "מגרש 2 - קהילה ורווחה (50)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "קהילה ורווחה (50)",
     "domains": [
      "culture",
      "welfare"
@@ -209,6 +287,8 @@
     "status": "אישור",
     "hafrash_sqm": 2293.0,
     "hafrash_prg": "מגרש 1 - בית כנסת (250); מגרש 3 - מבנים ומוסדות ציבור לתרבות ופנאי (280); מגרש 6 - 3 כיתות גן ילדים (441); מגרש 8 - גן ילדים (130); מגרש 9 - 2 גני ילדים (390); מגרש 30199/40 - 3 כיתות מעון יום (441); מגרש 30199/40 - מרכז הוליסטי (361)",
+    "shavatz_out_sqm": 5000.0,
+    "shavatz_out_prog": "מגרש 25 - *בתיאום מחלקת מבני ציבור* הרחבת בית ספר/גני ילדים/מעונות יום (5000)",
     "domains": [
      "culture",
      "education",
@@ -222,6 +302,21 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - גן ילדים (130)",
+    "shavatz_out_sqm": 13541.0,
+    "shavatz_out_prog": "מגרש 116 - ביהס רמת גונן (13541)",
+    "domains": [
+     "education"
+    ]
+   },
+   {
+    "taba": "588897",
+    "plan_name": "101-0588897",
+    "sub_neighborhood": "קטמון הישנה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 7975.0,
+    "shavatz_out_prog": "מגרש 1 - בי\"ס על-יסודי מדרשיית הרטמן (5975); מגרש 4 - מבנים ומוסדות ציבור ותחבורה (2000)",
     "domains": [
      "education"
     ]
@@ -233,6 +328,8 @@
     "status": "אישור",
     "hafrash_sqm": 935.0,
     "hafrash_prg": "מגרש 30128/51 - 3 כיתות מעון יום (440); 2 כיתות גן (345); בית כנסת (150)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -245,7 +342,10 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 116.0,
     "hafrash_prg": "מעון לבעלי מוגבלויות (116)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "קהילה ורווחה (116)",
     "domains": [
+     "culture",
      "education",
      "welfare"
     ]
@@ -257,6 +357,8 @@
     "status": "אישור",
     "hafrash_sqm": 1300.0,
     "hafrash_prg": "סדנאות אומנים, תרבות/קהילה/רווחה/אמנות (1300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -269,7 +371,24 @@
     "status": "אישור",
     "hafrash_sqm": 2630.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260); מגרש 2 - 2 כיתות גן (355); מגרש 4 - 2 כיתות גן (260); מגרש 5 - 3 כיתות מעון (355); מגרש 6 - 3 כיתות מעון (440); מגרש 7 - 2 כיתות גן (260)",
+    "shavatz_out_sqm": 14112.0,
+    "shavatz_out_prog": "מגרש 401 - יסודי 24 כיתות (13712), מתנ\"ס (400)",
     "domains": [
+     "culture",
+     "education"
+    ]
+   },
+   {
+    "taba": "582056",
+    "plan_name": "101-0582056",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 3660.0,
+    "shavatz_out_prog": "מרכז קהילתי שכונתי ; מעונות יום ; גני ילדים",
+    "domains": [
+     "culture",
      "education"
     ]
    },
@@ -280,6 +399,8 @@
     "status": "אישור",
     "hafrash_sqm": 1074.0,
     "hafrash_prg": "3 כיתות מעון יום (460); גן ילדים (130); בית כנסת (224); 2 גני ילדים (260)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -292,6 +413,8 @@
     "status": "אישור",
     "hafrash_sqm": 950.0,
     "hafrash_prg": "מגרש 201 - מבני ציבור לתרבות וקהילה (250); מגרש 202 - מבני ציבור לתרבות וקהילה (700)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -303,6 +426,8 @@
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - קהילה/ רווחה (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -315,10 +440,27 @@
     "status": "אישור",
     "hafrash_sqm": 1150.0,
     "hafrash_prg": "בית כנסת (200); 2 כיתות גן (260); תחנה לבריאות המשפחה (250); 3 כיתות מעון יום (440)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "health",
      "religion"
+    ]
+   },
+   {
+    "taba": "653840",
+    "plan_name": "101-0653840",
+    "sub_neighborhood": "מתחם הרכבת",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 7500.0,
+    "shavatz_out_prog": "בית ספר - 12 כיתות (5,800–6,700) ; מבני תרבות, חברה וקהילה ; מוסדות חינוך ; תחנת רכבת ושימושים נלווים (מגרש 3C מעל התחנה, בתיאום עם רכבת ישראל)",
+    "domains": [
+     "culture",
+     "education",
+     "welfare"
     ]
    },
    {
@@ -328,6 +470,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 510.0,
     "hafrash_prg": "מגרש 1 - בית כנסת (250); מגרש 1 - 2 כיתות גן ילדים (260)",
+    "shavatz_out_sqm": 2350.0,
+    "shavatz_out_prog": "מגרש 3 - בית ספר 6 כיתות (2350)",
     "domains": [
      "education",
      "religion"
@@ -340,6 +484,8 @@
     "status": "אישור",
     "hafrash_sqm": 1400.0,
     "hafrash_prg": "תרבות - כלמוביל (1400)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -351,6 +497,8 @@
     "status": "אישור",
     "hafrash_sqm": 200.0,
     "hafrash_prg": "מגרש 1 - מועדון גיל שלישי (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -362,6 +510,23 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 560.0,
     "hafrash_prg": "מגרש 100 - 2 כיתות גן (260); מגרש 101 - בית כנסת (250); תרבות ואמנות (50)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "domains": [
+     "culture",
+     "education",
+     "religion"
+    ]
+   },
+   {
+    "taba": "682849",
+    "plan_name": "101-0682849",
+    "sub_neighborhood": "מתחם הרכבת",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 8817.0,
+    "shavatz_out_prog": "מגרש 21 - תרבות חברה קהילה, גני ילדים ומעונות, בית כנסת (8817)",
     "domains": [
      "culture",
      "education",
@@ -375,6 +540,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 200.0,
     "hafrash_prg": "מגרש 1 - תחנה לבריאות המשפחה (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "health"
     ]
@@ -386,6 +553,8 @@
     "status": "אישור",
     "hafrash_sqm": 300.0,
     "hafrash_prg": "מגרש 30007/82 - כיתת גן ילדים (130); מועדון לקשיש (136)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "welfare"
@@ -398,6 +567,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 4570.0,
     "hafrash_prg": "6 כיתות מעון (728 מ\"ר); 8 כיתות גן (1170 מ\"ר); 12 כיתות בי\"ס; 1 בית כנסת (600 מ\"ר)",
+    "shavatz_out_sqm": 9000.0,
+    "shavatz_out_prog": "מגרש 500 - בית ספר (7000)",
     "domains": [
      "education",
      "religion"
@@ -410,6 +581,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 65.0,
     "hafrash_prg": "מגרש 1 - שימושי חברה ורווחה (65)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -421,6 +594,8 @@
     "status": "אישור",
     "hafrash_sqm": 526.0,
     "hafrash_prg": "2 כיתות גן ילדים (266); בית כנסת (260)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -433,9 +608,27 @@
     "status": "אישור",
     "hafrash_sqm": 206.0,
     "hafrash_prg": "קהילה ורווחה - 4 יחידות לצורכי ציבור (206)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
+    ]
+   },
+   {
+    "taba": "826636",
+    "plan_name": "101-0826636",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 5641.6,
+    "shavatz_out_prog": "מגרש 1A - מתנ\"ס, בריכת שחיה ומעון יום (11600); מגרש 1B - גן ילדים ומשרדים קיימים (780); מגרש 1C - מסגד (2650)",
+    "domains": [
+     "culture",
+     "education",
+     "religion",
+     "sport"
     ]
    },
    {
@@ -445,8 +638,23 @@
     "status": "אישור",
     "hafrash_sqm": 0.0,
     "hafrash_prg": "מגרש 1 - תפעול/חירום (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "emergency"
+    ]
+   },
+   {
+    "taba": "798306",
+    "plan_name": "101-0798306",
+    "sub_neighborhood": "גוננים א-ו",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 3251.0,
+    "shavatz_out_prog": "מעון יום (3 כיתות)",
+    "domains": [
+     "education"
     ]
    },
    {
@@ -456,6 +664,8 @@
     "status": "אישור",
     "hafrash_sqm": 380.0,
     "hafrash_prg": "1 כיתת גן (130 מ\"ר), קהילה ורווחה (250 מ\"ר)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -469,6 +679,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 890.0,
     "hafrash_prg": "שלוחת מתנ\"ס, ספריה, מבנה קהילתי ובית כנסת (890)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "religion"
@@ -481,6 +693,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - כיתת גן ילדים (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -492,6 +706,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "קהילה ורווחה (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -504,9 +720,24 @@
     "status": "אישור",
     "hafrash_sqm": 1230.0,
     "hafrash_prg": "מגרש 4 - 3 כיתות גן (390); 3 כיתות מעון (441); בית כנסת (184); מגרש 6 - מבנים ומוסדות ציבור (215)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
+    ]
+   },
+   {
+    "taba": "857086",
+    "plan_name": "101-0857086",
+    "sub_neighborhood": "גוננים א-ו",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 11046.0,
+    "shavatz_out_prog": "מגרש 17 - בית ספר 24 כיתות (11046)",
+    "domains": [
+     "education"
     ]
    },
    {
@@ -514,8 +745,10 @@
     "plan_name": "101-0889428",
     "sub_neighborhood": "תלפיות ארנונה",
     "status": "אישור",
-    "hafrash_sqm": 1006.0,
-    "hafrash_prg": "2 בתי כנסת",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 1005.3,
+    "shavatz_out_prog": "מגרש 1 - מקווה, 2 בתי כנסת (1530)",
     "domains": [
      "religion"
     ]
@@ -527,8 +760,26 @@
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - דירה לבעלי מוגבלויות (130)",
+    "shavatz_out_sqm": 441.0,
+    "shavatz_out_prog": "מעון יום (441)",
     "domains": [
+     "education",
      "welfare"
+    ]
+   },
+   {
+    "taba": "901140",
+    "plan_name": "101-0901140",
+    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 4610.0,
+    "shavatz_out_prog": "מגרש 101 - 7 כיתות גן (910); בית כנסת ותרבות (3700)",
+    "domains": [
+     "culture",
+     "education",
+     "religion"
     ]
    },
    {
@@ -538,6 +789,8 @@
     "status": "אישור",
     "hafrash_sqm": 160.0,
     "hafrash_prg": "מגרש 2 - חברה וקהילה (160)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -550,6 +803,8 @@
     "status": "אישור",
     "hafrash_sqm": 710.0,
     "hafrash_prg": "מגרש 1+2 - תרבות וקהילה, בית כנסת (500); חברה וקהילה (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "religion",
@@ -563,8 +818,23 @@
     "status": "אישור",
     "hafrash_sqm": 80.0,
     "hafrash_prg": "מגרש 1 - דירת רווחה (80)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
+    ]
+   },
+   {
+    "taba": "823922",
+    "plan_name": "101-0823922",
+    "sub_neighborhood": "תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 180.0,
+    "shavatz_out_prog": "מגרש 1 - ספורט ונופש (180)",
+    "domains": [
+     "sport"
     ]
    },
    {
@@ -574,6 +844,8 @@
     "status": "אישור",
     "hafrash_sqm": 1046.0,
     "hafrash_prg": "מגרש 3 - 3 כיתות מעון יום (440); 2 כיתות גן (260); חברה (346)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -585,6 +857,8 @@
     "status": "אישור",
     "hafrash_sqm": 150.0,
     "hafrash_prg": "מגרש 1 - 2 דירות קלט (150)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -596,6 +870,8 @@
     "status": "אישור",
     "hafrash_sqm": 140.0,
     "hafrash_prg": "מגרש 24 - רווחה (140)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -607,6 +883,8 @@
     "status": "אישור",
     "hafrash_sqm": 1376.0,
     "hafrash_prg": "מגרש 1 - בית כנסת (250); מגרש 30002/93 - תרבות/אמנות (285); 2 גני ילדים (635)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -620,6 +898,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 30028/37 - גן ילדים (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -631,6 +911,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 500.0,
     "hafrash_prg": "מגרש 1 - תרבות (500)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -642,6 +924,8 @@
     "status": "אישור",
     "hafrash_sqm": 2940.0,
     "hafrash_prg": "מגרש 1 - שלוחת מתנ\"ס (2500); 3 כיתות מעון יום (440)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education"
@@ -654,6 +938,8 @@
     "status": "אישור",
     "hafrash_sqm": 2000.0,
     "hafrash_prg": "מגרש 30169/61, 122, 123 - בית ספר 6 כיתות (2000)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -665,6 +951,8 @@
     "status": "אישור",
     "hafrash_sqm": 1365.0,
     "hafrash_prg": "בניין A - גני ילדים (260); בניין A - שימוש ציבורי (280); בניין B - שימוש ציבורי (470); בניין C - שימוש ציבורי (235); בניין D - שימוש ציבורי (120)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -676,6 +964,8 @@
     "status": "אישור",
     "hafrash_sqm": 85.0,
     "hafrash_prg": "מגרש 1 - דירה לרווחה (85)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -687,6 +977,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 350.0,
     "hafrash_prg": "מגרש 1 - חברה/ תרבות ואמנות (275); מגרש 2 - חברה/ תרבות (350)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -698,6 +990,8 @@
     "status": "אישור",
     "hafrash_sqm": 231.0,
     "hafrash_prg": "בית כנסת (231)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "religion"
     ]
@@ -709,6 +1003,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 180.0,
     "hafrash_prg": "מגרש 1 - חברה/ קהילה/ תרבות (180)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -720,6 +1016,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 600.0,
     "hafrash_prg": "מגרש 1 - מעון יום (600)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -731,6 +1029,8 @@
     "status": "אישור",
     "hafrash_sqm": 1165.0,
     "hafrash_prg": "3 גני ילדים (390); בית כנסת (331)",
+    "shavatz_out_sqm": 10203.0,
+    "shavatz_out_prog": "מגרש 2 - בתי ספר (10203)",
     "domains": [
      "education",
      "religion"
@@ -743,23 +1043,11 @@
     "status": "אישור",
     "hafrash_sqm": 760.0,
     "hafrash_prg": "מגרש 100 - 2 גני ילדים (260); בית כנסת (500)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
-    ]
-   },
-   {
-    "taba": "955450",
-    "plan_name": "101-0955450",
-    "sub_neighborhood": "א.ת. תלפיות",
-    "status": "אישור",
-    "hafrash_sqm": 1195.0,
-    "hafrash_prg": "מגרש 1 - 3 כיתות מעון יום (441); בית כנסת (450); שירותי קהילה ורווחה (304)",
-    "domains": [
-     "culture",
-     "education",
-     "religion",
-     "welfare"
     ]
    },
    {
@@ -769,6 +1057,8 @@
     "status": "הכרעה בהתנגדויות / אישור",
     "hafrash_sqm": 230.0,
     "hafrash_prg": "מגרש 1 - קהילה/ רווחה (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -781,6 +1071,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 4000.0,
     "hafrash_prg": "מגרש 1 - חינוך, תרבות וקהילה (4000); 3 כיתות מעון; בית כנסת",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -794,6 +1086,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 101.0,
     "hafrash_prg": "מגרש 1 - דירת דיור ציבורי (101)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -805,6 +1099,8 @@
     "status": "אישור",
     "hafrash_sqm": 88.0,
     "hafrash_prg": "מגרש 1 - שימושי קהילה (88)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -816,6 +1112,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 250.0,
     "hafrash_prg": "מגרש 1 - גן ילדים (130); קהילה ותרבות (120)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education"
@@ -828,6 +1126,8 @@
     "status": "אישור",
     "hafrash_sqm": 1310.0,
     "hafrash_prg": "מגרש 1 - 3 כיתות מעון (440); בית כנסת (400); 2 גני ילדים (260)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -840,6 +1140,8 @@
     "status": "אישור",
     "hafrash_sqm": 540.0,
     "hafrash_prg": "מגרש 2 - 3 כיתות מעון יום (440); תרבות ואמנות (100)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education"
@@ -852,6 +1154,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 193.0,
     "hafrash_prg": "מגרש 1 - גן ילדים (128)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -863,6 +1167,8 @@
     "status": "אישור",
     "hafrash_sqm": 90.0,
     "hafrash_prg": "מגרש 1 - קהילה ורווחה (90)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "קהילה ורווחה (90)",
     "domains": [
      "culture",
      "welfare"
@@ -875,6 +1181,8 @@
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - קהילה/חינוך (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education"
@@ -887,6 +1195,8 @@
     "status": "אישור",
     "hafrash_sqm": 790.0,
     "hafrash_prg": "3 כיתות מעון (440 מ\"ר), 3 כיתות גן, 12 כיתות בי\"ס, 1 בית כנסת (350 מ\"ר)",
+    "shavatz_out_sqm": 6984.0,
+    "shavatz_out_prog": "3 כיתות מעון יום (440) ; בית כנסת (350) ; גני ילדים",
     "domains": [
      "education",
      "religion"
@@ -899,6 +1209,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 180.0,
     "hafrash_prg": "מגרש 1 - קהילה ורווחה (180)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -911,20 +1223,11 @@
     "status": "אישור",
     "hafrash_sqm": 500.0,
     "hafrash_prg": "שירותי קהילה (200 מ\"ר); בית כנסת (300 מ\"ר)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "religion"
-    ]
-   },
-   {
-    "taba": "1062645",
-    "plan_name": "101-1062645",
-    "sub_neighborhood": "א.ת. תלפיות",
-    "status": "תבע מאושרת",
-    "hafrash_sqm": 1670.0,
-    "hafrash_prg": "מגרש 301 - ומוסדות מבנים ציבור (1470); מגרש 501 - דירה לרווחה (200)",
-    "domains": [
-     "welfare"
     ]
    },
    {
@@ -934,6 +1237,8 @@
     "status": "אישור",
     "hafrash_sqm": 2400.0,
     "hafrash_prg": "מגרש 2+3 - 3 כיתות מעון יום (441); 2 כיתות גן ילדים (260); 2 בתי כנסת וקהילה ותרבות (1699)",
+    "shavatz_out_sqm": 8132.0,
+    "shavatz_out_prog": "מגרש 1 - בית ספר 12 כיתות (8132); קהילה פנאי ותרבות",
     "domains": [
      "culture",
      "education",
@@ -947,6 +1252,8 @@
     "status": "אישור",
     "hafrash_sqm": 2200.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260); תרבות ואמנות (1590)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education"
@@ -959,6 +1266,8 @@
     "status": "אישור",
     "hafrash_sqm": 4010.0,
     "hafrash_prg": "מגרש 1 - בית כנסת (500); מגרש 2 - 4 כיתות גן (520); 6 כיתות מעון (882); בית כנסת (2108)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -971,6 +1280,8 @@
     "status": "אישור",
     "hafrash_sqm": 820.0,
     "hafrash_prg": "A - 4 כיתות גן ילדים (520); B - בית כנסת (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -983,6 +1294,8 @@
     "status": "אישור",
     "hafrash_sqm": 85.0,
     "hafrash_prg": "מגרש 1 - דירה לבעלי מוגבלויות (85)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -994,9 +1307,25 @@
     "status": "אישור",
     "hafrash_sqm": 260.0,
     "hafrash_prg": "מגרש 2 - קהילה ורווחה (260)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
+    ]
+   },
+   {
+    "taba": "1133040",
+    "plan_name": "101-1133040",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "תבע מאושרת",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 6600.0,
+    "shavatz_out_prog": "מגרש 501 - קהילה חברה וחינוך (6600)",
+    "domains": [
+     "culture",
+     "education"
     ]
    },
    {
@@ -1006,6 +1335,8 @@
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 100 - גן ילדים (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -1017,6 +1348,8 @@
     "status": "אישור",
     "hafrash_sqm": 1480.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260); בית כנסת (350); ספורט (870)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion",
@@ -1030,6 +1363,8 @@
     "status": "אישור",
     "hafrash_sqm": 670.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260); בית כנסת (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -1042,6 +1377,8 @@
     "status": "מאושרת",
     "hafrash_sqm": 1825.0,
     "hafrash_prg": "מגרש 1 - קהילה ורווחה (525); תרבות ואמנות (1300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -1054,6 +1391,8 @@
     "status": "אישור",
     "hafrash_sqm": 200.0,
     "hafrash_prg": "מגרש 1 - 2 דירות רווחה (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -1065,21 +1404,12 @@
     "status": "אישור",
     "hafrash_sqm": 1140.0,
     "hafrash_prg": "מגרש 1 - 3 כיתות מעון יום (440); שלוחת מתנ\"ס (200); בית כנסת (500)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
      "religion"
-    ]
-   },
-   {
-    "taba": "1078476",
-    "plan_name": "101-1078476",
-    "sub_neighborhood": "רסקו",
-    "status": "הכרעה בהתנגדויות / אישור",
-    "hafrash_sqm": 130.0,
-    "hafrash_prg": "מגרש 2 - כיתת גן (130)",
-    "domains": [
-     "education"
     ]
    },
    {
@@ -1089,8 +1419,43 @@
     "status": "אישור",
     "hafrash_sqm": 706.0,
     "hafrash_prg": "מגרש 1 - חינוך-גנ\"י (130); מבנים ומוסדות ציבור (576)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
+    ]
+   },
+   {
+    "taba": "1166586",
+    "plan_name": "101-1166586",
+    "sub_neighborhood": "קטמונים",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 61270.0,
+    "shavatz_out_prog": "פרוגרמה מנחה (מינהל התכנון) — מצב מוצע: מעונות 6 (800) ; גני ילדים 8 כיתות (1,024) ; 2 בתי ספר יסודיים 24+24 כיתות (9,136) ; תיכון חט\"ב+חט\"ע 42 כיתות (11,348) ; אולם ספורט 2 (2,500) ; בית כנסת 2 (900) ; מחלקת רווחה (1,000) ; מועדון תנועות נוער (1,500) ; מתנ\"ס (3,000) — סה\"כ פרוגרמה 31,208 מ\"ר (עיקרי) · זכויות כולל שירות/תנועה 61,270 מ\"ר",
+    "domains": [
+     "culture",
+     "education",
+     "religion",
+     "sport",
+     "welfare"
+    ]
+   },
+   {
+    "taba": "1030790",
+    "plan_name": "101-1030790",
+    "sub_neighborhood": "קטמון הישנה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 9628.0,
+    "shavatz_out_prog": "מגרש 1 - חינוך, קהילה, דת וספורט (9628)",
+    "domains": [
+     "culture",
+     "education",
+     "religion",
+     "sport"
     ]
    },
    {
@@ -1100,6 +1465,8 @@
     "status": "אישור",
     "hafrash_sqm": 860.0,
     "hafrash_prg": "3 כיתות מעון יום (440); בית כנסת (190); מבני ציבור לדת (230)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -1112,6 +1479,8 @@
     "status": "אישור",
     "hafrash_sqm": 4300.0,
     "hafrash_prg": "מגרש 101 - מבנים ומוסדות ציבור (4000); בית כנסת (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "religion"
     ]
@@ -1123,6 +1492,8 @@
     "status": "אישור",
     "hafrash_sqm": 350.0,
     "hafrash_prg": "צרכי קהילה / מינהל קהילתי (מועדון נוער, גיל שלישי) (350)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -1135,6 +1506,8 @@
     "status": "אישור",
     "hafrash_sqm": 1330.0,
     "hafrash_prg": "מגרש 1 - 3 כיתות מעון (440); מגרש 3 - 2 כיתות גן (260); מגרש 3 - בית כנסת (500); מגרש 3 - בית כנסת (500)",
+    "shavatz_out_sqm": 7300.0,
+    "shavatz_out_prog": "מגרש 5 - ביה\"ס יסודי 12 כיתות (7300); גיתת גן",
     "domains": [
      "education",
      "religion"
@@ -1147,6 +1520,8 @@
     "status": "אישור",
     "hafrash_sqm": 250.0,
     "hafrash_prg": "מגרש 1 - קהילה ורווחה (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -1159,6 +1534,8 @@
     "status": "אישור",
     "hafrash_sqm": 850.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260); בית כנסת (390); קהילה ורווחה (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -1173,6 +1550,8 @@
     "status": "אישור",
     "hafrash_sqm": 440.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור לחינוך (440)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -1184,6 +1563,8 @@
     "status": "אישור",
     "hafrash_sqm": 441.0,
     "hafrash_prg": "מגרש 1 - מעון יום (441)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -1195,6 +1576,8 @@
     "status": "אישור",
     "hafrash_sqm": 940.0,
     "hafrash_prg": "3 כיתות מעון יום (440); 2 בתי כנסת (500)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
@@ -1207,20 +1590,11 @@
     "status": "אישור",
     "hafrash_sqm": 190.0,
     "hafrash_prg": "מגרש 1 - רווחה/חברה/תרבות ופנאי (190)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
-    ]
-   },
-   {
-    "taba": "1026574",
-    "plan_name": "101-1026574",
-    "sub_neighborhood": "בית צפאפא,שרפת",
-    "status": "אישור",
-    "hafrash_sqm": 2741.0,
-    "hafrash_prg": "מגרש 2 - לשכת תיירות עירונית (300); מגרש 3 - מעון יום (441); מגרש 4 - מבנים ומוסדות ציבור (2000)",
-    "domains": [
-     "education"
     ]
    },
    {
@@ -1230,6 +1604,8 @@
     "status": "אישור",
     "hafrash_sqm": 110.0,
     "hafrash_prg": "מגרש 1 - תרבות או קהילה (110)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -1238,26 +1614,16 @@
     "taba": "1236736",
     "plan_name": "101-1236736",
     "sub_neighborhood": "א.ת. תלפיות",
-    "status": "הכרעה בהתנגדויות / אישור",
+    "status": "אישור",
     "hafrash_sqm": 2560.0,
     "hafrash_prg": "מגרש 1 - 4 כיתות גן (520); בית כנסת (300); קהילה ורווחה (900); ציבורי גמיש (840)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
      "religion",
      "welfare"
-    ]
-   },
-   {
-    "taba": "1191014",
-    "plan_name": "101-1191014",
-    "sub_neighborhood": "א.ת. תלפיות",
-    "status": "אישור",
-    "hafrash_sqm": 1650.0,
-    "hafrash_prg": "תא 1 (קומות 5-6) - משרדים עירוניים (904); תא 2 (קומות 5-6) - משרדים עירוניים (136); 2 כיתות גן (260); בית כנסת (350)",
-    "domains": [
-     "education",
-     "religion"
     ]
    },
    {
@@ -1267,6 +1633,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 2340.0,
     "hafrash_prg": "מגרש 1 - בי\"ס (2640)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -1278,6 +1646,8 @@
     "status": "אישור",
     "hafrash_sqm": 560.0,
     "hafrash_prg": "מגרש 1A - 2 גני ילדים (260); קהילה וחברה (300)",
+    "shavatz_out_sqm": 2952.0,
+    "shavatz_out_prog": "מגרש 3 - 3 כיתות מעון (440); *בתאורם מחלקת מבני ציבור* (1990)",
     "domains": [
      "culture",
      "education"
@@ -1290,6 +1660,8 @@
     "status": "אישור",
     "hafrash_sqm": 5500.0,
     "hafrash_prg": "3 כיתות גן; 18 כיתות בי\"ס; 1 בית כנסת; תפעול/חירום (5500 מ\"ר)",
+    "shavatz_out_sqm": 15670.0,
+    "shavatz_out_prog": "בי\"ס ; גני ילדים ; בית כנסת (~500)",
     "domains": [
      "education",
      "emergency",
@@ -1303,6 +1675,8 @@
     "status": "הכרעה בהתנגדויות / אישור",
     "hafrash_sqm": 600.0,
     "hafrash_prg": "מגרש 1 - 3 כיתות מעון (600)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -1314,6 +1688,21 @@
     "status": "אישור",
     "hafrash_sqm": 260.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "domains": [
+     "education"
+    ]
+   },
+   {
+    "taba": "995829",
+    "plan_name": "101-0995829",
+    "sub_neighborhood": "תלפיות",
+    "status": "הכרעה בהתנגדויות / אישור",
+    "hafrash_sqm": 441.0,
+    "hafrash_prg": "מגרש 5 - 3 כיתות מעון (441)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
     ]
@@ -1325,8 +1714,26 @@
     "status": "אישור",
     "hafrash_sqm": 132.0,
     "hafrash_prg": "מגרש 30130/26 - כיתת גן ילדים בקומת הקרקע (132)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
+    ]
+   },
+   {
+    "taba": "1056019",
+    "plan_name": "101-1056019",
+    "sub_neighborhood": "קטמונים",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2500.0,
+    "shavatz_out_prog": "גן ילדים (3 כיתות); בית כנסת (250 מ\"ר); שירותי קהילה (500 מ\"ר); שירותי רווחה (500 מ\"ר)",
+    "domains": [
+     "culture",
+     "education",
+     "religion",
+     "welfare"
     ]
    },
    {
@@ -1336,6 +1743,8 @@
     "status": "אישור",
     "hafrash_sqm": 91.0,
     "hafrash_prg": "מגרש 1 - קהילה ורווחה (91)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "welfare"
@@ -1348,6 +1757,8 @@
     "status": "אישור",
     "hafrash_sqm": 1030.0,
     "hafrash_prg": "2 כיתות גן (260 מ\"ר), 1 בית כנסת (270 מ\"ר), קהילה ורווחה (500 מ\"ר) | הערה: השטח לקהילה ורווחה אמור לשמש כתחנת שיקום דרום (פועלת כיום בשכירות ברח' האומן 18). בשטח לתעסוקה/משרדים יותר גם שימוש למלונאות",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -1362,8 +1773,24 @@
     "status": "אישור",
     "hafrash_sqm": 260.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260)",
+    "shavatz_out_sqm": 2255.0,
+    "shavatz_out_prog": "מגרש 2 - 2 בתי כנסת (קיימים) (2255)",
     "domains": [
-     "education"
+     "education",
+     "religion"
+    ]
+   },
+   {
+    "taba": "1298728",
+    "plan_name": "101-1298728",
+    "sub_neighborhood": "רחביה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 928.3,
+    "shavatz_out_prog": "מגרש 1 - בית כנסת (2228)",
+    "domains": [
+     "religion"
     ]
    },
    {
@@ -1373,6 +1800,8 @@
     "status": "אישור",
     "hafrash_sqm": 1640.0,
     "hafrash_prg": "תא 1 - 2 כיתות גן (260); 3 כיתות מעון (440); תא 2 - מועדון נוער וקהילה (440); 2 בתי כנסת (500)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -1387,6 +1816,8 @@
     "status": "אישור",
     "hafrash_sqm": 360.0,
     "hafrash_prg": "מגרש 1 - חברה ותרבות (360)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -1398,8 +1829,26 @@
     "status": "הכרעה בהתנגדויות / אישור",
     "hafrash_sqm": 260.0,
     "hafrash_prg": "מגרש 101 - 2 גני ילדים (260)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education"
+    ]
+   },
+   {
+    "taba": "1037209",
+    "plan_name": "101-1037209",
+    "sub_neighborhood": "גבעת חנניה - אבו תור",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 5563.7,
+    "shavatz_out_prog": "מבנים ומוסדות ציבור: חינוך, רווחה, דת, תרבות, מוסדות קהילתיים (בי\"ס / מועדון לקשיש — ייקבע בהיתר)",
+    "domains": [
+     "culture",
+     "education",
+     "religion",
+     "welfare"
     ]
    },
    {
@@ -1409,6 +1858,8 @@
     "status": "אישור",
     "hafrash_sqm": 7250.0,
     "hafrash_prg": "מגרש 1 - 6 כיתות מעון יום (880); 4 כיתות גן (520); בי\"ס 18 כיתות (3500); 2 בתי כנסת (800); תרבות ואמנות (1400)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -1422,8 +1873,28 @@
     "status": "הכרעה בהתנגדויות / אישור",
     "hafrash_sqm": 200.0,
     "hafrash_prg": "מגרש 1 - שלוחת מתנ\"ס (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
+    ]
+   },
+   {
+    "taba": "1261510",
+    "plan_name": "101-1261510",
+    "sub_neighborhood": "קטמונים ח-ט",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 51275.0,
+    "shavatz_out_prog": "מתחם הקנגרו — חינוך: בי\"ס על-יסודי 42 כיתות (10000), בי\"ס יסודי 24 כיתות (4350), 6 גני ילדים (1030), מעונות יום 9 כיתות (1300), סדנאות/כיתות (556); ספורט: מרכז ספורט (8580), אולם ספורט (1370); תרבות: מרכז תרבות רובעי (5600); דת: 2 בתי כנסת (500), מקווה (250); רווחה: טיפת חלב ומשחקייה (500); שירותים עירוניים (1040)",
+    "domains": [
+     "culture",
+     "education",
+     "health",
+     "religion",
+     "sport",
+     "welfare"
     ]
    },
    {
@@ -1433,6 +1904,8 @@
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "חברה/פנאי/תרבות",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -1444,6 +1917,8 @@
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - דירת רווחה (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -1455,6 +1930,8 @@
     "status": "אישור",
     "hafrash_sqm": 1491.0,
     "hafrash_prg": "מגרש 1 - בית כנסת (250); מגרש 3 - מבנים ומוסדות ציבור לתרבות ופנאי (280); מגרש 6 - 3 כיתות מעון יום (441); מגרש 8 - מבנים ומוסדות ציבור (130); מגרש 9 - מבנים ומוסדות ציבור (390)",
+    "shavatz_out_sqm": 5000.0,
+    "shavatz_out_prog": "מגרש 25 - מבנים ומוסדות ציבור לחינוך (5000)",
     "domains": [
      "culture",
      "education",
@@ -1468,9 +1945,37 @@
     "status": "אישור",
     "hafrash_sqm": 394.0,
     "hafrash_prg": "מגרש 1 - מרכז תרבות/קהילה/ספורט (תיאטרון/מרכז צעירים) (394)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "sport"
+    ]
+   },
+   {
+    "taba": "1338425",
+    "plan_name": "101-1338425",
+    "sub_neighborhood": "גוננים א-ו",
+    "status": "הכרעה בהתנגדויות / אישור",
+    "hafrash_sqm": 130.0,
+    "hafrash_prg": "מגרש 1 - דירת רווחה (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "domains": [
+     "welfare"
+    ]
+   },
+   {
+    "taba": "1106863",
+    "plan_name": "101-1106863",
+    "sub_neighborhood": "בקעה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 12560.9,
+    "shavatz_out_prog": "מגרש 1 - בית ספר 48 כיתות (34000)",
+    "domains": [
+     "education"
     ]
    },
    {
@@ -1480,8 +1985,36 @@
     "status": "אישור",
     "hafrash_sqm": 300.0,
     "hafrash_prg": "לשכת רווחה (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
+    ]
+   },
+   {
+    "taba": "112557",
+    "plan_name": "101-0112557",
+    "sub_neighborhood": "גוננים",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 3000.0,
+    "shavatz_out_prog": "גני ילדים, מעונות יום ו/או כל ייעוד ציבורי אחר בהתאם לדרישות עיריית ירושלים",
+    "domains": [
+     "education"
+    ]
+   },
+   {
+    "taba": "110510",
+    "plan_name": "101-0110510",
+    "sub_neighborhood": "גוננים",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 994.0,
+    "shavatz_out_prog": "בית כנסת",
+    "domains": [
+     "religion"
     ]
    },
    {
@@ -1491,6 +2024,8 @@
     "status": "אישור",
     "hafrash_sqm": 200.0,
     "hafrash_prg": "מגרש 1 - חברה/ קהילה/ תרבות (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
     ]
@@ -1502,6 +2037,8 @@
     "status": "אישור",
     "hafrash_sqm": 780.0,
     "hafrash_prg": "רווחה (600); הכשרה תעסוקתית (180)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "welfare"
     ]
@@ -1513,8 +2050,24 @@
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "תרבות ואמנות (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture"
+    ]
+   },
+   {
+    "taba": "1252998",
+    "plan_name": "101-1252998",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "הכרעה בהתנגדויות / אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 4200.0,
+    "shavatz_out_prog": "מגרש 104 - גן ילדים 6 כיתות, מעון יום 3 כיתות, מבנה דת (4200)",
+    "domains": [
+     "education",
+     "religion"
     ]
    },
    {
@@ -1524,6 +2077,8 @@
     "status": "מאושרת",
     "hafrash_sqm": 1400.0,
     "hafrash_prg": "מגרש 202 - 2 כיתות גן (300); שימושי קהילה/רווחה/תרבות (800); מגרש 204 - שימושי קהילה/רווחה/תרבות (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "culture",
      "education",
@@ -1537,9 +2092,42 @@
     "status": "אישור",
     "hafrash_sqm": 750.0,
     "hafrash_prg": "מגרש 1 - 2 כיתות גן (260); בית כנסת (490)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "domains": [
      "education",
      "religion"
+    ]
+   },
+   {
+    "taba": "808840",
+    "plan_name": "101-0808840",
+    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 64620.0,
+    "shavatz_out_prog": "בי\"ס מקיף 30 כיתות ; 2 בתי\"ס יסודיים 12 כיתות ; גני ילדים ; מעונות יום",
+    "domains": [
+     "education"
+    ]
+   },
+   {
+    "taba": "1320233",
+    "plan_name": "101-1320233",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 31833.0,
+    "shavatz_out_prog": "בית ספר ; 2 אשכולות מעונות יום ; 2 אשכולות גני ילדים ; בית כנסת ; שימושים ציבוריים: חברה, קהילה, ספורט, תרבות, חינוך, בריאות, רווחה",
+    "domains": [
+     "culture",
+     "education",
+     "health",
+     "religion",
+     "sport",
+     "welfare"
     ]
    }
   ],
@@ -1551,6 +2139,8 @@
     "status": "אישור",
     "hafrash_sqm": 250.0,
     "hafrash_prg": "מגרש 1 - מסחר תעסוקה ומבנים ומוסדות ציבור (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "delivery": [
      {
       "asset": "גן ילדים",
@@ -1582,6 +2172,8 @@
     "status": "אישור",
     "hafrash_sqm": 300.0,
     "hafrash_prg": "מגרש 1 - מגורים ומבנים ומוסדות ציבור (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "delivery": [
      {
       "asset": "שטח מבונה בבניין",
@@ -1599,6 +2191,8 @@
     "status": "אישור",
     "hafrash_sqm": 103.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (103)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "delivery": [
      {
       "asset": "שטח מבונה בבניין",
@@ -1616,6 +2210,8 @@
     "status": "אישור",
     "hafrash_sqm": 1176.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (1176)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "delivery": [
      {
       "asset": "שטח מבונה בבניין",
@@ -1633,6 +2229,8 @@
     "status": "אישור",
     "hafrash_sqm": 120.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (120)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "delivery": [
      {
       "asset": "שטח מבונה בבניין",
@@ -1651,6 +2249,8 @@
     "status": "אישור",
     "hafrash_sqm": 204.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (204)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "delivery": [
      {
       "asset": "שטח מבונה בבניין",
@@ -1660,23 +2260,42 @@
       "built_sqm": 201.84
      }
     ]
-   }
-  ],
-  "plot_not_hafrasha": [
+   },
    {
-    "taba": "613570",
-    "plan_name": "101-0613570",
-    "sub_neighborhood": "מקור חיים",
+    "taba": "1422401",
+    "plan_name": "101-1422401",
+    "sub_neighborhood": "א.ת. תלפיות",
     "status": "אישור",
-    "hafrash_sqm": 264.0,
-    "hafrash_prg": "מבנים ומוסדות ציבור (264)",
-    "public_lot": {
-     "lot": "3",
-     "area": 264,
-     "designation": "מבנים ומוסדות ציבור"
-    }
+    "hafrash_sqm": 1635.0,
+    "hafrash_prg": "מבנים ומוסדות ציבור (935); מבנים ומוסדות ציבור ומשרדים (700)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "delivery": [
+     {
+      "asset": "שטח מבונה בבניין",
+      "cats": [
+       "גן ילדים"
+      ],
+      "built_sqm": 130.0
+     },
+     {
+      "asset": "שטח מבונה בבניין",
+      "cats": [
+       "בית כנסת"
+      ],
+      "built_sqm": 150.0
+     },
+     {
+      "asset": "שטח מבונה בבניין",
+      "cats": [
+       "מעון"
+      ],
+      "built_sqm": 440.0
+     }
+    ]
    }
   ],
+  "plot_not_hafrasha": [],
   "superseded": [
    {
     "taba": "95612",
@@ -1685,6 +2304,8 @@
     "status": "אישור",
     "hafrash_sqm": 1631.0,
     "hafrash_prg": "מגרש 201 - מגורים מסחר ומבנים ומוסדות ציבור (1631)",
+    "shavatz_out_sqm": 1604.0,
+    "shavatz_out_prog": "מגרש 103 - בריכת שחייה; מגרש 104 - מבנים ומוסדות ציבור; מגרש 201 - מגורים מסחר ומבנים ומוסדות ציבור; מגרש 301 - מבנים ומוסדות ציבור (1604)",
     "superseded_by": "101-0571190",
     "containment": 1.0
    },
@@ -1695,6 +2316,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 202.0,
     "hafrash_prg": "מועדון קשישים (202)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "superseded_by": "101-1249358",
     "containment": 0.9999
    },
@@ -1705,6 +2328,8 @@
     "status": "תבע מאושרת",
     "hafrash_sqm": 200.0,
     "hafrash_prg": "מגרש 2 - מוקד לקשיש / מרכז למיצוי זכויות (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "superseded_by": "101-1037670",
     "containment": 1.0
    },
@@ -1715,6 +2340,8 @@
     "status": "אישור",
     "hafrash_sqm": 440.0,
     "hafrash_prg": "מגרש 1 - מעונות יום/רוחה וקהילה 1 בניין (440)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "superseded_by": "101-1103571",
     "containment": 0.9977
    },
@@ -1725,18 +2352,90 @@
     "status": "אישור",
     "hafrash_sqm": 100.0,
     "hafrash_prg": "מבנים ומוסדות ציבור (100)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
     "superseded_by": "101-1443126",
     "containment": 0.9894
    }
   ],
   "no_permit": [
    {
+    "taba": "147348",
+    "plan_name": "101-0147348",
+    "sub_neighborhood": "ניות",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2721.8,
+    "shavatz_out_prog": "מגרש 10 - מרכז הדרכה לבטיחות בדרכים",
+    "sides": [
+     "shavatz"
+    ]
+   },
+   {
+    "taba": "283978",
+    "plan_name": "101-0283978",
+    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 700.0,
+    "shavatz_out_prog": "מבנים ומוסדות ציבור",
+    "sides": [
+     "shavatz"
+    ]
+   },
+   {
     "taba": "216614",
     "plan_name": "101-0216614",
     "sub_neighborhood": "א.ת. תלפיות",
     "status": "אישור",
     "hafrash_sqm": 300.0,
-    "hafrash_prg": "מגרש 2 - מבנים ומוסדות ציבור (300)"
+    "hafrash_prg": "מגרש 2 - מבנים ומוסדות ציבור (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "314617",
+    "plan_name": "101-0314617",
+    "sub_neighborhood": "טנטור",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 13433.0,
+    "shavatz_out_prog": "מכון אקדמי (טנטור): אולמות, כיתות לימוד, חדרי אירוח, מגורי סטודנטים וצוות",
+    "sides": [
+     "shavatz"
+    ]
+   },
+   {
+    "taba": "56952",
+    "plan_name": "101-0056952",
+    "sub_neighborhood": "בקעה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 360.0,
+    "shavatz_out_prog": "מבנים ומוסדות ציבור (360)",
+    "sides": [
+     "shavatz"
+    ]
+   },
+   {
+    "taba": "713222",
+    "plan_name": "101-0713222",
+    "sub_neighborhood": "בקעה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 56.0,
+    "shavatz_out_prog": "מסחר (56)",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "702662",
@@ -1744,15 +2443,25 @@
     "sub_neighborhood": "בקעה",
     "status": "אישור",
     "hafrash_sqm": 300.0,
-    "hafrash_prg": "מגרש 1 - *בתיאום מחלקת מבני ציבור* (300)"
+    "hafrash_prg": "מגרש 1 - *בתיאום מחלקת מבני ציבור* (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
-    "taba": "857086",
-    "plan_name": "101-0857086",
-    "sub_neighborhood": "גוננים א-ו",
+    "taba": "761858",
+    "plan_name": "101-0761858",
+    "sub_neighborhood": "גבעת חנניה - אבו תור",
     "status": "אישור",
     "hafrash_sqm": 0.0,
-    "hafrash_prg": "מגרש 17 - שטחים פתוחים ומבנים ומוסדות ציבור (11046)"
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 40.0,
+    "shavatz_out_prog": "תוריית (40)",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "731877",
@@ -1760,7 +2469,12 @@
     "sub_neighborhood": "מרכז ספורט מנחת - מלחה",
     "status": "אישור",
     "hafrash_sqm": 1000.0,
-    "hafrash_prg": "מגרש 2 - *בתיאום מחלקת מבני ציבור* (1000)"
+    "hafrash_prg": "מגרש 2 - *בתיאום מחלקת מבני ציבור* (1000)",
+    "shavatz_out_sqm": 5400.0,
+    "shavatz_out_prog": "מעל מפלס 691: 5000 מ\"ר מבנים לשירות הספורט; 400 מ\"ר מסחרי/ציבורי (יחסי השטחים ניתנים לשינוי ע\"י מהנדס העיר)",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "666594",
@@ -1768,7 +2482,12 @@
     "sub_neighborhood": "בית צפאפא",
     "status": "אישור",
     "hafrash_sqm": 80.0,
-    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (80)"
+    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (80)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "969162",
@@ -1776,7 +2495,12 @@
     "sub_neighborhood": "בית צפאפא",
     "status": "אישור",
     "hafrash_sqm": 1400.0,
-    "hafrash_prg": "מגרש 201 - מבנים ומוסדות ציבור (384); מגרש 203 - מבנים ומוסדות ציבור (450); מגרש 204 - מבנים ומוסדות ציבור (566)"
+    "hafrash_prg": "מגרש 201 - מבנים ומוסדות ציבור (384); מגרש 203 - מבנים ומוסדות ציבור (450); מגרש 204 - מבנים ומוסדות ציבור (566)",
+    "shavatz_out_sqm": 15975.0,
+    "shavatz_out_prog": "כיתות גן ; אשכול מעונות יום ; מבני דת ; מרכז קהילתי",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "950642",
@@ -1784,7 +2508,51 @@
     "sub_neighborhood": "בית צפאפא,שרפת",
     "status": "אישור",
     "hafrash_sqm": 130.0,
-    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (130)"
+    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "955450",
+    "plan_name": "101-0955450",
+    "sub_neighborhood": "א.ת. תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 1195.0,
+    "hafrash_prg": "מגרש 1 - 3 כיתות מעון יום (441); בית כנסת (450); שירותי קהילה ורווחה (304)",
+    "shavatz_out_sqm": 5082.0,
+    "shavatz_out_prog": "מגרש 3 - *בתיאום מחלקת מבני ציבור*; מבנים ומוסדות ציבור (5082)",
+    "sides": [
+     "shavatz"
+    ]
+   },
+   {
+    "taba": "1062645",
+    "plan_name": "101-1062645",
+    "sub_neighborhood": "א.ת. תלפיות",
+    "status": "תבע מאושרת",
+    "hafrash_sqm": 1670.0,
+    "hafrash_prg": "מגרש 501 - מבנים ומוסדות ציבור (1470); מגרש 501 - דירה לרווחה (200)",
+    "shavatz_out_sqm": 6466.0,
+    "shavatz_out_prog": "מגרש 301 - ומוסדות מבנים ציבור (6466)",
+    "sides": [
+     "shavatz"
+    ]
+   },
+   {
+    "taba": "1115484",
+    "plan_name": "101-1115484",
+    "sub_neighborhood": "קטמונים",
+    "status": "הכרעה בהתנגדויות / אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 1145.0,
+    "shavatz_out_prog": "מגרש 1A - מבנים ומוסדות ציבור (230); מגרש 1B - מבנים ומוסדות ציבור (200); מגרש 2 - מבנים ומוסדות ציבור (715)",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "1063957",
@@ -1792,7 +2560,12 @@
     "sub_neighborhood": "קטמונים ח-ט",
     "status": "אישור",
     "hafrash_sqm": 0.0,
-    "hafrash_prg": "מגרש 2 - שטחים פתוחים ומבנים ומוסדות ציבור; מגרש 8 - שטחים פתוחים ומבנים ומוסדות ציבור"
+    "hafrash_prg": "מגרש 2 - שטחים פתוחים ומבנים ומוסדות ציבור; מגרש 8 - שטחים פתוחים ומבנים ומוסדות ציבור",
+    "shavatz_out_sqm": 4772.0,
+    "shavatz_out_prog": "בית כנסת (400 מ\"ר); גני ילדים (3 כיתות); שירותי רווחה (425 מ\"ר)",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "995332",
@@ -1800,7 +2573,12 @@
     "sub_neighborhood": "רחביה",
     "status": "הכרעה בהתנגדויות / אישור",
     "hafrash_sqm": 0.0,
-    "hafrash_prg": "מגרש 401 - שטחים פתוחים ומבנים ומוסדות ציבור"
+    "hafrash_prg": "מגרש 401 - שטחים פתוחים ומבנים ומוסדות ציבור",
+    "shavatz_out_sqm": 160.0,
+    "shavatz_out_prog": "2 בתי\"ס יסודיים 18 כיתות (אוולינה דה רוטשילד, פולה בן גוריון) ; בית כנסת ; גן ילדים",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "1159722",
@@ -1808,15 +2586,26 @@
     "sub_neighborhood": "בית צפאפא",
     "status": "אישור",
     "hafrash_sqm": 290.0,
-    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (290)"
+    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (290)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "657593",
     "plan_name": "101-0657593",
     "sub_neighborhood": "גבעת המטוס",
     "status": "אישור",
-    "hafrash_sqm": 0.0,
-    "hafrash_prg": "מגרש 2-7 - מבנים ומוסדות ציבור (32650); מגרש 12 - מבנים ומוסדות ציבור (3000); מגרש 15-16 - מבנים ומוסדות ציבור (17205); מגרש 22-23 - מבנים ומוסדות ציבור (3180); מגרש 28 - מבנים ומוסדות ציבור (9740); מגרש 33-36 - מבנים ומוסדות ציבור (10010)"
+    "hafrash_sqm": 75785.0,
+    "hafrash_prg": "מגרש 2-7 - מבנים ומוסדות ציבור (32650); מגרש 12 - מבנים ומוסדות ציבור (3000); מגרש 15-16 - מבנים ומוסדות ציבור (17205); מגרש 22-23 - מבנים ומוסדות ציבור (3180); מגרש 28 - מבנים ומוסדות ציבור (9740); מגרש 33-36 - מבנים ומוסדות ציבור (10010)",
+    "shavatz_out_sqm": 3968.0,
+    "shavatz_out_prog": "מגרש 8 - מבנים ומוסדות ציבור (3968)",
+    "sides": [
+     "hafrash",
+     "shavatz"
+    ]
    },
    {
     "taba": "950691",
@@ -1824,7 +2613,25 @@
     "sub_neighborhood": "בית צפאפא,שרפת",
     "status": "אישור",
     "hafrash_sqm": 128.0,
-    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (128)"
+    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (128)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "1026574",
+    "plan_name": "101-1026574",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "אישור",
+    "hafrash_sqm": 741.0,
+    "hafrash_prg": "מגרש 2 - לשכת תיירות עירונית (300); מגרש 3 - מעון יום (441)",
+    "shavatz_out_sqm": 2000.0,
+    "shavatz_out_prog": "מגרש 4 - מבנים ומוסדות ציבור (2000)",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "1229517",
@@ -1832,7 +2639,25 @@
     "sub_neighborhood": "תלפיות - תעשייה ומסחר",
     "status": "אישור",
     "hafrash_sqm": 2150.0,
-    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור - מתחמי יצרנים (2150)"
+    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור - מתחמי יצרנים (2150)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "1191014",
+    "plan_name": "101-1191014",
+    "sub_neighborhood": "א.ת. תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 1650.0,
+    "hafrash_prg": "תא 1 (קומות 5-6) - משרדים עירוניים (904); תא 2 (קומות 5-6) - משרדים עירוניים (136); 2 כיתות גן (260); בית כנסת (350)",
+    "shavatz_out_sqm": 2670.0,
+    "shavatz_out_prog": "מגרש 3 - מבנים ומוסדות ציבור (2670)",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "1249572",
@@ -1840,7 +2665,51 @@
     "sub_neighborhood": "בית צפאפא,שרפת",
     "status": "אישור",
     "hafrash_sqm": 500.0,
-    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (250); מגרש 2 - מבנים ומוסדות ציבור (250)"
+    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (250); מגרש 2 - מבנים ומוסדות ציבור (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "1300003",
+    "plan_name": "101-1300003",
+    "sub_neighborhood": "פת",
+    "status": "אישור",
+    "hafrash_sqm": 500.0,
+    "hafrash_prg": "*בתיאום מול מחלקת מבני ציבור* (300)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "130310",
+    "plan_name": "101-0130310",
+    "sub_neighborhood": "בית צפאפא",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 284.0,
+    "shavatz_out_prog": "מבנים ומוסדות ציבור (284)",
+    "sides": [
+     "shavatz"
+    ]
+   },
+   {
+    "taba": "1239623",
+    "plan_name": "101-1239623",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 250.0,
+    "shavatz_out_prog": "מבנים ומוסדות ציבור (250)",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "1307255",
@@ -1848,7 +2717,12 @@
     "sub_neighborhood": "גינות העיר",
     "status": "הכרעה בהתנגדויות / אישור",
     "hafrash_sqm": 405.0,
-    "hafrash_prg": "מגרש 1 - *בתיאום מול מחלקת מבני ציבור* (405)"
+    "hafrash_prg": "מגרש 1 - *בתיאום מול מחלקת מבני ציבור* (405)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "1360650",
@@ -1856,7 +2730,12 @@
     "sub_neighborhood": "א.ת. תלפיות",
     "status": "אישור",
     "hafrash_sqm": 410.0,
-    "hafrash_prg": "מגרש 1 - להלן: כמפורט בלבד ציבוריים שימושים יותרו - בנוי שטח והיקפו (410)"
+    "hafrash_prg": "מגרש 1 - להלן: כמפורט בלבד ציבוריים שימושים יותרו - בנוי שטח והיקפו (410)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "1244417",
@@ -1864,15 +2743,25 @@
     "sub_neighborhood": "תלפיות ארנונה",
     "status": "אישור",
     "hafrash_sqm": 125.0,
-    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (125)"
+    "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (125)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "1420926",
     "plan_name": "101-1420926",
     "sub_neighborhood": "גוננים",
-    "status": "הכרעה בהתנגדויות / אישור",
+    "status": "אישור",
     "hafrash_sqm": 730.0,
-    "hafrash_prg": "מגרש 200 - *בתיאום מחלקת מבני ציבור* (730)"
+    "hafrash_prg": "מגרש 200 - *בתיאום מחלקת מבני ציבור* (730)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "1443126",
@@ -1880,7 +2769,12 @@
     "sub_neighborhood": "גינות העיר",
     "status": "הכרעה בהתנגדויות / אישור",
     "hafrash_sqm": 100.0,
-    "hafrash_prg": "*בתיאום מחלקת מבני ציבור* (100)"
+    "hafrash_prg": "*בתיאום מחלקת מבני ציבור* (100)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    },
    {
     "taba": "973958",
@@ -1888,7 +2782,25 @@
     "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
     "status": "אישור",
     "hafrash_sqm": 50.0,
-    "hafrash_prg": "מגרש 1 - מרכז תיירות (50)"
+    "hafrash_prg": "מגרש 1 - מרכז תיירות (50)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "1185099",
+    "plan_name": "101-1185099",
+    "sub_neighborhood": "מינהל מוסדי מלחה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 17120.0,
+    "shavatz_out_prog": "מגרש 1 - מבנים ומוסדות ציבור (17000); דיור מיוחד (19000); מגרש 4 - מבנים ומוסדות ציבור (120)",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "1252980",
@@ -1896,7 +2808,25 @@
     "sub_neighborhood": "מינהל מוסדי מלחה",
     "status": "אישור",
     "hafrash_sqm": 5680.0,
-    "hafrash_prg": "מגרש 101 - מבנים ומוסדות ציבור (5680)"
+    "hafrash_prg": "מגרש 101 - מבנים ומוסדות ציבור (5680)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
+   },
+   {
+    "taba": "581850",
+    "plan_name": "101-0581850",
+    "sub_neighborhood": "",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2276.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "shavatz"
+    ]
    },
    {
     "taba": "1258045",
@@ -1904,10 +2834,214 @@
     "sub_neighborhood": "בית צפאפא,שרפת",
     "status": "אישור",
     "hafrash_sqm": 130.0,
-    "hafrash_prg": ""
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ]
    }
   ],
   "queued": [
+   {
+    "taba": "71951",
+    "plan_name": "101-0071951",
+    "sub_neighborhood": "א.ת. תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 1009.4,
+    "shavatz_out_prog": "מגרש 301 - מבנים ומוסדות ציבור; מגרש 603 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 604 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 605 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 606 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 607 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 610 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 611 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 613 - מסחר תעסוקה ומבנים ומוסדות ציבור; מגרש 614 - מסחר תעסוקה ומבנים ומוסדות ציבור",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2018/0065.01",
+      "descr": "בקשה עבור תוספת של 3 קומות חניה מקורות ומשרדים, ו12 קומות משרדים.",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "27/09/2025",
+      "score": 10
+     },
+     {
+      "tik": "2018/0713.00",
+      "descr": "חניון ציבורי מקורה מתחת להמשך כביש פייר קניג לכיוון דרום",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "20/11/2022",
+      "score": 10
+     },
+     {
+      "tik": "2018/0713.02",
+      "descr": "מבנה גרעין היציאה מחניון ציבורי מקורה מתחת לכביש פייר קניג לכיוון דרום",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "20/11/2022",
+      "score": 10
+     },
+     {
+      "tik": "2017/0745.00",
+      "descr": "מבנה טרומי יביל המשמש משרד למגרש מכירת רכב.",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "21/07/2019",
+      "score": 10
+     },
+     {
+      "tik": "2023/0160.00",
+      "descr": "בניית חניון מחושמל לאוטובוסים חדר מיתוג חדר שנאים ומבנה שומר",
+      "permit_status": "נפתח תיק רישוי",
+      "status_date": "05/06/2023",
+      "score": 10
+     },
+     {
+      "tik": "2018/0713.01",
+      "descr": "הארכת רחוב פייר קניג מרחוב הסדנא לרחוב ברעם",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "14/01/2021",
+      "score": 10
+     },
+     {
+      "tik": "2010/0928.00",
+      "descr": "תוספת יחידות דיור לבניין קיים חד קומתי ובו חנות ויח\"ד. סה\"כ 12 יח\"ד",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "26/12/2010",
+      "score": -5
+     },
+     {
+      "tik": "2005/0415.03",
+      "descr": "פתיחת שתי וטרינות בחזיתות מנוגדות. פיתוח שטח כולל מדרגות ונגישות",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "24/12/2023",
+      "score": -5
+     },
+     {
+      "tik": "2018/0065.02",
+      "descr": "תכנית שינויים למסד מסחר ותעשייה.",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "02/05/2022",
+      "score": -30
+     },
+     {
+      "tik": "2017/0408.00",
+      "descr": "שימוש חורג מתעשייה לאולם אירועים",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "01/05/2022",
+      "score": -30
+     },
+     {
+      "tik": "2017/0408.01",
+      "descr": "שימוש חורג מתעשייה לאולם אירועים תיק עסק מס 8040628",
+      "permit_status": "תום תקופת פרסום",
+      "status_date": "01/10/2024",
+      "score": -30
+     }
+    ],
+    "low_prospect": false
+   },
+   {
+    "taba": "133884",
+    "plan_name": "101-0133884",
+    "sub_neighborhood": "בקעה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2999.0,
+    "shavatz_out_prog": "מגרש 1 - מכללה",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2016/0800.00",
+      "descr": "בניית חניון תת קרקעי, הרחבות בניה ותוספת קומה במכללת אפרתה",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "09/02/2023",
+      "score": 30
+     }
+    ],
+    "low_prospect": false
+   },
+   {
+    "taba": "189852",
+    "plan_name": "101-0189852",
+    "sub_neighborhood": "איתרי",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2278.0,
+    "shavatz_out_prog": "מגרש 1 - מבנים ומוסדות לחרום ציבור והצלה (2278)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2015/0311.00",
+      "descr": "מבנה חדש לתחנת כיבוי אש.",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "18/02/2016",
+      "score": 25
+     },
+     {
+      "tik": "2017/0976.01",
+      "descr": "פיתוח שטח מעל הפרדה מפלסית ברחוב דרך חברון",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "24/06/2021",
+      "score": 10
+     }
+    ],
+    "low_prospect": false
+   },
+   {
+    "taba": "205054",
+    "plan_name": "101-0205054",
+    "sub_neighborhood": "מקור חיים",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "שצ\"פ",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "1973/0818.07",
+      "descr": "בקשה להיתר בניה למגורים וחניון משותף (מקור חיים 33 + 35 ) - סה\"כ 27 יח\"ד",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "31/08/2023",
+      "score": -5
+     },
+     {
+      "tik": "1973/0818.08",
+      "descr": "בקשה להיתר הריסה, חפירה דיפון ורצפה ראשונה עבור 2 בניינים עם חניון אחד משותף",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "11/11/2021",
+      "score": -5
+     }
+    ],
+    "low_prospect": true
+   },
+   {
+    "taba": "132944",
+    "plan_name": "101-0132944",
+    "sub_neighborhood": "רחביה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 2225.0,
+    "shavatz_out_prog": "תעסוקה (2225)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2022/0354.00",
+      "descr": "תוספת בניה על בנין קיים עפ\"י תב\"ע 132944 הכוללת מסחר, 4 יח\"ד, 18 חדרי מלון וחניון",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "30/06/2024",
+      "score": 30
+     }
+    ],
+    "low_prospect": false
+   },
    {
     "taba": "205674",
     "plan_name": "101-0205674",
@@ -1915,13 +3049,63 @@
     "status": "אישור",
     "hafrash_sqm": 0.0,
     "hafrash_prg": "מגרש 14 - מגורים ומבנים ומוסדות ציבור",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "מגרש 14 - מבנים ומוסדות ציבור",
+    "sides": [
+     "hafrash",
+     "shavatz"
+    ],
     "candidates": [
      {
       "tik": "1982/0594.03",
       "descr": "תוספת בניה מעל בנין קיים סה\"כ 4 קומות",
-      "permit_status": "נפתח תיק רישוי",
-      "status_date": "21/09/2020",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "19/08/2026",
       "score": 15
+     }
+    ],
+    "low_prospect": false
+   },
+   {
+    "taba": "275636",
+    "plan_name": "101-0275636",
+    "sub_neighborhood": "א.ת. תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "קהילה ורווחה (1200 מ\"ר)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "מבנים ומוסדות ציבור",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2018/0065.00",
+      "descr": "בניין חדש לתעשייה קלה ומלאכה ומסחר",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "01/12/2019",
+      "score": 25
+     },
+     {
+      "tik": "2018/0065.01",
+      "descr": "בקשה עבור תוספת של 3 קומות חניה מקורות ומשרדים, ו12 קומות משרדים.",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "27/09/2025",
+      "score": 10
+     },
+     {
+      "tik": "2018/0713.01",
+      "descr": "הארכת רחוב פייר קניג מרחוב הסדנא לרחוב ברעם",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "14/01/2021",
+      "score": 10
+     },
+     {
+      "tik": "2018/0065.02",
+      "descr": "תכנית שינויים למסד מסחר ותעשייה.",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "02/05/2022",
+      "score": -30
      }
     ],
     "low_prospect": false
@@ -1933,6 +3117,11 @@
     "status": "אישור",
     "hafrash_sqm": 900.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (900)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2001/0529.07",
@@ -1949,21 +3138,102 @@
       "score": -30
      },
      {
-      "tik": "2001/0529.08",
-      "descr": "תכנית שינויים בקירות חזית ללא תוספת שטחים",
-      "permit_status": "אושר ע\"י מהנדס העיר",
-      "status_date": "16/06/2021",
-      "score": -45
-     },
-     {
       "tik": "2001/0529.10",
       "descr": "שימוש חורג למשרדים",
       "permit_status": "שולמה מקדמה",
       "status_date": "16/07/2026",
       "score": -45
+     },
+     {
+      "tik": "2001/0529.08",
+      "descr": "תכנית שינויים בקירות חזית ללא תוספת שטחים",
+      "permit_status": "אושר ע\"י מהנדס העיר",
+      "status_date": "16/06/2021",
+      "score": -45
      }
     ],
     "low_prospect": true
+   },
+   {
+    "taba": "410282",
+    "plan_name": "101-0410282",
+    "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 11375.3,
+    "shavatz_out_prog": "מגרש 1 - מבנים ומוסדות ציבור (5622); שטח לתכנון בעתיד (1635)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2021/0467.00",
+      "descr": "הקמת מבנה לקונסרבטוריון הסדנה",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "13/02/2025",
+      "score": 45
+     }
+    ],
+    "low_prospect": false
+   },
+   {
+    "taba": "415976",
+    "plan_name": "101-0415976",
+    "sub_neighborhood": "רסקו - גבעת הורדים",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 0.6,
+    "shavatz_out_prog": "",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2025/0012.00",
+      "descr": "הקמת תחנת משנה לחשמל 161/24 ק\"ו",
+      "permit_status": "נדונה בוועדת המשנה",
+      "status_date": "24/03/2026",
+      "score": 25
+     },
+     {
+      "tik": "2019/0245.01",
+      "descr": "היתר שינויים להיתר חפירה ודיפון חניון חנה וסע הקו הירוק - שלב א'",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "08/07/2021",
+      "score": 10
+     },
+     {
+      "tik": "2020/0399.00",
+      "descr": "תוספת בניה, ממדי''''ם, מרפסות ומחסנים",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "20/07/2023",
+      "score": 10
+     },
+     {
+      "tik": "2021/0174.00",
+      "descr": "היתר בניה חניון חנה וסע",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "27/02/2023",
+      "score": 10
+     },
+     {
+      "tik": "2021/0121.00",
+      "descr": "היתר בניה מנהרות, מרכז אנרגיה, מדרגות מילוט .",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "25/01/2024",
+      "score": 10
+     },
+     {
+      "tik": "2013/0657.02",
+      "descr": "שינוי ותוספת שטחים להיתר קיים 2013/0657.01",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "17/09/2020",
+      "score": -5
+     }
+    ],
+    "low_prospect": false
    },
    {
     "taba": "571190",
@@ -1972,6 +3242,12 @@
     "status": "אישור",
     "hafrash_sqm": 1631.0,
     "hafrash_prg": "מגרש 201 - מבנים ומוסדות ציבור (1631)",
+    "shavatz_out_sqm": 1604.0,
+    "shavatz_out_prog": "מגרש 301 - מבנים ומוסדות ציבור (1604)",
+    "sides": [
+     "hafrash",
+     "shavatz"
+    ],
     "candidates": [
      {
       "tik": "2017/0384.02",
@@ -1991,12 +3267,75 @@
     "low_prospect": false
    },
    {
+    "taba": "575456",
+    "plan_name": "101-0575456",
+    "sub_neighborhood": "צפון תלפיות",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 8168.0,
+    "shavatz_out_prog": "מגרש 9 - מוסד כלל עירוני (בית הידידות, כמאושר בבמ/2954/גי) (8,168)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2023/0487.00",
+      "descr": "",
+      "permit_status": "GS",
+      "status_date": "",
+      "score": 50
+     }
+    ],
+    "low_prospect": false
+   },
+   {
+    "taba": "613570",
+    "plan_name": "101-0613570",
+    "sub_neighborhood": "מקור חיים",
+    "status": "אישור",
+    "hafrash_sqm": 264.0,
+    "hafrash_prg": "מבנים ומוסדות ציבור (264)",
+    "shavatz_out_sqm": 100.0,
+    "shavatz_out_prog": "מגרש 3 - מבנים ומוסדות ציבור (100)",
+    "public_lot": {
+     "lot": "3",
+     "area": 264,
+     "designation": "מבנים ומוסדות ציבור"
+    },
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2022/0225.01",
+      "descr": "",
+      "permit_status": "GS",
+      "status_date": "",
+      "score": 50
+     },
+     {
+      "tik": "2022/0225.00",
+      "descr": "מבנה לשימור בחזית המגרש והריסת מבנה אחורי ובנייה חדשה של מבנה מגורים 39 יח\"ד",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "09/09/2026",
+      "score": 25
+     }
+    ],
+    "low_prospect": false
+   },
+   {
     "taba": "696104",
     "plan_name": "101-0696104",
     "sub_neighborhood": "מרכז ספורט מנחת - מלחה",
     "status": "אישור",
     "hafrash_sqm": 4000.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (4000)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2024/0446.00",
@@ -2023,12 +3362,93 @@
     "low_prospect": false
    },
    {
+    "taba": "740555",
+    "plan_name": "101-0740555",
+    "sub_neighborhood": "גוננים א-ו",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 300.0,
+    "shavatz_out_prog": "מסחר (300)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2014/0732.03",
+      "descr": "פיצול היתר לבניית חדר טרנספורמציה בשלב א'",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "30/10/2022",
+      "score": -5
+     },
+     {
+      "tik": "2014/0732.02",
+      "descr": "תוספת קומה באמצע הבנין הכוללת תוספת 7 יח\"ד להשכרה ארוכת טווח, ותוספות בניה בבנין.",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "10/01/2023",
+      "score": -5
+     }
+    ],
+    "low_prospect": true
+   },
+   {
+    "taba": "844969",
+    "plan_name": "101-0844969",
+    "sub_neighborhood": "גינות העיר",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 1149.1,
+    "shavatz_out_prog": "מגרש 1 - מבנים ומוסדות ציבור (5904)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2022/0409.01",
+      "descr": "פירוק והריסה חלק של בניין קיים ללא שימור",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "21/05/2023",
+      "score": 30
+     }
+    ],
+    "low_prospect": false
+   },
+   {
+    "taba": "827956",
+    "plan_name": "101-0827956",
+    "sub_neighborhood": "בית צפאפא",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 247.0,
+    "shavatz_out_prog": "מבנים ומוסדות ציבור (247)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2025/0066.00",
+      "descr": "",
+      "permit_status": "GS",
+      "status_date": "",
+      "score": 50
+     }
+    ],
+    "low_prospect": false
+   },
+   {
     "taba": "1161439",
     "plan_name": "101-1161439",
     "sub_neighborhood": "קטמון הישנה",
     "status": "אישור",
     "hafrash_sqm": 130.0,
     "hafrash_prg": "מגרש 1 - *בתיאום מחלקת מבני ציבור* (130)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2024/0426.01",
@@ -2047,6 +3467,11 @@
     "status": "אישור",
     "hafrash_sqm": 150.0,
     "hafrash_prg": "מגרש 1 - מבנים ומוסדות ציבור (150)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2024/0466.00",
@@ -2065,6 +3490,11 @@
     "status": "אישור",
     "hafrash_sqm": 200.0,
     "hafrash_prg": "מגרש 2 - מבנים ומוסדות ציבור (200)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2023/0109.01",
@@ -2077,12 +3507,77 @@
     "low_prospect": false
    },
    {
+    "taba": "1278407",
+    "plan_name": "101-1278407",
+    "sub_neighborhood": "בקעה",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "מסחר (180)",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "1996/0943.05",
+      "descr": "תוספת בניה בהתאם לתב\"ע 101-1278407",
+      "permit_status": "נפתח תיק רישוי",
+      "status_date": "08/02/2026",
+      "score": -5
+     }
+    ],
+    "low_prospect": true
+   },
+   {
+    "taba": "181933",
+    "plan_name": "101-0181933",
+    "sub_neighborhood": "גוננים",
+    "status": "אישור",
+    "hafrash_sqm": 0.0,
+    "hafrash_prg": "",
+    "shavatz_out_sqm": 292.5,
+    "shavatz_out_prog": "",
+    "sides": [
+     "shavatz"
+    ],
+    "candidates": [
+     {
+      "tik": "2018/0184.00",
+      "descr": "בנית בניין חדש למגורים, 25 יח\"ד ברח' יהודה הנשיא",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "09/02/2023",
+      "score": 25
+     },
+     {
+      "tik": "2022/0095.00",
+      "descr": "תוספת 6 כיתות ספח במבנים יבילים לבית ספר שחרית",
+      "permit_status": "הופק-הוצא היתר בניה",
+      "status_date": "06/12/2022",
+      "score": 10
+     },
+     {
+      "tik": "1999/0112.00",
+      "descr": ".0יית בנין חדש מגורים ומסחר",
+      "permit_status": "הבקשה נסגרה",
+      "status_date": "16/03/2017",
+      "score": -5
+     }
+    ],
+    "low_prospect": false
+   },
+   {
     "taba": "1048347",
     "plan_name": "101-1048347",
     "sub_neighborhood": "מקור חיים",
     "status": "אישור",
     "hafrash_sqm": 4660.0,
     "hafrash_prg": "מגרש 140 - מבנים ומוסדות ציבור (2060); מגרש 141 - מבנים ומוסדות ציבור (2600)",
+    "shavatz_out_sqm": 37302.0,
+    "shavatz_out_prog": "בי\"ס יסודי חדש ; בית כנסת ; שטחי חינוך, תרבות ופנאי",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2025/0102.00",
@@ -2101,6 +3596,11 @@
     "status": "אישור",
     "hafrash_sqm": 250.0,
     "hafrash_prg": "מבנים ומוסדות ציבור (250)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2025/0483.01",
@@ -2119,6 +3619,11 @@
     "status": "אישור",
     "hafrash_sqm": 15.0,
     "hafrash_prg": "מגרש 401 - מבנה ציבור בשצ\"פ (15)",
+    "shavatz_out_sqm": 0.0,
+    "shavatz_out_prog": "",
+    "sides": [
+     "hafrash"
+    ],
     "candidates": [
      {
       "tik": "2025/0258.00",
