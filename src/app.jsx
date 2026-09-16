@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-maon-final-nun';
+        const APP_VERSION = '2026-09-16-book-built-sqm';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11197,6 +11197,33 @@
                     return { use: 'מבני ציבור — לפי ספר הנכסים: ' + cats.join(', '),
                              doms: hafrashUseDomainsAll(cats.join(', ')) };
                 }
+                // …and HOW MUCH of each. The assets carry a measured built_sqm, so when a plan's
+                // assets fall into more than one category set they say the proportions — the
+                // sheet still supplies the total, because that is what the KPIs add up.
+                // Returns [{use, doms, sqm}] summing to `figure`, or null when there is nothing
+                // to split: no assets, one category set (deliveryUseFor already names it), or no
+                // measured area at all.
+                function deliveryRowsFor(taba, source, figure) {
+                    if (source !== 'הפרשה מבונה' || !(figure > 0)) return null;
+                    const groups = {};
+                    (_dlvByTaba[taba] || []).forEach(a => {
+                        const cs = (a.cats || []).slice().sort();
+                        if (!cs.length) return;
+                        const k = cs.join(', ');
+                        if (!groups[k]) groups[k] = { label: k, sqm: 0 };
+                        groups[k].sqm += (a.built_sqm || 0);
+                    });
+                    // an unmeasured group would come out as a 0 מ"ר row, which says nothing
+                    const list = Object.keys(groups).map(k => groups[k]).filter(g => g.sqm > 0);
+                    if (list.length < 2) return null;
+                    const total = list.reduce((acc, g) => acc + g.sqm, 0);
+                    if (!(total > 0)) return null;
+                    return list.map(g => ({
+                        use: 'מבני ציבור — לפי ספר הנכסים: ' + g.label,
+                        doms: hafrashUseDomainsAll(g.label),
+                        sqm: figure * (g.sqm / total),
+                    }));
+                }
                 const detailRows = [];
                 // Rows where the מ"ר written next to the individual uses add up to MORE than the
                 // plan's own figure in the sheet - usually the text lists area bands (below-grade
@@ -11289,18 +11316,33 @@
                         const baseSqm = totalSqm > 0 ? totalSqm : (uncategorizedSqm || 0);
                         // Segments the key parser left alone but which state their own figure.
                         const segRows = [];
+                        // Segments that name nothing are pooled and answered once. 101-1131192
+                        // calls both מגרש 8 and מגרש 9 "מבנים ומוסדות ציבור"; splitting each by
+                        // the same plan-wide asset ratios printed "גן ילדים" twice and claimed a
+                        // per-parcel breakdown nobody measured, while splitting only when there
+                        // is exactly one such segment threw the evidence away. The assets cannot
+                        // say WHICH lot, so the answer is given once for their combined area.
+                        const genericSegs = [];
                         prgSegments(prg).forEach(seg => {
                             const v = segFigure(seg);
                             if (!(v > 0)) return;
                             if (parseFacilitiesDetailed(seg).items.length) return;   // already a named key
+                            const label = seg.replace(/\([^)]*\)/, '').replace(/[\s,;\-–—]+$/, '').trim() || seg;
                             const segDoms = hafrashUseDomainsAll(seg);
-                            const dlvU = segDoms.length ? null : deliveryUseFor(r.taba, source);
-                            segRows.push({
-                                use: dlvU ? dlvU.use
-                                    : (seg.replace(/\([^)]*\)/, '').replace(/[\s,;\-–—]+$/, '').trim() || seg),
-                                sqm: v, doms: dlvU ? dlvU.doms : segDoms,
-                            });
+                            if (segDoms.length) segRows.push({ use: label, sqm: v, doms: segDoms });
+                            else genericSegs.push({ use: label, sqm: v });
                         });
+                        const genericSqm = genericSegs.reduce((acc, x) => acc + x.sqm, 0);
+                        const dlvSplit = deliveryRowsFor(r.taba, source, genericSqm);
+                        if (dlvSplit) {
+                            dlvSplit.forEach(x => segRows.push(x));
+                        } else {
+                            const dlvU = genericSegs.length ? deliveryUseFor(r.taba, source) : null;
+                            genericSegs.forEach(g => segRows.push({
+                                use: dlvU ? dlvU.use : g.use,
+                                sqm: g.sqm, doms: dlvU ? dlvU.doms : [],
+                            }));
+                        }
                         const segSqm = segRows.reduce((acc, x) => acc + x.sqm, 0);
                         const residualSqm = Math.max(0, baseSqm - attributedSqm - segSqm);
                         let envelopeSqm = residualSqm;
@@ -11372,6 +11414,15 @@
                                 // so they must override it for the area split too - otherwise the row
                                 // would read "בית כנסת" on screen and be counted under whatever domain
                                 // the plan text happened to name.
+                                const dlvRows = deliveryRowsFor(r.taba, source, envelopeSqm);
+                                if (dlvRows) {
+                                    dlvRows.forEach(x => detailRows.push({
+                                        taba: r.taba, name: r.name, status: r.status, sub: r.sub,
+                                        source, use: x.use, doms: x.doms, count: 0, unit: '', sqm: x.sqm,
+                                    }));
+                                    envelopeSqm = 0;
+                                    return;   // nothing follows in this source's callback
+                                }
                                 const dlvU = deliveryUseFor(r.taba, source);
                                 if (dlvU) {
                                     use = dlvU.use;
