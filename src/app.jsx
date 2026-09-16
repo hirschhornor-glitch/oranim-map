@@ -37481,7 +37481,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         // ל-361 — וההיתרים אכן על 362. בלי זה כל הגדלת זכויות נראית כחריגה של
                         // התכנית שמתחתיה. הזיהוי: חפיפה מרחבית (≥50%, ממפת החפיפות), אישור מאוחר,
                         // סך גדול יותר, ו"נכנס" של המאוחרת ≈ הסך של המוקדמת (או סוג הגדלת זכויות).
-                        const oMapX = overlapMapRef.current;
+                        // reading overlapReady ties this report to the worker that builds the
+                        // overlap map: open the report before it finishes and the raiser column is
+                        // simply empty, with no signal that it is merely early. The state flip
+                        // re-renders the report with the map in hand.
+                        const oMapX = overlapReady ? overlapMapRef.current : null;
                         const byTabaX = window.__planByTaba || {};
                         const planYearX = pr => {
                             const m = String((pr && pr.mavat_date) || '').match(/(\d{4})/);
@@ -37574,6 +37578,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const nBonus = view.filter(r => r.bonusUnits).length;
                         const nHak = view.filter(r => r.hakExtra).length;
                         const nReal = view.filter(r => r.realized).length;
+                        const nRaise = view.filter(r => r.raiseUnits).length;
 
                         const SEL = { background: '#0d1428', color: '#dbe4f5', border: '1px solid #2a3a5e',
                             borderRadius: 5, padding: '4px 7px', fontSize: 12, fontFamily: 'inherit', minWidth: 130 };
@@ -37593,13 +37598,17 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'יח"ד בתב"ע',
                             'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'תכנית מאוחרת מגדילה', 'יח"ד בהיתרים',
                             'תוספת בפועל', 'ללא מקור מתועד', 'המקור'];
-                        const srcLabel = r => (r.raiseUnits && r.realized && r.realized <= r.raiseUnits + r.condUnits + r.bonusUnits)
-                                ? ('תכנית מאוחרת מגדילה · ' + r.raiserName)
-                            : r.hakExtra ? ('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''))
-                            : (r.condUnits && r.realized && r.realized <= r.condUnits + r.bonusUnits) ? 'יח"ד מותנות שמומשו'
-                            : r.bonusUnits ? ('הערת טבלה 5 · עד ' + r.bonusPct + '%')
-                            : r.condUnits ? 'יח"ד מותנות' + (r.realized ? ' (חלקי)' : '')
-                            : r.realized ? 'תוספת בהיתר ללא מקור מתועד' : '';
+                        // every channel that covers this row, and what is left over. A row is
+                        // rarely one story: משתלת חוות הנוער is 45 from a later plan and 1 beyond it.
+                        const srcLabel = r => {
+                            const parts = [];
+                            if (r.raiseUnits) parts.push('תכנית מאוחרת מגדילה · ' + r.raiserName);
+                            if (r.hakExtra) parts.push('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''));
+                            if (r.condUnits) parts.push('יח"ד מותנות');
+                            if (r.bonusUnits) parts.push('הערת טבלה 5 · עד ' + r.bonusPct + '%');
+                            if (r.unexplained) parts.push(parts.length ? 'ועוד ' + r.unexplained + ' ללא מקור' : 'תוספת בהיתר ללא מקור מתועד');
+                            return parts.join(' · ');
+                        };
                         const csvEscape = s => `"${String(s == null ? '' : s).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ')}"`;
                         const exportCsv = () => {
                             const lines = [COLS.map(csvEscape).join(',')].concat(view.map(r => [
@@ -37690,12 +37699,13 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     </div>
 
                                     <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 12 }}>
-                                        {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nReal + ' בפועל', '#dbe4f5')}
+                                        {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5')}
                                         {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
                                         {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
                                         {tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2')}
                                         {tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041')}
-                                        {tile('תכנית מאוחרת מגדילה', nf(T.raise), 'הגדלת זכויות מעל התכנית', '#80cbc4')}
+                                        {tile('תכנית מאוחרת מגדילה', nf(T.raise),
+                                            overlapReady ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4')}
                                         {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
                                         {tile('ללא מקור מתועד', nf(T.unexplained), 'לבדיקה', '#ff9aa8')}
                                     </div>
