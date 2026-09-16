@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-delivery-labels';
+        const APP_VERSION = '2026-09-16-alloc-legend';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11082,7 +11082,36 @@
                         (fd.length
                             ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody id="alloc-tbody">' + buildPlanRows() + '</tbody></table>'
                             : '<div style="color:#999;font-size:13px;padding:10px">' +
-                              (stageFilter === 'all' ? 'לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.' : 'אין הפרשות בסטטוס "' + esc(filterLabel()) + '" בתחום הנבחר.') + '</div>');
+                              (stageFilter === 'all' ? 'לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.' : 'אין הפרשות בסטטוס "' + esc(filterLabel()) + '" בתחום הנבחר.') + '</div>') +
+                        buildLegend();
+                }
+                // Printed with the table, so the two columns that are easy to misread
+                // carry their explanation into the PDF as well as the screen.
+                function buildLegend() {
+                    const meta = (window.__hafrashaDelivery || {}).meta || {};
+                    let assets = 0, reg = 0;
+                    rows.forEach(r => {
+                        const list = _dlvByTaba[String(r.taba || '').trim()];
+                        if (!Array.isArray(list)) return;
+                        assets += list.length;
+                        list.forEach(a => { if (deliveryAssetState(a).key === 'registered') reg++; });
+                    });
+                    const dot = (c) => '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + c + ';margin-left:4px"></span>';
+                    return '<div style="margin-top:12px;padding:8px 10px;background:#1f1a16;border:1px solid #3a2e26;border-radius:6px;font-size:11px;color:#a89a8a;line-height:1.75">' +
+                        '<div style="color:#d4a373;font-weight:bold;margin-bottom:3px">מקרא</div>' +
+                        '<div><b style="color:#c9c0b4">סטטוס</b> — הסטטוס הסטטוטורי של התכנית, ' +
+                            'אלא אם יש לה היתר בנייה ואז מוצג <span style="color:#4ba1f0">היתרים</span>. ' +
+                            '"היתרים" היא קטגוריה כללית שמכסה מטרום-רישוי ועד גמר בנייה — סמן "פירוט שלב ההיתר" כדי לראות את השלב בפועל.</div>' +
+                        '<div><b style="color:#c9c0b4">מסירה בפועל</b> — הצלבה מול ספר הנכסים העירוני' +
+                            (meta.source_refresh ? ' (עדכון ' + esc(meta.source_refresh) + ')' : '') +
+                            '. <b>המספר בסוגריים הוא מספר הנכסים, לא מ"ר.</b><br>' +
+                            dot('#86b89a') + '<b>נרשם</b> — הבעלות נרשמה על שם העירייה · ' +
+                            dot('#e0c08a') + '<b>כתב התחייבות</b> — נחתם אך טרם נרשם · ' +
+                            dot('#c9a227') + '<b>טרם נרשם</b> — תיק ההפרשה נפתח בלבד · ' +
+                            '<b>—</b> לא נמצא נכס מתאים (ייתכן שהתהליך טרם נפתח, וייתכן שההצלבה הגיאוגרפית פספסה)</div>' +
+                        (assets ? '<div style="color:#8a7a6a">בתחום זה: ' + assets + ' נכסי הפרשה נפתחו, מהם <b style="color:' +
+                            (reg ? '#86b89a' : '#c9a227') + '">' + reg + '</b> רשומים על שם העירייה.</div>' : '') +
+                        '</div>';
                 }
                 function buildFilterOptions() {
                     const counts = {};
@@ -37447,6 +37476,38 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const F = extraUnitsFilter;
                         const setF = (k, v) => setExtraUnitsFilter({ ...F, [k]: v });
                         const nf = v => (v == null || !isFinite(v)) ? '—' : Math.round(v).toLocaleString('he-IL');
+                        // תכנית מאוחרת שמגדילה את הקודמת. 101-0250563 (משתלת חוות הנוער) מתכננת
+                        // 316, ומעליה 101-1021344 "הגדלת זכויות - המשתלה" שלוקחת 316 נכנס ומעלה
+                        // ל-361 — וההיתרים אכן על 362. בלי זה כל הגדלת זכויות נראית כחריגה של
+                        // התכנית שמתחתיה. הזיהוי: חפיפה מרחבית (≥50%, ממפת החפיפות), אישור מאוחר,
+                        // סך גדול יותר, ו"נכנס" של המאוחרת ≈ הסך של המוקדמת (או סוג הגדלת זכויות).
+                        const oMapX = overlapMapRef.current;
+                        const byTabaX = window.__planByTaba || {};
+                        const planYearX = pr => {
+                            const m = String((pr && pr.mavat_date) || '').match(/(\d{4})/);
+                            return m ? parseInt(m[1], 10) : 0;
+                        };
+                        const findRaiser = (props, base) => {
+                            if (!oMapX || !base) return null;
+                            const nbrs = oMapX.get(String(props.taba || '').trim());
+                            if (!nbrs) return null;
+                            let best = null, bestTot = 0;
+                            nbrs.forEach(nb => {
+                                const B = byTabaX[String(nb).trim()];
+                                if (!B) return;
+                                const tot = parseFloat(B.units_total) || 0;
+                                if (tot <= base) return;
+                                const ya = planYearX(props), yb = planYearX(B);
+                                if (ya && yb && yb < ya) return;
+                                const inn = parseFloat(B.units_in) || 0;
+                                const kind = (B.plan_type || '') + ' ' + (B.plan_name_he || '');
+                                const signal = Math.abs(inn - base) <= Math.max(2, base * 0.02)
+                                    || kind.indexOf('זכויות') !== -1 || kind.indexOf('עיבוי') !== -1;
+                                if (!signal) return;
+                                if (tot > bestTot) { best = B; bestTot = tot; }
+                            });
+                            return best;
+                        };
                         const rows = [];
                         const seen = new Set();
                         ((gd.plans && gd.plans.features) || []).forEach(f => {
@@ -37464,6 +37525,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const bonus = planUnitBonus(p);
                             const bonusUnits = bonus ? planBonusUnits(p) : 0;
                             const condUnits = planConditionalUnits(p);
+                            const raiser = findRaiser(p, base);
+                            const raiseUnits = raiser ? Math.max(0, (parseFloat(raiser.units_total) || 0) - base) : 0;
                             const hakRecs = permitsHakalaRecords(permits, inclusion);
                             const hakExtra = permitsHakalaExtra(permits, inclusion);
                             // A plan with no unit count of its own (a rights/setback amendment whose
@@ -37473,14 +37536,16 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const realized = base > 0 ? Math.max(0, permitUnits - base) : 0;
                             // what the plan or a committee decision already accounts for. A טבלה 5 note
                             // is an ALLOWANCE (may never be used); a הקלה is a decision already taken.
-                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits);
-                            if (!bonusUnits && !hakExtra && !realized && !condUnits) return;
+                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits);
+                            if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits) return;
                             rows.push({
                                 taba, plan_name: p.plan_name || ('101-' + taba),
                                 name: p.plan_summary || p.plan_name_he || '',
                                 minahak: p.minahak || '', sub: p.sub_neighborhood || '',
                                 status: p.status_mavat || '', base, permitUnits, realized,
                                 bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: bonus ? bonus.note : '', condUnits,
+                                raiseUnits, raiserName: raiser ? (raiser.plan_name || '') : '',
+                                raiserTitle: raiser ? (raiser.plan_summary || raiser.plan_name_he || '') : '',
                                 hakExtra, hakPct: hakRecs.map(r => r.pct).filter(Boolean)[0] || 0,
                                 hakWhen: hakRecs.map(r => r.decision_date).filter(Boolean)[0] || '',
                                 hakText: hakRecs.map(r => (r.published || [])[0]).filter(Boolean)[0] || '',
@@ -37497,13 +37562,15 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (F.src === 'hakala' && !r.hakExtra) return false;
                             if (F.src === 'realized' && !r.realized) return false;
                             if (F.src === 'conditional' && !r.condUnits) return false;
+                            if (F.src === 'raise' && !r.raiseUnits) return false;
                             if (F.src === 'unexplained' && !r.unexplained) return false;
                             if (q && (r.name + ' ' + r.plan_name + ' ' + r.minahak).indexOf(q) === -1) return false;
                             return true;
                         }).sort((a, b) => (b.realized - a.realized) || (b.bonusUnits + b.hakExtra) - (a.bonusUnits + a.hakExtra));
                         const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
                         const T = { base: sum(view, 'base'), bonus: sum(view, 'bonusUnits'), hak: sum(view, 'hakExtra'),
-                            cond: sum(view, 'condUnits'), realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
+                            cond: sum(view, 'condUnits'), raise: sum(view, 'raiseUnits'),
+                            realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
                         const nBonus = view.filter(r => r.bonusUnits).length;
                         const nHak = view.filter(r => r.hakExtra).length;
                         const nReal = view.filter(r => r.realized).length;
@@ -37524,9 +37591,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             </div>
                         );
                         const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'יח"ד בתב"ע',
-                            'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'יח"ד בהיתרים',
+                            'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'תכנית מאוחרת מגדילה', 'יח"ד בהיתרים',
                             'תוספת בפועל', 'ללא מקור מתועד', 'המקור'];
-                        const srcLabel = r => r.hakExtra ? ('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''))
+                        const srcLabel = r => (r.raiseUnits && r.realized && r.realized <= r.raiseUnits + r.condUnits + r.bonusUnits)
+                                ? ('תכנית מאוחרת מגדילה · ' + r.raiserName)
+                            : r.hakExtra ? ('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''))
                             : (r.condUnits && r.realized && r.realized <= r.condUnits + r.bonusUnits) ? 'יח"ד מותנות שמומשו'
                             : r.bonusUnits ? ('הערת טבלה 5 · עד ' + r.bonusPct + '%')
                             : r.condUnits ? 'יח"ד מותנות' + (r.realized ? ' (חלקי)' : '')
@@ -37535,6 +37604,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const exportCsv = () => {
                             const lines = [COLS.map(csvEscape).join(',')].concat(view.map(r => [
                                 r.plan_name, r.name, r.minahak, r.status, r.base, r.condUnits || '', r.bonusUnits || '', r.hakExtra || '',
+                                r.raiseUnits ? (r.raiseUnits + ' (' + r.raiserName + ')') : '',
                                 r.permitUnits || '', r.realized || '', r.unexplained || '',
                                 srcLabel(r) + (r.hakTiks ? ' (' + r.hakTiks + ')' : '')].map(csvEscape).join(',')));
                             const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -37549,6 +37619,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const body = view.map(r => '<tr>' + [r.plan_name, r.name, r.minahak, r.status, nf(r.base),
                                 r.condUnits ? nf(r.condUnits) : '—',
                                 r.bonusUnits ? nf(r.bonusUnits) : '—', r.hakExtra ? nf(r.hakExtra) : '—',
+                                r.raiseUnits ? (nf(r.raiseUnits) + ' ' + r.raiserName) : '—',
                                 r.permitUnits ? nf(r.permitUnits) : '—', r.realized ? nf(r.realized) : '—',
                                 r.unexplained ? nf(r.unexplained) : '—', srcLabel(r)]
                                 .map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>').join('');
@@ -37561,6 +37632,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 + '<h1>תוספות יח"ד מעבר לתכנית המקורית</h1>'
                                 + '<div class="sum">' + view.length + ' תכניות · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
                                 + ' · יח"ד מותנות: ' + nf(T.cond)
+                                + ' · תכנית מאוחרת מגדילה: ' + nf(T.raise)
                                 + ' · הקלות שאושרו בהיתר: ' + nf(T.hak) + ' · תוספת בפועל בהיתרים: ' + nf(T.realized)
                                 + ' · ללא מקור מתועד: ' + nf(T.unexplained) + '</div>'
                                 + '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
@@ -37586,6 +37658,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         <b style={{ color: '#5dade2' }}>הערת טבלה 5</b> — זכות שהתכנית נותנת מראש (עד N%), עשויה לא להתממש;{' '}
                                         <b style={{ color: '#f5b041' }}>הקלה שאושרה בהיתר</b> — החלטת ועדת רישוי על בקשה מסוימת;{' '}
                                         <b style={{ color: '#b39ddb' }}>יח"ד מותנות</b> — יחידות שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) ויושבות מחוץ ל-יח"ד שבתב"ע;{' '}
+                                        <b style={{ color: '#80cbc4' }}>תכנית מאוחרת שמגדילה</b> — הגדלת זכויות שאושרה מעל התכנית ומרימה את התקרה בפועל;{' '}
                                         <b style={{ color: '#ff9aa8' }}>תוספת בפועל</b> — ההפרש בין היח"ד בהיתרים לבין התב"ע, גם כשאין לו מקור מתועד אצלנו.
                                         התוספת בפועל אינה סכום של השניים הראשונים אלא מה שההיתרים מראים.
                                     </p>
@@ -37598,6 +37671,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 <option value="table5">הערת טבלה 5</option>
                                                 <option value="hakala">הקלה שאושרה בהיתר</option>
                                                 <option value="conditional">יח"ד מותנות</option>
+                                                <option value="raise">תכנית מאוחרת שמגדילה</option>
                                                 <option value="realized">תוספת בפועל בהיתרים</option>
                                                 <option value="unexplained">תוספת ללא מקור מתועד</option>
                                             </select></div>
@@ -37621,6 +37695,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
                                         {tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2')}
                                         {tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041')}
+                                        {tile('תכנית מאוחרת מגדילה', nf(T.raise), 'הגדלת זכויות מעל התכנית', '#80cbc4')}
                                         {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
                                         {tile('ללא מקור מתועד', nf(T.unexplained), 'לבדיקה', '#ff9aa8')}
                                     </div>
@@ -37646,6 +37721,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                         {r.bonusUnits ? nf(r.bonusUnits) + ' (' + r.bonusPct + '%)' : '—'}</td>
                                                     <td style={{ ...TD, color: r.hakExtra ? '#f5b041' : '#55617a' }} title={r.hakText}>
                                                         {r.hakExtra ? nf(r.hakExtra) + (r.hakPct ? ' (' + r.hakPct + '%)' : '') : '—'}</td>
+                                                    <td style={{ ...TD, color: r.raiseUnits ? '#80cbc4' : '#55617a' }}
+                                                        title={r.raiserTitle ? r.raiserName + ' — ' + r.raiserTitle : ''}>
+                                                        {r.raiseUnits ? nf(r.raiseUnits) + ' · ' + r.raiserName : '—'}</td>
                                                     <td style={TD}>{r.permitUnits ? nf(r.permitUnits) : '—'}</td>
                                                     <td style={{ ...TD, fontWeight: 700, color: r.realized ? '#7fc98a' : '#55617a' }}>
                                                         {r.realized ? nf(r.realized) : '—'}</td>
