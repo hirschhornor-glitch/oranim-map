@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-conditional';
+        const APP_VERSION = '2026-09-16-delivery-labels';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -527,6 +527,37 @@
         // "היתרים" is a bucket, not a stage: a plan can hold permits anywhere from pre-licensing to
         // גמר בנייה. Higher = further along; used to pick the most advanced permit on a plan/plot.
         const PERMIT_STAGE_PRIO = { built: 5, construction: 4, issued: 3, licensing: 2, pre_licensing: 1, done: 0 };
+        // "מסירה בפועל" — how far a הפרשה asset has actually travelled in the municipal
+        // property book. The stored `state` is binary (נמסר / בתהליך) and "בתהליך" reads
+        // as though building work were under way, when all it means is that the city
+        // opened a file and nothing is registered yet — as of 09/2026 that is EVERY one
+        // of the 139 assets. So the label is derived from the asset's own סטטוס, which
+        // does distinguish a signed undertaking from a merely-opened process.
+        function deliveryAssetState(a) {
+            const st = String((a && a.status) || '');
+            if (st.indexOf('נרשם') !== -1) return { key: 'registered', label: 'נרשם ע"ש העירייה', color: '#86b89a' };
+            if (st.indexOf('התחייבות') !== -1) return { key: 'undertaking', label: 'נחתם כתב התחייבות', color: '#e0c08a' };
+            return { key: 'opened', label: 'טרם נרשם', color: '#c9a227' };
+        }
+        // Per-plan roll-up: {text, color, title} or null when the plan has no assets.
+        function deliverySummary(list) {
+            if (!Array.isArray(list) || !list.length) return null;
+            const n = list.length;
+            let reg = 0, und = 0;
+            list.forEach(a => {
+                const k = deliveryAssetState(a).key;
+                if (k === 'registered') reg++;
+                else if (k === 'undertaking') und++;
+            });
+            const title = n + ' נכסי הפרשה נפתחו בספר הנכסים העירוני' +
+                ' · ' + reg + ' נרשמו ע"ש העירייה' +
+                ' · ' + und + ' בכתב התחייבות' +
+                ' · ' + (n - reg - und) + ' תהליך נפתח בלבד';
+            if (reg >= n) return { text: 'נרשם (' + n + ')', color: '#86b89a', title: title };
+            if (reg > 0) return { text: 'נרשם חלקית (' + reg + '/' + n + ')', color: '#86b89a', title: title };
+            if (und > 0) return { text: 'כתב התחייבות (' + und + '/' + n + ')', color: '#e0c08a', title: title };
+            return { text: 'טרם נרשם (' + n + ')', color: '#c9a227', title: title };
+        }
         // Max plausible classroom count for a school. A school's parenthetical value at or below this
         // is read as classes; above it, as an area in m² (real school areas are ≥ ~1000 m²).
         const SCHOOL_CLASS_CAP = 150;
@@ -10860,17 +10891,16 @@
                     return { label: getPermitStageLabel(stage), color: getPermitStageColor(stage), permit: true };
                 }
                 // "מסירה בפועל" — delivery-evidence assets per plan from the muni
-                // property book join (data/hafrasha_delivery.json). A plan is "נמסר"
-                // when all its assets are registered in the city's name, partial when
-                // some are, otherwise "בתהליך".
+                // property book join (data/hafrasha_delivery.json), labelled by
+                // deliverySummary() so the column reports what actually happened
+                // instead of the ambiguous "בתהליך".
                 const _dlvByTaba = (window.__hafrashaDelivery || {}).plans || {};
+                function deliveryInfo(taba) {
+                    return deliverySummary(_dlvByTaba[String(taba || '').trim()]);
+                }
                 function deliveryLabel(taba) {
-                    const list = _dlvByTaba[String(taba || '').trim()];
-                    if (!Array.isArray(list) || !list.length) return '';
-                    const done = list.filter(a => a.state === 'נמסר').length;
-                    return done >= list.length ? 'נמסר (' + list.length + ')'
-                        : done > 0 ? 'נמסר חלקית (' + done + '/' + list.length + ')'
-                        : 'בתהליך (' + list.length + ')';
+                    const d = deliveryInfo(taba);
+                    return d ? d.text : '';
                 }
                 const propsByTaba = {};
                 if (gd.plans) gd.plans.features.forEach(f => {
@@ -10981,13 +11011,14 @@
                         const statusStyle = sc.permit ? 'color:' + sc.color + ';font-weight:bold' : 'color:#999';
                         const stage = sc.permit ? planPermitStage(r.taba) : null;
                         const statusTitle = sc.permit && stage ? ' title="היתר בנייה — שלב: ' + esc(getPermitStageLabel(stage)) + '"' : '';
-                        const dlv = deliveryLabel(r.taba);
-                        const dlvStyle = dlv.indexOf('נמסר (') === 0 ? 'color:#86b89a;font-weight:bold' : dlv ? 'color:#e0c08a' : 'color:#555';
+                        const dlvI = deliveryInfo(r.taba);
+                        const dlv = dlvI ? dlvI.text : '';
+                        const dlvStyle = dlvI ? 'color:' + dlvI.color + (dlvI.color === '#86b89a' ? ';font-weight:bold' : '') : 'color:#555';
                         return '<tr style="border-bottom:1px solid #222">' +
                         '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' +
                         '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + statusStyle + '"' + statusTitle + '>' + esc(sc.label) + '</td>' +
-                        '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + dlvStyle + '" title="מסירה בפועל לפי ספר הנכסים העירוני">' + (dlv ? esc(dlv) : '—') + '</td>' +
+                        '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + dlvStyle + '" title="' + esc(dlvI ? dlvI.title : 'אין נכס מתאים בספר הנכסים העירוני') + '">' + (dlv ? esc(dlv) : '—') + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' +
                         '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' +
@@ -11028,7 +11059,11 @@
                         kpi('שב"צ עתידי (מ"ר)', Math.round(t.out).toLocaleString(), '#c9a227') +
                         kpi('הפרשה מבונה (מ"ר)', Math.round(t.haf).toLocaleString(), '#b5651d') +
                         kpi('סה"כ שטח ציבור (מ"ר)', Math.round(t.out + t.haf).toLocaleString(), '#e8d9c8') +
-                        kpi('מסירה בפועל (תכניות)', fr.filter(r => deliveryLabel(r.taba)).length, '#86b89a');
+                        kpi('תהליך מסירה נפתח', (function () {
+                            const withAssets = fr.filter(r => deliveryInfo(r.taba));
+                            const reg = withAssets.filter(r => deliveryInfo(r.taba).text.indexOf('נרשם (') === 0).length;
+                            return withAssets.length + '<span style="font-size:11px;color:#8a7a6a"> · נרשמו ' + reg + '</span>';
+                        })(), '#86b89a');
                 }
                 function buildUseSection() {
                     const c = useCountsFor(filteredRows());
@@ -25017,12 +25052,13 @@
                     const _nDone = _dlv.filter(a => a.state === 'נמסר').length;
                     html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(134,184,154,0.10);border:1px solid rgba(134,184,154,0.35);border-radius:5px">';
                     html += '<div style="font-weight:bold;color:#86b89a;font-size:11px;margin-bottom:3px">מסירה בפועל — ספר הנכסים העירוני</div>';
-                    html += '<div style="font-size:10px;color:#c4ccda;margin-bottom:3px">' + _dlv.length + ' נכסי הפרשה נפתחו בעירייה בתחום התכנית' + (_nDone ? ' (' + _nDone + ' נרשמו בבעלות העירייה)' : '') + ':</div>';
+                    html += '<div style="font-size:10px;color:#c4ccda;margin-bottom:3px">' + _dlv.length + ' נכסי הפרשה נפתחו בעירייה בתחום התכנית' + (_nDone ? ' (' + _nDone + ' נרשמו בבעלות העירייה)' : ' — אף אחד טרם נרשם ע"ש העירייה') + ':</div>';
                     _dlv.forEach(a => {
-                        const col = a.state === 'נמסר' ? '#86b89a' : '#e0c08a';
+                        const _as = deliveryAssetState(a);
+                        const col = _as.color;
                         html += '<div style="font-size:10px;color:#e6e9ef;margin:2px 0" title="' + _escD(a.status || '') + (a.parcels && a.parcels.length ? ' · גוש/חלקה ' + _escD(a.parcels.join(', ')) : '') + '">' +
                             '<span style="color:' + col + '">●</span> ' + _escD(a.name || a.use) +
-                            ' — <span style="color:' + col + ';font-weight:bold">' + _escD(a.state) + '</span>' +
+                            ' — <span style="color:' + col + ';font-weight:bold">' + _escD(_as.label) + '</span>' +
                             (a.opened ? ' <span style="color:#8a8a9a">(' + _escD(a.opened) + ')</span>' : '') +
                             '</div>';
                         const _actAl = (a.allocations || []).filter(al => al && al.active !== 0 && al.active !== '0');
