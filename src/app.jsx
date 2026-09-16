@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-shared-standard';
+        const APP_VERSION = '2026-09-16-service-prorata';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11303,6 +11303,32 @@
                         });
                         const segSqm = segRows.reduce((acc, x) => acc + x.sqm, 0);
                         const residualSqm = Math.max(0, baseSqm - attributedSqm - segSqm);
+                        let envelopeSqm = residualSqm;
+                        // Service and circulation over a stated programme, spread across the
+                        // domains that programme names in proportion to their main area. One row
+                        // per DOMAIN rather than per use: the figure is shared infrastructure, so
+                        // naming a single use for it would assert something the plan never said,
+                        // while the domain split is exactly what it can answer.
+                        if (residualSqm > 0 && attributedSqm > 0 && residualSqm <= attributedSqm) {
+                            const byDom = {};
+                            keys.forEach(ak => {
+                                const a = agg[ak];
+                                const d = PARSER_KEY_DOMAIN[a.key];
+                                if (d && a.sqm > 0) byDom[d] = (byDom[d] || 0) + a.sqm;
+                            });
+                            const domTotal = Object.values(byDom).reduce((x, y) => x + y, 0);
+                            if (domTotal > 0) {
+                                Object.keys(byDom).forEach(d => {
+                                    detailRows.push({
+                                        taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                                        use: 'שטחי שירות ותנועה (פרו-רטה) — ' + (HAFRASH_DOM_HE[d] || d),
+                                        doms: [d], count: 0, unit: '',
+                                        sqm: residualSqm * (byDom[d] / domTotal),
+                                    });
+                                });
+                                envelopeSqm = 0;
+                            }
+                        }
                         if (attributedSqm + segSqm > baseSqm && baseSqm > 0) {
                             overAttributed.push({ taba: r.taba, source, excess: attributedSqm + segSqm - baseSqm });
                         }
@@ -11316,7 +11342,7 @@
                         // A generic designation with no m² at all (e.g. "שטחים פתוחים ומבנים
                         // ומוסדות ציבור" with a blank hafrash_sqm) is a land-use label, not a
                         // quantified allocation, so it stays out rather than showing as an empty row.
-                        if (residualSqm > 0) {
+                        if (envelopeSqm > 0) {
                             // Domains already implied by the itemised uses, plus whatever else the
                             // free text names. The residual belongs to all of them jointly.
                             let _doms = [];
@@ -11357,7 +11383,7 @@
                             }
                             detailRows.push({
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                                use, doms: _doms, count: 0, unit: '', sqm: residualSqm,
+                                use, doms: _doms, count: 0, unit: '', sqm: envelopeSqm,
                             });
                         }
                     });
