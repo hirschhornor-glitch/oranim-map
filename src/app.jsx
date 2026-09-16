@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-plan-unit-caps';
+        const APP_VERSION = '2026-09-16-alloc-seg-split';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11134,6 +11134,28 @@
                 // Explode each plan into one row per facility use × source (שב"צ עתידי / הפרשה מבונה),
                 // so a plan repeats across its uses and the detail can be filtered by use like the
                 // summary table. Counts of the same use within a source are aggregated.
+                // A ";"-separated segment that the key parser did not claim, but which states
+                // its own מ"ר, is an allocation in its own right — "תרבות ואמנות (5000)",
+                // "תפעול/חירום (5500 מ"ר)", "מגרש 501 - קהילה חברה וחינוך (6600)". Reading the
+                // figure off the segment keeps it with ITS domains instead of spreading it over
+                // every domain the rest of the plan's text happens to mention.
+                function segFigure(seg) {
+                    const m = String(seg || '').match(/\(([^)]*)\)/);
+                    if (!m) return 0;
+                    const inner = m[1];
+                    // "(1 כיתות, 105 מ"ר)" — the unit marks which number is the area
+                    const withUnit = inner.match(/([\d,]+(?:\.\d+)?)\s*(?:מ"ר|מ״ר)/);
+                    if (withUnit) return parseFloat(withUnit[1].replace(/,/g, '')) || 0;
+                    // "(5000)" / "(41,910)" / "(~500)" — a bare figure, nothing else
+                    const bare = inner.match(/^\s*~?\s*([\d,]+(?:\.\d+)?)\s*$/);
+                    return bare ? (parseFloat(bare[1].replace(/,/g, '')) || 0) : 0;
+                }
+                // Split on ";" only. parseFacilitiesDetailed also splits on "," because a single
+                // use can be listed that way, but a segment like "מבני חינוך, ספורט וקהילה
+                // (41,910)" is ONE allocation whose commas are inside its name.
+                function prgSegments(text) {
+                    return String(text || '').split(';').map(x => x.trim()).filter(Boolean);
+                }
                 const detailRows = [];
                 // Rows where the מ"ר written next to the individual uses add up to MORE than the
                 // plan's own figure in the sheet - usually the text lists area bands (below-grade
@@ -11182,12 +11204,28 @@
                         // against that same figure or it cannot be reconciled with them; the text's
                         // own number only stands in where the column is blank.
                         const baseSqm = totalSqm > 0 ? totalSqm : (uncategorizedSqm || 0);
-                        const residualSqm = Math.max(0, baseSqm - attributedSqm);
-                        if (attributedSqm > baseSqm && baseSqm > 0) {
-                            overAttributed.push({ taba: r.taba, source, excess: attributedSqm - baseSqm });
+                        // Segments the key parser left alone but which state their own figure.
+                        const segRows = [];
+                        prgSegments(prg).forEach(seg => {
+                            const v = segFigure(seg);
+                            if (!(v > 0)) return;
+                            if (parseFacilitiesDetailed(seg).items.length) return;   // already a named key
+                            segRows.push({
+                                use: seg.replace(/\([^)]*\)/, '').replace(/[\s,;\-–—]+$/, '').trim() || seg,
+                                sqm: v, doms: hafrashUseDomainsAll(seg),
+                            });
+                        });
+                        const segSqm = segRows.reduce((acc, x) => acc + x.sqm, 0);
+                        const residualSqm = Math.max(0, baseSqm - attributedSqm - segSqm);
+                        if (attributedSqm + segSqm > baseSqm && baseSqm > 0) {
+                            overAttributed.push({ taba: r.taba, source, excess: attributedSqm + segSqm - baseSqm });
                         }
-                        if (!(totalSqm > 0) && (baseSqm > 0 || attributedSqm > 0)) {
-                            blankColumn.push({ taba: r.taba, source, sqm: Math.max(baseSqm, attributedSqm) });
+                        segRows.forEach(x => detailRows.push({
+                            taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                            use: x.use, doms: x.doms, count: 0, unit: '', sqm: x.sqm,
+                        }));
+                        if (!(totalSqm > 0) && (baseSqm > 0 || attributedSqm + segSqm > 0)) {
+                            blankColumn.push({ taba: r.taba, source, sqm: Math.max(baseSqm, attributedSqm + segSqm) });
                         }
                         // A generic designation with no m² at all (e.g. "שטחים פתוחים ומבנים
                         // ומוסדות ציבור" with a blank hafrash_sqm) is a land-use label, not a
@@ -11202,7 +11240,7 @@
                             });
                             hafrashUseDomainsAll(prg || '').forEach(d => { if (_doms.indexOf(d) === -1) _doms.push(d); });
                             let use;
-                            if (!keys.length) {
+                            if (!keys.length && !segRows.length) {
                                 // No specific facility is named, but the text almost always says
                                 // what KIND of public use it is - "תרבות ואמנות", "קהילה ורווחה",
                                 // "מבנה דת", "דיור מיוחד". Those cannot become PARSER_KEYS: every key
