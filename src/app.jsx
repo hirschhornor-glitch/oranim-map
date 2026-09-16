@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-units';
+        const APP_VERSION = '2026-09-16-alloc-shared2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -571,7 +571,16 @@
             const out = [];
             let uncategorizedSqm = 0;
             if (!text || !text.trim()) return { items: out, uncategorizedSqm };
-            const items = text.split(/[;,]/);
+            // Split the list on ';' and ',' — but a comma inside a number is a thousands
+            // separator, not a list delimiter. Splitting it shattered "(1,024)" into
+            // "…(1" + "024)", so the figure disappeared and the facility was reported with
+            // no area at all: 101-1166586 listed nine facilities totalling 31,208 מ"ר and
+            // only the two whose figures had no comma (800, 900) survived.
+            // A lot list ("מגרש 61, 122, 123") keeps splitting — there the comma is
+            // followed by a space, so the guard below does not protect it.
+            const SEP = '\u0001';
+            const items = text.replace(/(\d),(?=\d{3}\b)/g, '$1' + SEP)
+                .split(/[;,]/).map(x => x.split(SEP).join(','));
             for (const raw of items) {
                 const t = (raw || '').trim();
                 if (!t) continue;
@@ -587,28 +596,33 @@
                 // the fragment "123 - בית ספר" — "123" is NOT a facility count).
                 const leadMatch = t.match(/^(\d+)\s+(?=[א-ת])/);
                 const leadCount = leadMatch ? parseInt(leadMatch[1]) : 0;
-                let key = null;
-                // Education — al_yesodi (longer/more-specific phrases first)
-                if (/(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/.test(t)) { key = 'al_yesodi'; }
-                else if (/(מעון|מעונות יום|פעוטון)/.test(t)) { key = 'maon'; }
-                else if (/(גן ילדים|גני ילדים|גנון|גן חינוך)/.test(t) || /(?:^|[^א-ת])(?:כיתות?\s+)?גן(?:[^א-ת]|$)/.test(t)) { key = 'gan'; }
-                else if (/(יסודי|בית ספר|בי"ס|בי״ס|ביה"ס|ביה״ס|בית-ספר)/.test(t)) { key = 'yesodi'; }
-                // Religious
-                else if (/(בית כנסת|ביכ"נ|ביכ״נ|בית-כנסת|בתי כנסת|בית כנסת)/.test(t)) { key = 'synagogue'; }
-                else if (/(מקווה|מקוואות)/.test(t)) { key = 'mikve'; }
-                // Community / culture
-                else if (/(מתנ"ס|מתנ״ס|מרכז קהילתי|שלוחת מתנס|מועדון קהילתי)/.test(t)) { key = 'matnas'; }
-                else if (/(ספרייה|ספריה)/.test(t)) { key = 'library'; }
-                // Sports
-                else if (/(אולם ספורט|מגרש ספורט|בריכת שחייה|בריכה ציבורית|מרכז ספורט|מתקני ספורט|מבנים ומתקנים לפעילויות ספורט|פעילויות ספורט|פנאי וספורט|אולם)/.test(t)) { key = 'sport_hall'; }
-                // Health
-                else if (/(טיפת חלב|תחנת בריאות)/.test(t)) { key = 'tipat_chalav'; }
-                else if (/(מרפאה|קופת חולים)/.test(t)) { key = 'clinic'; }
-                // Welfare
-                else if (/(לשכת רווחה|מחלקה לשירותים חברתיים)/.test(t)) { key = 'welfare_dept'; }
-                else if (/(מועדון נוער|מועדונית|מרכז נוער)/.test(t)) { key = 'noar_club'; }
-                else if (/(מועדון קשיש|מועדון לקשיש|מועדון לאזרחים ותיקים|אזרחים ותיקים)/.test(t)) { key = 'elderly_club'; }
-                else if (/(מרכז יום לקשיש|מרכז יום|תשושים|תשושי גוף)/.test(t)) { key = 'elderly_day'; }
+                // One ordered table, tested in order, replacing the old if/else chain. The
+                // first match still wins — but the SAME patterns now also reveal when a
+                // segment named several uses under one figure, which the chain could not
+                // see: "מקווה, 2 בתי כנסת (1530)" booked all 1,530 מ"ר to the synagogue and
+                // the mikve silently to zero.
+                // "מעונות" (plural, no "יום") used to match nothing at all: the pattern was
+                // "מעון" with a FINAL nun, which "מעונות" does not contain.
+                const FACILITY_PATTERNS = [
+                    ['al_yesodi', /(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/],
+                    ['maon', /(מעון|מעונות|פעוטון)/],
+                    ['gan', /(גן ילדים|גני ילדים|גנון|גן חינוך)|(?:^|[^א-ת])(?:כיתות?\s+)?גן(?:[^א-ת]|$)/],
+                    ['yesodi', /(יסודי|בית ספר|בי"ס|בי״ס|ביה"ס|ביה״ס|בית-ספר)/],
+                    ['synagogue', /(בית כנסת|ביכ"נ|ביכ״נ|בית-כנסת|בתי כנסת)/],
+                    ['mikve', /(מקווה|מקוואות)/],
+                    ['matnas', /(מתנ"ס|מתנ״ס|מרכז קהילתי|שלוחת מתנס|מועדון קהילתי)/],
+                    ['library', /(ספרייה|ספריה)/],
+                    ['sport_hall', /(אולם ספורט|מגרש ספורט|בריכת שחייה|בריכה ציבורית|מרכז ספורט|מתקני ספורט|מבנים ומתקנים לפעילויות ספורט|פעילויות ספורט|פנאי וספורט|אולם)/],
+                    ['tipat_chalav', /(טיפת חלב|תחנת בריאות)/],
+                    ['clinic', /(מרפאה|קופת חולים)/],
+                    ['welfare_dept', /(לשכת רווחה|מחלקת רווחה|מחלקה לשירותים חברתיים)/],
+                    ['noar_club', /(מועדון נוער|מועדונית|מרכז נוער|תנועות נוער|תנועת נוער)/],
+                    ['elderly_club', /(מועדון קשיש|מועדון לקשיש|מועדון לאזרחים ותיקים|אזרחים ותיקים)/],
+                    ['elderly_day', /(מרכז יום לקשיש|מרכז יום|תשושים|תשושי גוף)/],
+                ];
+                const matchedKeys = [];
+                FACILITY_PATTERNS.forEach(pair => { if (pair[1].test(t)) matchedKeys.push(pair[0]); });
+                const key = matchedKeys.length ? matchedKeys[0] : null;
                 if (key) {
                     let count, isClasses, itemSqm = sqm;
                     if (explicitClasses) { count = explicitClasses; isClasses = true; }
@@ -623,12 +637,24 @@
                         count = DEFAULT_YESODI_CLASSES; isClasses = true;
                     }
                     else { count = leadCount || 1; isClasses = false; }
-                    out.push({ key, count, sqm: itemSqm, isClasses });
+                    // sharedWith: the segment carried ONE figure but named these other uses
+                    // too, so itemSqm is their combined area and not this use's own.
+                    const sharedWith = matchedKeys.slice(1);
+                    out.push({ key, count, sqm: itemSqm, isClasses, sharedWith });
                 }
                 // Uncategorized generic public buildings — accumulate sqm
                 else if (/(מבנים ומוסדות|מבני ציבור|מוסדות ציבור|מוסדות כלל ציבור|שב"צ|שבצ|שצ"פ|שצ״פ|שטחי ציבור)/.test(t)) {
                     uncategorizedSqm += sqm;
                 }
+            }
+            // One figure for the whole list: exactly one item carries an area and the
+            // rest name a use with no area and no class count. That area belongs to all
+            // of them, so record the others on the item that holds it rather than let
+            // 8,817 מ"ר read as one synagogue's floor space.
+            const carriers = out.filter(i => i.sqm > 0);
+            if (carriers.length === 1) {
+                const bare = out.filter(i => i !== carriers[0] && !i.sqm && !i.isClasses).map(i => i.key);
+                bare.forEach(k => { if (carriers[0].sharedWith.indexOf(k) === -1) carriers[0].sharedWith.push(k); });
             }
             return { items: out, uncategorizedSqm };
         }
@@ -10963,6 +10989,9 @@
                 }
 
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                // For title="…": a bare " in Hebrew text (מ"ר, שב"צ, בי"ס) closes the
+                // attribute and silently truncates the tooltip, so attributes need their own.
+                const escAttr = (s) => esc(s).replace(/"/g, '&quot;');
                 // Explode each plan into one row per facility use × source (שב"צ עתידי / הפרשה מבונה),
                 // so a plan repeats across its uses and the detail can be filtered by use like the
                 // summary table. Counts of the same use within a source are aggregated.
@@ -10979,8 +11008,9 @@
                         const agg = {};
                         items.forEach(it => {
                             const ak = it.key + '|' + (it.isClasses ? 'c' : 'f');
-                            if (!agg[ak]) agg[ak] = { key: it.key, isClasses: it.isClasses, count: 0, sqm: 0 };
+                            if (!agg[ak]) agg[ak] = { key: it.key, isClasses: it.isClasses, count: 0, sqm: 0, shared: [] };
                             agg[ak].count += it.count; agg[ak].sqm += it.sqm;
+                            (it.sharedWith || []).forEach(k => { if (agg[ak].shared.indexOf(k) === -1) agg[ak].shared.push(k); });
                         });
                         const keys = Object.keys(agg);
                         keys.forEach(ak => {
@@ -10989,7 +11019,7 @@
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
                                 use: ALLOC_LBLS[a.key], count: a.count,
                                 unit: a.isClasses ? 'כיתות' : (a.count > 1 ? 'מתקנים' : 'מתקן'),
-                                sqm: a.sqm,
+                                sqm: a.sqm, shared: a.shared,
                             });
                         });
                         // No recognized facility — keep ONLY if it carries actual מ"ר; a generic
@@ -11020,7 +11050,7 @@
                         const sc = statusCell(r.taba, r.status);
                         const statusStyle = sc.permit ? 'color:' + sc.color + ';font-weight:bold' : 'color:#999';
                         const stage = sc.permit ? planPermitStage(r.taba) : null;
-                        const statusTitle = sc.permit && stage ? ' title="היתר בנייה — שלב: ' + esc(getPermitStageLabel(stage)) + '"' : '';
+                        const statusTitle = sc.permit && stage ? ' title="היתר בנייה — שלב: ' + escAttr(getPermitStageLabel(stage)) + '"' : '';
                         const dlvI = deliveryInfo(r.taba);
                         const dlv = dlvI ? dlvI.text : '';
                         const dlvStyle = dlvI ? 'color:' + dlvI.color + (dlvI.color === '#86b89a' ? ';font-weight:bold' : '') : 'color:#555';
@@ -11028,11 +11058,18 @@
                         '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' +
                         '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + statusStyle + '"' + statusTitle + '>' + esc(sc.label) + '</td>' +
-                        '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + dlvStyle + '" title="' + esc(dlvI ? dlvI.title : 'אין נכס מתאים בספר הנכסים העירוני') + '">' + (dlv ? esc(dlv) : '—') + '</td>' +
+                        '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + dlvStyle + '" title="' + escAttr(dlvI ? dlvI.title : 'אין נכס מתאים בספר הנכסים העירוני') + '">' + (dlv ? esc(dlv) : '—') + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
                         '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' +
                         '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' +
-                        '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.sqm > 0 ? Math.round(r.sqm).toLocaleString() : '—') + '</td>' +
+                        '<td style="padding:5px 6px;text-align:center;color:#bbb">' +
+                            (r.sqm > 0
+                                ? ((r.shared && r.shared.length)
+                                    ? '<span style="color:#e0c08a" title="' + escAttr(Math.round(r.sqm).toLocaleString() +
+                                        ' מ"ר נאמרו במקור כסכום אחד עבור ' + [r.use].concat(r.shared.map(k => ALLOC_LBLS[k] || k)).join(' + ') +
+                                        ' — לא שטח השימוש הזה בלבד') + '">' + Math.round(r.sqm).toLocaleString() + ' ⚯</span>'
+                                    : Math.round(r.sqm).toLocaleString())
+                                : '—') + '</td>' +
                         '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.use) + '</td>' +
                         '</tr>';
                     }).join('');
@@ -11119,6 +11156,8 @@
                             dot('#e0c08a') + '<b>כתב התחייבות</b> — נחתם אך טרם נרשם · ' +
                             dot('#c9a227') + '<b>טרם נרשם</b> — תיק ההפרשה נפתח בלבד · ' +
                             '<b>—</b> לא נמצא נכס מתאים (ייתכן שהתהליך טרם נפתח, וייתכן שההצלבה הגיאוגרפית פספסה)</div>' +
+                        '<div><b style="color:#c9c0b4">מ"ר</b> — <span style="color:#e0c08a">⚯</span> מסמן שהמקור נקב סכום אחד לכמה שימושים יחד, ' +
+                            'כך שהשטח אינו של השימוש שבשורה בלבד. ריחוף מציג את השימושים שחולקים אותו.</div>' +
                         (assets ? '<div style="color:#8a7a6a">בתחום זה: ' + assets + ' נכסי הפרשה נפתחו, מהם <b style="color:' +
                             (reg ? '#86b89a' : '#c9a227') + '">' + reg + '</b> רשומים על שם העירייה.</div>' : '') +
                         '</div>';
