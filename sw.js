@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v66-alloc-legend';
+const CACHE_VERSION = 'v67-alloc-units';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

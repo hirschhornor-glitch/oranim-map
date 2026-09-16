@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-legend';
+        const APP_VERSION = '2026-09-16-alloc-units';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -10971,17 +10971,27 @@
                     [['שב"צ עתידי', r.outPrg, r.outSqm], ['הפרשה מבונה', r.hafPrg, r.hafSqm]].forEach(([source, prg, totalSqm]) => {
                         if (!prg && !(totalSqm > 0)) return;
                         const { items, uncategorizedSqm } = parseFacilitiesDetailed(prg || '');
+                        // Stated class counts are kept apart from facility counts. The parser
+                        // falls back to count=1 / isClasses=false when the text gives no number
+                        // ("מעון יום (600)"), and the unit used to be chosen from the KEY alone —
+                        // so that printed as "1 כיתות", asserting a classroom count the plan never
+                        // gave, next to a 600 מ"ר figure that plainly covers about four of them.
                         const agg = {};
                         items.forEach(it => {
-                            if (!agg[it.key]) agg[it.key] = { count: 0, sqm: 0 };
-                            agg[it.key].count += it.count; agg[it.key].sqm += it.sqm;
+                            const ak = it.key + '|' + (it.isClasses ? 'c' : 'f');
+                            if (!agg[ak]) agg[ak] = { key: it.key, isClasses: it.isClasses, count: 0, sqm: 0 };
+                            agg[ak].count += it.count; agg[ak].sqm += it.sqm;
                         });
                         const keys = Object.keys(agg);
-                        keys.forEach(key => detailRows.push({
-                            taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                            use: ALLOC_LBLS[key], count: agg[key].count,
-                            unit: EDU_PARSER_KEYS.includes(key) ? 'כיתות' : 'מתקנים', sqm: agg[key].sqm,
-                        }));
+                        keys.forEach(ak => {
+                            const a = agg[ak];
+                            detailRows.push({
+                                taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                                use: ALLOC_LBLS[a.key], count: a.count,
+                                unit: a.isClasses ? 'כיתות' : (a.count > 1 ? 'מתקנים' : 'מתקן'),
+                                sqm: a.sqm,
+                            });
+                        });
                         // No recognized facility — keep ONLY if it carries actual מ"ר; a generic
                         // designation with no m² (e.g. "שטחים פתוחים ומבנים ומוסדות ציבור" with a
                         // blank hafrash_sqm) is a land-use label, not a quantified allocation, so it
