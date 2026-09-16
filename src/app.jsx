@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-15-plan-override';
+        const APP_VERSION = '2026-09-16-extra-units';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3690,6 +3690,9 @@
             const [activeSitesReport, setActiveSitesReport] = useState(false);
             const [activeSitesFilter, setActiveSitesFilter] = useState({ sub: 'all', flag: 'all', q: '' });
             const [publicRatioReport, setPublicRatioReport] = useState(false);
+            // תוספות יח"ד מעבר לתכנית — הערת טבלה 5 / הקלה בהיתר / תוספת בפועל
+            const [extraUnitsReport, setExtraUnitsReport] = useState(false);
+            const [extraUnitsFilter, setExtraUnitsFilter] = useState({ src: '', minahak: '', q: '' });
             const [parkingReport, setParkingReport] = useState(false);
             const [parkFilter, setParkFilter] = useState({ minahak: 'all', sub: 'all', band: 'all', q: '' });
             const [prFilter, setPrFilter] = useState({ year: '', status: '', minahak: '', build: '', flag: '', minUnits: 0 });
@@ -4179,6 +4182,7 @@
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [fundReport, () => setFundReport(false)],
+                        [extraUnitsReport, () => setExtraUnitsReport(false)],
                         [socialReport, () => setSocialReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
                         [eduRenewalReport, () => setEduRenewalReport(false)],
@@ -15316,6 +15320,9 @@
                     { key: 'shavaz', isOpen: () => shavazKayamReport, open: () => setShavazKayamReport(true),
                         ser: () => ({ sub: shavazReportFilter.sub, minahak: shavazReportFilter.minahak, q: shavazReportFilter.q }),
                         apply: p => setShavazReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
+                    { key: 'extraunits', isOpen: () => extraUnitsReport, open: () => setExtraUnitsReport(true),
+                        ser: () => ({ src: extraUnitsFilter.src, minahak: extraUnitsFilter.minahak, q: extraUnitsFilter.q }),
+                        apply: p => setExtraUnitsFilter({ src: p.src || '', minahak: p.minahak || '', q: p.q || '' }) },
                     { key: 'fund', isOpen: () => fundReport, open: () => setFundReport(true),
                         ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, status: fundReportFilter.status, q: fundReportFilter.q }),
                         apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', status: p.status || 'all', q: p.q || '' }) },
@@ -29323,6 +29330,7 @@
                                 { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => fetchUnitsData()) },
                                 { icon:'🏘️', title:'דיור להשכרה', desc:'יח"ד להשכרה + משך השכרה מ-טבלה 5 (יח"ד מותנות עברו לדוח קרן תחזוקה)', onClick:() => go(() => setSpecialHousingReport(true)) },
                                 { icon:'🏗️', title:'דוח יזמים', desc:'יח"ד מתוכננות לפי יזם, מינה"ק ושלב', onClick:() => go(() => { setDevRepExpanded(null); setDevelopersReport(true); }) },
+                                { icon:'📈', title:'תוספות יח"ד מעבר לתכנית', desc:'יח"ד שנוספו מעבר לתכנון המקורי — הערת טבלה 5, הקלה שאושרה בהיתר, והתוספת שבפועל בהיתרים', onClick:() => go(() => { setExtraUnitsFilter({ src:'', minahak:'', q:'' }); setExtraUnitsReport(true); }) },
                                 { icon:'💰', title:'קרן תחזוקה', desc:'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה — גובה הקרן ומספר יח"ד מותנות', onClick:() => go(() => { setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }) },
                                 { icon:'👥', title:'מצב נכנס — נספחים חברתיים', desc:'הרכב המתחם הקיים לפני הפינוי: דיור ציבורי, שכירות, גיל וגודל משק בית, מול ממוצע האזור הסטטיסטי (למ"ס 2022)', onClick:() => go(() => setSocialReport(true)) },
                             ]},
@@ -37385,6 +37393,218 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         );
                     })()}
 
+                    {/* ── תוספות יח"ד מעבר לתכנית: הערת טבלה 5, הקלה בהיתר, ותוספת בפועל ── */}
+                    {extraUnitsReport && (() => {
+                        const gd = geoDataRef.current || {};
+                        const F = extraUnitsFilter;
+                        const setF = (k, v) => setExtraUnitsFilter({ ...F, [k]: v });
+                        const nf = v => (v == null || !isFinite(v)) ? '—' : Math.round(v).toLocaleString('he-IL');
+                        const rows = [];
+                        const seen = new Set();
+                        ((gd.plans && gd.plans.features) || []).forEach(f => {
+                            const p = f.properties || {};
+                            const taba = String(p.taba || '').trim();
+                            if (!taba || seen.has(taba)) return;
+                            if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                            seen.add(taba);
+                            const base = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add) || 0;
+                            // the same permits, inclusion and totals the "היתרים מול תב״ע" report uses,
+                            // so the two reports can never disagree about a plan's permitted units
+                            const permits = getPlanExecutingPermits(taba);
+                            const inclusion = permits.length ? getEffectivePermitInclusion(permits, 'plan:' + taba, base) : [];
+                            const permitUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? (Number(x.units) || 0) : 0), 0);
+                            const bonus = planUnitBonus(p);
+                            const bonusUnits = bonus ? planBonusUnits(p) : 0;
+                            const hakRecs = permitsHakalaRecords(permits, inclusion);
+                            const hakExtra = permitsHakalaExtra(permits, inclusion);
+                            // A plan with no unit count of its own (a rights/setback amendment whose
+                            // יח"ד live in the parent plan — 101-0257592 carries 0 and its permits 98)
+                            // has no baseline to exceed; counting the whole permit as "extra" would
+                            // invent a 98-unit addition out of a bookkeeping gap.
+                            const realized = base > 0 ? Math.max(0, permitUnits - base) : 0;
+                            // what the plan or a committee decision already accounts for. A טבלה 5 note
+                            // is an ALLOWANCE (may never be used); a הקלה is a decision already taken.
+                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits);
+                            if (!bonusUnits && !hakExtra && !realized) return;
+                            rows.push({
+                                taba, plan_name: p.plan_name || ('101-' + taba),
+                                name: p.plan_summary || p.plan_name_he || '',
+                                minahak: p.minahak || '', sub: p.sub_neighborhood || '',
+                                status: p.status_mavat || '', base, permitUnits, realized,
+                                bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: bonus ? bonus.note : '',
+                                hakExtra, hakPct: hakRecs.map(r => r.pct).filter(Boolean)[0] || 0,
+                                hakWhen: hakRecs.map(r => r.decision_date).filter(Boolean)[0] || '',
+                                hakText: hakRecs.map(r => (r.published || [])[0]).filter(Boolean)[0] || '',
+                                hakTiks: hakRecs.map(r => r.file_number).join(', '),
+                                unexplained, feature: f,
+                            });
+                        });
+                        const minahaks = rows.map(r => r.minahak).filter(Boolean)
+                            .filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a.localeCompare(b, 'he'));
+                        const q = (F.q || '').trim();
+                        const view = rows.filter(r => {
+                            if (F.minahak && r.minahak !== F.minahak) return false;
+                            if (F.src === 'table5' && !r.bonusUnits) return false;
+                            if (F.src === 'hakala' && !r.hakExtra) return false;
+                            if (F.src === 'realized' && !r.realized) return false;
+                            if (F.src === 'unexplained' && !r.unexplained) return false;
+                            if (q && (r.name + ' ' + r.plan_name + ' ' + r.minahak).indexOf(q) === -1) return false;
+                            return true;
+                        }).sort((a, b) => (b.realized - a.realized) || (b.bonusUnits + b.hakExtra) - (a.bonusUnits + a.hakExtra));
+                        const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
+                        const T = { base: sum(view, 'base'), bonus: sum(view, 'bonusUnits'), hak: sum(view, 'hakExtra'),
+                            realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
+                        const nBonus = view.filter(r => r.bonusUnits).length;
+                        const nHak = view.filter(r => r.hakExtra).length;
+                        const nReal = view.filter(r => r.realized).length;
+
+                        const SEL = { background: '#0d1428', color: '#dbe4f5', border: '1px solid #2a3a5e',
+                            borderRadius: 5, padding: '4px 7px', fontSize: 12, fontFamily: 'inherit', minWidth: 130 };
+                        const LBL = { fontSize: 11, color: '#9fb0d0', display: 'block', marginBottom: 3 };
+                        const TH = { textAlign: 'center', padding: '5px 4px', color: '#fff', fontWeight: 600, whiteSpace: 'nowrap' };
+                        const THR = { ...TH, textAlign: 'right' };
+                        const TD = { textAlign: 'center', padding: '4px', color: '#cfd8ea', whiteSpace: 'nowrap' };
+                        const TDR = { ...TD, textAlign: 'right', whiteSpace: 'normal' };
+                        const tile = (label, value, sub, accent) => (
+                            <div style={{ flex: '1 1 130px', minWidth: 120, background: '#10193a',
+                                border: '1px solid #2a3a5e', borderRadius: 9, padding: '8px 10px', textAlign: 'center' }}>
+                                <div style={{ fontSize: 11, color: '#9fb0d0', whiteSpace: 'nowrap' }}>{label}</div>
+                                <div style={{ fontSize: 23, fontWeight: 800, color: accent, lineHeight: 1.2 }}>{value}</div>
+                                <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>{sub || ' '}</div>
+                            </div>
+                        );
+                        const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'יח"ד בתב"ע',
+                            'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'יח"ד בהיתרים',
+                            'תוספת בפועל', 'ללא מקור מתועד', 'המקור'];
+                        const srcLabel = r => r.hakExtra ? ('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''))
+                            : r.bonusUnits ? ('הערת טבלה 5 · עד ' + r.bonusPct + '%')
+                            : r.realized ? 'תוספת בהיתר ללא מקור מתועד' : '';
+                        const csvEscape = s => `"${String(s == null ? '' : s).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ')}"`;
+                        const exportCsv = () => {
+                            const lines = [COLS.map(csvEscape).join(',')].concat(view.map(r => [
+                                r.plan_name, r.name, r.minahak, r.status, r.base, r.bonusUnits || '', r.hakExtra || '',
+                                r.permitUnits || '', r.realized || '', r.unexplained || '',
+                                srcLabel(r) + (r.hakTiks ? ' (' + r.hakTiks + ')' : '')].map(csvEscape).join(',')));
+                            const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'תוספות_יחד_מעבר_לתכנית.csv'; a.click();
+                            URL.revokeObjectURL(url);
+                        };
+                        const printReport = () => {
+                            const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const head = COLS.map(c => '<th>' + esc(c) + '</th>').join('');
+                            const body = view.map(r => '<tr>' + [r.plan_name, r.name, r.minahak, r.status, nf(r.base),
+                                r.bonusUnits ? nf(r.bonusUnits) : '—', r.hakExtra ? nf(r.hakExtra) : '—',
+                                r.permitUnits ? nf(r.permitUnits) : '—', r.realized ? nf(r.realized) : '—',
+                                r.unexplained ? nf(r.unexplained) : '—', srcLabel(r)]
+                                .map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>').join('');
+                            const w = window.open('', '_blank');
+                            w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>תוספות יח"ד מעבר לתכנית</title>'
+                                + '<style>body{font-family:Arial,sans-serif;direction:rtl;padding:18px}'
+                                + 'h1{font-size:18px}table{border-collapse:collapse;width:100%;font-size:11px}'
+                                + 'th,td{border:1px solid #bbb;padding:4px;text-align:center}th{background:#eee}'
+                                + '.sum{margin:10px 0;font-size:13px}@media print{button{display:none}}</style></head><body>'
+                                + '<h1>תוספות יח"ד מעבר לתכנית המקורית</h1>'
+                                + '<div class="sum">' + view.length + ' תכניות · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
+                                + ' · הקלות שאושרו בהיתר: ' + nf(T.hak) + ' · תוספת בפועל בהיתרים: ' + nf(T.realized)
+                                + ' · ללא מקור מתועד: ' + nf(T.unexplained) + '</div>'
+                                + '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
+                                + '<div style="margin-top:12px"><button onclick="window.print()">הדפסה / שמירת PDF</button></div>'
+                                + '</body></html>');
+                            w.document.close();
+                        };
+                        const btn = (txt, onClick, bg) => (
+                            <button onClick={onClick} style={{ background: bg, color: '#fff', border: 'none',
+                                borderRadius: 5, padding: '5px 11px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{txt}</button>
+                        );
+
+                        return (
+                        <div className="units-overlay" onClick={() => setExtraUnitsReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()}
+                                style={{ maxWidth: 'min(1400px,97vw)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                                <ReportLinkBtn />
+                                <button className="units-close" onClick={() => setExtraUnitsReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{ overflowY: 'auto', flex: 1 }}>
+                                    <h2 style={{ color: '#fff', fontSize: 18, marginBottom: 4 }}>📈 תוספות יח"ד מעבר לתכנית</h2>
+                                    <p style={{ color: '#aaa', fontSize: 12.5, marginBottom: 10, lineHeight: 1.65 }}>
+                                        יח"ד שנוספו מעבר למה שהתכנית תכננה, בשלושה ערוצים שאסור לבלבל ביניהם:{' '}
+                                        <b style={{ color: '#5dade2' }}>הערת טבלה 5</b> — זכות שהתכנית נותנת מראש (עד N%), עשויה לא להתממש;{' '}
+                                        <b style={{ color: '#f5b041' }}>הקלה שאושרה בהיתר</b> — החלטת ועדת רישוי על בקשה מסוימת;{' '}
+                                        <b style={{ color: '#ff9aa8' }}>תוספת בפועל</b> — ההפרש בין היח"ד בהיתרים לבין התב"ע, גם כשאין לו מקור מתועד אצלנו.
+                                        התוספת בפועל אינה סכום של השניים הראשונים אלא מה שההיתרים מראים.
+                                    </p>
+
+                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end',
+                                        background: '#0d1428', border: '1px solid #2a3a5e', borderRadius: 8, padding: '9px 12px', marginBottom: 12 }}>
+                                        <div><label style={LBL}>מקור התוספת</label>
+                                            <select style={SEL} value={F.src} onChange={e => setF('src', e.target.value)}>
+                                                <option value="">הכל</option>
+                                                <option value="table5">הערת טבלה 5</option>
+                                                <option value="hakala">הקלה שאושרה בהיתר</option>
+                                                <option value="realized">תוספת בפועל בהיתרים</option>
+                                                <option value="unexplained">תוספת ללא מקור מתועד</option>
+                                            </select></div>
+                                        <div><label style={LBL}>מינה"ק</label>
+                                            <select style={SEL} value={F.minahak} onChange={e => setF('minahak', e.target.value)}>
+                                                <option value="">כל המינהלים</option>
+                                                {minahaks.map(m => <option key={m} value={m}>{m}</option>)}
+                                            </select></div>
+                                        <div><label style={LBL}>חיפוש</label>
+                                            <input style={{ ...SEL, minWidth: 180 }} value={F.q}
+                                                onChange={e => setF('q', e.target.value)} placeholder="שם תכנית / מספר" /></div>
+                                        <div style={{ display: 'flex', gap: 7, marginRight: 'auto' }}>
+                                            {btn('📊 ייצוא CSV', exportCsv, '#2e7d32')}
+                                            {btn('🖨️ הדפסה', printReport, '#3d5a80')}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 12 }}>
+                                        {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nReal + ' בפועל', '#dbe4f5')}
+                                        {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
+                                        {tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2')}
+                                        {tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041')}
+                                        {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
+                                        {tile('ללא מקור מתועד', nf(T.unexplained), 'לבדיקה', '#ff9aa8')}
+                                    </div>
+
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                                        <thead><tr style={{ background: '#16224a' }}>
+                                            {COLS.map((c, i) => <th key={c} style={i === 1 ? THR : TH}>{c}</th>)}
+                                        </tr></thead>
+                                        <tbody>
+                                            {view.map(r => (
+                                                <tr key={r.taba} style={{ borderTop: '1px solid #223056',
+                                                    background: r.unexplained ? 'rgba(198,40,40,0.10)' : r.hakExtra ? 'rgba(245,176,65,0.08)' : 'transparent' }}>
+                                                    <td style={{ ...TD, color: '#5dade2', cursor: 'pointer' }}
+                                                        onClick={() => { setExtraUnitsReport(false); zoomToFeature(r.feature); }}>{r.plan_name}</td>
+                                                    <td style={TDR}>{r.name || '—'}</td>
+                                                    <td style={TD}>{r.minahak || '—'}</td>
+                                                    <td style={TD}>{r.status || '—'}</td>
+                                                    <td style={TD}>{nf(r.base)}</td>
+                                                    <td style={{ ...TD, color: r.bonusUnits ? '#5dade2' : '#55617a' }}>
+                                                        {r.bonusUnits ? nf(r.bonusUnits) + ' (' + r.bonusPct + '%)' : '—'}</td>
+                                                    <td style={{ ...TD, color: r.hakExtra ? '#f5b041' : '#55617a' }} title={r.hakText}>
+                                                        {r.hakExtra ? nf(r.hakExtra) + (r.hakPct ? ' (' + r.hakPct + '%)' : '') : '—'}</td>
+                                                    <td style={TD}>{r.permitUnits ? nf(r.permitUnits) : '—'}</td>
+                                                    <td style={{ ...TD, fontWeight: 700, color: r.realized ? '#7fc98a' : '#55617a' }}>
+                                                        {r.realized ? nf(r.realized) : '—'}</td>
+                                                    <td style={{ ...TD, color: r.unexplained ? '#ff9aa8' : '#55617a' }}>
+                                                        {r.unexplained ? nf(r.unexplained) : '—'}</td>
+                                                    <td style={{ ...TDR, fontSize: 11, color: '#9fb0d0' }}>{srcLabel(r)}</td>
+                                                </tr>
+                                            ))}
+                                            {!view.length && (
+                                                <tr><td colSpan={COLS.length} style={{ ...TD, padding: 18, color: '#8a9bc0' }}>
+                                                    אין תכניות שעונות לסינון.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        );
+                    })()}
                     {fundReport && (() => {
                         const gd = geoDataRef.current;
                         const fundMap = window.__maintenanceFund || {};
