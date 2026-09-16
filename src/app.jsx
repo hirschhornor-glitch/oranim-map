@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-extra-units';
+        const APP_VERSION = '2026-09-16-conditional';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1373,6 +1373,18 @@
             const k = String(taba || '').replace(/^101-?0*/, '').replace(/^0+/, '').trim();
             const r = k && o[k];
             return (r && r.outcome === 'found' && r.confidence !== 'low') ? r : null;
+        }
+        // יח"ד מותנות — units a plan allows only once a condition is met (a maintenance fund,
+        // a rental commitment). They sit OUTSIDE units_total, so a permit that realises them
+        // reads as if it exceeded the plan: 101-0855668 plans 265, permits 287, and the 22 in
+        // between are exactly its conditional units. Two sources, because the GS column is
+        // filled for some plans while for others only the horaot parse caught them
+        // (maintenance_fund.json, keyed by plan_name).
+        function planConditionalUnits(props) {
+            const direct = parseFloat(props && props.conditional_housing) || 0;
+            if (direct > 0) return direct;
+            const mf = (window.__maintenanceFund || {})[String((props && props.plan_name) || '').trim()];
+            return (mf && parseFloat(mf.conditional_units)) || 0;
         }
         // Table 5 "unit bonus" note (תותר תוספת של עד N% ממספר יחידות הדיור...) —
         // a note at the bottom of טבלה 5 permitting MORE יח"ד at building-permit
@@ -29526,7 +29538,7 @@
                             // where existing units are demolished), not just for the net addition.
                             // Fall back to units_add if units_total is missing/zero.
                             const baseTotal = parseFloat(p.units_total) || parseFloat(p.units_add) || 0;
-                            const conditional = parseFloat(p.conditional_housing) || 0;
+                            const conditional = planConditionalUnits(p);
                             // Table 5 unit-bonus (תותר תוספת של עד N% ממספר יח״ד) — extra יח״ד the
                             // plan permits at building-permit stage. Folded per-plan at cluster level.
                             const bonusInfo = planUnitBonus(p);
@@ -37415,6 +37427,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const permitUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? (Number(x.units) || 0) : 0), 0);
                             const bonus = planUnitBonus(p);
                             const bonusUnits = bonus ? planBonusUnits(p) : 0;
+                            const condUnits = planConditionalUnits(p);
                             const hakRecs = permitsHakalaRecords(permits, inclusion);
                             const hakExtra = permitsHakalaExtra(permits, inclusion);
                             // A plan with no unit count of its own (a rights/setback amendment whose
@@ -37424,14 +37437,14 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const realized = base > 0 ? Math.max(0, permitUnits - base) : 0;
                             // what the plan or a committee decision already accounts for. A טבלה 5 note
                             // is an ALLOWANCE (may never be used); a הקלה is a decision already taken.
-                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits);
-                            if (!bonusUnits && !hakExtra && !realized) return;
+                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits);
+                            if (!bonusUnits && !hakExtra && !realized && !condUnits) return;
                             rows.push({
                                 taba, plan_name: p.plan_name || ('101-' + taba),
                                 name: p.plan_summary || p.plan_name_he || '',
                                 minahak: p.minahak || '', sub: p.sub_neighborhood || '',
                                 status: p.status_mavat || '', base, permitUnits, realized,
-                                bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: bonus ? bonus.note : '',
+                                bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: bonus ? bonus.note : '', condUnits,
                                 hakExtra, hakPct: hakRecs.map(r => r.pct).filter(Boolean)[0] || 0,
                                 hakWhen: hakRecs.map(r => r.decision_date).filter(Boolean)[0] || '',
                                 hakText: hakRecs.map(r => (r.published || [])[0]).filter(Boolean)[0] || '',
@@ -37447,13 +37460,14 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (F.src === 'table5' && !r.bonusUnits) return false;
                             if (F.src === 'hakala' && !r.hakExtra) return false;
                             if (F.src === 'realized' && !r.realized) return false;
+                            if (F.src === 'conditional' && !r.condUnits) return false;
                             if (F.src === 'unexplained' && !r.unexplained) return false;
                             if (q && (r.name + ' ' + r.plan_name + ' ' + r.minahak).indexOf(q) === -1) return false;
                             return true;
                         }).sort((a, b) => (b.realized - a.realized) || (b.bonusUnits + b.hakExtra) - (a.bonusUnits + a.hakExtra));
                         const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
                         const T = { base: sum(view, 'base'), bonus: sum(view, 'bonusUnits'), hak: sum(view, 'hakExtra'),
-                            realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
+                            cond: sum(view, 'condUnits'), realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
                         const nBonus = view.filter(r => r.bonusUnits).length;
                         const nHak = view.filter(r => r.hakExtra).length;
                         const nReal = view.filter(r => r.realized).length;
@@ -37474,15 +37488,17 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             </div>
                         );
                         const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'יח"ד בתב"ע',
-                            'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'יח"ד בהיתרים',
+                            'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'יח"ד בהיתרים',
                             'תוספת בפועל', 'ללא מקור מתועד', 'המקור'];
                         const srcLabel = r => r.hakExtra ? ('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''))
+                            : (r.condUnits && r.realized && r.realized <= r.condUnits + r.bonusUnits) ? 'יח"ד מותנות שמומשו'
                             : r.bonusUnits ? ('הערת טבלה 5 · עד ' + r.bonusPct + '%')
+                            : r.condUnits ? 'יח"ד מותנות' + (r.realized ? ' (חלקי)' : '')
                             : r.realized ? 'תוספת בהיתר ללא מקור מתועד' : '';
                         const csvEscape = s => `"${String(s == null ? '' : s).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ')}"`;
                         const exportCsv = () => {
                             const lines = [COLS.map(csvEscape).join(',')].concat(view.map(r => [
-                                r.plan_name, r.name, r.minahak, r.status, r.base, r.bonusUnits || '', r.hakExtra || '',
+                                r.plan_name, r.name, r.minahak, r.status, r.base, r.condUnits || '', r.bonusUnits || '', r.hakExtra || '',
                                 r.permitUnits || '', r.realized || '', r.unexplained || '',
                                 srcLabel(r) + (r.hakTiks ? ' (' + r.hakTiks + ')' : '')].map(csvEscape).join(',')));
                             const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -37495,6 +37511,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                             const head = COLS.map(c => '<th>' + esc(c) + '</th>').join('');
                             const body = view.map(r => '<tr>' + [r.plan_name, r.name, r.minahak, r.status, nf(r.base),
+                                r.condUnits ? nf(r.condUnits) : '—',
                                 r.bonusUnits ? nf(r.bonusUnits) : '—', r.hakExtra ? nf(r.hakExtra) : '—',
                                 r.permitUnits ? nf(r.permitUnits) : '—', r.realized ? nf(r.realized) : '—',
                                 r.unexplained ? nf(r.unexplained) : '—', srcLabel(r)]
@@ -37507,6 +37524,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 + '.sum{margin:10px 0;font-size:13px}@media print{button{display:none}}</style></head><body>'
                                 + '<h1>תוספות יח"ד מעבר לתכנית המקורית</h1>'
                                 + '<div class="sum">' + view.length + ' תכניות · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
+                                + ' · יח"ד מותנות: ' + nf(T.cond)
                                 + ' · הקלות שאושרו בהיתר: ' + nf(T.hak) + ' · תוספת בפועל בהיתרים: ' + nf(T.realized)
                                 + ' · ללא מקור מתועד: ' + nf(T.unexplained) + '</div>'
                                 + '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
@@ -37531,6 +37549,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         יח"ד שנוספו מעבר למה שהתכנית תכננה, בשלושה ערוצים שאסור לבלבל ביניהם:{' '}
                                         <b style={{ color: '#5dade2' }}>הערת טבלה 5</b> — זכות שהתכנית נותנת מראש (עד N%), עשויה לא להתממש;{' '}
                                         <b style={{ color: '#f5b041' }}>הקלה שאושרה בהיתר</b> — החלטת ועדת רישוי על בקשה מסוימת;{' '}
+                                        <b style={{ color: '#b39ddb' }}>יח"ד מותנות</b> — יחידות שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) ויושבות מחוץ ל-יח"ד שבתב"ע;{' '}
                                         <b style={{ color: '#ff9aa8' }}>תוספת בפועל</b> — ההפרש בין היח"ד בהיתרים לבין התב"ע, גם כשאין לו מקור מתועד אצלנו.
                                         התוספת בפועל אינה סכום של השניים הראשונים אלא מה שההיתרים מראים.
                                     </p>
@@ -37542,6 +37561,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 <option value="">הכל</option>
                                                 <option value="table5">הערת טבלה 5</option>
                                                 <option value="hakala">הקלה שאושרה בהיתר</option>
+                                                <option value="conditional">יח"ד מותנות</option>
                                                 <option value="realized">תוספת בפועל בהיתרים</option>
                                                 <option value="unexplained">תוספת ללא מקור מתועד</option>
                                             </select></div>
@@ -37562,6 +37582,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 12 }}>
                                         {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nReal + ' בפועל', '#dbe4f5')}
                                         {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
+                                        {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
                                         {tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2')}
                                         {tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041')}
                                         {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
@@ -37582,6 +37603,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={TD}>{r.minahak || '—'}</td>
                                                     <td style={TD}>{r.status || '—'}</td>
                                                     <td style={TD}>{nf(r.base)}</td>
+                                                    <td style={{ ...TD, color: r.condUnits ? '#b39ddb' : '#55617a' }}
+                                                        title="יח״ד שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) — מחוץ ל-units_total">
+                                                        {r.condUnits ? nf(r.condUnits) : '—'}</td>
                                                     <td style={{ ...TD, color: r.bonusUnits ? '#5dade2' : '#55617a' }}>
                                                         {r.bonusUnits ? nf(r.bonusUnits) + ' (' + r.bonusPct + '%)' : '—'}</td>
                                                     <td style={{ ...TD, color: r.hakExtra ? '#f5b041' : '#55617a' }} title={r.hakText}>

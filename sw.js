@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v63-extra-units';
+const CACHE_VERSION = 'v64-conditional';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
