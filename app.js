@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-09-16-hakala-notices';
+const APP_VERSION = '2026-09-16-plan-unit-caps';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -2069,6 +2069,18 @@ function planUnitBonus(props) {
   const o = window.__unitBonus || {};
   const k = String(props && props.plan_name || '').trim();
   return k && o[k] && o[k].pct ? o[k] : null;
+}
+// The same overlay's non-percentage clauses. ברל לוקר 13 names an absolute
+// ceiling — "ניתן להוסיף יחידות דיור עד לכמות מירבית של 143 יחידות דיור" against
+// a טבלה 5 of 136, and its permit is for exactly 143. דרך חברון 101 states its
+// count as a FLOOR — "מספר יח״ד בתוכנית הינו 46 לכל הפחות" — so 61 in the permit
+// is not above the plan at all; what binds there is the floor area, not a unit cap.
+// Separate from planUnitBonus because every caller of that one reads `.pct`.
+function planUnitCap(props) {
+  const o = window.__unitBonus || {};
+  const k = String(props && props.plan_name || '').trim();
+  const r = k && o[k];
+  return r && (r.max_units || r.min_only) ? r : null;
 }
 // The baseline יח"ד count the bonus percentage applies to — same base the
 // permits-vs-plan report compares against (units_total, falling back to units_add).
@@ -56302,7 +56314,9 @@ function App() {
       const inclusion = permits.length ? getEffectivePermitInclusion(permits, 'plan:' + taba, base) : [];
       const permitUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? Number(x.units) || 0 : 0), 0);
       const bonus = planUnitBonus(p);
-      const bonusUnits = bonus ? planBonusUnits(p) : 0;
+      const cap = planUnitCap(p);
+      const capUnits = cap && cap.max_units ? Math.max(0, (parseFloat(cap.max_units) || 0) - base) : 0;
+      const bonusUnits = (bonus ? planBonusUnits(p) : 0) + capUnits;
       const condUnits = planConditionalUnits(p);
       const raiser = findRaiser(p, base);
       const raiseUnits = raiser ? Math.max(0, (parseFloat(raiser.units_total) || 0) - base) : 0;
@@ -56334,7 +56348,10 @@ function App() {
       // what the plan or a committee decision already accounts for. A טבלה 5 note
       // is an ALLOWANCE (may never be used); a הקלה is a decision already taken.
       const tamaUnits = allTama ? Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits) : 0;
-      const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits);
+      // A plan that fixes its count as a minimum sets no ceiling to exceed.
+      const openCeiling = !!(cap && cap.min_only);
+      const openUnits = openCeiling ? Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits) : 0;
+      const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits - openUnits);
       if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits) return;
       rows.push({
         taba,
@@ -56348,7 +56365,9 @@ function App() {
         realized,
         bonusUnits,
         bonusPct: bonus ? bonus.pct : 0,
-        bonusNote: bonus ? bonus.note : '',
+        bonusNote: bonus && bonus.note || cap && cap.note || '',
+        bonusCap: cap && cap.max_units || 0,
+        openUnits,
         condUnits,
         raiseUnits,
         tamaUnits,
@@ -56390,6 +56409,7 @@ function App() {
       cond: sum(view, 'condUnits'),
       raise: sum(view, 'raiseUnits'),
       tama: sum(view, 'tamaUnits'),
+      open: sum(view, 'openUnits'),
       realized: sum(view, 'realized'),
       unexplained: sum(view, 'unexplained')
     };
@@ -56476,7 +56496,8 @@ function App() {
       if (r.tamaUnits) parts.push('מכוח תמ"א 38 — היתר חיזוק, לא מטבלה 5');
       if (r.hakExtra) parts.push('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''));
       if (r.condUnits) parts.push('יח"ד מותנות');
-      if (r.bonusUnits) parts.push('הערת טבלה 5 · עד ' + r.bonusPct + '%');
+      if (r.bonusUnits) parts.push(r.bonusPct ? 'הערת טבלה 5 · עד ' + r.bonusPct + '%' : 'הוראות התכנית · עד ' + r.bonusCap + ' יח"ד');
+      if (r.openUnits) parts.push('התכנית קובעת ' + r.base + ' יח"ד "לכל הפחות" — אין תקרה');
       if (r.unexplained && r.pubOnly) parts.push((parts.length ? 'ועוד ' + r.unexplained + ' ' : '') + 'מהקלה שפורסמה (§149' + (r.pubDate ? ' ' + r.pubDate : '') + ') שהמספר שלה לא נרשם');else if (r.unexplained) parts.push(parts.length ? 'ועוד ' + r.unexplained + ' ללא מקור' : 'תוספת בהיתר ללא מקור מתועד');
       return parts.join(' · ');
     };
@@ -56644,7 +56665,7 @@ function App() {
         flexWrap: 'wrap',
         marginBottom: 12
       }
-    }, tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5'), tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0'), tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb'), tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2'), tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041'), tile('תכנית מאוחרת מגדילה', nf(T.raise), window.__planRaisers && Object.keys(window.__planRaisers).length || overlapReady ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4'), tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff'), tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a'), tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c'), tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')), /*#__PURE__*/React.createElement("table", {
+    }, tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5'), tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0'), tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb'), tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2'), tile('יח"ד בתב"ע כרצפה', nf(T.open), 'התכנית לא קובעת תקרה', '#9fd8c8'), tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041'), tile('תכנית מאוחרת מגדילה', nf(T.raise), window.__planRaisers && Object.keys(window.__planRaisers).length || overlapReady ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4'), tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff'), tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a'), tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c'), tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')), /*#__PURE__*/React.createElement("table", {
       style: {
         width: '100%',
         borderCollapse: 'collapse',
@@ -56692,7 +56713,7 @@ function App() {
         ...TD,
         color: r.bonusUnits ? '#5dade2' : '#55617a'
       }
-    }, r.bonusUnits ? nf(r.bonusUnits) + ' (' + r.bonusPct + '%)' : '—'), /*#__PURE__*/React.createElement("td", {
+    }, r.bonusUnits ? nf(r.bonusUnits) + (r.bonusPct ? ' (' + r.bonusPct + '%)' : ' (עד ' + nf(r.bonusCap) + ')') : '—'), /*#__PURE__*/React.createElement("td", {
       style: {
         ...TD,
         color: r.hakExtra ? '#f5b041' : '#55617a'
