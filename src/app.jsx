@@ -38303,6 +38303,15 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const T = { base: sum(view, 'base'), bonus: sum(view, 'bonusUnits'), hak: sum(view, 'hakExtra'),
                             cond: sum(view, 'condUnits'), raise: sum(view, 'raiseUnits'), tama: sum(view, 'tamaUnits'),
             open: sum(view, 'openUnits'),
+            // The single figure: יח"ד that exist beyond what the תב"עות count. Per plan the
+            // HIGHER of the two sides, never their sum — the rights a plan grants above its
+            // own יח"ד total and the addition its permits already show are the same units
+            // seen twice (פת/בר יוחאי: 36 מהערת טבלה 5, ו-36 בהיתר). Taking the higher keeps
+            // a right that has not been used yet (טבלה 5 של תכנית בלי היתרים) and an addition
+            // that outran its documented channel, without counting either one twice.
+            beyond: view.reduce((a, r) => a + Math.max(r.realized || 0,
+                (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
+                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)), 0),
                             realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
                         const nBonus = view.filter(r => r.bonusUnits).length;
                         const nHak = view.filter(r => r.hakExtra).length;
@@ -38377,7 +38386,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 + 'th,td{border:1px solid #bbb;padding:4px;text-align:center}th{background:#eee}'
                                 + '.sum{margin:10px 0;font-size:13px}@media print{button{display:none}}</style></head><body>'
                                 + '<h1>תוספות יח"ד מעבר לתכנית המקורית</h1>'
-                                + '<div class="sum">' + view.length + ' תכניות · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
+                                + '<div class="sum">' + view.length + ' תכניות · סה"כ מעבר לתב"ע: ' + nf(T.beyond)
+                                + ' · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
                                 + ' · יח"ד מותנות: ' + nf(T.cond)
                                 + ' · תכנית מאוחרת מגדילה: ' + nf(T.raise)
                                 + ' · מכוח תמ"א 38: ' + nf(T.tama)
@@ -38442,6 +38452,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     </div>
 
                                     <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 12 }}>
+                                        {tile('סה"כ מעבר לתב"ע', nf(T.beyond),
+                                            'לכל תכנית — הגבוה מבין הזכויות לבין ההיתרים', '#ffd479')}
                                         {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5')}
                                         {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
                                         {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
