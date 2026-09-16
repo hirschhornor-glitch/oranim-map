@@ -5896,6 +5896,7 @@
                     ['__unitBonus', 'data/unit_bonus.json'],
                     ['__permitHakalot', 'data/permit_hakalot.json'],
                     ['__permitPlanOverrides', 'data/permit_plan_overrides.json'],
+                    ['__planRaisers', 'data/plan_raisers.json'],
                     ['__table5Units', 'data/table5_units.json'],
                     ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
                     ['__hafrashPermitUse', 'data/hafrash_permit_use.json'],
@@ -6444,6 +6445,7 @@
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__unitBonus') { window.__unitBonus = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__permitHakalot') { window.__permitHakalot = (data && data.by_permit) ? data.by_permit : {}; }
+                            else if (key === '__planRaisers') { window.__planRaisers = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__permitPlanOverrides') {
                                 // the file is written the human way ("2024/0568"); every lookup
                                 // here speaks permitBaseKey ("2024/568")
@@ -37597,6 +37599,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             return m ? parseInt(m[1], 10) : 0;
                         };
                         const findRaiser = (props, base) => {
+                            // precomputed by build_plan_raisers.py — same test, but available the
+                            // moment the report opens instead of after the overlap worker finishes
+                            const pre = (window.__planRaisers || {})[String(props.taba || '').trim()];
+                            if (pre) return { taba: pre.taba, plan_name: pre.plan_name, plan_summary: pre.title,
+                                              units_total: pre.units_total, units_in: pre.units_in };
                             if (!oMapX || !base) return null;
                             const nbrs = oMapX.get(String(props.taba || '').trim());
                             if (!nbrs) return null;
@@ -37824,7 +37831,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         {tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2')}
                                         {tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041')}
                                         {tile('תכנית מאוחרת מגדילה', nf(T.raise),
-                                            overlapReady ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4')}
+                                            (window.__planRaisers && Object.keys(window.__planRaisers).length) || overlapReady
+                                                ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4')}
                                         {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
                                         {tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c')}
                                         {tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')}
