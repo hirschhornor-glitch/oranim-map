@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-shared2';
+        const APP_VERSION = '2026-09-16-alloc-shared3';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -622,6 +622,19 @@
                 ];
                 const matchedKeys = [];
                 FACILITY_PATTERNS.forEach(pair => { if (pair[1].test(t)) matchedKeys.push(pair[0]); });
+                // "בי"ס על-יסודי" contains "יסודי", so the yesodi pattern fires on a segment
+                // that is purely a high school and the area looks shared between two school
+                // types that are really one building. Drop a key whose phrase is a substring
+                // of one already matched — this only affects the shared-use report, since the
+                // chosen key is still the first (most specific) match.
+                const SUBSUMES = { al_yesodi: ['yesodi'] };
+                Object.keys(SUBSUMES).forEach(outer => {
+                    if (matchedKeys.indexOf(outer) === -1) return;
+                    SUBSUMES[outer].forEach(inner => {
+                        const at = matchedKeys.indexOf(inner);
+                        if (at !== -1) matchedKeys.splice(at, 1);
+                    });
+                });
                 const key = matchedKeys.length ? matchedKeys[0] : null;
                 if (key) {
                     let count, isClasses, itemSqm = sqm;
