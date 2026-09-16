@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v76-alloc-seg-split';
+const CACHE_VERSION = 'v77-seg-delivery';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-16-alloc-seg-split';
+        const APP_VERSION = '2026-09-16-seg-delivery';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11156,6 +11156,18 @@
                 function prgSegments(text) {
                     return String(text || '').split(';').map(x => x.trim()).filter(Boolean);
                 }
+                // Refinement from the muni property book: where the statutory text says nothing
+                // but "מבנים ומוסדות ציבור", the assets the city actually opened say what the
+                // space becomes (גן / בית כנסת / מעון / דירות לבעלי מוגבלויות…). הפרשה source
+                // only — delivery evidence IS the hafrasha process by definition. Returns
+                // {use, doms} or null.
+                function deliveryUseFor(taba, source) {
+                    if (source !== 'הפרשה מבונה') return null;
+                    const cats = [...new Set((_dlvByTaba[taba] || []).flatMap(a => a.cats || []))];
+                    if (!cats.length) return null;
+                    return { use: 'מבני ציבור — לפי ספר הנכסים: ' + cats.join(', '),
+                             doms: hafrashUseDomainsAll(cats.join(', ')) };
+                }
                 const detailRows = [];
                 // Rows where the מ"ר written next to the individual uses add up to MORE than the
                 // plan's own figure in the sheet - usually the text lists area bands (below-grade
@@ -11210,9 +11222,12 @@
                             const v = segFigure(seg);
                             if (!(v > 0)) return;
                             if (parseFacilitiesDetailed(seg).items.length) return;   // already a named key
+                            const segDoms = hafrashUseDomainsAll(seg);
+                            const dlvU = segDoms.length ? null : deliveryUseFor(r.taba, source);
                             segRows.push({
-                                use: seg.replace(/\([^)]*\)/, '').replace(/[\s,;\-–—]+$/, '').trim() || seg,
-                                sqm: v, doms: hafrashUseDomainsAll(seg),
+                                use: dlvU ? dlvU.use
+                                    : (seg.replace(/\([^)]*\)/, '').replace(/[\s,;\-–—]+$/, '').trim() || seg),
+                                sqm: v, doms: dlvU ? dlvU.doms : segDoms,
                             });
                         });
                         const segSqm = segRows.reduce((acc, x) => acc + x.sqm, 0);
@@ -11256,17 +11271,14 @@
                                 // generic ("מבנים ומוסדות ציבור"), the delivered assets say what
                                 // the space actually becomes (גן/בית כנסת/מעון…). הפרשה source
                                 // only - delivery evidence is by definition the hafrasha process.
-                                if (source === 'הפרשה מבונה') {
-                                    const dlvCats = [...new Set((_dlvByTaba[r.taba] || []).flatMap(a => a.cats || []))];
-                                    if (dlvCats.length) {
-                                        use = 'מבני ציבור — לפי ספר הנכסים: ' + dlvCats.join(', ');
-                                        // The delivered assets override the statutory text for the
-                                        // label, so they must override it for the area split too -
-                                        // otherwise the row would read "בית כנסת" on screen and be
-                                        // counted under whatever domain the plan text happened to name.
-                                        const _dd = hafrashUseDomainsAll(dlvCats.join(', '));
-                                        if (_dd.length) _doms = _dd;
-                                    }
+                                // The delivered assets override the statutory text for the label,
+                                // so they must override it for the area split too - otherwise the row
+                                // would read "בית כנסת" on screen and be counted under whatever domain
+                                // the plan text happened to name.
+                                const dlvU = deliveryUseFor(r.taba, source);
+                                if (dlvU) {
+                                    use = dlvU.use;
+                                    if (dlvU.doms.length) _doms = dlvU.doms;
                                 }
                             } else {
                                 use = 'שטח שלא פולח בין השימושים' +
