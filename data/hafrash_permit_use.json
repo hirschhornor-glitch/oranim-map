@@ -37,7 +37,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/1037670_2023_0109.01_d12_p01_z90.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -74,7 +74,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/1161439_zlabel300.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -112,7 +112,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/175232_01_b0665_0550_0715_1000a.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -153,7 +153,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/204743_ev_p04_taba_migrash.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -190,7 +190,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/224477_p01_b0805_0260_0925_0400.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -228,7 +228,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/342170_ev_taba_lot.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -266,7 +266,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/571190_ev_permit_form.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -305,7 +305,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/696104_11_b0200_0270_0300_0480a.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -342,7 +342,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/779546_2024_0561.00_d42_p03_z90.jpg",
    "superseded_by": "101-1443126",
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -380,7 +380,7 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/798439_ev_floorplan_komah_a.jpg",
    "superseded_by": null,
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   },
@@ -428,11 +428,86 @@
    ],
    "evidence_jpg": "data/hafrash_evidence/95612_2017_0384.00_d00_p01_z90.jpg",
    "superseded_by": "101-0571190",
-   "read_at": "2026-08-18",
+   "read_at": "2026-09-17",
+   "reader": "claude-vision",
+   "verified_by": null
+  },
+  "410282": {
+   "plan_name": "101-0410282",
+   "outcome": "found",
+   "confidence": "high",
+   "label_he": "קונסרבטוריון הסדנה — מבנה תרבות",
+   "uses": [
+    "קונסרבטוריון הסדנה (מוסד מוסיקה)"
+   ],
+   "use_specified": true,
+   "sqm_read": 2233.09,
+   "sqm_expected": 11375,
+   "sqm_match": false,
+   "lot": "",
+   "taba_on_sheet": "1300",
+   "taba_match": false,
+   "permit": {
+    "tik": "2021/0467.00",
+    "doc_kind": "מאושר",
+    "doc_descr": "היתר בניה והרמוניקה מאושרת -היתר בניה",
+    "doc_date": "13/05/2025",
+    "permit_subject": "הקמת מבנה לקונסרבטוריון הסדנה",
+    "sheet": 1,
+    "panel": "תעודת היתר בנייה 120402 — גוש פרטי הבקשה"
+   },
+   "quote_he": "היתר בנייה מס' 120402, בקשה 2021/0467.00 · \"ניתן בזה היתר ל: הקמת מבנה לקונסרבטוריון הסדנה\" · בעל ההיתר: עמותת קונסרבטוריון הסדנה י-ם הקרן לירושלים · גוש 30012 חלקות 21,22,62,63 · תב\"ע הרשומה בתעודה: 1300 (ולא 410282) · על פי החלטת ועדת משנה מ-08/02/2023, הופק 13/02/2025. טבלת הכמויות של ההיתר: שטח עיקרי 2,233.09 (1,400.46 מעל קו הקרקע, 832.63 מתחת), שטחי שירות 100.13.",
+   "evidence_bbox": [
+    0.0196,
+    0.08,
+    0.9797,
+    0.4
+   ],
+   "evidence_jpg": "data/hafrash_evidence/410282_permit_grant_box.jpg",
+   "superseded_by": null,
+   "read_at": "2026-09-17",
+   "reader": "claude-vision",
+   "verified_by": null
+  },
+  "682849": {
+   "plan_name": "101-0682849",
+   "outcome": "found",
+   "confidence": "high",
+   "label_he": "בניני ציבור מוצע — ללא שימוש ספציפי; ההיתר משאיר את השימוש פתוח",
+   "uses": [
+    "בניני ציבור — קומת קרקע (גובה 752.00): 491.19 מ\"ר, נטו 487.29",
+    "בניני ציבור — קומת חצר מונמכת, בניין 201 (גובה 747.00): 479.57 מ\"ר, נטו 461.68"
+   ],
+   "use_specified": false,
+   "sqm_read": 948.97,
+   "sqm_expected": 8817,
+   "sqm_match": false,
+   "lot": "21",
+   "taba_on_sheet": "",
+   "taba_match": null,
+   "permit": {
+    "tik": "2023/0410.01",
+    "doc_kind": "הגשה",
+    "doc_descr": "הרמוניקה -הגשה מקוונת",
+    "doc_date": "12/09/2023",
+    "permit_subject": "בנין חדש בשני אגפים - אגף מגורים בן 9 קומות ואגף מלון בן 4 קומות מעל ק.הקרקע. ק.הקרקע וק. הקרקע המונמכת כוללות פונקציות של מסחר, מלונאות ומבנה ציבור. בנוסף 4 קומות מרתף חניה.",
+    "sheet": 1,
+    "panel": "טבלאות חישוב שטחים — קומת קרקע וקומת חצר מונמכת"
+   },
+   "quote_he": "קומת קרקע: \"בניני ציבור מוצע 491.19 (נטו 487.29) | (17) −3.90 | סה\"כ בניני ציבור מוצע 487.29 מ\"ר\" — מתוך סה\"כ שטח למטרות עיקריות 1,050.33. קומת חצר מונמכת (בניין 201): \"בניני ציבור מוצע 479.57 (נטו 461.68) | (20) −7.37 (21) −6.62 (22) −3.90 | סה\"כ בניני ציבור מוצע 461.68 מ\"ר\" — מתוך 1,319.88. שתי הטבלאות מונות מסחר ומלונאות בנפרד, ואינן נוקבות בשום שימוש ציבורי ספציפי; תשריט חישוב השטחים מסמן את השטח הציבורי כפוליגון חום ממוספר (3) ללא שם חדר.",
+   "evidence_bbox": [
+    0.5864,
+    0.03,
+    0.6726,
+    0.98
+   ],
+   "evidence_jpg": "data/hafrash_evidence/682849_public_floors.jpg",
+   "superseded_by": null,
+   "read_at": "2026-09-17",
    "reader": "claude-vision",
    "verified_by": null
   }
  },
- "count": 11,
- "built_at": "2026-08-18"
+ "count": 13,
+ "built_at": "2026-09-17"
 }
