@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-beyond-plan-pct';
+        const APP_VERSION = '2026-09-17-permit-checked';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1492,7 +1492,13 @@
         // keyed by BARE taba) and is only ever shown alongside the statutory text,
         // marked with a * and the tik it came from — it never overwrites hafrash_prg.
         // Reads that were not confidently located are withheld (see hafrash_read_merge.py).
-        function planPermitHafrashUse(taba) {
+        function planPermitChecked(taba) {
+  const o = window.__hafrashPermitUse || {};
+  const k = String(taba || '').replace(/^101-?0*/, '').replace(/^0+/, '').trim();
+  const r = k && o[k];
+  return r && r.checked ? r : null;
+}
+function planPermitHafrashUse(taba) {
             const o = window.__hafrashPermitUse || {};
             const k = String(taba || '').replace(/^101-?0*/, '').replace(/^0+/, '').trim();
             const r = k && o[k];
@@ -11220,7 +11226,17 @@
                 // deliberately leaves the use open, so no further reading will sharpen it.
                 function permitUseFor(taba, lot) {
                     const pr = (typeof planPermitHafrashUse === 'function') ? planPermitHafrashUse(taba) : null;
-                    if (!pr) return null;
+                    if (!pr) {
+                        // checked and ruled out: no use to show, but the fact that we looked —
+                        // and what we found instead — is itself an answer about the state here
+                        const ck = (typeof planPermitChecked === 'function') ? planPermitChecked(taba) : null;
+                        if (!ck) return null;
+                        const cm = ck.permit || {};
+                        return { noteOnly: true, doms: [],
+                                 note: 'ההיתר נבדק ואינו עונה: ' + (ck.checked_note || '') +
+                                     (cm.permit_subject ? ' — "' + cm.permit_subject + '"' : '') +
+                                     (cm.tik ? ' (תיק ' + cm.tik + ')' : '') };
+                    }
                     // the reading was taken off ONE lot; it says nothing about the others
                     const prLot = String(pr.lot || '').trim();
                     const rowLot = String(lot || '').replace(/^\S+\s+/, '').trim();
@@ -11453,10 +11469,11 @@
                             const dlvU = (genericSegs.length && !keys.length) ? deliveryUseFor(r.taba, source) : null;
                             genericSegs.forEach(g => {
                                 const pU = keys.length ? null : permitUseFor(r.taba, g.lot);
+                                const pNamed = pU && !pU.noteOnly ? pU : null;
                                 segRows.push({
-                                    use: pU ? pU.use : dlvU ? dlvU.use : g.use, lot: g.lot,
+                                    use: pNamed ? pNamed.use : dlvU ? dlvU.use : g.use, lot: g.lot,
                                     note: pU ? pU.note : undefined,
-                                    sqm: g.sqm, doms: pU ? pU.doms : dlvU ? dlvU.doms : [],
+                                    sqm: g.sqm, doms: pNamed ? pNamed.doms : dlvU ? dlvU.doms : [],
                                 });
                             });
                         }
@@ -11539,11 +11556,14 @@
                                 const permitE = deliveryRowsFor(r.taba, source, envelopeSqm)
                                     ? null : permitUseFor(r.taba, '');
                                 if (permitE) {
-                                    use = permitE.use;
                                     _note = permitE.note;
-                                    _doms = permitE.doms.length ? permitE.doms : _doms;
+                                    if (!permitE.noteOnly) {
+                                        use = permitE.use;
+                                        _doms = permitE.doms.length ? permitE.doms : _doms;
+                                    }
                                 }
-                                const dlvSplitE = permitE ? null : deliveryRowsFor(r.taba, source, envelopeSqm);
+                                const dlvSplitE = (permitE && !permitE.noteOnly)
+                                    ? null : deliveryRowsFor(r.taba, source, envelopeSqm);
                                 if (dlvSplitE) {
                                     const gapE = envelopeSqm - dlvSplitE.total;
                                     if (gapE > 1) dlvSplitE.rows.push({ use: 'מבני ציבור (כללי / לא מסווג)', sqm: gapE, doms: [] });
@@ -38326,6 +38346,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 taba, plan_name: p.plan_name || ('101-' + taba),
                                 name: p.plan_summary || p.plan_name_he || '',
                                 minahak: p.minahak || '', sub: p.sub_neighborhood || '',
+                                // planYearX reads mavat_date — the plan's last Mavat status date,
+                                // which for an approved plan IS the approval date. 0 when missing.
+                                year: planYearX(p),
                                 status: p.status_mavat || '', base, permitUnits, realized,
                                 bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: (bonus && bonus.note) || (cap && cap.note) || '',
                                 bonusCap: (cap && cap.max_units) || 0, openUnits, condUnits,
@@ -38386,6 +38409,25 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const THR = { ...TH, textAlign: 'right' };
                         const TD = { textAlign: 'center', padding: '4px', color: '#cfd8ea', whiteSpace: 'nowrap' };
                         const TDR = { ...TD, textAlign: 'right', whiteSpace: 'normal' };
+                        // מגמה לפי שנת אישור — the same per-plan "higher of the two sides" as the
+                        // headline tile, bucketed by year, so a rising share of יח"ד that the plans
+                        // themselves do not count is visible rather than buried in 123 rows.
+                        const beyondOf = r => Math.max(r.realized || 0,
+                            (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
+                            + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0));
+                        const byYear = (() => {
+                            const m = new Map();
+                            view.forEach(r => {
+                                if (!r.year) return;
+                                const e = m.get(r.year) || { year: r.year, plans: 0, base: 0, beyond: 0, realized: 0 };
+                                e.plans++; e.base += r.base || 0; e.beyond += beyondOf(r); e.realized += r.realized || 0;
+                                m.set(r.year, e);
+                            });
+                            return Array.from(m.values()).sort((a, b) => a.year - b.year);
+                        })();
+                        const noYear = view.filter(r => !r.year).length;
+                        const yearMaxPct = byYear.reduce((mx, e) =>
+                            Math.max(mx, e.base > 0 ? e.beyond / e.base * 100 : 0), 0);
                         const tile = (label, value, sub, accent, hint) => (
                             <div title={hint || ''} style={{ flex: '1 1 130px', minWidth: 120, background: '#10193a',
                                 border: '1px solid #2a3a5e', borderRadius: 9, padding: '8px 10px', textAlign: 'center' }}>
@@ -38394,7 +38436,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>{sub || ' '}</div>
                             </div>
                         );
-                        const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'יח"ד בתב"ע',
+                        const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'שנה', 'יח"ד בתב"ע',
                             'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'תכנית מאוחרת מגדילה',
                             'מכוח תמ"א 38', 'יח"ד בהיתרים',
                             'תוספת בפועל', 'ללא מקור מתועד', 'המקור'];
@@ -38417,7 +38459,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const csvEscape = s => `"${String(s == null ? '' : s).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ')}"`;
                         const exportCsv = () => {
                             const lines = [COLS.map(csvEscape).join(',')].concat(view.map(r => [
-                                r.plan_name, r.name, r.minahak, r.status, r.base, r.condUnits || '', r.bonusUnits || '', r.hakExtra || '',
+                                r.plan_name, r.name, r.minahak, r.status, r.year || '', r.base, r.condUnits || '', r.bonusUnits || '', r.hakExtra || '',
                                 r.raiseUnits ? (r.raiseUnits + ' (' + r.raiserName + ')') : '', r.tamaUnits || '',
                                 r.permitUnits || '', r.realized || '', r.unexplained || '',
                                 srcLabel(r) + (r.hakTiks ? ' (' + r.hakTiks + ')' : '')].map(csvEscape).join(',')));
@@ -38430,7 +38472,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const printReport = () => {
                             const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                             const head = COLS.map(c => '<th>' + esc(c) + '</th>').join('');
-                            const body = view.map(r => '<tr>' + [r.plan_name, r.name, r.minahak, r.status, nf(r.base),
+                            const body = view.map(r => '<tr>' + [r.plan_name, r.name, r.minahak, r.status, r.year || '—', nf(r.base),
                                 r.condUnits ? nf(r.condUnits) : '—',
                                 r.bonusUnits ? nf(r.bonusUnits) : '—', r.hakExtra ? nf(r.hakExtra) : '—',
                                 r.raiseUnits ? (nf(r.raiseUnits) + ' ' + r.raiserName) : '—',
@@ -38534,6 +38576,48 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         {tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')}
                                     </div>
 
+                                    {byYear.length > 1 && (
+                                        <details open style={{ marginBottom: 12, background: '#0d1428',
+                                            border: '1px solid #2a3a5e', borderRadius: 8, padding: '8px 12px' }}>
+                                            <summary style={{ cursor: 'pointer', color: '#dbe4f5', fontSize: 12.5, fontWeight: 600 }}>
+                                                📈 מגמה לפי שנת אישור התכנית
+                                                <span style={{ color: '#8a9bc0', fontWeight: 400, fontSize: 11 }}>
+                                                    {' '}— כמה מהיח"ד אינן בתב"ע, לפי שנה
+                                                    {noYear ? ' (' + noYear + ' תכניות ללא תאריך)' : ''}</span>
+                                            </summary>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5, marginTop: 8 }}>
+                                                <thead><tr style={{ background: '#16224a' }}>
+                                                    {['שנה', 'תכניות', 'יח"ד בתב"ע', 'מעבר לתב"ע', 'מזה בפועל בהיתרים', '% מעבר לתב"ע']
+                                                        .map(c => <th key={c} style={TH}>{c}</th>)}
+                                                </tr></thead>
+                                                <tbody>
+                                                    {byYear.map(e => {
+                                                        const pct = e.base > 0 ? e.beyond / e.base * 100 : 0;
+                                                        return (
+                                                            <tr key={e.year} style={{ borderTop: '1px solid #223056' }}>
+                                                                <td style={{ ...TD, fontWeight: 600 }}>{e.year}</td>
+                                                                <td style={TD}>{e.plans}</td>
+                                                                <td style={TD}>{nf(e.base)}</td>
+                                                                <td style={{ ...TD, color: '#ffd479', fontWeight: 600 }}>{nf(e.beyond)}</td>
+                                                                <td style={{ ...TD, color: '#7fc98a' }}>{e.realized ? nf(e.realized) : '—'}</td>
+                                                                <td style={TD}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                                                                        <div style={{ width: 90, height: 7, background: '#1b2542', borderRadius: 4 }}>
+                                                                            <div style={{ width: (yearMaxPct > 0 ? (pct / yearMaxPct * 100) : 0) + '%',
+                                                                                height: '100%', background: '#ffd479', borderRadius: 4 }} />
+                                                                        </div>
+                                                                        <span style={{ minWidth: 42, textAlign: 'right' }}>
+                                                                            {e.base > 0 ? pct.toFixed(1) + '%' : '—'}</span>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </details>
+                                    )}
+
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                                         <thead><tr style={{ background: '#16224a' }}>
                                             {COLS.map((c, i) => <th key={c} style={i === 1 ? THR : TH}>{c}</th>)}
@@ -38547,6 +38631,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={TDR}>{r.name || '—'}</td>
                                                     <td style={TD}>{r.minahak || '—'}</td>
                                                     <td style={TD}>{r.status || '—'}</td>
+                                                    <td style={TD} title="שנת התאריך האחרון במבא״ת — לתכנית מאושרת זהו תאריך האישור">
+                                                        {r.year || '—'}</td>
                                                     <td style={TD}>{nf(r.base)}</td>
                                                     <td style={{ ...TD, color: r.condUnits ? '#b39ddb' : '#55617a' }}
                                                         title="יח״ד שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) — מחוץ ל-units_total">
