@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-permit-reads-2';
+        const APP_VERSION = '2026-09-17-beyond-plan-pct';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -38386,8 +38386,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const THR = { ...TH, textAlign: 'right' };
                         const TD = { textAlign: 'center', padding: '4px', color: '#cfd8ea', whiteSpace: 'nowrap' };
                         const TDR = { ...TD, textAlign: 'right', whiteSpace: 'normal' };
-                        const tile = (label, value, sub, accent) => (
-                            <div style={{ flex: '1 1 130px', minWidth: 120, background: '#10193a',
+                        const tile = (label, value, sub, accent, hint) => (
+                            <div title={hint || ''} style={{ flex: '1 1 130px', minWidth: 120, background: '#10193a',
                                 border: '1px solid #2a3a5e', borderRadius: 9, padding: '8px 10px', textAlign: 'center' }}>
                                 <div style={{ fontSize: 11, color: '#9fb0d0', whiteSpace: 'nowrap' }}>{label}</div>
                                 <div style={{ fontSize: 23, fontWeight: 800, color: accent, lineHeight: 1.2 }}>{value}</div>
@@ -38446,6 +38446,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 + '.sum{margin:10px 0;font-size:13px}@media print{button{display:none}}</style></head><body>'
                                 + '<h1>תוספות יח"ד מעבר לתכנית המקורית</h1>'
                                 + '<div class="sum">' + view.length + ' תכניות · סה"כ מעבר לתב"ע: ' + nf(T.beyond)
+                                + (T.base > 0 ? ' (+' + (T.beyond / T.base * 100).toFixed(1) + '%)' : '')
                                 + ' · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
                                 + ' · יח"ד מותנות: ' + nf(T.cond)
                                 + ' · תכנית מאוחרת מגדילה: ' + nf(T.raise)
@@ -38512,7 +38513,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
 
                                     <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 12 }}>
                                         {tile('סה"כ מעבר לתב"ע', nf(T.beyond),
-                                            'לכל תכנית — הגבוה מבין הזכויות לבין ההיתרים', '#ffd479')}
+                                            (T.base > 0 ? '+' + (T.beyond / T.base * 100).toFixed(1) + '% מעל היח"ד בתב"ע' : ''),
+                                            '#ffd479',
+                                            'לכל תכנית נלקח הגבוה מבין הזכויות שמעבר ל-יח״ד שבתב״ע (מותנות, טבלה 5, '
+                                            + 'תכנית מאוחרת מגדילה, תמ״א 38, רצפה, הקלות) לבין התוספת שההיתרים כבר מראים — '
+                                            + 'לא סכום שלהם, כי לרוב אלו אותן יח״ד משני צדדים. '
+                                            + nf(T.beyond) + ' מתוך ' + nf(T.base) + ' יח״ד בתב״ע.')}
                                         {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5')}
                                         {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
                                         {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
