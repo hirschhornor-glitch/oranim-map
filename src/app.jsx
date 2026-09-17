@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-year-trend';
+        const APP_VERSION = '2026-09-17-override-notice';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -38299,6 +38299,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             // so the two reports can never disagree about a plan's permitted units
                             const permits = getPlanExecutingPermits(taba);
                             const inclusion = permits.length ? getEffectivePermitInclusion(permits, 'plan:' + taba, base) : [];
+                            // a stored tick that disagrees with the rules — see overridden below
+                            const defaultsHere = permits.length ? getPermitInclusionDefaults(permits, base).included : [];
+                            const overridden = inclusion.reduce((c, v, i) => c + (v !== defaultsHere[i] ? 1 : 0), 0);
                             const permitUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? (Number(x.units) || 0) : 0), 0);
                             const bonus = planUnitBonus(p);
                             const cap = planUnitCap(p);
@@ -38352,7 +38355,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 status: p.status_mavat || '', base, permitUnits, realized,
                                 bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: (bonus && bonus.note) || (cap && cap.note) || '',
                                 bonusCap: (cap && cap.max_units) || 0, openUnits, condUnits,
-                                raiseUnits, tamaUnits, raiserName: raiser ? (raiser.plan_name || '') : '',
+                                raiseUnits, tamaUnits, overridden, raiserName: raiser ? (raiser.plan_name || '') : '',
                                 raiserTitle: raiser ? (raiser.plan_summary || raiser.plan_name_he || '') : '',
                                 hakExtra, hakPct: hakRecs.map(r => r.pct).filter(Boolean)[0] || 0,
                                 pubOnly: pubRecs.length > 0,
@@ -38395,6 +38398,14 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                 (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
                 + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)), 0),
                             realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
+                        // Manual ticks are stored per browser and beat the rules for good, so a tick
+                        // made before the rules improved silently keeps an old number on screen.
+                        const nOverridden = view.reduce((a, r) => a + (r.overridden || 0), 0);
+                        const nOverriddenPlans = view.filter(r => r.overridden).length;
+                        const clearPermitOverrides = () => {
+                            try { localStorage.removeItem(PERMIT_OVERRIDES_KEY); } catch (e) {}
+                            setExtraUnitsFilter({ ...extraUnitsFilter });
+                        };
                         const nBonus = view.filter(r => r.bonusUnits).length;
                         const nHak = view.filter(r => r.hakExtra).length;
                         const nReal = view.filter(r => r.realized).length;
@@ -38552,6 +38563,21 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             {btn('🖨️ הדפסה', printReport, '#3d5a80')}
                                         </div>
                                     </div>
+
+                                    {nOverridden > 0 && (
+                                        <div style={{ background: '#2b1f10', border: '1px solid #6b4f1d', borderRadius: 8,
+                                            padding: '8px 12px', marginBottom: 12, color: '#f0d9a8', fontSize: 12,
+                                            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                            <span>⚠️ <b>{nOverridden} היתרים</b> ב-{nOverriddenPlans} תכניות מסומנים ידנית
+                                            בניגוד לכללי הזיהוי. הסימון נשמר בדפדפן הזה בלבד וגובר על החישוב, גם אם
+                                            הכללים השתנו מאז — ולכן המספרים כאן עשויים להיות שונים ממה שרואה מישהו אחר.</span>
+                                            <button onClick={clearPermitOverrides}
+                                                style={{ background: '#6b4f1d', color: '#fff', border: 'none', borderRadius: 5,
+                                                    padding: '4px 10px', fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit' }}>
+                                                אפס את הסימונים הידניים
+                                            </button>
+                                        </div>
+                                    )}
 
                                     <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 12 }}>
                                         {tile('סה"כ מעבר לתב"ע', nf(T.beyond),

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v88-year-trend';
+const CACHE_VERSION = 'v89-override-notice';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
