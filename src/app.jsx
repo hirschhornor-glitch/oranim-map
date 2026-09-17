@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-no-service-rows';
+        const APP_VERSION = '2026-09-17-permit-reads-2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11190,6 +11190,15 @@
                 }
                 // "מגרש 9 - …", "מגרש 30199/40 - …", "תא שטח 7 - …", "בניין 3 / תא שטח 7 - …".
                 // Returns '' when the segment names no lot.
+                // Is the segment nothing but a public-building designation? Only then may the
+                // permit or the property book speak for it. "שטח לתכנון בעתיד" says something
+                // about itself and must keep saying it.
+                function isBarePublic(seg) {
+                    const t = stripLot(String(seg || '')).replace(/\([^)]*\)/g, '').trim();
+                    // reserved / not-yet-planned area: the plan is telling us there is no
+                    // facility here yet, so neither the permit nor the book may name one
+                    return !/(לתכנון בעתיד|תכנון עתידי|עתודה|שמור לעתיד|טרם נקבע|יקבע בעתיד)/.test(t);
+                }
                 function segLot(seg) {
                     // HAFRASH_LOT_PREFIX_RE is the layer's; the others are forms it does not cover
                     const m = String(seg || '').match(/^(מגרש|תא שטח|תא|בניין|מתחם)\s+([\dא-תA-Za-z/+]+)\s*[-–—]/);
@@ -11329,11 +11338,15 @@
                             const scale = Math.min(1, figure / total);
                             parts.forEach((x, i) => { x.sqm = want[i] * scale; x.byStandard = true; });
                             const left = figure - total * scale;
-                            if (left > 1) sharedLeftovers.push({
-                                sqm: left,
-                                uses: parts.map(x => ALLOC_LBLS[x.key] || x.key),
-                                doms: [...new Set(parts.map(x => PARSER_KEY_DOMAIN[x.key]).filter(Boolean))],
-                            });
+                            if (left > 1) {
+                                const _pu = permitUseFor(r.taba, '');
+                                sharedLeftovers.push({
+                                    sqm: left,
+                                    uses: parts.map(x => ALLOC_LBLS[x.key] || x.key),
+                                    doms: [...new Set(parts.map(x => PARSER_KEY_DOMAIN[x.key]).filter(Boolean))],
+                                    note: _pu ? _pu.note : undefined,
+                                });
+                            }
                         });
                         // Stated class counts are kept apart from facility counts. The parser
                         // falls back to count=1 / isClasses=false when the text gives no number
@@ -11387,7 +11400,7 @@
                         // domains the text names, and marked unsplit when there is more than one.
                         sharedLeftovers.forEach(x => detailRows.push({
                             taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                            use: 'יתרה משותפת — ' + x.uses.join(' + '), doms: x.doms,
+                            use: 'יתרה משותפת — ' + x.uses.join(' + '), doms: x.doms, note: x.note,
                             count: 0, unit: '', sqm: x.sqm,
                         }));
                         const attributedSqm = keys.reduce((acc, ak) => acc + (agg[ak].sqm || 0), 0)
@@ -11416,7 +11429,8 @@
                             segCarriedLot = lot;
                             const segDoms = hafrashUseDomainsAll(seg);
                             if (segDoms.length) segRows.push({ use: label, sqm: v, doms: segDoms, lot });
-                            else genericSegs.push({ use: label, sqm: v, lot });
+                            else if (isBarePublic(seg)) genericSegs.push({ use: label, sqm: v, lot });
+                            else segRows.push({ use: label, sqm: v, doms: [], lot });
                         });
                         const genericSqm = genericSegs.reduce((acc, x) => acc + x.sqm, 0);
                         // Only where the text names no use at all. The book covers the plan's
