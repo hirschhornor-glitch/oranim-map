@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-override-notice';
+        const APP_VERSION = '2026-09-17-drop-rejected';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -38293,6 +38293,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const taba = String(p.taba || '').trim();
                             if (!taba || seen.has(taba)) return;
                             if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                            // A shelved or rejected plan grants nothing, so "יח״ד מעבר לתב״ע" is
+                            // meaningless for it — and it was noise: most of those rows were a dead
+                            // plan credited with a "later plan that raises it", which is just the
+                            // live plan that replaced it. statusGroupKey is the single source
+                            // (STATUS_GROUP_DEFS) so this tracks any future wording.
+                            if (statusGroupKey(p.status_mavat) === 'rejected') return;
                             seen.add(taba);
                             const base = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add) || 0;
                             // the same permits, inclusion and totals the "היתרים מול תב״ע" report uses,
