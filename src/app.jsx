@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-permit-use';
+        const APP_VERSION = '2026-09-17-no-service-rows';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11467,6 +11467,7 @@
                                     detailRows.push({
                                         taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
                                         use: 'שטחי שירות ותנועה — ' + (HAFRASH_DOM_HE[d] || d),
+                                        serviceArea: true,
                                         note: 'התכנית נוקבת בפרוגרמה מפורטת (' + Math.round(attributedSqm).toLocaleString() +
                                             ' מ"ר עיקרי) ובסה"כ גדול יותר (' + Math.round(baseSqm).toLocaleString() +
                                             ' מ"ר). ההפרש הוא שטחי שירות ותנועה של אותם שימושים, ומחולק ביניהם לפי חלקם בשטח העיקרי',
@@ -11559,8 +11560,11 @@
                 detailRows.sort((a, b) => (a.taba < b.taba ? -1 : a.taba > b.taba ? 1
                     : ((a.lot || '') < (b.lot || '') ? -1 : (a.lot || '') > (b.lot || '') ? 1
                     : (a.use < b.use ? -1 : a.use > b.use ? 1 : 0))));
+                function planRowsForTable() {
+                    return filteredDetailRows().filter(r => !r.serviceArea);
+                }
                 function buildPlanRows() {
-                    return filteredDetailRows().map(r => {
+                    return planRowsForTable().map(r => {
                         const sc = statusCell(r.taba, r.status);
                         const statusStyle = sc.permit ? 'color:' + sc.color + ';font-weight:bold' : 'color:#999';
                         const stage = sc.permit ? planPermitStage(r.taba) : null;
@@ -11730,9 +11734,9 @@
                         : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>';
                 }
                 function buildDetailSection() {
-                    const fd = filteredDetailRows();
+                    const fd = planRowsForTable();
                     return '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + fd.length +
-                            (stageFilter === 'all' ? '' : ' מתוך ' + detailRows.length) + ')</h4>' +
+                            (stageFilter === 'all' ? '' : ' מתוך ' + detailRows.filter(x => !x.serviceArea).length) + ')</h4>' +
                         (fd.length
                             ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373" title="מגרש / תא שטח כפי שנכתב בתכנית — כמה הפרשות באותה תכנית יושבות על מגרשים שונים">מגרש</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody id="alloc-tbody">' + buildPlanRows() + '</tbody></table>'
                             : '<div style="color:#999;font-size:13px;padding:10px">' +
@@ -12021,7 +12025,7 @@
                     const lines = [];
                     // The export mirrors what is on screen, filter included — an export that
                     // silently held more rows than the report would be read as a different answer.
-                    const fr = filteredRows(), fd = filteredDetailRows(), t = sumSqm(fr), fc = useCountsFor(fr);
+                    const fr = filteredRows(), fd = planRowsForTable(), t = sumSqm(fr), fc = useCountsFor(fr);
                     lines.push(['מדד', 'ערך'].join(','));
                     lines.push([q('סינון סטטוס/שלב'), q(stageFilter === 'all' ? 'הכל' : filterLabel())].join(','));
                     lines.push(['תכניות תורמות', fr.length].join(','));
