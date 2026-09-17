@@ -181,6 +181,50 @@ def superseded_by(taba):
     return rec.get("superseded_by") if rec else None
 
 
+# A ruled-out read is worth keeping: it stops the plan being re-rendered and re-read,
+# and it lets the report say "the permit was checked" instead of leaving the area
+# anonymous. Deliberately carries NO label_he and NO uses, so no consumer can turn it
+# into a use row. "illegible" is excluded — that one should be retried, not recorded.
+CHECKED_OUTCOMES = {"wrong_permit": "ההיתר שנבדק אינו ההיתר של ההפרשה",
+                    "wrong_plan": "הגרמושקה שייכת לתכנית אחרת",
+                    "not_found": "ההפרשה לא אותרה בגרמושקה שנבדקה"}
+
+
+def build_checked_record(taba, r, index_rec):
+    out = r.get("outcome")
+    if out not in CHECKED_OUTCOMES or r.get("confidence") == "low":
+        return None
+    ch = (index_rec or {}).get("chosen") or {}
+    ev = (r.get("evidence") or [{}])[0]
+    return {
+        "plan_name": (index_rec or {}).get("plan_name") or r.get("plan_name"),
+        "outcome": out,
+        "confidence": r.get("confidence"),
+        "checked": True,
+        "checked_note": CHECKED_OUTCOMES[out],
+        "label_he": None,
+        "uses": [],
+        "use_specified": False,
+        "sqm_read": None,
+        "sqm_expected": r.get("sqm_expected") or (index_rec or {}).get("hafrash_sqm"),
+        "sqm_match": None,
+        "lot": r.get("lot"),
+        "taba_on_sheet": r.get("taba_on_sheet"),
+        "taba_match": r.get("taba_match"),
+        "permit": {"tik": ch.get("tik"), "doc_kind": derive_doc_kind(ch.get("doc_descr")),
+                   "doc_descr": ch.get("doc_descr"), "doc_date": ch.get("doc_date"),
+                   "permit_subject": r.get("permit_subject") or ch.get("permit_descr"),
+                   "sheet": ev.get("sheet"), "panel": ev.get("panel")},
+        "quote_he": ev.get("quote_he"),
+        "evidence_bbox": ev.get("bbox_frac"),
+        "evidence_jpg": None,
+        "superseded_by": superseded_by(taba),
+        "read_at": date.today().strftime("%Y-%m-%d"),
+        "reader": "claude-vision",
+        "verified_by": r.get("verified_by"),
+    }
+
+
 def build_record(taba, r, index_rec, write_evidence=True):
     ch = (index_rec or {}).get("chosen") or {}
     ev = (r.get("evidence") or [{}])[0]
@@ -290,7 +334,7 @@ def main():
     cur.setdefault("_schema", {"description": SCHEMA_NOTE})["description"] = SCHEMA_NOTE
     by_plan = cur.setdefault("by_plan", {})
 
-    published, skipped, done = [], [], []
+    published, skipped, done, checked = [], [], [], []
     for path in sorted(glob.glob(AGENT_GLOB)):
         blob = load(path)
         for taba, r in blob.items():
@@ -299,11 +343,17 @@ def main():
             done.append(taba)
             if not ok:
                 skipped.append((taba, why))
+                neg = build_checked_record(taba, r, index.get(taba))
+                if neg:
+                    by_plan[taba] = neg
+                    checked.append(taba)
                 continue
             by_plan[taba] = build_record(taba, r, index.get(taba), write_evidence=not dry)
             published.append(taba)
 
     named = sum(1 for t in published if by_plan[t].get("use_specified"))
+    if checked:
+        print("checked-and-ruled-out (recorded, no use): %s" % ", ".join(sorted(checked)))
     print("agent files: %d | published: %d (%d with a named use, %d built-but-unspecified) "
           "| not published: %d" % (len(done), len(published), named,
                                    len(published) - named, len(skipped)))
