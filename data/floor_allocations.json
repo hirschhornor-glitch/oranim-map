@@ -1786,42 +1786,25 @@
         "sqm": 280
       },
       {
-        "use": "מגרש 6 - 3 כיתות גן ילדים",
+        "use": "מגרש 6 - גני ילדים",
         "floor_start": "קרקע",
         "floor_label": "מבנה ציבור עצמאי",
         "confidence": "medium",
-        "sqm": 441,
-        "classes": 3
+        "sqm": 441
       },
       {
-        "use": "מגרש 8 - גן ילדים",
+        "use": "מגרש 8 - גני ילדים ותרבות ופנאי",
         "floor_start": "קרקע",
         "floor_label": "מבנה ציבור עצמאי",
         "confidence": "medium",
         "sqm": 130
       },
       {
-        "use": "מגרש 9 - 2 גני ילדים",
+        "use": "מגרש 9 - גני ילדים ותרבות ופנאי",
         "floor_start": "קרקע",
         "floor_label": "מבנה ציבור עצמאי",
         "confidence": "medium",
-        "sqm": 390,
-        "classes": 2
-      },
-      {
-        "use": "מגרש 30199/40 - 3 כיתות מעון יום",
-        "floor_start": "קרקע",
-        "floor_label": "מבנה ציבור עצמאי",
-        "confidence": "medium",
-        "sqm": 441,
-        "classes": 3
-      },
-      {
-        "use": "מגרש 30199/40 - מרכז הוליסטי",
-        "floor_start": "קרקע",
-        "floor_label": "מבנה ציבור עצמאי",
-        "confidence": "medium",
-        "sqm": 361
+        "sqm": 390
       }
     ]
   },

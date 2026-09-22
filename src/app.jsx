@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-17-drop-rejected';
+        const APP_VERSION = '2026-09-22-shavatz-dedup';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2271,14 +2271,27 @@ function planPermitHafrashUse(taba) {
         // side — but only when the operative plan is actually loaded, so a duplicate
         // is dropped and a genuine standalone allocation never is.
         function _bareTaba(v) { return String(v == null ? '' : v).trim().replace(/^101\s*-?\s*/, '').replace(/^0+/, ''); }
-        function hafrashIsDuplicate(taba) {
+        // A pair can duplicate one field and not the other, so the answer is per-field:
+        // detect_plan_containment.py now emits dup_hafrash / dup_shavatz, and skipping
+        // both on a pair that duplicates only one would erase a real allocation.
+        // Entries written before that change carry neither flag; treat those as hafrash,
+        // the only field the old detector ever compared.
+        function _dupSide(taba, field) {
             const rec = (window.__planContainment || {})[_bareTaba(taba)];
             if (!rec) return false;
+            const legacy = rec.dup_hafrash === undefined && rec.dup_shavatz === undefined;
+            const on = legacy ? (field === 'hafrash')
+                              : !!(field === 'shavatz' ? rec.dup_shavatz : rec.dup_hafrash);
+            if (!on) return false;
             const op = _bareTaba(rec.superseded_by);
             if (!op) return false;
+            // only when the operative plan is actually loaded, so a duplicate is dropped
+            // and a genuine standalone allocation never is
             const byTaba = window.__planByTaba || {};
             return !!(byTaba[op] || byTaba[String(rec.superseded_by || '').trim()]);
         }
+        function hafrashIsDuplicate(taba) { return _dupSide(taba, 'hafrash'); }
+        function shavatzIsDuplicate(taba) { return _dupSide(taba, 'shavatz'); }
 
         // === THEMATIC COLOR FAMILIES (added 2026-05-01) ===
         // Four families with internal shades preserving information.
@@ -12440,8 +12453,8 @@ function planPermitHafrashUse(taba) {
                     plansCount++;
                     const ut = parseInt(p.units_total) || 0, ua = parseFloat(p.units_add) || 0;
                     unitsPlanned += ut; unitsAdd += ua;
-                    futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
-                    // skip the superseded half of a nested pair — see hafrashIsDuplicate()
+                    // skip the superseded half of a nested pair — see _dupSide()
+                    if (!shavatzIsDuplicate(taba)) futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
                     if (!hafrashIsDuplicate(taba)) hafSqm += parseFloat(p.hafrash_sqm) || 0;
                     commerceOut += parseFloat(p.commerce_out) || 0;
                     employment += parseFloat(p.employment) || 0;
@@ -12686,8 +12699,8 @@ function planPermitHafrashUse(taba) {
                     plansCount++;
                     const ua = parseFloat(p.units_add) || 0, ut = parseInt(p.units_total) || 0;
                     unitsAdd += ua; unitsPlanned += ut;
-                    futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
-                    // skip the superseded half of a nested pair — see hafrashIsDuplicate()
+                    // skip the superseded half of a nested pair — see _dupSide()
+                    if (!shavatzIsDuplicate(p.taba)) futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
                     if (!hafrashIsDuplicate(p.taba)) hafSqm += parseFloat(p.hafrash_sqm) || 0;
                     commerceOut += parseFloat(p.commerce_out) || 0; employment += parseFloat(p.employment) || 0;
                     const stN = normalizeStatus(st) || 'לא ידוע'; byStatus[stN] = (byStatus[stN] || 0) + 1;
@@ -33930,8 +33943,8 @@ function planPermitHafrashUse(taba) {
                                         agg.units_add   += parseFloat(pr.units_add) || 0;
                                         agg.commerce_in += parseFloat(pr.commerce_in) || 0;
                                         agg.employment  += parseFloat(pr.employment)  || 0;
-                                        agg.shavatz_out += parseFloat(pr.shavatz_out_sqm) || 0;
-                                        // skip the superseded half of a nested pair — see hafrashIsDuplicate()
+                                        // skip the superseded half of a nested pair — see _dupSide()
+                                        if (!shavatzIsDuplicate(pr.taba)) agg.shavatz_out += parseFloat(pr.shavatz_out_sqm) || 0;
                                         if (!hafrashIsDuplicate(pr.taba)) agg.hafrash += parseFloat(pr.hafrash_sqm) || 0;
                                     });
 

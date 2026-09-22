@@ -39,6 +39,7 @@ from shapely.geometry import shape
 DATA = r"C:\dev\oranim-app\data"
 OUT = os.path.join(DATA, "plan_containment.json")
 PLANS = os.path.join(DATA, "plans.geojson")
+OVERRIDES = os.path.join(DATA, "plan_containment_overrides.json")
 
 APPROVED = {"אישור", "מאושרת", "תבע מאושרת", "תחילת תוקף", "הכרעה בהתנגדויות / אישור"}
 
@@ -116,6 +117,7 @@ def main():
         except Exception:
             continue
         items.append({"p": p, "g": sh, "bb": bbox(g), "haf": num(p.get("hafrash_sqm")),
+                      "shv": num(p.get("shavatz_out_sqm")),
                       "units": num(p.get("units_total"))})
 
     pairs = []
@@ -138,13 +140,30 @@ def main():
             inner, outer = (a, b) if fa >= fb else (b, a)
             op, sup = operative_of(inner["p"], outer["p"])
             hi, ho = inner["haf"], outer["haf"]
-            if hi > 0 and ho > 0:
-                # Tolerance, not equality: 101-0533711 records 202 מ"ר against
-                # 101-1249358's 204 on the same ground — a 1% rounding difference, not
-                # two obligations. Anything past a few percent is a real divergence.
-                tol = max(5.0, 0.02 * min(hi, ho))
-                kind = "duplicate_obligation" if abs(hi - ho) <= tol else "divergent_figure"
-            elif hi > 0 or ho > 0:
+            si, so = inner["shv"], outer["shv"]
+
+            def _field_kind(x, y):
+                """duplicate / divergent / one_sided / none, for ONE field.
+
+                Tolerance, not equality: 101-0533711 records 202 מ"ר against
+                101-1249358's 204 on the same ground — a 1% rounding difference, not two
+                obligations. Anything past a few percent is a real divergence."""
+                if x > 0 and y > 0:
+                    return "duplicate" if abs(x - y) <= max(5.0, 0.02 * min(x, y)) else "divergent"
+                if x > 0 or y > 0:
+                    return "one_sided"
+                return "none"
+
+            k_haf, k_shv = _field_kind(hi, ho), _field_kind(si, so)
+            # The pair's kind is the strongest signal either field gives. A pair can be a
+            # clean duplicate in שב"צ and divergent in הפרשה — 101-1131192/101-0511923 was
+            # exactly that before the הפרשה figures were reconciled, and it was filed as
+            # divergent_figure and therefore never deducted at all.
+            if "duplicate" in (k_haf, k_shv):
+                kind = "duplicate_obligation"
+            elif "divergent" in (k_haf, k_shv):
+                kind = "divergent_figure"
+            elif "one_sided" in (k_haf, k_shv):
                 kind = "one_sided"
             else:
                 kind = "no_figure"
@@ -156,6 +175,8 @@ def main():
                 "operative": op.get("plan_name"),
                 "superseded": sup.get("plan_name"),
                 "hafrash": {inner["p"].get("plan_name"): hi, outer["p"].get("plan_name"): ho},
+                "shavatz": {inner["p"].get("plan_name"): si, outer["p"].get("plan_name"): so},
+                "field_kind": {"hafrash": k_haf, "shavatz": k_shv},
                 "units": {inner["p"].get("plan_name"): inner["units"],
                           outer["p"].get("plan_name"): outer["units"]},
                 "dates": {inner["p"].get("plan_name"): inner["p"].get("mavat_date"),
@@ -166,17 +187,50 @@ def main():
                               or outer["p"].get("plan_name_he")},
             })
 
-    # Only duplicate_obligation is safe to net out automatically; the rest are flags.
+    # A divergent pair cannot be netted automatically, but a person can read both plans
+    # and decide. plan_containment_overrides.json is where that decision lives, so it
+    # survives the next run instead of being re-made or hardcoded.
+    overrides = {}
+    if os.path.exists(OVERRIDES):
+        try:
+            raw = json.load(io.open(OVERRIDES, encoding="utf-8"))
+            for o in raw.get("pairs", []):
+                k = "%s|%s" % (o.get("operative"), o.get("superseded"))
+                overrides[k] = o
+        except Exception as e:
+            print("⚠ overrides לא נקרא: %s" % e)
+
+    n_override = 0
+    for pr in pairs:
+        o = overrides.get("%s|%s" % (pr["operative"], pr["superseded"]))
+        if not o:
+            continue
+        pr["override"] = {"decided_by": o.get("decided_by"), "why": o.get("why")}
+        if o.get("kind"):
+            pr["kind"] = o["kind"]
+        for f in ("hafrash", "shavatz"):
+            if o.get("field_kind", {}).get(f):
+                pr["field_kind"][f] = o["field_kind"][f]
+        n_override += 1
+
+    # Net out only what is a duplicate IN THAT FIELD — a pair can duplicate שב"צ while
+    # its הפרשה figures genuinely differ, and skipping both would erase a real allocation.
     superseded = {}
     for pr in pairs:
-        if pr["kind"] != "duplicate_obligation":
+        dup_h = pr["field_kind"]["hafrash"] == "duplicate"
+        dup_s = pr["field_kind"]["shavatz"] == "duplicate"
+        if not (dup_h or dup_s):
             continue
         key = re.sub(r"^101-0*", "", str(pr["superseded"] or "")).lstrip("0")
         superseded[key] = {"superseded_by": pr["operative"],
                            "hafrash_sqm": pr["hafrash"].get(pr["superseded"]),
+                           "shavatz_sqm": pr["shavatz"].get(pr["superseded"]),
+                           "dup_hafrash": dup_h,
+                           "dup_shavatz": dup_s,
                            "containment": pr["containment"]}
 
-    dup_sqm = sum(v["hafrash_sqm"] or 0 for v in superseded.values())
+    dup_sqm = sum((v["hafrash_sqm"] or 0) for v in superseded.values() if v["dup_hafrash"])
+    dup_shv = sum((v["shavatz_sqm"] or 0) for v in superseded.values() if v["dup_shavatz"])
     out = {
         "built_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "min_overlap": min_ov,
@@ -185,6 +239,8 @@ def main():
         "counts": {k: sum(1 for p in pairs if p["kind"] == k)
                    for k in ("duplicate_obligation", "divergent_figure", "one_sided", "no_figure")},
         "double_counted_hafrash_sqm": round(dup_sqm),
+        "double_counted_shavatz_sqm": round(dup_shv),
+        "overrides_applied": n_override,
         "superseded": superseded,
         # Only the pairs that carry a hafrasha figure on BOTH sides are actionable.
         # Nesting is normal — 859 of the pairs are two plans neither of which has an
