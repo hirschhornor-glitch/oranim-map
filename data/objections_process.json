@@ -1,47 +1,7 @@
 {
  "scanned": 11,
- "generated": "2026-09-13",
+ "generated": "2026-09-22",
  "confirmed_open": [],
- "verify": [
-  {
-   "tik": "2026/0363.00",
-   "address": "מבוא יורם 1",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "19/08/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "07/10/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0363.00",
-   "lnglat": [
-    35.212813,
-    31.767515
-   ],
-   "in_district": true,
-   "category": "verify"
-  }
- ],
- "open_in_district": [
-  {
-   "tik": "2026/0363.00",
-   "address": "מבוא יורם 1",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "19/08/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "07/10/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0363.00",
-   "lnglat": [
-    35.212813,
-    31.767515
-   ],
-   "in_district": true,
-   "category": "verify"
-  }
- ]
+ "verify": [],
+ "open_in_district": []
 }
