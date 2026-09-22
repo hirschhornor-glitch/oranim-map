@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-09-14T06:36:00",
+  "generated_at": "2026-09-22T07:02:36",
   "sources": [
     {
       "file": "all_permits.json",
       "label": "היתרים לפי תב\"ע",
       "refresh": "דו-שבועי (סריקה)",
       "records": 775,
-      "last_publish": "2026-09-13",
-      "age_days": 1,
+      "last_publish": "2026-09-15",
+      "age_days": 7,
       "status": "green",
       "notes": []
     },
@@ -16,8 +16,8 @@
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1349,
-      "last_publish": "2026-09-13",
-      "age_days": 1,
+      "last_publish": "2026-09-15",
+      "age_days": 7,
       "status": "green",
       "notes": []
     },
@@ -27,7 +27,7 @@
       "refresh": "לפי צורך",
       "records": 18,
       "last_publish": "2026-06-29",
-      "age_days": 77,
+      "age_days": 85,
       "status": "info",
       "notes": []
     },
@@ -35,9 +35,9 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 19,
-      "last_publish": "2026-09-07",
-      "age_days": 7,
+      "records": 18,
+      "last_publish": "2026-09-14",
+      "age_days": 8,
       "status": "green",
       "notes": []
     },
@@ -47,8 +47,8 @@
       "refresh": "שבועי",
       "records": 0,
       "last_publish": "2026-08-30",
-      "age_days": 15,
-      "status": "yellow",
+      "age_days": 23,
+      "status": "red",
       "notes": []
     },
     {
@@ -57,7 +57,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 73,
+      "age_days": 81,
       "status": "info",
       "notes": []
     },
@@ -65,9 +65,9 @@
       "file": "tree_permits.json",
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
-      "records": 4,
-      "last_publish": "2026-09-11",
-      "age_days": 3,
+      "records": 6,
+      "last_publish": "2026-09-21",
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -77,7 +77,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 85,
+      "age_days": 93,
       "status": "info",
       "notes": []
     },
@@ -87,7 +87,7 @@
       "refresh": "לפי צורך",
       "records": 48,
       "last_publish": "2026-09-01",
-      "age_days": 13,
+      "age_days": 21,
       "status": "info",
       "notes": []
     }
@@ -106,7 +106,7 @@
       "status": 13,
       "removed": 0
     },
-    "age_days": 1
+    "age_days": 9
   },
   "committee_audit": {
     "date": "2026-09-14",
