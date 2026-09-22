@@ -142,5 +142,77 @@
   "held_value": "מגרש 1 - חברה, קהילה ותרבות (204)",
   "status": "אישור",
   "first_seen": "2026-09-22 10:16:34"
+ },
+ "410878|hafrash_sqm": {
+  "taba": 410878,
+  "plan_name": "101-0410878",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 648,
+  "status": "אישור",
+  "first_seen": "2026-09-22 15:39:58"
+ },
+ "410878|hafrash_prg": {
+  "taba": 410878,
+  "plan_name": "101-0410878",
+  "field": "hafrash_prg",
+  "old": "",
+  "held_value": "בניין 1 + בניין 2 - צרכי קהילה, שירותים ציבוריים, מחסנים וחדרי התארגנות (648)",
+  "status": "אישור",
+  "first_seen": "2026-09-22 15:39:58"
+ },
+ "601898|hafrash_sqm": {
+  "taba": 601898,
+  "plan_name": "101-0601898",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 2800,
+  "status": "אישור",
+  "first_seen": "2026-09-22 15:39:58"
+ },
+ "601898|hafrash_prg": {
+  "taba": 601898,
+  "plan_name": "101-0601898",
+  "field": "hafrash_prg",
+  "old": "",
+  "held_value": "מרכז חברתי עירוני בינתחומי לקשישים (1000); חברה, רווחה, קהילה ופנאי (1800)",
+  "status": "אישור",
+  "first_seen": "2026-09-22 15:39:58"
+ },
+ "813329|hafrash_prg": {
+  "taba": 813329,
+  "plan_name": "101-0813329",
+  "field": "hafrash_prg",
+  "old": "מגרש 1 - תפעול/חירום (250)",
+  "held_value": "מגרש 1 - שטח לצרכי ציבור בקומת קרקע וגלריה (250)",
+  "status": "אישור",
+  "first_seen": "2026-09-22 15:39:58"
+ },
+ "665752|hafrash_sqm": {
+  "taba": 665752,
+  "plan_name": "101-0665752",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 82,
+  "status": "אישור",
+  "first_seen": "2026-09-22 15:39:58"
+ },
+ "1342179|hafrash_sqm": {
+  "taba": 1342179,
+  "plan_name": "101-1342179",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 335,
+  "status": "נקלטה מקובץ מבאת",
+  "first_seen": "2026-09-22 15:39:58"
+ },
+ "1342179|hafrash_prg": {
+  "taba": 1342179,
+  "plan_name": "101-1342179",
+  "field": "hafrash_prg",
+  "old": "",
+  "held_value": "תא שטח 4 - שטח מבונה לרווחת הקהילה (335)",
+  "status": "נקלטה מקובץ מבאת",
+  "first_seen": "2026-09-22 15:39:58"
  }
 }
