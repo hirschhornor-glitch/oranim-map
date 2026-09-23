@@ -27,8 +27,12 @@ import re
 # Order matters: the more specific / higher-priority domains are tested first.
 # Keep this list byte-for-byte in step with the JS; a use string may match more
 # than one domain (e.g. "טיפת חלב ומעון יום" = health + education).
+# (?<!ש) on מעון: it is a substring of שמעון, so a street or person of that
+# name would classify as education. A plain word boundary will not do — למעון,
+# המעון and ומעון are legitimate; only the ש prefix collides. KEEP IN STEP with
+# HAFRASH_DOMAIN_RX in src/app.jsx, which carries the same guard.
 HAFRASH_DOMAIN_RX = [
-    ("education", r'(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|מעון|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)'),
+    ("education", r'(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|(?<!ש)מעון|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)'),
     ("religion",  r'(בית[- ]?כנסת|בתי כנסת|ביכ"?נ|ביכ״נ|מקווה|מקוואות|כנסיי|מנזר|מסגד|בית מדרש|כולל|דת)'),
     ("sport",     r'(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)'),
     ("health",    r'(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)'),

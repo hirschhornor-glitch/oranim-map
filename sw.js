@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v91-shavatz-dedup';
+const CACHE_VERSION = 'v92-maon-guard';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

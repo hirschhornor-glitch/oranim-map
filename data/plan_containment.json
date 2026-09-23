@@ -1,17 +1,17 @@
 {
- "built_at": "2026-09-22 09:06:39",
+ "built_at": "2026-09-22 09:14:56",
  "min_overlap": 0.95,
  "scope": "approved plans",
  "plans_compared": 588,
  "counts": {
-  "duplicate_obligation": 8,
-  "divergent_figure": 9,
+  "duplicate_obligation": 9,
+  "divergent_figure": 8,
   "one_sided": 456,
   "no_figure": 756
  },
- "double_counted_hafrash_sqm": 5054,
+ "double_counted_hafrash_sqm": 5834,
  "double_counted_shavatz_sqm": 6604,
- "overrides_applied": 2,
+ "overrides_applied": 3,
  "superseded": {
   "95612": {
    "superseded_by": "101-0571190",
@@ -76,6 +76,14 @@
    "dup_hafrash": true,
    "dup_shavatz": false,
    "containment": 0.9894
+  },
+  "150805": {
+   "superseded_by": "101-1002625",
+   "hafrash_sqm": 780.0,
+   "shavatz_sqm": 0.0,
+   "dup_hafrash": true,
+   "dup_shavatz": false,
+   "containment": 0.9912
   }
  },
  "pairs": [
@@ -241,38 +249,6 @@
   },
   {
    "kind": "divergent_figure",
-   "containment": 0.9912,
-   "inner": "101-0150805",
-   "outer": "101-1002625",
-   "operative": "101-1002625",
-   "superseded": "101-0150805",
-   "hafrash": {
-    "101-0150805": 780.0,
-    "101-1002625": 1480.0
-   },
-   "shavatz": {
-    "101-0150805": 0.0,
-    "101-1002625": 0.0
-   },
-   "field_kind": {
-    "hafrash": "divergent",
-    "shavatz": "none"
-   },
-   "units": {
-    "101-0150805": 0.0,
-    "101-1002625": 148.0
-   },
-   "dates": {
-    "101-0150805": "15/06/2016",
-    "101-1002625": "05/06/2024"
-   },
-   "summaries": {
-    "101-0150805": "פייר קניג 39",
-    "101-1002625": "ביתילי"
-   }
-  },
-  {
-   "kind": "divergent_figure",
    "containment": 0.9871,
    "inner": "101-0867317",
    "outer": "101-0175232",
@@ -429,6 +405,42 @@
    "summaries": {
     "101-1131192": "תוספת קומות בר יוחאי",
     "101-0511923": "קדמת גונן - בר יוחאי 5-15"
+   }
+  },
+  {
+   "kind": "duplicate_obligation",
+   "containment": 0.9912,
+   "inner": "101-0150805",
+   "outer": "101-1002625",
+   "operative": "101-1002625",
+   "superseded": "101-0150805",
+   "hafrash": {
+    "101-0150805": 780.0,
+    "101-1002625": 1480.0
+   },
+   "shavatz": {
+    "101-0150805": 0.0,
+    "101-1002625": 0.0
+   },
+   "field_kind": {
+    "hafrash": "duplicate",
+    "shavatz": "none"
+   },
+   "units": {
+    "101-0150805": 0.0,
+    "101-1002625": 148.0
+   },
+   "dates": {
+    "101-0150805": "15/06/2016",
+    "101-1002625": "05/06/2024"
+   },
+   "summaries": {
+    "101-0150805": "פייר קניג 39",
+    "101-1002625": "ביתילי"
+   },
+   "override": {
+    "decided_by": "אור, 22/09/2026",
+    "why": "מתייחסים רק לתכנית החדשה. אין מקטע משותף בין השתיים — 101-1002625 מחזיקה 2 כיתות גן (260), בית כנסת (350) וספורט (870), ו-101-0150805 מחזיקה לשכת רווחה אזורית (600) ומרכז הכשרה תעסוקתית (180) — ולכן אי אפשר היה להכריע מהמסמכים אם זו חובה אחת שהוחלפה או שתיים שדרות זו לצד זו. ההכרעה: התכנית המאוחרת החליפה את הפרוגרמה, ו-780 המ\"ר של הישנה יוצאים מהמאזן."
    }
   },
   {

@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-22-shavatz-dedup';
+        const APP_VERSION = '2026-09-23-maon-guard';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -644,9 +644,15 @@
                 // the mikve silently to zero.
                 // "מעונות" (plural, no "יום") used to match nothing at all: the pattern was
                 // "מעון" with a FINAL nun, which "מעונות" does not contain.
+                // The (?<!ש) guards are not cosmetic: מעון is a substring of שמעון, so a
+                // street or person named שמעון / שמעוני inside a use string would be booked
+                // as a day-care. Surfaced 22/09/2026 by a corpus sweep that came back full
+                // of address lines. A plain word boundary will NOT do — למעון, המעון and
+                // ומעון are all legitimate; only the ש prefix collides. Latent today (no
+                // hafrash_prg holds an address) but one import away from biting.
                 const FACILITY_PATTERNS = [
                     ['al_yesodi', /(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/],
-                    ['maon', /(מעון(?!\s*ל?בעלי)|מעונות(?!\s*ל?בעלי)|פעוטון)/],
+                    ['maon', /((?<!ש)מעון(?!\s*ל?בעלי)|(?<!ש)מעונות(?!\s*ל?בעלי)|פעוטון)/],
                     ['gan', /(גן ילדים|גני ילדים|גנון|גן חינוך)|(?:^|[^א-ת])(?:כיתות?\s+)?גן(?:[^א-ת]|$)/],
                     // "בתי ספר" (plural) and unpunctuated "ביהס" matched nothing, so
                     // 101-0935189's "מגרש 2 - בתי ספר (10203)" and 101-0565317's
@@ -739,7 +745,7 @@
         // decides which plans count as "allocation type unknown" in the hafrasha audit, and a
         // divergence would make the map symbology and the audit disagree silently.
         const HAFRASH_DOMAIN_RX = [
-            ['education', /(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|(?:מעון|מעונות)(?!\s*ל?בעלי)|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)/],
+            ['education', /(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|(?<!ש)(?:מעון|מעונות)(?!\s*ל?בעלי)|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)/],
             ['religion',  /(בית[- ]?כנסת|בתי כנסת|ביכ"?נ|ביכ״נ|מקווה|מקוואות|כנסיי|מנזר|מסגד|בית מדרש|כולל|דת)/],
             ['sport',     /(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)/],
             ['health',    /(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/],
@@ -755,7 +761,7 @@
         const EDU_SUB_RX = [
             ['al_yesodi', /(תיכון|חטיב|אולפנ|מדרשי|ישיב|מקיף|אורט|על[\- ]?יסודי)/],
             ['yesodi',    /(ת"ת|ת״ת|תלמוד תורה|בית[- ]?ספר יסודי|בי"?ס יסודי|בי״ס יסודי|יסודי)/],
-            ['maon',      /(מעונות יום|מעון|פעוטון)/],
+            ['maon',      /(מעונות יום|(?<!ש)מעון|פעוטון)/],
             ['gan',       /(גן ילדים|גני ילדים|גנון|כיתת גן|כיתות גן|גן חובה|טרום חובה|גן)/],
         ];
         function eduSubOf(t) {

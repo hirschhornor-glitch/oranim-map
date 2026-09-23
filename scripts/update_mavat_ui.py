@@ -1959,8 +1959,22 @@ async def main():
                 # just refreshed) also re-checks, even when the status string is
                 # unchanged: a re-deposited plan can carry a new Table 5 under the
                 # same status.
+                #
+                # A CHANGED DATE ALSO RE-CHECKS, for the same reason. The comment above
+                # already knew a plan can carry a new Table 5 under an unchanged status,
+                # but only --plans-file acted on it, and the weekly run does not pass it,
+                # so in practice the hole stayed open. 101-1106863 went אישור → אישור
+                # while its date moved 19/03/2024 → 02/03/2026 and its הוראות were
+                # reissued (מונה הדפסה 5 → 30, טבלה 5 from 300 to 34,000 מ"ר). The sheet
+                # kept the plot size, 12,560.9, and nothing ever re-read the table.
+                # Both fields were already in hand here — item['current_date'] is built
+                # alongside current_status and result['new_date'] is set with new_status.
+                _date_moved = (result.get('new_date')
+                               and item.get('current_date')
+                               and result['new_date'].strip() != item['current_date'].strip())
                 if (result.get('new_status') and not result.get('error')
                         and (result['new_status'] != item['current_status']
+                             or _date_moved
                              or PLANS_FILTER is not None)):
                     try:
                         _pn = item.get('plan_name', '')
@@ -1968,9 +1982,10 @@ async def main():
                     except Exception:
                         _taba = ''
                     try:
-                        # force=True: the status moved, so the plan may carry a new
-                        # Table 5. Without it download_xlsx returns the file cached on
-                        # first sight and the re-check is a no-op (101-1322452, 2026-08).
+                        # force=True: the status or the date moved, so the plan may
+                        # carry a new Table 5. Without it download_xlsx returns the file
+                        # cached on first sight and the re-check is a no-op
+                        # (101-1322452, 2026-08).
                         result['t5_balance'] = await scrape_t5_balance(
                             page, {'agam_id': aid, 'plan_number': item.get('plan_name', ''), 'taba': _taba},
                             force=True)
