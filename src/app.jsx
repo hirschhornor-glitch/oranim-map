@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-renewal-slope';
+        const APP_VERSION = '2026-09-24-renewal-spatial';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13793,10 +13793,11 @@ function planPermitHafrashUse(taba) {
             //    the year the plan file was received. Multiplier = (units_in + units_add) / units_in,
             //    units from the sheet (Table 5 always wins). XPLAN supplies ONLY the receiving year
             //    (receiving_date) via data/xplan_plan_dates.json (scripts/fetch_xplan_plan_dates.py). ──
-            const RENEWAL_PLAN_TYPES = new Set(['התחדשות עירונית', 'פינוי בינוי']);
+            // Narrower than the global RENEWAL_PLAN_TYPES (which adds עיבוי): a multiplier needs an existing stock being replaced.
+            const RENEWAL_MULT_PLAN_TYPES = new Set(['התחדשות עירונית', 'פינוי בינוי']);
             function openRenewalMultiplierDashboard(opts) {
                 const gd = geoDataRef.current || {};
-                if (gd.xplanDates) { renderRenewalMultiplierDashboard(opts || {}); return; }
+                if (gd.xplanDates && gd.sub_neighborhoods) { renderRenewalMultiplierDashboard(opts || {}); return; }
                 const prev = document.getElementById('rmdash-result');
                 if (prev) prev.remove();
                 const loading = document.createElement('div');
@@ -13804,10 +13805,11 @@ function planPermitHafrashUse(taba) {
                 loading.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:24px;border-radius:14px;border:2px solid #26a69a;direction:rtl;font-family:Assistant,sans-serif';
                 loading.textContent = 'טוען תאריכי קליטה מ-XPLAN…';
                 document.body.appendChild(loading);
-                fetch('data/xplan_plan_dates.json?v=' + APP_VERSION)
-                    .then(r => r.json())
-                    .then(d => { geoDataRef.current.xplanDates = d; renderRenewalMultiplierDashboard(opts || {}); })
-                    .catch(() => { loading.textContent = 'שגיאה בטעינת נתוני XPLAN.'; });
+                const need = (key, url) => gd[key] ? Promise.resolve() :
+                    fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(d => { geoDataRef.current[key] = d; });
+                Promise.all([need('xplanDates', 'data/xplan_plan_dates.json'), need('sub_neighborhoods', GEOJSON_FILES.sub_neighborhoods)])
+                    .then(() => renderRenewalMultiplierDashboard(opts || {}))
+                    .catch(() => { loading.textContent = 'שגיאה בטעינת נתוני XPLAN / תתי-שכונות.'; });
             }
 
             function renderRenewalMultiplierDashboard(o) {
@@ -13839,13 +13841,38 @@ function planPermitHafrashUse(taba) {
                 const colOf = (y) => y == null ? NO_DATE : (bin === 'year' ? String(y) : periodOf(y));
                 const FLAT = 0.03;    // |slope| below this (multiplier points per year, ≈0.3 per decade) reads as flat
 
+                // Sub-neighborhood = the polygon on the map the plan sits in, NOT the sheet's
+                // sub_neighborhood text (39 of 205 renewal plans disagree with the map, e.g. רשב"ג 48
+                // tagged קטמונים but inside גוננים). Vote: the centroid (×3) + the outer-ring vertices;
+                // the sub with most points wins. No polygon hit → fall back to the sheet value.
+                const subFeats = ((gd.sub_neighborhoods || {}).features || []).filter(sf => sf.geometry);
+                const spatialSub = (geom) => {
+                    if (!geom || !subFeats.length) return null;
+                    const polys = geom.type === 'MultiPolygon' ? geom.coordinates : geom.type === 'Polygon' ? [geom.coordinates] : [];
+                    const pts = [];
+                    const c = geomCentroid(geom);
+                    if (c) pts.push(c, c, c);
+                    polys.forEach(pl => {
+                        const ring = pl[0] || [];
+                        const step = Math.max(1, Math.floor(ring.length / 40));
+                        for (let i = 0; i < ring.length; i += step) pts.push(ring[i]);
+                    });
+                    const votes = {};
+                    pts.forEach(pt => {
+                        const hit = subFeats.find(sf => pointInGeometry(pt, sf.geometry));
+                        if (hit) { const n = hit.properties.schn_nama; votes[n] = (votes[n] || 0) + 1; }
+                    });
+                    const best = Object.keys(votes).sort((a, b) => votes[b] - votes[a])[0];
+                    return best ? (SUB_NORMALIZE[best] || best) : null;
+                };
+
                 // ── one record per renewal plan (status-scoped, before the geographic filter) ──
                 const seen = new Set();
                 const scoped = [];
                 let excludedStatus = 0;
                 (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
                     const p = f.properties || {};
-                    if (!RENEWAL_PLAN_TYPES.has(String(p.plan_type || '').trim())) return;
+                    if (!RENEWAL_MULT_PLAN_TYPES.has(String(p.plan_type || '').trim())) return;
                     const id = String(p.plan_name || '').trim();
                     if (!id || seen.has(id)) return;
                     seen.add(id);
@@ -13857,15 +13884,17 @@ function planPermitHafrashUse(taba) {
                     // whole string first ('בית צפאפא,שרפת' is itself a sub name), else the first listed sub
                     const rawSub = String(p.sub_neighborhood || '').trim();
                     const firstSub = (rawSub.split(',')[0] || '').trim();
-                    const sub = SUB_NORMALIZE[rawSub] || (SUB_TO_MINAHAK[rawSub] ? rawSub : null)
-                        || SUB_NORMALIZE[firstSub] || firstSub || 'לא ידוע';
+                    const sheetSub = SUB_NORMALIZE[rawSub] || (SUB_TO_MINAHAK[rawSub] ? rawSub : null)
+                        || SUB_NORMALIZE[firstSub] || firstSub || '';
+                    const mapSub = spatialSub(f.geometry);
+                    const sub = mapSub || sheetSub || 'לא ידוע';
                     // A sub belongs to exactly one minhak, so its canonical minhak wins over the row's tag —
                     // otherwise one sub splits across several minhak groups.
                     const minhak = SUB_TO_MINAHAK[sub] || MIN_NORM[p.minahak] || p.minahak || 'לא ידוע';
                     // No added units (a building-line / area-only amendment tagged as renewal) is not a
                     // multiplier story — a 1.00 there would only drag the averages down.
                     const mult = (uin > 0 && uadd > 0) ? (uin + uadd) / uin : null;
-                    scoped.push({ id, name: p.plan_name_he || p.plan_summary || id, minhak, sub, year, recv: x ? x.recv : null,
+                    scoped.push({ id, name: p.plan_name_he || p.plan_summary || id, minhak, sub, sheetSub, subFromMap: !!mapSub, year, recv: x ? x.recv : null,
                         status: normalizeStatus(String(p.status_mavat || '').trim()) || '', uin, uadd, mult });
                 });
                 const allMins = Array.from(new Set(scoped.filter(r => r.mult != null).map(r => r.minhak))).sort();
@@ -14119,7 +14148,9 @@ function planPermitHafrashUse(taba) {
                         '<tr style="border-bottom:1px solid #1d2f36">' +
                         '<td style="padding:4px;text-align:center"><a href="#" class="rm-plan" data-id="' + esc(r.id) + '" style="color:#64b5f6">' + esc(r.id) + '</a></td>' +
                         '<td style="padding:4px;text-align:right;color:#dde;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.name) + '">' + esc(r.name) + '</td>' +
-                        '<td style="padding:4px;text-align:center;color:#abc;white-space:nowrap">' + esc(r.minhak) + ' · ' + esc(r.sub) + '</td>' +
+                        '<td style="padding:4px;text-align:center;color:#abc;white-space:nowrap">' + esc(r.minhak) + ' · ' + esc(r.sub) +
+                            (!r.subFromMap ? ' <span title="התכנית מחוץ לפוליגוני תתי-השכונות — לפי הגיליון" style="color:#8a9aa2;cursor:help">*</span>'
+                                : (r.sheetSub && r.sheetSub !== r.sub ? ' <span title="' + esc('בגיליון: ' + r.sheetSub + ' · כאן לפי המיקום על המפה') + '" style="color:#f2a65a;cursor:help">≠</span>' : '')) + '</td>' +
                         '<td style="padding:4px;text-align:center;color:#abc">' + (r.recv ? r.recv.split('-').reverse().join('/') : '—') + '</td>' +
                         '<td style="padding:4px;text-align:center;color:#abc">' + esc(r.status) + '</td>' +
                         '<td style="padding:4px;text-align:center">' + n0(r.uin) + '</td>' +
@@ -14148,7 +14179,7 @@ function planPermitHafrashUse(taba) {
                     '<b>מכפיל</b> = (יח"ד קיים + תוספת) ÷ יח"ד קיים, לפי טבלה 5 (הגיליון). <b>משוקלל</b> = סך המוצע ÷ סך הקיים בקבוצה (תכנית גדולה משפיעה יותר); החציון מוצג בריחוף על תא. ' +
                     '<b>שנת קליטה</b> = "תאריך קבלת תכנית" (receiving_date) ב-XPLAN' + (fetched ? ', נמשך ' + esc(fetched) : '') + ' — זה הנתון היחיד שנלקח מ-XPLAN. ' +
                     '<b>מגמה</b> = שיפוע קו רגרסיה של מכפיל התכנית על שנת הקליטה, משוקלל ביח"ד הקיימות (כמו המכפיל המשוקלל), בלי שנת חיתוך — בכמה המכפיל עולה או יורד בממוצע לכל שנה. מחושבת רק לאזור עם ≥4 תכניות ב-≥3 שנות קליטה; "?" = לא מובהקת (השיפוע קטן מפעמיים סטיית התקן); שיפוע קטן מ-' + FLAT + ' לשנה נחשב יציב. ' +
-                    'נכללות תכניות שסווגו "התחדשות עירונית" / "פינוי בינוי"; תת-שכונה משויכת למינהל שאליו היא שייכת. ' +
+                    'נכללות תכניות שסווגו "התחדשות עירונית" / "פינוי בינוי". <b>תת-שכונה</b> = הפוליגון במפה שבו התכנית יושבת (חיתוך מרחבי), לא השדה בגיליון; ≠ ברשימה = הגיליון אומר אחרת, * = מחוץ לפוליגונים ולכן לפי הגיליון. תת-שכונה משויכת למינהל שאליו היא שייכת. ' +
                     'לא נכללו במכפיל: ' + noIn + ' תכניות ללא מצב נכנס (0 יח"ד קיימות)' +
                     (noAdd ? ', ' + noAdd + ' ללא תוספת יח"ד (שינוי קווי בניין / שטחים בלבד)' : '') +
                     (noData ? ', ' + noData + ' ללא נתוני יח"ד' : '') +
@@ -14218,9 +14249,9 @@ function planPermitHafrashUse(taba) {
                     });
                     lines.push(mRow('סה"כ', '', valid));
                     lines.push('');
-                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת', 'מוצע', 'מכפיל'].map(q).join(','));
+                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה (מפה)', 'תת-שכונה בגיליון', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת', 'מוצע', 'מכפיל'].map(q).join(','));
                     plans.slice().sort((a, b) => (a.year || 9999) - (b.year || 9999)).forEach(r => lines.push([
-                        q(r.id), q(r.name), q(r.minhak), q(r.sub), q(r.recv || ''), r.year || '', q(r.status),
+                        q(r.id), q(r.name), q(r.minhak), q(r.sub), q(r.sheetSub), q(r.recv || ''), r.year || '', q(r.status),
                         r.uin == null ? '' : r.uin, r.uadd == null ? '' : r.uadd, (r.uin == null || r.uadd == null) ? '' : r.uin + r.uadd,
                         r.mult == null ? '' : r.mult.toFixed(2)].join(',')));
                     const title = (document.getElementById('rmdash-title') || {}).textContent || 'מכפילי התחדשות';
