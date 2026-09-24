@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-renewal-from2020';
+        const APP_VERSION = '2026-09-24-renewal-potential';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13824,6 +13824,14 @@ function planPermitHafrashUse(taba) {
                 // they are left out of everything — charts, trend line, KPIs and table alike — rather
                 // than only hidden from the chart, which would leave the trend fitted on points you can't see.
                 const DEFAULT_FROM = 2020;
+                // Multiplier mode: 'approved' = Table 5 as approved; 'potential' adds what the plan
+                // (or a later plan over it) already allows on top — each channel switchable:
+                //   b = Table 5 note "תותר תוספת של עד N%" / an absolute ceiling (unit_bonus.json)
+                //   c = conditional units (maintenance fund / rental), which sit OUTSIDE units_total
+                //   r = a later overlapping plan that raises this one (plan_raisers.json)
+                const potMode = o.m === 'potential';
+                const chans = o.ch === '-' ? '' : (typeof o.ch === 'string' && o.ch ? o.ch : 'bcr');   // '-' = all channels off
+                const chOn = (k) => potMode && chans.indexOf(k) >= 0;
                 const fromYear = o.from === 'all' ? null : (parseInt(o.from) || DEFAULT_FROM);
                 const gd = geoDataRef.current || {};
                 const xpl = ((gd.xplanDates || {}).plans) || {};
@@ -13900,10 +13908,31 @@ function planPermitHafrashUse(taba) {
                     const minhak = SUB_TO_MINAHAK[sub] || MIN_NORM[p.minahak] || p.minahak || 'לא ידוע';
                     // No added units (a building-line / area-only amendment tagged as renewal) is not a
                     // multiplier story — a 1.00 there would only drag the averages down.
-                    const mult = (uin > 0 && uadd > 0) ? (uin + uadd) / uin : null;
-                    scoped.push({ id, name: p.plan_name_he || p.plan_summary || id, minhak, sub, sheetSub, subFromMap: !!mapSub, year, recv: x ? x.recv : null,
-                        status: normalizeStatus(String(p.status_mavat || '').trim()) || '', uin, uadd, mult });
+                    const eligible = uin > 0 && uadd > 0;
+                    // extra channels (potential mode). bonus: the % note on units_total, else an absolute ceiling above it.
+                    let exB = planBonusUnits(p);
+                    const cap = planUnitCap(p);
+                    if (!exB && cap && cap.max_units) exB = Math.max(0, Math.round(cap.max_units - (uin + uadd)));
+                    const raiser = (window.__planRaisers || {})[String(p.taba || '').trim()] || null;
+                    scoped.push({ id, taba: String(p.taba || '').trim(), name: p.plan_name_he || p.plan_summary || id, minhak, sub, sheetSub, subFromMap: !!mapSub, year, recv: x ? x.recv : null,
+                        status: normalizeStatus(String(p.status_mavat || '').trim()) || '', uin, uaddA: uadd, eligible,
+                        exB, exC: planConditionalUnits(p) || 0, exR: raiser ? (parseFloat(raiser.raise) || 0) : 0, raiser });
                 });
+                // A raiser that is itself a renewal plan here would count the same units twice
+                // (101-1350594 lifts 101-1002054 from 440 to 474 and also stands alone at ×1.08).
+                // With the 'r' channel on, its increase is credited to the base plan and the raiser
+                // row is folded away — but only when the base is in this list; otherwise the raiser stays.
+                const scopedIds = new Set(scoped.map(r => r.id));
+                const folded = new Set();
+                if (chOn('r')) scoped.forEach(r => { if (r.raiser && scopedIds.has(r.raiser.plan_name)) folded.add(r.raiser.plan_name); });
+                scoped.forEach(r => {
+                    r.exR = (chOn('r') && r.raiser) ? r.exR : 0;
+                    r.extra = (chOn('b') ? r.exB : 0) + (chOn('c') ? r.exC : 0) + r.exR;
+                    r.uadd = r.uaddA == null ? null : r.uaddA + r.extra;
+                    r.multA = r.eligible ? (r.uin + r.uaddA) / r.uin : null;
+                    r.mult = (r.eligible && !folded.has(r.id)) ? (r.uin + r.uadd) / r.uin : null;
+                });
+                const foldedN = scoped.filter(r => folded.has(r.id) && r.eligible).length;
                 const allMins = Array.from(new Set(scoped.filter(r => r.mult != null).map(r => r.minhak))).sort();
                 const subsOfMin = Array.from(new Set(scoped.filter(r => r.mult != null && r.minhak === fMin).map(r => r.sub))).sort();
                 const plans = scoped.filter(r => (!fMin || r.minhak === fMin) && (!fSub || r.sub === fSub));
@@ -13963,9 +13992,9 @@ function planPermitHafrashUse(taba) {
                     return minColor(rk.split(' › ')[0]);
                 };
                 const total = aggr(valid);
-                const noIn = plans.filter(r => r.mult == null && r.uadd > 0 && !(r.uin > 0)).length;
-                const noAdd = plans.filter(r => r.mult == null && r.uin > 0 && !(r.uadd > 0)).length;
-                const noData = plans.filter(r => r.mult == null).length - noIn - noAdd;
+                const noIn = plans.filter(r => r.mult == null && r.uaddA > 0 && !(r.uin > 0)).length;
+                const noAdd = plans.filter(r => r.mult == null && r.uin > 0 && !(r.uaddA > 0)).length;
+                const noData = plans.filter(r => r.mult == null && !folded.has(r.id)).length - noIn - noAdd;
 
                 const HEAT = [[2, '#27404f'], [3, '#2b6a78'], [4, '#2d9387'], [5, '#5cb57f'], [6, '#a9cd6a'], [Infinity, '#f0d45a']];
                 const heat = (v) => (HEAT.find(h => v < h[0]) || HEAT[HEAT.length - 1])[1];
@@ -13982,13 +14011,16 @@ function planPermitHafrashUse(taba) {
 
                 // ── KPIs ──
                 const tt = trendOf(valid);
+                const approvedW = (() => { let a = 0, b = 0; valid.forEach(r => { a += r.uin; b += r.uin + r.uaddA; }); return a ? b / a : null; })();
+                const extraSum = valid.reduce((a, r) => a + r.extra, 0);
                 const kpi = (label, val, sub2, color) =>
                     '<div style="background:#12222a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' +
                     '<div style="font-size:11px;color:#9cc">' + label + '</div>' +
                     '<div style="font-size:21px;font-weight:bold;color:' + color + '"><bdi dir="ltr">' + val + '</bdi></div>' +
                     (sub2 ? '<div style="font-size:10px;color:#7aa">' + sub2 + '</div>' : '') + '</div>';
                 const kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
-                    kpi('מכפיל משוקלל', m2(total.w), 'Σ יח"ד מוצע ÷ Σ יח"ד קיים', '#5ee0c8') +
+                    kpi(potMode ? 'מכפיל פוטנציאלי (משוקלל)' : 'מכפיל משוקלל', m2(total.w),
+                        potMode ? 'מאושר ' + m2(approvedW) + (foldedN ? ' (אחרי מיזוג)' : '') + ' · +' + n0(extraSum) + ' יח"ד מערוצי התוספת' : 'Σ יח"ד מוצע ÷ Σ יח"ד קיים', '#5ee0c8') +
                     kpi('מכפיל חציוני', m2(total.med), total.n + ' תכניות עם מצב נכנס', '#9bd6f0') +
                     kpi('יח"ד קיים → מוצע', n0(total.uin) + ' → ' + n0(total.utot), '+' + n0(total.utot - total.uin) + ' יח"ד', '#f0d45a') +
                     kpi('מגמה: שינוי המכפיל בשנה', tt.ok ? (tt.b > 0 ? '+' : '') + tt.b.toFixed(2) : '—',
@@ -14145,12 +14177,16 @@ function planPermitHafrashUse(taba) {
                     const rowOk = rk === '*' || rowOf(r) === rk || (geo === 'sub' && rk.indexOf(' › ') < 0 && r.minhak === rk);
                     return rowOk && (ck === '*' || colOf(r.year) === ck);
                 };
+                const extraSrc = (r) => [
+                    chOn('b') && r.exB ? 'הערת טבלה 5: +' + r.exB : '',
+                    chOn('c') && r.exC ? 'מותנות: +' + r.exC : '',
+                    r.exR ? 'תכנית מגדילה ' + r.raiser.plan_name + ': +' + r.exR : ''].filter(Boolean).join(' · ') || 'אין תוספת בערוצים שנבחרו';
                 const listRows = valid.filter(inCell).sort((a, b) => (a.year || 9999) - (b.year || 9999) || b.mult - a.mult);
                 const cellLabel = cell ? cell.split('|').map((s, i) => s === '*' ? (i ? 'כל השנים' : 'כל האזורים') : s).join(' · ') : 'כל התכניות';
                 const planTable = '<h4 style="color:#7fe0cf;margin:4px 0 6px;font-size:13px">📋 ' + esc(cellLabel) + ' (' + listRows.length + ')' +
                     (cell ? ' <a href="#" id="rmdash-clearcell" style="color:#9bd6f0;font-size:11px;font-weight:normal">הצג הכל</a>' : '') + '</h4>' +
                     '<div style="max-height:300px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:#12262e;position:sticky;top:0">' +
-                    ['תכנית', 'שם', 'מינה"ק · תת-שכונה', 'קליטה', 'סטטוס', 'קיים', 'תוספת', 'מוצע', 'מכפיל'].map(t => '<th style="padding:5px;color:#7fe0cf;text-align:' + (t === 'שם' ? 'right' : 'center') + '">' + t + '</th>').join('') +
+                    ['תכנית', 'שם', 'מינה"ק · תת-שכונה', 'קליטה', 'סטטוס', 'קיים', 'תוספת'].concat(potMode ? ['תוספת פוטנציאלית'] : []).concat(['מוצע', 'מכפיל']).map(t => '<th style="padding:5px;color:#7fe0cf;text-align:' + (t === 'שם' ? 'right' : 'center') + '">' + t + '</th>').join('') +
                     '</tr></thead><tbody>' + listRows.map(r =>
                         '<tr style="border-bottom:1px solid #1d2f36">' +
                         '<td style="padding:4px;text-align:center"><a href="#" class="rm-plan" data-id="' + esc(r.id) + '" style="color:#64b5f6">' + esc(r.id) + '</a></td>' +
@@ -14161,7 +14197,8 @@ function planPermitHafrashUse(taba) {
                         '<td style="padding:4px;text-align:center;color:#abc">' + (r.recv ? r.recv.split('-').reverse().join('/') : '—') + '</td>' +
                         '<td style="padding:4px;text-align:center;color:#abc">' + esc(r.status) + '</td>' +
                         '<td style="padding:4px;text-align:center">' + n0(r.uin) + '</td>' +
-                        '<td style="padding:4px;text-align:center">' + n0(r.uadd) + '</td>' +
+                        '<td style="padding:4px;text-align:center">' + n0(r.uaddA) + '</td>' +
+                        (potMode ? '<td style="padding:4px;text-align:center;color:#c8b4ff;white-space:nowrap" title="' + esc(extraSrc(r)) + '">' + (r.extra ? '+' + n0(r.extra) : '—') + '</td>' : '') +
                         '<td style="padding:4px;text-align:center">' + n0(r.uin + r.uadd) + '</td>' +
                         '<td style="padding:4px;text-align:center;font-weight:bold;color:' + heat(r.mult) + '">' + m2(r.mult) + '</td>' +
                         '</tr>').join('') + '</tbody></table></div>';
@@ -14176,6 +14213,10 @@ function planPermitHafrashUse(taba) {
                     grp('סינון:', sel('rmdash-min', fMin, allMins, 'כל המינהלים') + (fMin ? sel('rmdash-sub', fSub, subsOfMin, 'כל תתי-השכונות') : '')) +
                     (fMin ? '' : grp('שורות:', chip('geo', 'minhak', 'מינהל קהילתי', geo === 'minhak') + chip('geo', 'sub', 'תת-שכונה', geo === 'sub'))) +
                     grp('עמודות:', chip('bin', 'year', 'שנה', bin === 'year') + chip('bin', 'period', 'תקופות', bin === 'period')) +
+                    grp('מכפיל:', chip('m', 'approved', 'מאושר (טבלה 5)', !potMode) + chip('m', 'potential', 'פוטנציאלי', potMode)) +
+                    (potMode ? grp('כולל:', [['b', 'הערת טבלה 5 (עד N%)'], ['c', 'יח"ד מותנות'], ['r', 'תכנית מגדילה']].map(([k, l]) =>
+                        '<button data-rmch="' + k + '" style="background:' + (chans.indexOf(k) >= 0 ? '#8e6ad8' : '#12222a') + ';color:' + (chans.indexOf(k) >= 0 ? '#fff' : '#b9a8e0') +
+                        ';border:1px solid #8e6ad8;padding:4px 10px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:6px">' + (chans.indexOf(k) >= 0 ? '✓ ' : '') + l + '</button>').join('')) : '') +
                     grp('שנת קליטה:', chip('from', String(DEFAULT_FROM), 'מ-' + DEFAULT_FROM, fromYear === DEFAULT_FROM) + chip('from', 'all', 'כל השנים', !fromYear)) +
                     grp('סטטוס:', chip('sc', 'active', 'פעילות', sc === 'active') + chip('sc', 'approved', 'מאושרות', sc === 'approved') + chip('sc', 'all', 'הכל', sc === 'all')) +
                     '</div>';
@@ -14184,6 +14225,9 @@ function planPermitHafrashUse(taba) {
 
                 const fetched = (gd.xplanDates || {}).fetched || '';
                 const note = '<div style="font-size:10px;color:#7aa;margin-top:10px;line-height:1.6">' +
+                    (potMode ? '<b>מכפיל פוטנציאלי</b> = (יח"ד מאושרות + מה שכבר מותר מעליהן) ÷ יח"ד קיים. ערוצים: <b>הערת טבלה 5</b> — "תותר תוספת של עד N%" (או תקרה מוחלטת בהוראות); זו תקרה, לא בהכרח תמומש. ' +
+                        '<b>יח"ד מותנות</b> — מותנות בקרן תחזוקה / השכרה ולכן מחוץ לסך היח"ד; נכנסות רק אם התנאי יתקיים. <b>תכנית מגדילה</b> — תכנית מאוחרת חופפת (≥50%) שמעלה את הסך; ' +
+                        'כשהמגדילה עצמה היא תכנית התחדשות בדשבורד, היא מתמזגת לתכנית הבסיס כדי לא לספור פעמיים' + (foldedN ? ' (' + foldedN + ' מוזגו)' : '') + '. ' : '') +
                     '<b>מכפיל</b> = (יח"ד קיים + תוספת) ÷ יח"ד קיים, לפי טבלה 5 (הגיליון). <b>משוקלל</b> = סך המוצע ÷ סך הקיים בקבוצה (תכנית גדולה משפיעה יותר); החציון מוצג בריחוף על תא. ' +
                     '<b>שנת קליטה</b> = "תאריך קבלת תכנית" (receiving_date) ב-XPLAN' + (fetched ? ', נמשך ' + esc(fetched) : '') + ' — זה הנתון היחיד שנלקח מ-XPLAN. ' +
                     '<b>מגמה</b> = שיפוע קו רגרסיה של מכפיל התכנית על שנת הקליטה, משוקלל ביח"ד הקיימות (כמו המכפיל המשוקלל), כל תכנית בשנת הקליטה שלה — בכמה המכפיל עולה או יורד בממוצע לכל שנה. מחושבת רק לאזור עם ≥4 תכניות ב-≥3 שנות קליטה; "?" = לא מובהקת (השיפוע קטן מפעמיים סטיית התקן); שיפוע קטן מ-' + FLAT + ' לשנה נחשב יציב. ' +
@@ -14205,7 +14249,7 @@ function planPermitHafrashUse(taba) {
                 document.body.appendChild(div);
                 const scopeTitle = fSub ? ' — ' + fSub : fMin ? ' — ' + fMin : '';
                 const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #1f3a44">' +
-                    '<h3 id="rmdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#5ee0c8;font-size:16px;outline:none;border-bottom:1px dashed #2e6a66;padding-bottom:2px;cursor:text">📈 מכפילי התחדשות עירונית לפי שנת קליטת התיק' + esc(scopeTitle) + '</h3>' +
+                    '<h3 id="rmdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#5ee0c8;font-size:16px;outline:none;border-bottom:1px dashed #2e6a66;padding-bottom:2px;cursor:text">📈 מכפילי התחדשות עירונית' + (potMode ? ' (פוטנציאלי)' : '') + ' לפי שנת קליטת התיק' + esc(scopeTitle) + '</h3>' +
                     '<button id="rmdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button></div>';
                 const footer = '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">' +
                     '<button id="rmdash-csv" style="background:#26a69a;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
@@ -14216,7 +14260,7 @@ function planPermitHafrashUse(taba) {
                     : '<div style="color:#9cc;padding:16px;text-align:center">אין תכניות התחדשות עם מצב נכנס בסינון הנוכחי.</div>' + note) + footer;
                 div.scrollTop = keepScroll;
 
-                const params = { sc, geo, bin, view, min: fMin, sub: fSub, from: fromYear ? String(fromYear) : 'all' };
+                const params = { sc, geo, bin, view, min: fMin, sub: fSub, from: fromYear ? String(fromYear) : 'all', m: potMode ? 'potential' : 'approved', ch: chans || '-' };
                 setImpReport('renewalMultDash', params);
                 wireImpLinkBtn('rmdash-link', 'renewalMultDash', params);
                 const rerender = (patch) => renderRenewalMultiplierDashboard(Object.assign({}, params, { cell }, patch));
@@ -14226,6 +14270,10 @@ function planPermitHafrashUse(taba) {
                     // row/column keys change with geo/bin, so a selected cell would point nowhere
                     if (patch.geo || patch.bin || patch.from) patch.cell = null;
                     rerender(patch);
+                }));
+                div.querySelectorAll('button[data-rmch]').forEach(b => b.addEventListener('click', () => {
+                    const k = b.getAttribute('data-rmch');
+                    rerender({ ch: (chans.indexOf(k) >= 0 ? chans.replace(k, '') : chans + k) || '-' });
                 }));
                 const selMin = document.getElementById('rmdash-min');
                 if (selMin) selMin.addEventListener('change', () => rerender({ min: selMin.value, sub: '', cell: null }));
@@ -14243,8 +14291,9 @@ function planPermitHafrashUse(taba) {
 
                 document.getElementById('rmdash-csv').addEventListener('click', () => {
                     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const extraSrcLabel = [['b', 'הערת טבלה 5'], ['c', 'מותנות'], ['r', 'תכנית מגדילה']].filter(([k]) => chOn(k)).map(x => x[1]).join(' + ') || 'ללא ערוצים';
                     const lines = [];
-                    lines.push([q('מכפיל משוקלל (טבלה 5) לפי ' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + ' ושנת קליטה (XPLAN)' + scopeTitle)].join(','));
+                    lines.push([q((potMode ? 'מכפיל פוטנציאלי משוקלל (' + extraSrcLabel + ')' : 'מכפיל משוקלל (טבלה 5)') + ' לפי ' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + ' ושנת קליטה (XPLAN)' + scopeTitle)].join(','));
                     lines.push(['מינהל', 'תת-שכונה'].concat(cols).concat(['כל השנים', 'תכניות', 'יח"ד קיים', 'יח"ד מוצע', 'חציון', 'מגמה: שינוי לשנה', 'סטיית תקן', 'מובהק', 'תכניות במגמה']).map(q).join(','));
                     const mRow = (label1, label2, list) => {
                         const a = aggr(list), t = trendOf(list);
@@ -14258,11 +14307,13 @@ function planPermitHafrashUse(taba) {
                     });
                     lines.push(mRow('סה"כ', '', valid));
                     lines.push('');
-                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה (מפה)', 'תת-שכונה בגיליון', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת', 'מוצע', 'מכפיל'].map(q).join(','));
+                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה (מפה)', 'תת-שכונה בגיליון', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת מאושרת', 'מכפיל מאושר', 'הערת טבלה 5', 'מותנות', 'תכנית מגדילה', 'יח"ד מגדילה', 'תוספת בערוצים שנבחרו', 'מוצע', 'מכפיל' + (potMode ? ' פוטנציאלי' : ''), 'מוזגה לתכנית בסיס'].map(q).join(','));
                     plans.slice().sort((a, b) => (a.year || 9999) - (b.year || 9999)).forEach(r => lines.push([
                         q(r.id), q(r.name), q(r.minhak), q(r.sub), q(r.sheetSub), q(r.recv || ''), r.year || '', q(r.status),
-                        r.uin == null ? '' : r.uin, r.uadd == null ? '' : r.uadd, (r.uin == null || r.uadd == null) ? '' : r.uin + r.uadd,
-                        r.mult == null ? '' : r.mult.toFixed(2)].join(',')));
+                        r.uin == null ? '' : r.uin, r.uaddA == null ? '' : r.uaddA, r.multA == null ? '' : r.multA.toFixed(2),
+                        r.exB || '', r.exC || '', q(r.raiser ? r.raiser.plan_name : ''), r.raiser ? (parseFloat(r.raiser.raise) || '') : '', r.extra || '',
+                        (r.uin == null || r.uadd == null) ? '' : r.uin + r.uadd,
+                        r.mult == null ? '' : r.mult.toFixed(2), folded.has(r.id) ? 'כן' : ''].join(',')));
                     const title = (document.getElementById('rmdash-title') || {}).textContent || 'מכפילי התחדשות';
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
@@ -16741,7 +16792,7 @@ function planPermitHafrashUse(taba) {
                     const gen = {
                         populationDash: () => openPopulationDashboard(ip.min || undefined),
                         constructionDash: () => openConstructionDashboard(),
-                        renewalMultDash: () => openRenewalMultiplierDashboard({ sc: ip.sc, geo: ip.geo, bin: ip.bin, view: ip.view, min: ip.min, sub: ip.sub, from: ip.from }),
+                        renewalMultDash: () => openRenewalMultiplierDashboard({ sc: ip.sc, geo: ip.geo, bin: ip.bin, view: ip.view, min: ip.min, sub: ip.sub, from: ip.from, m: ip.m, ch: ip.ch }),
                         subDash: () => renderSubDashboard(ip.sub || dashSub),
                         minhakDash: () => renderMinhakDashboard(ip.min || reportsMenuMinahak),
                     }[params.impreport];
