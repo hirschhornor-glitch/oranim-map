@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-renewal-trend';
+        const APP_VERSION = '2026-09-24-renewal-slope';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13837,7 +13837,7 @@ function planPermitHafrashUse(taba) {
                 const periodOf = (y) => y == null ? null : (PERIODS.find(p => p.test(y)) || {}).key;
                 const NO_DATE = 'ללא תאריך';
                 const colOf = (y) => y == null ? NO_DATE : (bin === 'year' ? String(y) : periodOf(y));
-                const SPLIT = 2021;   // trend = files received before SPLIT vs from SPLIT on
+                const FLAT = 0.03;    // |slope| below this (multiplier points per year, ≈0.3 per decade) reads as flat
 
                 // ── one record per renewal plan (status-scoped, before the geographic filter) ──
                 const seen = new Set();
@@ -13883,11 +13883,29 @@ function planPermitHafrashUse(taba) {
                     const med = ms.length ? (ms.length % 2 ? ms[(ms.length - 1) / 2] : (ms[ms.length / 2 - 1] + ms[ms.length / 2]) / 2) : null;
                     return { n: v.length, uin: si, utot: st, w: si > 0 ? st / si : null, med };
                 };
-                // early (< SPLIT) vs late (≥ SPLIT) — shown only when both sides have ≥ 2 plans
+                // Trend = slope of a weighted least-squares line through the plans: multiplier on
+                // receiving year, weighted by existing units — the same weighting as the weighted
+                // multiplier (Σtotal/Σin is the units_in-weighted mean of the plan multipliers).
+                // No cut-off year: every plan counts at its own year. Needs ≥4 dated plans over
+                // ≥3 distinct years; 'sig' = |slope| ≥ 2 standard errors.
                 const trendOf = (list) => {
-                    const e = aggr(list.filter(r => r.year != null && r.year < SPLIT));
-                    const l = aggr(list.filter(r => r.year != null && r.year >= SPLIT));
-                    return { e, l, ok: e.n >= 2 && l.n >= 2, d: (e.w != null && l.w != null) ? l.w - e.w : null };
+                    const v = list.filter(r => r.mult != null && r.year != null);
+                    const yrs = new Set(v.map(r => r.year));
+                    const out = { n: v.length, ok: false };
+                    if (v.length < 4 || yrs.size < 3) return out;
+                    const sw = v.reduce((a, r) => a + r.uin, 0);
+                    const w = v.map(r => r.uin * v.length / sw);            // normalised: Σw = n
+                    const xb = v.reduce((a, r, i) => a + w[i] * r.year, 0) / v.length;
+                    const yb = v.reduce((a, r, i) => a + w[i] * r.mult, 0) / v.length;
+                    let sxx = 0, sxy = 0;
+                    v.forEach((r, i) => { sxx += w[i] * (r.year - xb) ** 2; sxy += w[i] * (r.year - xb) * (r.mult - yb); });
+                    if (!(sxx > 0)) return out;
+                    const b = sxy / sxx, a0 = yb - b * xb;
+                    let sse = 0;
+                    v.forEach((r, i) => { sse += w[i] * (r.mult - (a0 + b * r.year)) ** 2; });
+                    const se = Math.sqrt(sse / (v.length - 2) / sxx);
+                    return { n: v.length, ok: true, b, se, sig: Math.abs(b) >= 2 * se,
+                        y0: Math.min(...yrs), y1: Math.max(...yrs), at: (y) => a0 + b * y };
                 };
 
                 const years = valid.map(r => r.year).filter(y => y != null);
@@ -13917,11 +13935,13 @@ function planPermitHafrashUse(taba) {
                 const heat = (v) => (HEAT.find(h => v < h[0]) || HEAT[HEAT.length - 1])[1];
                 const heatInk = (v) => v >= 5 ? '#10202a' : '#eaf6f4';
                 const trendBadge = (t, big) => {
-                    if (!t.ok) return '<span style="color:#56707a" title="נדרשות לפחות 2 תכניות בכל צד (לפני ' + SPLIT + ' / מ-' + SPLIT + ')">—</span>';
-                    const up = t.d > 0.15, down = t.d < -0.15;
-                    const c = up ? '#f2a65a' : down ? '#6fb8e8' : '#9ab';
-                    return '<span dir="ltr" style="color:' + c + ';white-space:nowrap;font-size:' + (big ? 12 : 11) + 'px" title="לפני ' + SPLIT + ': ' + m2(t.e.w) + ' (' + t.e.n + ' תכניות) · מ-' + SPLIT + ': ' + m2(t.l.w) + ' (' + t.l.n + ')">' +
-                        m2(t.e.w) + ' → ' + m2(t.l.w) + ' ' + (up ? '▲' : down ? '▼' : '≈') + (t.d > 0 ? '+' : '') + t.d.toFixed(2) + '</span>';
+                    if (!t.ok) return '<span style="color:#56707a" title="נדרשות לפחות 4 תכניות ב-3 שנות קליטה שונות">—</span>';
+                    const up = t.b >= FLAT, down = t.b <= -FLAT;
+                    const c = !t.sig ? '#8a9aa2' : up ? '#f2a65a' : down ? '#6fb8e8' : '#9ab';
+                    return '<span dir="ltr" style="color:' + c + ';white-space:nowrap;font-size:' + (big ? 12 : 11) + 'px" title="' +
+                        esc('שיפוע ' + (t.b > 0 ? '+' : '') + t.b.toFixed(3) + ' לשנה (±' + t.se.toFixed(3) + ') · ' + t.n + ' תכניות, ' + t.y0 + '–' + t.y1 +
+                            '\nקו המגמה: ' + m2(t.at(t.y0)) + ' ב-' + t.y0 + ' ← ' + m2(t.at(t.y1)) + ' ב-' + t.y1 + (t.sig ? '' : '\nלא מובהק: השיפוע קטן מפעמיים סטיית התקן')) + '">' +
+                        (up ? '▲' : down ? '▼' : '≈') + ' ' + (t.b > 0 ? '+' : '') + t.b.toFixed(2) + ' לשנה' + (t.sig ? '' : ' ?') + '</span>';
                 };
 
                 // ── KPIs ──
@@ -13935,63 +13955,66 @@ function planPermitHafrashUse(taba) {
                     kpi('מכפיל משוקלל', m2(total.w), 'Σ יח"ד מוצע ÷ Σ יח"ד קיים', '#5ee0c8') +
                     kpi('מכפיל חציוני', m2(total.med), total.n + ' תכניות עם מצב נכנס', '#9bd6f0') +
                     kpi('יח"ד קיים → מוצע', n0(total.uin) + ' → ' + n0(total.utot), '+' + n0(total.utot - total.uin) + ' יח"ד', '#f0d45a') +
-                    kpi('מגמה: לפני ' + SPLIT + ' → מ-' + SPLIT, tt.e.w != null && tt.l.w != null ? m2(tt.e.w) + ' → ' + m2(tt.l.w) : '—',
-                        tt.e.n + ' / ' + tt.l.n + ' תכניות (משוקלל)', tt.d > 0.15 ? '#f2a65a' : tt.d < -0.15 ? '#6fb8e8' : '#9ab') +
+                    kpi('מגמה: שינוי המכפיל בשנה', tt.ok ? (tt.b > 0 ? '+' : '') + tt.b.toFixed(2) : '—',
+                        tt.ok ? 'קו מגמה ' + m2(tt.at(tt.y0)) + ' ב-' + tt.y0 + ' ← ' + m2(tt.at(tt.y1)) + ' ב-' + tt.y1 + (tt.sig ? '' : ' · לא מובהק') : 'אין מספיק תכניות',
+                        !tt.ok || !tt.sig ? '#9ab' : tt.b >= FLAT ? '#f2a65a' : tt.b <= -FLAT ? '#6fb8e8' : '#9ab') +
                     '</div>';
 
-                // ── chart A (trend): small multiples — one panel per area, weighted multiplier by period ──
+                // ── chart A (trend): small multiples — one mini-scatter per area (plans by receiving
+                //    year) with its weighted trend line; dashed = the trend line of everything in scope ──
                 const trendChart = (() => {
-                    const pks = PERIODS.map(p => p.key);
                     const dated = valid.filter(r => r.year != null);
                     if (!dated.length) return '';
                     const panels = rowKeys.filter(rk => dated.some(r => rowOf(r) === rk));
                     const series = panels.map(rk => {
                         const list = dated.filter(r => rowOf(r) === rk);
-                        return { rk, pts: pks.map(k => ({ k, a: aggr(list.filter(r => periodOf(r.year) === k)) })), t: trendOf(list), n: list.length };
+                        return { rk, list, t: trendOf(list), n: list.length };
                     });
-                    const ymax = Math.min(10, Math.max(4, Math.ceil(Math.max(...series.flatMap(s => s.pts.filter(p => p.a.n).map(p => p.a.w))))));
-                    const W = 230, H = 110, L0 = 10, R0 = 24, T0 = 8, B0 = 18;
-                    // RTL: earliest period on the right, same direction as the table
-                    const sx = (i) => L0 + (1 - i / (pks.length - 1)) * (W - L0 - R0);
-                    const sy = (m) => T0 + (1 - (Math.min(m, ymax) - 1) / (ymax - 1)) * (H - T0 - B0);
-                    const overall = pks.map(k => aggr(dated.filter(r => periodOf(r.year) === k)));
+                    const X0 = Math.min(...dated.map(r => r.year)), X1 = Math.max(...dated.map(r => r.year));
+                    const ymax = 8;
+                    const W = 230, H = 110, L0 = 8, R0 = 22, T0 = 8, B0 = 18;
+                    // RTL: earliest year on the right, same direction as the table
+                    const sx = (y) => L0 + (X1 === X0 ? 0.5 : (X1 - y) / (X1 - X0)) * (W - L0 - R0);
+                    const sy = (m) => T0 + (1 - (Math.max(1, Math.min(m, ymax)) - 1) / (ymax - 1)) * (H - T0 - B0);
+                    const all = trendOf(dated);
+                    const seg = (t, y0, y1) => 'x1="' + sx(y0).toFixed(1) + '" y1="' + sy(t.at(y0)).toFixed(1) + '" x2="' + sx(y1).toFixed(1) + '" y2="' + sy(t.at(y1)).toFixed(1) + '"';
+                    const tickYears = Array.from(new Set([X0, Math.round((X0 + X1) / 2), X1]));
                     const panel = (s) => {
                         let g = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block">';
-                        [1, Math.round((1 + ymax) / 2), ymax].forEach(m => {
+                        [1, 3, 5, ymax].forEach(m => {
                             g += '<line x1="' + L0 + '" x2="' + (W - R0) + '" y1="' + sy(m) + '" y2="' + sy(m) + '" stroke="#223a44" stroke-width="0.6"/>' +
-                                '<text x="' + (W - R0 + 4) + '" y="' + (sy(m) + 3) + '" fill="#6f8f99" font-size="9">' + m + '</text>';
+                                '<text x="' + (W - R0 + 4) + '" y="' + (sy(m) + 3) + '" fill="#6f8f99" font-size="9">' + (m === ymax ? '≥' + m : m) + '</text>';
                         });
-                        pks.forEach((k, i) => { g += '<text x="' + sx(i) + '" y="' + (H - 5) + '" fill="#6f8f99" font-size="8.5" text-anchor="middle">' + k + '</text>'; });
-                        // reference: all areas in scope (dashed)
-                        const ref = overall.map((a, i) => a.n ? sx(i).toFixed(1) + ',' + sy(a.w).toFixed(1) : null).filter(Boolean);
-                        if (ref.length > 1) g += '<polyline fill="none" stroke="#5d7680" stroke-width="1" stroke-dasharray="3,3" points="' + ref.join(' ') + '"/>';
+                        tickYears.forEach(y => { g += '<text x="' + sx(y) + '" y="' + (H - 5) + '" fill="#6f8f99" font-size="8.5" text-anchor="middle">' + y + '</text>'; });
+                        if (all.ok) g += '<line ' + seg(all, X0, X1) + ' stroke="#5d7680" stroke-width="1" stroke-dasharray="3,3"/>';
                         const col = rowColor(s.rk);
-                        const on = s.pts.map((p, i) => p.a.n ? sx(i).toFixed(1) + ',' + sy(p.a.w).toFixed(1) : null).filter(Boolean);
-                        if (on.length > 1) g += '<polyline fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" points="' + on.join(' ') + '"/>';
-                        s.pts.forEach((p, i) => {
-                            if (!p.a.n) return;
-                            g += '<circle cx="' + sx(i).toFixed(1) + '" cy="' + sy(p.a.w).toFixed(1) + '" r="' + Math.min(7, 2.5 + p.a.n * 0.6).toFixed(1) + '" fill="' + col + '" stroke="#0b1418" stroke-width="1"' +
-                                (p.a.n < 2 ? ' fill-opacity="0.45"' : '') + '><title>' + esc(rowLabel(s.rk) + ' · ' + p.k + '\nמכפיל משוקלל ' + m2(p.a.w) + ' · ' + p.a.n + ' תכניות\n' + n0(p.a.uin) + ' → ' + n0(p.a.utot) + ' יח"ד') + '</title></circle>';
+                        s.list.forEach(r => {
+                            g += '<circle class="rm-dot" data-id="' + esc(r.id) + '" cx="' + sx(r.year).toFixed(1) + '" cy="' + sy(r.mult).toFixed(1) + '" r="' + Math.max(2.2, Math.min(6, Math.sqrt(r.uin) / 2.5)).toFixed(1) +
+                                '" fill="' + col + '" fill-opacity="0.6" stroke="#0b1418" stroke-width="0.8" style="cursor:pointer"><title>' +
+                                esc(r.id + ' — ' + r.name + '\nנקלטה ' + (r.recv || '') + ' · מכפיל ' + m2(r.mult) + ' (' + n0(r.uin) + ' → ' + n0(r.uin + r.uadd) + ' יח"ד)') + '</title></circle>';
                         });
+                        if (s.t.ok) g += '<line ' + seg(s.t, s.t.y0, s.t.y1) + ' stroke="' + col + '" stroke-width="2.2"' + (s.t.sig ? '' : ' stroke-opacity="0.5" stroke-dasharray="5,3"') + '/>';
                         g += '</svg>';
                         return '<div style="background:#0f1c22;border:1px solid #1f3a44;border-radius:8px;padding:6px 8px 2px">' +
                             '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:12px;margin-bottom:2px">' +
                             '<span style="color:#dde;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:' + col + '">●</span> ' + esc(rowLabel(s.rk)) +
                             ' <span style="color:#6f8f99;font-weight:normal;font-size:10px">(' + s.n + ')</span></span>' + trendBadge(s.t) + '</div>' + g + '</div>';
                     };
-                    // findings: areas with a measurable trend, strongest change first
-                    const withT = series.filter(s => s.t.ok).sort((a, b) => b.t.d - a.t.d);
-                    const ups = withT.filter(s => s.t.d > 0.15), downs = withT.filter(s => s.t.d < -0.15), flat = withT.length - ups.length - downs.length;
-                    const nm = (s) => esc(rowLabel(s.rk)) + ' (' + (s.t.d > 0 ? '+' : '') + s.t.d.toFixed(2) + ')';
+                    // findings: areas with a computable trend, steepest first; significant ones called out
+                    const withT = series.filter(s => s.t.ok).sort((a, b) => b.t.b - a.t.b);
+                    const sig = withT.filter(s => s.t.sig && Math.abs(s.t.b) >= FLAT);
+                    const ups = sig.filter(s => s.t.b > 0), downs = sig.filter(s => s.t.b < 0);
+                    const rest = withT.filter(s => !sig.includes(s));
+                    const nm = (s) => esc(rowLabel(s.rk)) + ' <bdi dir="ltr">(' + (s.t.b > 0 ? '+' : '') + s.t.b.toFixed(2) + ')</bdi>';
                     const findings = '<div style="font-size:12px;color:#bcd;line-height:1.7;margin-bottom:8px;background:#12222a;border-radius:6px;padding:6px 10px">' +
-                        '<b style="color:#5ee0c8">מגמה בין תיקים שנקלטו לפני ' + SPLIT + ' לבין ' + SPLIT + ' ואילך</b> (מכפיל משוקלל; רק אזורים עם ≥2 תכניות בכל צד — ' + withT.length + ' מתוך ' + series.length + '):<br>' +
-                        (ups.length ? '<span style="color:#f2a65a">▲ עלייה:</span> ' + ups.map(nm).join(' · ') + '<br>' : '') +
-                        (downs.length ? '<span style="color:#6fb8e8">▼ ירידה:</span> ' + downs.slice().reverse().map(nm).join(' · ') + '<br>' : '') +
-                        (flat ? '<span style="color:#9ab">≈ ללא שינוי מהותי (±0.15):</span> ' + withT.filter(s => Math.abs(s.t.d) <= 0.15).map(nm).join(' · ') : '') +
-                        (withT.length ? '' : '<span style="color:#7aa">אין מספיק תכניות בשני הצדים לאף אזור בסינון הנוכחי.</span>') + '</div>';
+                        '<b style="color:#5ee0c8">שינוי המכפיל לכל שנת קליטה</b> (שיפוע קו מגמה על כל התכניות, בלי שנת חיתוך; מחושב ל-' + withT.length + ' מתוך ' + series.length + ' אזורים — בשאר פחות מ-4 תכניות):<br>' +
+                        (ups.length ? '<span style="color:#f2a65a">▲ עלייה מובהקת:</span> ' + ups.map(nm).join(' · ') + '<br>' : '') +
+                        (downs.length ? '<span style="color:#6fb8e8">▼ ירידה מובהקת:</span> ' + downs.slice().reverse().map(nm).join(' · ') + '<br>' : '') +
+                        (rest.length ? '<span style="color:#9ab">≈ ללא מגמה מובהקת:</span> ' + rest.map(nm).join(' · ') : '') +
+                        (withT.length ? '' : '<span style="color:#7aa">אין מספיק תכניות לחישוב מגמה לאף אזור בסינון הנוכחי.</span>') + '</div>';
                     return '<div style="margin-bottom:12px">' + findings +
                         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">' + series.map(panel).join('') + '</div>' +
-                        '<div style="font-size:10px;color:#7aa;margin-top:4px">קו מקווקו = כל האזורים בסינון · נקודה שקופה = תכנית בודדת בתקופה · גודל נקודה = מספר תכניות</div></div>';
+                        '<div style="font-size:10px;color:#7aa;margin-top:4px">נקודה = תכנית (גודל = יח"ד קיימות, המשקל שלה בקו) · קו רציף = מגמת האזור (מקווקו חיוור = לא מובהקת) · קו אפור מקווקו = מגמת כל האזורים בסינון · לחיצה על נקודה = מעבר למפה</div></div>';
                 })();
 
                 // ── chart B (plans): each plan a dot (x = receiving year, y = multiplier) ──
@@ -14073,7 +14096,7 @@ function planPermitHafrashUse(taba) {
                     cols.map(c => cellHtml(valid.filter(r => colOf(r.year) === c), '*|' + c)).join('') + cellHtml(valid, '*|*') + trendTd(valid) + '</tr>';
                 const table = '<div style="overflow-x:auto;margin-bottom:6px"><table style="border-collapse:collapse;font-size:12px;width:100%">' +
                     '<thead><tr style="background:#12262e"><th style="padding:4px 7px;text-align:right;color:#7fe0cf;font-size:11px">' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + '</th>' +
-                    cols.map(th).join('') + th('כל השנים') + th('מגמה: לפני ' + SPLIT + ' ← מ-' + SPLIT) + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
+                    cols.map(th).join('') + th('כל השנים') + th('מגמה (שינוי לשנה)') + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
                     '<div style="display:flex;gap:4px;align-items:center;font-size:10px;color:#8ab;margin-bottom:12px;flex-wrap:wrap">מכפיל משוקלל: ' +
                     HEAT.map((h, i) => '<span style="background:' + h[1] + ';color:' + heatInk(i ? HEAT[i - 1][0] : 1) + ';padding:1px 6px;border-radius:3px">' +
                         (i === 0 ? '&lt;2' : h[0] === Infinity ? '≥' + HEAT[i - 1][0] : HEAT[i - 1][0] + '–' + h[0]) + '</span>').join('') +
@@ -14124,7 +14147,7 @@ function planPermitHafrashUse(taba) {
                 const note = '<div style="font-size:10px;color:#7aa;margin-top:10px;line-height:1.6">' +
                     '<b>מכפיל</b> = (יח"ד קיים + תוספת) ÷ יח"ד קיים, לפי טבלה 5 (הגיליון). <b>משוקלל</b> = סך המוצע ÷ סך הקיים בקבוצה (תכנית גדולה משפיעה יותר); החציון מוצג בריחוף על תא. ' +
                     '<b>שנת קליטה</b> = "תאריך קבלת תכנית" (receiving_date) ב-XPLAN' + (fetched ? ', נמשך ' + esc(fetched) : '') + ' — זה הנתון היחיד שנלקח מ-XPLAN. ' +
-                    '<b>מגמה</b> = מכפיל משוקלל של תיקים שנקלטו לפני ' + SPLIT + ' מול ' + SPLIT + ' ואילך; מוצגת רק כשיש ≥2 תכניות בכל צד, ושינוי של עד ±0.15 נחשב יציב. בתקופה עם תכנית אחת–שתיים המכפיל רגיש מאוד לתכנית בודדת. ' +
+                    '<b>מגמה</b> = שיפוע קו רגרסיה של מכפיל התכנית על שנת הקליטה, משוקלל ביח"ד הקיימות (כמו המכפיל המשוקלל), בלי שנת חיתוך — בכמה המכפיל עולה או יורד בממוצע לכל שנה. מחושבת רק לאזור עם ≥4 תכניות ב-≥3 שנות קליטה; "?" = לא מובהקת (השיפוע קטן מפעמיים סטיית התקן); שיפוע קטן מ-' + FLAT + ' לשנה נחשב יציב. ' +
                     'נכללות תכניות שסווגו "התחדשות עירונית" / "פינוי בינוי"; תת-שכונה משויכת למינהל שאליו היא שייכת. ' +
                     'לא נכללו במכפיל: ' + noIn + ' תכניות ללא מצב נכנס (0 יח"ד קיימות)' +
                     (noAdd ? ', ' + noAdd + ' ללא תוספת יח"ד (שינוי קווי בניין / שטחים בלבד)' : '') +
@@ -14182,12 +14205,12 @@ function planPermitHafrashUse(taba) {
                     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
                     const lines = [];
                     lines.push([q('מכפיל משוקלל (טבלה 5) לפי ' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + ' ושנת קליטה (XPLAN)' + scopeTitle)].join(','));
-                    lines.push(['מינהל', 'תת-שכונה'].concat(cols).concat(['כל השנים', 'תכניות', 'יח"ד קיים', 'יח"ד מוצע', 'חציון', 'מכפיל לפני ' + SPLIT, 'מכפיל מ-' + SPLIT, 'שינוי']).map(q).join(','));
+                    lines.push(['מינהל', 'תת-שכונה'].concat(cols).concat(['כל השנים', 'תכניות', 'יח"ד קיים', 'יח"ד מוצע', 'חציון', 'מגמה: שינוי לשנה', 'סטיית תקן', 'מובהק', 'תכניות במגמה']).map(q).join(','));
                     const mRow = (label1, label2, list) => {
                         const a = aggr(list), t = trendOf(list);
                         return [q(label1), q(label2)].concat(cols.map(c => { const x = aggr(list.filter(r => colOf(r.year) === c)); return x.n ? x.w.toFixed(2) : ''; }))
                             .concat([a.w == null ? '' : a.w.toFixed(2), a.n, a.uin, a.utot, a.med == null ? '' : a.med.toFixed(2),
-                                t.e.n ? t.e.w.toFixed(2) : '', t.l.n ? t.l.w.toFixed(2) : '', t.ok ? t.d.toFixed(2) : '']).join(',');
+                                t.ok ? t.b.toFixed(3) : '', t.ok ? t.se.toFixed(3) : '', t.ok ? (t.sig ? 'כן' : 'לא') : '', t.n || '']).join(',');
                     };
                     rowKeys.forEach(rk => {
                         const parts = geo === 'sub' ? rk.split(' › ') : [rk, ''];
