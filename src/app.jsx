@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-renewal-mult';
+        const APP_VERSION = '2026-09-24-public-area-parsing';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -605,6 +605,18 @@
         // Standard elementary-school size. A בי"ס יסודי with no class count stated anywhere in its
         // phrase is assumed to be this many classrooms (overridden by any explicit "N כיתות"/"(N)").
         const DEFAULT_YESODI_CLASSES = 12;
+        // Wordings that mark a figure as public even when the segment also names a
+        // non-public use (mixed designations say both in one phrase).
+        const GENERIC_PUBLIC_RX = /מבנים ומוסדות|מבני ציבור|מוסדות ציבור|מוסדות כלל ציבור|שב"צ|שבצ|שצ"פ|שצ״פ|שטחי ציבור|שטח ציבורי|שטחים ציבוריים|שימוש ציבורי|שימושים ציבוריים|ציבורי גמיש/;
+        // Uses whose floor is NOT public. Guarded against the substring traps this codebase
+        // keeps hitting: דיור sits inside דיורית (a granny flat), and משרד inside משרד החינוך,
+        // which appears in ordinary requirement clauses — so offices are left out entirely
+        // rather than risk suppressing a real public figure.
+        // ⚠ דיור ציבורי/מוגן/מיוחד are welfare uses and must NOT be suppressed, and דיור
+        // sits inside דיורית. "מגורים" often describes WHERE a public area sits rather than
+        // what it is ("שטח ציבורי מבונה בבניין המגורים"), which is why GENERIC_PUBLIC_RX
+        // above overrides this guard.
+        const NON_PUBLIC_USE_RX = /מסחר|תעסוקה|תעשי|מגורים|דיור(?!ית|\s*(?:ציבורי|מוגן|מיוחד|לגיל))|חניון|חנייה|חניה|מלונא|בית מלון|אחסנ/;
         // Per-item breakdown of a program description. Returns { items, uncategorizedSqm } where each
         // item = { key, count, sqm, isClasses } for one recognized facility phrase. This is the single
         // source of truth; parseFacilitiesFromText() aggregates it into the legacy {counts} shape.
@@ -626,7 +638,9 @@
                 const t = (raw || '').trim();
                 if (!t) continue;
                 // sqm in parentheses (possibly followed by 'מ"ר') — used for generic items
-                const sqmMatch = t.match(/\(\s*([\d,]+(?:\.\d+)?)\s*(?:מ"ר|מ״ר|מר)?\s*\)/);
+                // "~500" — the plan hedges the number but still states one; without the ~
+                // the figure read as zero (101-1219724's "בית כנסת (~500)").
+                const sqmMatch = t.match(/\(\s*~?\s*([\d,]+(?:\.\d+)?)\s*(?:מ"ר|מ״ר|מר)?\s*\)/);
                 const sqm = sqmMatch ? parseFloat(sqmMatch[1].replace(/,/g, '')) : 0;
                 // "N כיתות" — explicit class count (highest priority)
                 const classesMatch = t.match(/(\d+)\s*כיתות?/);
@@ -710,8 +724,18 @@
                     const sharedWith = matchedKeys.slice(1);
                     out.push({ key, count, sqm: itemSqm, isClasses, sharedWith });
                 }
-                // Uncategorized generic public buildings — accumulate sqm
-                else if (/(מבנים ומוסדות|מבני ציבור|מוסדות ציבור|מוסדות כלל ציבור|שב"צ|שבצ|שצ"פ|שצ״פ|שטחי ציבור)/.test(t)) {
+                // No facility key matched. A segment that states an area is public floor
+                // unless it names a use that is not — so the DEFAULT is to park that area in
+                // uncategorizedSqm rather than drop it. This branch used to fire only on a
+                // closed list of generic wordings ("מבנים ומוסדות", "שב\"צ", …); every other
+                // phrasing fell through BOTH branches and lost its figure in silence —
+                // 134 segments across 113 plans, 178,949 מ"ר, e.g. "תרבות (15975)",
+                // "קהילה ורווחה (1200)", "מבנה דת (4200)", "קונסרבטוריון הסדנה (5622)".
+                // Holding an area unattributed is recoverable; dropping it is invisible.
+                // GENERIC_PUBLIC_RX wins over the guard: a mixed designation names commerce
+                // AND public in one breath — 101-0175232's "מסחר תעסוקה ומבנים ומוסדות ציבור
+                // (250)" is a public figure, and testing the guard first zeroed it.
+                else if (sqm > 0 && (GENERIC_PUBLIC_RX.test(t) || !NON_PUBLIC_USE_RX.test(t))) {
                     uncategorizedSqm += sqm;
                 }
             }
@@ -751,7 +775,9 @@
             ['health',    /(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/],
             ['emergency', /(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/],
             ['welfare',   /(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|גיל שלישי|אזרחים ותיקים|תשוש|מרכז יום|נכים|מוגבלויות|שיקום|דיר(?:ת|ות) קלט|דיור ציבורי|דיור מוגן|דיור מיוחד)/],
-            ['culture',   /(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/],
+            // ⚠ NOT גלריה: in this corpus it almost always means a MEZZANINE, not an art
+            // gallery — 101-0813329's "שטח לצרכי ציבור בקומת קרקע וגלריה" is a floor level.
+            ['culture',   /(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|אודיטור|קונסרבטור|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/],
         ];
         // Education sub-topic classifier (מעון / גן / יסודי / על-יסודי) for the future
         // public-building sub-filter. Order matters: על-יסודי is tested before יסודי (the
@@ -11613,8 +11639,17 @@ function planPermitHafrashUse(taba) {
                 detailRows.sort((a, b) => (a.taba < b.taba ? -1 : a.taba > b.taba ? 1
                     : ((a.lot || '') < (b.lot || '') ? -1 : (a.lot || '') > (b.lot || '') ? 1
                     : (a.use < b.use ? -1 : a.use > b.use ? 1 : 0))));
+                // The listing shows only allocations we can describe: a row must name a
+                // facility (a count) or at least the KIND of public use (a domain). A residual
+                // that names neither — "מבני ציבור (כללי / לא מסווג)" — is an unanswered
+                // quantity, not an allocation. It stays out of THIS report and is summed on
+                // purpose by the programme report and the brown-areas layer, which are meant
+                // to carry what is still undecided. The domain breakdown below is unaffected:
+                // it keeps counting that area in its own "no domain" bucket, so nothing is
+                // hidden from the totals — only from the row-by-row listing.
+                function rowHasDetail(r) { return (r.doms && r.doms.length > 0) || r.count > 0; }
                 function planRowsForTable() {
-                    return filteredDetailRows().filter(r => !r.serviceArea);
+                    return filteredDetailRows().filter(r => !r.serviceArea && rowHasDetail(r));
                 }
                 function buildPlanRows() {
                     return planRowsForTable().map(r => {
@@ -11789,7 +11824,7 @@ function planPermitHafrashUse(taba) {
                 function buildDetailSection() {
                     const fd = planRowsForTable();
                     return '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + fd.length +
-                            (stageFilter === 'all' ? '' : ' מתוך ' + detailRows.filter(x => !x.serviceArea).length) + ')</h4>' +
+                            (stageFilter === 'all' ? '' : ' מתוך ' + detailRows.filter(x => !x.serviceArea && rowHasDetail(x)).length) + ')</h4>' +
                         (fd.length
                             ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373" title="מגרש / תא שטח כפי שנכתב בתכנית — כמה הפרשות באותה תכנית יושבות על מגרשים שונים">מגרש</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody id="alloc-tbody">' + buildPlanRows() + '</tbody></table>'
                             : '<div style="color:#999;font-size:13px;padding:10px">' +
