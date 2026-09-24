@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-renewal-spatial';
+        const APP_VERSION = '2026-09-24-renewal-from2020';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13820,6 +13820,11 @@ function planPermitHafrashUse(taba) {
                 const bin = o.bin === 'period' ? 'period' : 'year';                         // matrix columns
                 const view = o.view === 'plans' ? 'plans' : 'trend';                        // chart
                 const cell = o.cell || null;                                                // drill-down "row|col"
+                // Start year. Before ~2020 renewal files were sporadic (1–5 a year), so by default
+                // they are left out of everything — charts, trend line, KPIs and table alike — rather
+                // than only hidden from the chart, which would leave the trend fitted on points you can't see.
+                const DEFAULT_FROM = 2020;
+                const fromYear = o.from === 'all' ? null : (parseInt(o.from) || DEFAULT_FROM);
                 const gd = geoDataRef.current || {};
                 const xpl = ((gd.xplanDates || {}).plans) || {};
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -13869,7 +13874,7 @@ function planPermitHafrashUse(taba) {
                 // ── one record per renewal plan (status-scoped, before the geographic filter) ──
                 const seen = new Set();
                 const scoped = [];
-                let excludedStatus = 0;
+                let excludedStatus = 0, excludedEarly = 0;
                 (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
                     const p = f.properties || {};
                     if (!RENEWAL_MULT_PLAN_TYPES.has(String(p.plan_type || '').trim())) return;
@@ -13881,6 +13886,8 @@ function planPermitHafrashUse(taba) {
                     const x = xpl[id] || null;
                     const uin = okU(p.units_in), uadd = okU(p.units_add);
                     const year = x && x.recv ? parseInt(x.recv.slice(0, 4)) : null;
+                    // Undated plans are kept: they're the newest files, received but not yet in XPLAN.
+                    if (fromYear && year != null && year < fromYear) { excludedEarly++; return; }
                     // whole string first ('בית צפאפא,שרפת' is itself a sub name), else the first listed sub
                     const rawSub = String(p.sub_neighborhood || '').trim();
                     const firstSub = (rawSub.split(',')[0] || '').trim();
@@ -14036,7 +14043,7 @@ function planPermitHafrashUse(taba) {
                     const rest = withT.filter(s => !sig.includes(s));
                     const nm = (s) => esc(rowLabel(s.rk)) + ' <bdi dir="ltr">(' + (s.t.b > 0 ? '+' : '') + s.t.b.toFixed(2) + ')</bdi>';
                     const findings = '<div style="font-size:12px;color:#bcd;line-height:1.7;margin-bottom:8px;background:#12222a;border-radius:6px;padding:6px 10px">' +
-                        '<b style="color:#5ee0c8">שינוי המכפיל לכל שנת קליטה</b> (שיפוע קו מגמה על כל התכניות, בלי שנת חיתוך; מחושב ל-' + withT.length + ' מתוך ' + series.length + ' אזורים — בשאר פחות מ-4 תכניות):<br>' +
+                        '<b style="color:#5ee0c8">שינוי המכפיל לכל שנת קליטה</b> (שיפוע קו מגמה על כל התכניות' + (fromYear ? ' שנקלטו מ-' + fromYear : '') + '; מחושב ל-' + withT.length + ' מתוך ' + series.length + ' אזורים — בשאר פחות מ-4 תכניות):<br>' +
                         (ups.length ? '<span style="color:#f2a65a">▲ עלייה מובהקת:</span> ' + ups.map(nm).join(' · ') + '<br>' : '') +
                         (downs.length ? '<span style="color:#6fb8e8">▼ ירידה מובהקת:</span> ' + downs.slice().reverse().map(nm).join(' · ') + '<br>' : '') +
                         (rest.length ? '<span style="color:#9ab">≈ ללא מגמה מובהקת:</span> ' + rest.map(nm).join(' · ') : '') +
@@ -14169,6 +14176,7 @@ function planPermitHafrashUse(taba) {
                     grp('סינון:', sel('rmdash-min', fMin, allMins, 'כל המינהלים') + (fMin ? sel('rmdash-sub', fSub, subsOfMin, 'כל תתי-השכונות') : '')) +
                     (fMin ? '' : grp('שורות:', chip('geo', 'minhak', 'מינהל קהילתי', geo === 'minhak') + chip('geo', 'sub', 'תת-שכונה', geo === 'sub'))) +
                     grp('עמודות:', chip('bin', 'year', 'שנה', bin === 'year') + chip('bin', 'period', 'תקופות', bin === 'period')) +
+                    grp('שנת קליטה:', chip('from', String(DEFAULT_FROM), 'מ-' + DEFAULT_FROM, fromYear === DEFAULT_FROM) + chip('from', 'all', 'כל השנים', !fromYear)) +
                     grp('סטטוס:', chip('sc', 'active', 'פעילות', sc === 'active') + chip('sc', 'approved', 'מאושרות', sc === 'approved') + chip('sc', 'all', 'הכל', sc === 'all')) +
                     '</div>';
                 const chartTabs = '<div style="display:flex;gap:6px;margin-bottom:8px">' +
@@ -14178,12 +14186,13 @@ function planPermitHafrashUse(taba) {
                 const note = '<div style="font-size:10px;color:#7aa;margin-top:10px;line-height:1.6">' +
                     '<b>מכפיל</b> = (יח"ד קיים + תוספת) ÷ יח"ד קיים, לפי טבלה 5 (הגיליון). <b>משוקלל</b> = סך המוצע ÷ סך הקיים בקבוצה (תכנית גדולה משפיעה יותר); החציון מוצג בריחוף על תא. ' +
                     '<b>שנת קליטה</b> = "תאריך קבלת תכנית" (receiving_date) ב-XPLAN' + (fetched ? ', נמשך ' + esc(fetched) : '') + ' — זה הנתון היחיד שנלקח מ-XPLAN. ' +
-                    '<b>מגמה</b> = שיפוע קו רגרסיה של מכפיל התכנית על שנת הקליטה, משוקלל ביח"ד הקיימות (כמו המכפיל המשוקלל), בלי שנת חיתוך — בכמה המכפיל עולה או יורד בממוצע לכל שנה. מחושבת רק לאזור עם ≥4 תכניות ב-≥3 שנות קליטה; "?" = לא מובהקת (השיפוע קטן מפעמיים סטיית התקן); שיפוע קטן מ-' + FLAT + ' לשנה נחשב יציב. ' +
+                    '<b>מגמה</b> = שיפוע קו רגרסיה של מכפיל התכנית על שנת הקליטה, משוקלל ביח"ד הקיימות (כמו המכפיל המשוקלל), כל תכנית בשנת הקליטה שלה — בכמה המכפיל עולה או יורד בממוצע לכל שנה. מחושבת רק לאזור עם ≥4 תכניות ב-≥3 שנות קליטה; "?" = לא מובהקת (השיפוע קטן מפעמיים סטיית התקן); שיפוע קטן מ-' + FLAT + ' לשנה נחשב יציב. ' +
                     'נכללות תכניות שסווגו "התחדשות עירונית" / "פינוי בינוי". <b>תת-שכונה</b> = הפוליגון במפה שבו התכנית יושבת (חיתוך מרחבי), לא השדה בגיליון; ≠ ברשימה = הגיליון אומר אחרת, * = מחוץ לפוליגונים ולכן לפי הגיליון. תת-שכונה משויכת למינהל שאליו היא שייכת. ' +
                     'לא נכללו במכפיל: ' + noIn + ' תכניות ללא מצב נכנס (0 יח"ד קיימות)' +
                     (noAdd ? ', ' + noAdd + ' ללא תוספת יח"ד (שינוי קווי בניין / שטחים בלבד)' : '') +
                     (noData ? ', ' + noData + ' ללא נתוני יח"ד' : '') +
-                    (excludedStatus ? ', ' + excludedStatus + ' שהוחרגו לפי סינון הסטטוס' : '') + '.' +
+                    (excludedStatus ? ', ' + excludedStatus + ' שהוחרגו לפי סינון הסטטוס' : '') +
+                    (excludedEarly ? ', ' + excludedEarly + ' שנקלטו לפני ' + fromYear + ' (תכניות ספורדיות — "כל השנים" מחזיר אותן)' : '') + '.' +
                     (valid.some(r => r.year == null) ? ' "' + NO_DATE + '" = תכנית שאינה מופיעה ב-XPLAN (בדרך כלל נקלטה לאחרונה וטרם פורסמה).' : '') +
                     '</div>';
 
@@ -14207,7 +14216,7 @@ function planPermitHafrashUse(taba) {
                     : '<div style="color:#9cc;padding:16px;text-align:center">אין תכניות התחדשות עם מצב נכנס בסינון הנוכחי.</div>' + note) + footer;
                 div.scrollTop = keepScroll;
 
-                const params = { sc, geo, bin, view, min: fMin, sub: fSub };
+                const params = { sc, geo, bin, view, min: fMin, sub: fSub, from: fromYear ? String(fromYear) : 'all' };
                 setImpReport('renewalMultDash', params);
                 wireImpLinkBtn('rmdash-link', 'renewalMultDash', params);
                 const rerender = (patch) => renderRenewalMultiplierDashboard(Object.assign({}, params, { cell }, patch));
@@ -14215,7 +14224,7 @@ function planPermitHafrashUse(taba) {
                 div.querySelectorAll('button[data-rm]').forEach(b => b.addEventListener('click', () => {
                     const patch = {}; patch[b.getAttribute('data-rm')] = b.getAttribute('data-val');
                     // row/column keys change with geo/bin, so a selected cell would point nowhere
-                    if (patch.geo || patch.bin) patch.cell = null;
+                    if (patch.geo || patch.bin || patch.from) patch.cell = null;
                     rerender(patch);
                 }));
                 const selMin = document.getElementById('rmdash-min');
@@ -16732,7 +16741,7 @@ function planPermitHafrashUse(taba) {
                     const gen = {
                         populationDash: () => openPopulationDashboard(ip.min || undefined),
                         constructionDash: () => openConstructionDashboard(),
-                        renewalMultDash: () => openRenewalMultiplierDashboard({ sc: ip.sc, geo: ip.geo, bin: ip.bin, view: ip.view, min: ip.min, sub: ip.sub }),
+                        renewalMultDash: () => openRenewalMultiplierDashboard({ sc: ip.sc, geo: ip.geo, bin: ip.bin, view: ip.view, min: ip.min, sub: ip.sub, from: ip.from }),
                         subDash: () => renderSubDashboard(ip.sub || dashSub),
                         minhakDash: () => renderMinhakDashboard(ip.min || reportsMenuMinahak),
                     }[params.impreport];

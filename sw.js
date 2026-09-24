@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v101-renewal-spatial';
+const CACHE_VERSION = 'v102-renewal-from2020';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
