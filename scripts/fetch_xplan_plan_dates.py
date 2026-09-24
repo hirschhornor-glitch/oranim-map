@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
-"""שנת קליטה + יח"ד מ-XPLAN לכל תכנית ב-plans.geojson → data/xplan_plan_dates.json
+"""שנת קליטה מ-XPLAN לכל תכנית ב-plans.geojson → data/xplan_plan_dates.json
 
 Feeds the "מכפילי התחדשות עירונית" dashboard (src/app.jsx, openRenewalMultiplierDashboard).
 
-XPLAN MapServer/1 per plan:
-    receiving_date               "תאריך קבלת תכנית"   → the year the file was opened
-    pq_authorised_quantity_120   "מגורים מאושר יח\"ד"  → units_in  (existing)
-    quantity_delta_120           "שינוי מס' יח' דיור"  → units_add
-    station_desc                 status text
-
-The app's primary unit figures stay the Table-5-verified GS columns; the XPLAN
-figures are kept alongside as a second source (they disagree on ~30% of renewal
-plans and carry m² garbage on some — see xplan_units.py). Dates are XPLAN-only.
+XPLAN MapServer/1 `receiving_date` ("תאריך קבלת תכנית") = the year the plan
+file was opened. That date is the ONLY thing taken from XPLAN here: unit counts
+always come from Table 5 (the sheet), never from XPLAN's pq_120/delta_120.
 
 Fetches ALL plans (not only renewal) so a plan_type reclassification in the
 sheet never leaves a plan without a date. Plans XPLAN doesn't know (rejected /
@@ -38,21 +32,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLANS = os.path.join(ROOT, "data", "plans.geojson")
 OUT = os.path.join(ROOT, "data", "xplan_plan_dates.json")
 CHUNK = 80
-FIELDS = ("pl_number,receiving_date,pq_authorised_quantity_120,"
-          "quantity_delta_120,station_desc")
+FIELDS = "pl_number,receiving_date"
 
 
 def _iso(ms):
     if not ms:
         return None
     return datetime.fromtimestamp(ms / 1000, timezone.utc).strftime("%Y-%m-%d")
-
-
-def _num(v):
-    try:
-        return None if v is None else round(float(v), 1)
-    except (TypeError, ValueError):
-        return None
 
 
 def fetch(names):
@@ -77,12 +63,7 @@ def fetch(names):
                 time.sleep(5)
         for ft in js.get("features") or []:
             a = ft["attributes"]
-            out[a["pl_number"]] = {
-                "recv": _iso(a.get("receiving_date")),
-                "xp_in": _num(a.get("pq_authorised_quantity_120")),
-                "xp_add": _num(a.get("quantity_delta_120")),
-                "xp_status": a.get("station_desc") or "",
-            }
+            out[a["pl_number"]] = {"recv": _iso(a.get("receiving_date"))}
     return out
 
 

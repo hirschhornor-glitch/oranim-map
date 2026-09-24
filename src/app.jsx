@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-public-area-parsing';
+        const APP_VERSION = '2026-09-24-renewal-trend';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3709,6 +3709,10 @@ function planPermitHafrashUse(taba) {
             });
             return out;
         })();
+        function hebrewWordIn(text, word) {
+            const w = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp('(^|[^א-ת])[בהלומש]?' + w + '($|[^א-ת])').test(text);
+        }
         function applyMinahakOverrides(gd) {
             if (!gd || !gd.plans || !gd.plans.features) return 0;
             let n = 0;
@@ -3732,7 +3736,10 @@ function planPermitHafrashUse(taba) {
                             hint.sub.replace(/^גבעת ([^ה])/, 'גבעת ה$1'),
                         ];
                         if (hint.sub === 'בית צפאפא') variants.push('בית צפפה');
-                        if (variants.some(v => v && blob.indexOf(v) >= 0)) {
+                        // Whole-word match only (an optional one-letter prefix — בקטמון, לרחביה — is
+                        // allowed). A bare indexOf hit 'פת' inside 'תוספת', so every plan named
+                        // "תוספת קומות…" (275 of them) was moved to sub פת / minhak גוננים.
+                        if (variants.some(v => v && hebrewWordIn(blob, v))) {
                             // Override sub + minahak to the canonical pair when
                             // the plan name disagrees with the CSV.
                             if (sub !== hint.sub) {
@@ -13783,10 +13790,9 @@ function planPermitHafrashUse(taba) {
             }
 
             // ── Urban-renewal multipliers (מכפילי התחדשות עירונית) by minhak / sub-neighborhood ×
-            //    the year the plan file was received (XPLAN receiving_date). Multiplier =
-            //    (units_in + units_add) / units_in. Units default to the Table-5-verified GS
-            //    columns; XPLAN's own pq_120/delta_120 are a switchable second source. Dates come
-            //    from data/xplan_plan_dates.json (scripts/fetch_xplan_plan_dates.py, weekly). ──
+            //    the year the plan file was received. Multiplier = (units_in + units_add) / units_in,
+            //    units from the sheet (Table 5 always wins). XPLAN supplies ONLY the receiving year
+            //    (receiving_date) via data/xplan_plan_dates.json (scripts/fetch_xplan_plan_dates.py). ──
             const RENEWAL_PLAN_TYPES = new Set(['התחדשות עירונית', 'פינוי בינוי']);
             function openRenewalMultiplierDashboard(opts) {
                 const gd = geoDataRef.current || {};
@@ -13805,10 +13811,12 @@ function planPermitHafrashUse(taba) {
             }
 
             function renderRenewalMultiplierDashboard(o) {
-                const src = o.src === 'xp' ? 'xp' : 'gs';                                   // units source
                 const sc = ['approved', 'all'].includes(o.sc) ? o.sc : 'active';            // status scope
-                const geo = o.geo === 'sub' ? 'sub' : 'minhak';                             // row grouping
-                const bin = o.bin === 'period' ? 'period' : 'year';                         // column grouping
+                const fMin = o.min || '';                                                   // minhak filter
+                const fSub = fMin ? (o.sub || '') : '';                                     // sub filter (within minhak)
+                const geo = (fMin || o.geo === 'sub') ? 'sub' : 'minhak';                   // row grouping
+                const bin = o.bin === 'period' ? 'period' : 'year';                         // matrix columns
+                const view = o.view === 'plans' ? 'plans' : 'trend';                        // chart
                 const cell = o.cell || null;                                                // drill-down "row|col"
                 const gd = geoDataRef.current || {};
                 const xpl = ((gd.xplanDates || {}).plans) || {};
@@ -13819,19 +13827,21 @@ function planPermitHafrashUse(taba) {
                 const MIN_COLORS = { 'גוננים': '#4e9be0', 'א.ת. תלפיות': '#f28e2b', 'בקעה רבתי': '#e8606a',
                     'גינות העיר': '#6fcfc4', 'בית צפאפא': '#7cc26b', 'גבעת המטוס': '#d4b84a' };
                 const minColor = (m) => MIN_COLORS[m] || '#b0a8c8';
-                // A units read is usable only if it can be a dwelling count (XPLAN puts m² in these columns on some plans).
+                const SUB_PALETTE = ['#4e9be0', '#f28e2b', '#e8606a', '#6fcfc4', '#7cc26b', '#d4b84a', '#b07cc6', '#ff9da7', '#9c9ede'];
                 const okU = (v) => { const f = parseFloat(v); return (isFinite(f) && f >= 0 && f <= 20000) ? f : null; };
                 const PERIODS = [
                     { key: '≤2016', test: y => y <= 2016 }, { key: '2017–19', test: y => y >= 2017 && y <= 2019 },
                     { key: '2020–21', test: y => y === 2020 || y === 2021 }, { key: '2022–23', test: y => y === 2022 || y === 2023 },
                     { key: '2024+', test: y => y >= 2024 },
                 ];
+                const periodOf = (y) => y == null ? null : (PERIODS.find(p => p.test(y)) || {}).key;
                 const NO_DATE = 'ללא תאריך';
-                const colOf = (y) => y == null ? NO_DATE : (bin === 'year' ? String(y) : (PERIODS.find(p => p.test(y)) || {}).key);
+                const colOf = (y) => y == null ? NO_DATE : (bin === 'year' ? String(y) : periodOf(y));
+                const SPLIT = 2021;   // trend = files received before SPLIT vs from SPLIT on
 
-                // ── collect one record per renewal plan ──
+                // ── one record per renewal plan (status-scoped, before the geographic filter) ──
                 const seen = new Set();
-                const plans = [];
+                const scoped = [];
                 let excludedStatus = 0;
                 (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
                     const p = f.properties || {};
@@ -13842,26 +13852,28 @@ function planPermitHafrashUse(taba) {
                     const sg = statusGroupKey(p.status_mavat);
                     if ((sc === 'active' && sg === 'rejected') || (sc === 'approved' && sg !== 'approved')) { excludedStatus++; return; }
                     const x = xpl[id] || null;
-                    const uin = src === 'xp' ? (x ? okU(x.xp_in) : null) : okU(p.units_in);
-                    const uadd = src === 'xp' ? (x ? okU(x.xp_add) : null) : okU(p.units_add);
+                    const uin = okU(p.units_in), uadd = okU(p.units_add);
                     const year = x && x.recv ? parseInt(x.recv.slice(0, 4)) : null;
-                    const minhak = MIN_NORM[p.minahak] || p.minahak || 'לא ידוע';
-                    const rawSub = String(p.sub_neighborhood || '').trim();
                     // whole string first ('בית צפאפא,שרפת' is itself a sub name), else the first listed sub
+                    const rawSub = String(p.sub_neighborhood || '').trim();
                     const firstSub = (rawSub.split(',')[0] || '').trim();
-                    const sub = SUB_NORMALIZE[rawSub] || ((MINAHAK_SUBS[minhak] || []).includes(rawSub) ? rawSub : null)
+                    const sub = SUB_NORMALIZE[rawSub] || (SUB_TO_MINAHAK[rawSub] ? rawSub : null)
                         || SUB_NORMALIZE[firstSub] || firstSub || 'לא ידוע';
+                    // A sub belongs to exactly one minhak, so its canonical minhak wins over the row's tag —
+                    // otherwise one sub splits across several minhak groups.
+                    const minhak = SUB_TO_MINAHAK[sub] || MIN_NORM[p.minahak] || p.minahak || 'לא ידוע';
                     // No added units (a building-line / area-only amendment tagged as renewal) is not a
                     // multiplier story — a 1.00 there would only drag the averages down.
                     const mult = (uin > 0 && uadd > 0) ? (uin + uadd) / uin : null;
-                    // Flag where the two sources disagree (>1 unit on either column).
-                    const gi = okU(p.units_in), ga = okU(p.units_add);
-                    const mismatch = !!(x && (gi == null || x.xp_in == null || Math.abs(gi - x.xp_in) > 1 || Math.abs((ga || 0) - (x.xp_add || 0)) > 1));
-                    plans.push({ id, feat: f, name: p.plan_name_he || p.plan_summary || id, minhak, sub, year, recv: x ? x.recv : null,
-                        status: normalizeStatus(String(p.status_mavat || '').trim()) || '', uin, uadd, mult, mismatch, inXplan: !!x });
+                    scoped.push({ id, name: p.plan_name_he || p.plan_summary || id, minhak, sub, year, recv: x ? x.recv : null,
+                        status: normalizeStatus(String(p.status_mavat || '').trim()) || '', uin, uadd, mult });
                 });
+                const allMins = Array.from(new Set(scoped.filter(r => r.mult != null).map(r => r.minhak))).sort();
+                const subsOfMin = Array.from(new Set(scoped.filter(r => r.mult != null && r.minhak === fMin).map(r => r.sub))).sort();
+                const plans = scoped.filter(r => (!fMin || r.minhak === fMin) && (!fSub || r.sub === fSub));
 
                 const rowOf = (r) => geo === 'sub' ? r.minhak + ' › ' + r.sub : r.minhak;
+                const rowLabel = (rk) => geo === 'sub' ? rk.split(' › ')[1] : rk;
                 const valid = plans.filter(r => r.mult != null);
                 const aggr = (list) => {
                     const v = list.filter(r => r.mult != null);
@@ -13869,10 +13881,15 @@ function planPermitHafrashUse(taba) {
                     v.forEach(r => { si += r.uin; st += r.uin + r.uadd; });
                     const ms = v.map(r => r.mult).sort((a, b) => a - b);
                     const med = ms.length ? (ms.length % 2 ? ms[(ms.length - 1) / 2] : (ms[ms.length / 2 - 1] + ms[ms.length / 2]) / 2) : null;
-                    return { n: v.length, nAll: list.length, uin: si, utot: st, w: si > 0 ? st / si : null, med };
+                    return { n: v.length, uin: si, utot: st, w: si > 0 ? st / si : null, med };
+                };
+                // early (< SPLIT) vs late (≥ SPLIT) — shown only when both sides have ≥ 2 plans
+                const trendOf = (list) => {
+                    const e = aggr(list.filter(r => r.year != null && r.year < SPLIT));
+                    const l = aggr(list.filter(r => r.year != null && r.year >= SPLIT));
+                    return { e, l, ok: e.n >= 2 && l.n >= 2, d: (e.w != null && l.w != null) ? l.w - e.w : null };
                 };
 
-                // columns in chronological order, "no date" last
                 const years = valid.map(r => r.year).filter(y => y != null);
                 let cols;
                 if (bin === 'year') {
@@ -13886,39 +13903,104 @@ function planPermitHafrashUse(taba) {
                     if (geo === 'sub') { const ma = a.split(' › ')[0], mb = b.split(' › ')[0]; if (ma !== mb) return ma < mb ? -1 : 1; }
                     return rowAgg[b].n - rowAgg[a].n;
                 });
+                const rowColor = (rk) => {
+                    if (geo === 'minhak') return minColor(rk);
+                    if (fMin) return SUB_PALETTE[Math.max(0, subsOfMin.indexOf(rk.split(' › ')[1])) % SUB_PALETTE.length];
+                    return minColor(rk.split(' › ')[0]);
+                };
                 const total = aggr(valid);
                 const noIn = plans.filter(r => r.mult == null && r.uadd > 0 && !(r.uin > 0)).length;
                 const noAdd = plans.filter(r => r.mult == null && r.uin > 0 && !(r.uadd > 0)).length;
                 const noData = plans.filter(r => r.mult == null).length - noIn - noAdd;
 
-                // Heat scale for the weighted multiplier (sequential, low = dark).
                 const HEAT = [[2, '#27404f'], [3, '#2b6a78'], [4, '#2d9387'], [5, '#5cb57f'], [6, '#a9cd6a'], [Infinity, '#f0d45a']];
                 const heat = (v) => (HEAT.find(h => v < h[0]) || HEAT[HEAT.length - 1])[1];
                 const heatInk = (v) => v >= 5 ? '#10202a' : '#eaf6f4';
+                const trendBadge = (t, big) => {
+                    if (!t.ok) return '<span style="color:#56707a" title="נדרשות לפחות 2 תכניות בכל צד (לפני ' + SPLIT + ' / מ-' + SPLIT + ')">—</span>';
+                    const up = t.d > 0.15, down = t.d < -0.15;
+                    const c = up ? '#f2a65a' : down ? '#6fb8e8' : '#9ab';
+                    return '<span dir="ltr" style="color:' + c + ';white-space:nowrap;font-size:' + (big ? 12 : 11) + 'px" title="לפני ' + SPLIT + ': ' + m2(t.e.w) + ' (' + t.e.n + ' תכניות) · מ-' + SPLIT + ': ' + m2(t.l.w) + ' (' + t.l.n + ')">' +
+                        m2(t.e.w) + ' → ' + m2(t.l.w) + ' ' + (up ? '▲' : down ? '▼' : '≈') + (t.d > 0 ? '+' : '') + t.d.toFixed(2) + '</span>';
+                };
 
                 // ── KPIs ──
-                const recent = aggr(valid.filter(r => r.year != null && r.year >= 2022));
-                const older = aggr(valid.filter(r => r.year != null && r.year < 2022));
+                const tt = trendOf(valid);
                 const kpi = (label, val, sub2, color) =>
                     '<div style="background:#12222a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' +
                     '<div style="font-size:11px;color:#9cc">' + label + '</div>' +
-                    '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' +
+                    '<div style="font-size:21px;font-weight:bold;color:' + color + '"><bdi dir="ltr">' + val + '</bdi></div>' +
                     (sub2 ? '<div style="font-size:10px;color:#7aa">' + sub2 + '</div>' : '') + '</div>';
                 const kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
                     kpi('מכפיל משוקלל', m2(total.w), 'Σ יח"ד מוצע ÷ Σ יח"ד קיים', '#5ee0c8') +
                     kpi('מכפיל חציוני', m2(total.med), total.n + ' תכניות עם מצב נכנס', '#9bd6f0') +
                     kpi('יח"ד קיים → מוצע', n0(total.uin) + ' → ' + n0(total.utot), '+' + n0(total.utot - total.uin) + ' יח"ד', '#f0d45a') +
-                    kpi('נקלטו 2022 ואילך', m2(recent.w), 'מול ' + m2(older.w) + ' לפני 2022 (משוקלל)', recent.w > older.w ? '#f2a65a' : '#7cc26b') +
+                    kpi('מגמה: לפני ' + SPLIT + ' → מ-' + SPLIT, tt.e.w != null && tt.l.w != null ? m2(tt.e.w) + ' → ' + m2(tt.l.w) : '—',
+                        tt.e.n + ' / ' + tt.l.n + ' תכניות (משוקלל)', tt.d > 0.15 ? '#f2a65a' : tt.d < -0.15 ? '#6fb8e8' : '#9ab') +
                     '</div>';
 
-                // ── scatter: each plan a dot (x = receiving year, y = multiplier), yearly weighted line ──
-                const chart = (() => {
+                // ── chart A (trend): small multiples — one panel per area, weighted multiplier by period ──
+                const trendChart = (() => {
+                    const pks = PERIODS.map(p => p.key);
+                    const dated = valid.filter(r => r.year != null);
+                    if (!dated.length) return '';
+                    const panels = rowKeys.filter(rk => dated.some(r => rowOf(r) === rk));
+                    const series = panels.map(rk => {
+                        const list = dated.filter(r => rowOf(r) === rk);
+                        return { rk, pts: pks.map(k => ({ k, a: aggr(list.filter(r => periodOf(r.year) === k)) })), t: trendOf(list), n: list.length };
+                    });
+                    const ymax = Math.min(10, Math.max(4, Math.ceil(Math.max(...series.flatMap(s => s.pts.filter(p => p.a.n).map(p => p.a.w))))));
+                    const W = 230, H = 110, L0 = 10, R0 = 24, T0 = 8, B0 = 18;
+                    // RTL: earliest period on the right, same direction as the table
+                    const sx = (i) => L0 + (1 - i / (pks.length - 1)) * (W - L0 - R0);
+                    const sy = (m) => T0 + (1 - (Math.min(m, ymax) - 1) / (ymax - 1)) * (H - T0 - B0);
+                    const overall = pks.map(k => aggr(dated.filter(r => periodOf(r.year) === k)));
+                    const panel = (s) => {
+                        let g = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block">';
+                        [1, Math.round((1 + ymax) / 2), ymax].forEach(m => {
+                            g += '<line x1="' + L0 + '" x2="' + (W - R0) + '" y1="' + sy(m) + '" y2="' + sy(m) + '" stroke="#223a44" stroke-width="0.6"/>' +
+                                '<text x="' + (W - R0 + 4) + '" y="' + (sy(m) + 3) + '" fill="#6f8f99" font-size="9">' + m + '</text>';
+                        });
+                        pks.forEach((k, i) => { g += '<text x="' + sx(i) + '" y="' + (H - 5) + '" fill="#6f8f99" font-size="8.5" text-anchor="middle">' + k + '</text>'; });
+                        // reference: all areas in scope (dashed)
+                        const ref = overall.map((a, i) => a.n ? sx(i).toFixed(1) + ',' + sy(a.w).toFixed(1) : null).filter(Boolean);
+                        if (ref.length > 1) g += '<polyline fill="none" stroke="#5d7680" stroke-width="1" stroke-dasharray="3,3" points="' + ref.join(' ') + '"/>';
+                        const col = rowColor(s.rk);
+                        const on = s.pts.map((p, i) => p.a.n ? sx(i).toFixed(1) + ',' + sy(p.a.w).toFixed(1) : null).filter(Boolean);
+                        if (on.length > 1) g += '<polyline fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" points="' + on.join(' ') + '"/>';
+                        s.pts.forEach((p, i) => {
+                            if (!p.a.n) return;
+                            g += '<circle cx="' + sx(i).toFixed(1) + '" cy="' + sy(p.a.w).toFixed(1) + '" r="' + Math.min(7, 2.5 + p.a.n * 0.6).toFixed(1) + '" fill="' + col + '" stroke="#0b1418" stroke-width="1"' +
+                                (p.a.n < 2 ? ' fill-opacity="0.45"' : '') + '><title>' + esc(rowLabel(s.rk) + ' · ' + p.k + '\nמכפיל משוקלל ' + m2(p.a.w) + ' · ' + p.a.n + ' תכניות\n' + n0(p.a.uin) + ' → ' + n0(p.a.utot) + ' יח"ד') + '</title></circle>';
+                        });
+                        g += '</svg>';
+                        return '<div style="background:#0f1c22;border:1px solid #1f3a44;border-radius:8px;padding:6px 8px 2px">' +
+                            '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:12px;margin-bottom:2px">' +
+                            '<span style="color:#dde;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:' + col + '">●</span> ' + esc(rowLabel(s.rk)) +
+                            ' <span style="color:#6f8f99;font-weight:normal;font-size:10px">(' + s.n + ')</span></span>' + trendBadge(s.t) + '</div>' + g + '</div>';
+                    };
+                    // findings: areas with a measurable trend, strongest change first
+                    const withT = series.filter(s => s.t.ok).sort((a, b) => b.t.d - a.t.d);
+                    const ups = withT.filter(s => s.t.d > 0.15), downs = withT.filter(s => s.t.d < -0.15), flat = withT.length - ups.length - downs.length;
+                    const nm = (s) => esc(rowLabel(s.rk)) + ' (' + (s.t.d > 0 ? '+' : '') + s.t.d.toFixed(2) + ')';
+                    const findings = '<div style="font-size:12px;color:#bcd;line-height:1.7;margin-bottom:8px;background:#12222a;border-radius:6px;padding:6px 10px">' +
+                        '<b style="color:#5ee0c8">מגמה בין תיקים שנקלטו לפני ' + SPLIT + ' לבין ' + SPLIT + ' ואילך</b> (מכפיל משוקלל; רק אזורים עם ≥2 תכניות בכל צד — ' + withT.length + ' מתוך ' + series.length + '):<br>' +
+                        (ups.length ? '<span style="color:#f2a65a">▲ עלייה:</span> ' + ups.map(nm).join(' · ') + '<br>' : '') +
+                        (downs.length ? '<span style="color:#6fb8e8">▼ ירידה:</span> ' + downs.slice().reverse().map(nm).join(' · ') + '<br>' : '') +
+                        (flat ? '<span style="color:#9ab">≈ ללא שינוי מהותי (±0.15):</span> ' + withT.filter(s => Math.abs(s.t.d) <= 0.15).map(nm).join(' · ') : '') +
+                        (withT.length ? '' : '<span style="color:#7aa">אין מספיק תכניות בשני הצדים לאף אזור בסינון הנוכחי.</span>') + '</div>';
+                    return '<div style="margin-bottom:12px">' + findings +
+                        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">' + series.map(panel).join('') + '</div>' +
+                        '<div style="font-size:10px;color:#7aa;margin-top:4px">קו מקווקו = כל האזורים בסינון · נקודה שקופה = תכנית בודדת בתקופה · גודל נקודה = מספר תכניות</div></div>';
+                })();
+
+                // ── chart B (plans): each plan a dot (x = receiving year, y = multiplier) ──
+                const scatter = (() => {
                     const pts = valid.filter(r => r.year != null);
                     if (!pts.length) return '';
                     const W = 900, H = 260, L0 = 16, R0 = 40, T0 = 12, B0 = 26;
                     const y0 = Math.min(...pts.map(r => r.year)), y1 = Math.max(...pts.map(r => r.year));
                     const YMAX = 10;
-                    // RTL: earliest year on the right, same direction as the table columns below
                     const sx = (y) => L0 + (y1 === y0 ? 0.5 : (y1 - y) / (y1 - y0)) * (W - L0 - R0);
                     const sy = (m) => T0 + (1 - (Math.min(m, YMAX) - 1) / (YMAX - 1)) * (H - T0 - B0);
                     let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block" role="img" aria-label="מכפיל לפי שנת קליטה">';
@@ -13927,7 +14009,6 @@ function planPermitHafrashUse(taba) {
                         if (m % 2 === 1 || m === YMAX) s += '<text x="' + (W - R0 + 6) + '" y="' + (sy(m) + 3.5) + '" fill="#8ab" font-size="10" text-anchor="start">' + (m === YMAX ? '≥' + m : m) + '</text>';
                     }
                     for (let y = y0; y <= y1; y++) s += '<text x="' + sx(y) + '" y="' + (H - 8) + '" fill="#8ab" font-size="10" text-anchor="middle">' + y + '</text>';
-                    // deterministic horizontal jitter so same-year plans don't overlap
                     const byYear = {};
                     pts.forEach(r => { (byYear[r.year] = byYear[r.year] || []).push(r); });
                     const span = (W - L0 - R0) / Math.max(1, y1 - y0 + 1) * 0.6;
@@ -13937,12 +14018,11 @@ function planPermitHafrashUse(taba) {
                             const dx = list.length > 1 ? (i / (list.length - 1) - 0.5) * span : 0;
                             const rr = Math.max(3, Math.min(9, Math.sqrt(r.uin + r.uadd) / 2.2));
                             s += '<circle class="rm-dot" data-id="' + esc(r.id) + '" cx="' + (sx(+y) + dx).toFixed(1) + '" cy="' + sy(r.mult).toFixed(1) + '" r="' + rr.toFixed(1) +
-                                '" fill="' + minColor(r.minhak) + '" fill-opacity="0.75" stroke="#0b1418" stroke-width="1" style="cursor:pointer">' +
+                                '" fill="' + rowColor(rowOf(r)) + '" fill-opacity="0.75" stroke="#0b1418" stroke-width="1" style="cursor:pointer">' +
                                 '<title>' + esc(r.id + ' — ' + r.name + '\n' + r.minhak + ' · ' + r.sub + '\nנקלטה ' + (r.recv || '') + ' · ' + r.status +
                                     '\nמכפיל ' + m2(r.mult) + ' (' + n0(r.uin) + ' → ' + n0(r.uin + r.uadd) + ' יח"ד)') + '</title></circle>';
                         });
                     });
-                    // yearly weighted multiplier line (years with ≥2 plans)
                     const line = Object.keys(byYear).map(Number).sort((a, b) => a - b)
                         .map(y => ({ y, a: aggr(byYear[y]) })).filter(d => d.a.n >= 2);
                     if (line.length > 1) {
@@ -13951,16 +14031,17 @@ function planPermitHafrashUse(taba) {
                         line.forEach(d => { s += '<circle cx="' + sx(d.y).toFixed(1) + '" cy="' + sy(d.a.w).toFixed(1) + '" r="3" fill="#f0d45a"><title>' + d.y + ': מכפיל משוקלל ' + m2(d.a.w) + ' (' + d.a.n + ' תכניות)</title></circle>'; });
                     }
                     s += '</svg>';
-                    const mins = Array.from(new Set(pts.map(r => r.minhak)));
+                    const keys = Array.from(new Set(pts.map(rowOf)));
+                    const legKeys = (geo === 'sub' && !fMin) ? Array.from(new Set(pts.map(r => r.minhak))) : keys;
                     const legend = '<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:#bcd;margin-top:4px">' +
-                        mins.map(m => '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + minColor(m) + ';margin-left:4px;vertical-align:middle"></span>' + esc(m) + '</span>').join('') +
+                        legKeys.map(k => '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' +
+                            ((geo === 'sub' && !fMin) ? minColor(k) : rowColor(k)) + ';margin-left:4px;vertical-align:middle"></span>' + esc((geo === 'sub' && !fMin) ? k : rowLabel(k)) + '</span>').join('') +
                         '<span><span style="display:inline-block;width:16px;height:2px;background:#f0d45a;margin-left:4px;vertical-align:middle"></span>מכפיל משוקלל שנתי</span>' +
                         '<span style="color:#7aa">גודל נקודה = יח"ד מוצע · לחיצה = מעבר למפה</span></div>';
-                    return '<div style="background:#0f1c22;border:1px solid #1f3a44;border-radius:8px;padding:10px 10px 6px;margin-bottom:12px">' +
-                        '<div style="font-size:12px;color:#9cc;margin-bottom:4px">מכפיל לפי שנת קליטת התיק — כל נקודה היא תכנית</div>' + s + legend + '</div>';
+                    return '<div style="background:#0f1c22;border:1px solid #1f3a44;border-radius:8px;padding:10px 10px 6px;margin-bottom:12px">' + s + legend + '</div>';
                 })();
 
-                // ── matrix: rows × columns, cell = weighted multiplier + plan count ──
+                // ── matrix: rows × columns, cell = weighted multiplier + plan count, plus a trend column ──
                 const cellHtml = (list, key) => {
                     const a = aggr(list);
                     if (!a.n) return '<td style="padding:4px;text-align:center;color:#3d5560">·</td>';
@@ -13969,42 +14050,43 @@ function planPermitHafrashUse(taba) {
                         ';border:1px solid ' + (on ? '#fff' : '#0b1418') + ';min-width:42px">' +
                         '<div style="font-weight:bold;font-size:12px">' + m2(a.w) + '</div><div style="font-size:9px;opacity:0.8">' + a.n + '</div></td>';
                 };
+                const trendTd = (list) => '<td style="padding:3px 6px;text-align:center;background:#0f1c22">' + trendBadge(trendOf(list)) + '</td>';
                 const th = (t) => '<th style="padding:4px 5px;color:#7fe0cf;font-size:11px;white-space:nowrap">' + esc(t) + '</th>';
                 let body = '';
                 let lastMin = null;
                 rowKeys.forEach(rk => {
-                    // sub view: a bold subtotal row opens each minhak's group
-                    if (geo === 'sub' && rk.split(' › ')[0] !== lastMin) {
+                    // sub view across all minhaks: a bold subtotal row opens each minhak's group
+                    if (geo === 'sub' && !fMin && rk.split(' › ')[0] !== lastMin) {
                         lastMin = rk.split(' › ')[0];
                         const ml = valid.filter(r => r.minhak === lastMin);
                         body += '<tr style="background:#15232e"><td style="padding:5px 7px;text-align:right;white-space:nowrap;font-weight:bold;color:#bfe3ff"><span style="color:' + minColor(lastMin) + '">●</span> ' + esc(lastMin) + '</td>' +
-                            cols.map(c => cellHtml(ml.filter(r => colOf(r.year) === c), lastMin + '|' + c)).join('') + cellHtml(ml, lastMin + '|*') + '</tr>';
+                            cols.map(c => cellHtml(ml.filter(r => colOf(r.year) === c), lastMin + '|' + c)).join('') + cellHtml(ml, lastMin + '|*') + trendTd(ml) + '</tr>';
                     }
                     const list = valid.filter(r => rowOf(r) === rk);
-                    const label = geo === 'sub' ? rk.split(' › ')[1] : rk;
-                    const pre = geo === 'sub' ? '' : '<span style="color:' + minColor(rk) + '">●</span> ';
-                    body += '<tr><td style="padding:4px 7px 4px 7px;' + (geo === 'sub' ? 'padding-right:22px;' : '') + 'text-align:right;white-space:nowrap;color:#dde">' + pre + esc(label) + '</td>' +
+                    const indent = geo === 'sub' && !fMin;
+                    body += '<tr><td style="padding:4px 7px;' + (indent ? 'padding-right:22px;' : '') + 'text-align:right;white-space:nowrap;color:#dde">' +
+                        (indent ? '' : '<span style="color:' + rowColor(rk) + '">●</span> ') + esc(rowLabel(rk)) + '</td>' +
                         cols.map(c => cellHtml(list.filter(r => colOf(r.year) === c), rk + '|' + c)).join('') +
-                        cellHtml(list, rk + '|*') + '</tr>';
+                        cellHtml(list, rk + '|*') + trendTd(list) + '</tr>';
                 });
-                body += '<tr style="border-top:2px solid #2e5560"><td style="padding:4px 7px;text-align:right;font-weight:bold;color:#bfe">סה"כ</td>' +
-                    cols.map(c => cellHtml(valid.filter(r => colOf(r.year) === c), '*|' + c)).join('') + cellHtml(valid, '*|*') + '</tr>';
+                body += '<tr style="border-top:2px solid #2e5560"><td style="padding:4px 7px;text-align:right;font-weight:bold;color:#bfe">סה"כ' + (fMin ? ' ' + esc(fSub || fMin) : '') + '</td>' +
+                    cols.map(c => cellHtml(valid.filter(r => colOf(r.year) === c), '*|' + c)).join('') + cellHtml(valid, '*|*') + trendTd(valid) + '</tr>';
                 const table = '<div style="overflow-x:auto;margin-bottom:6px"><table style="border-collapse:collapse;font-size:12px;width:100%">' +
                     '<thead><tr style="background:#12262e"><th style="padding:4px 7px;text-align:right;color:#7fe0cf;font-size:11px">' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + '</th>' +
-                    cols.map(th).join('') + th('כל השנים') + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
+                    cols.map(th).join('') + th('כל השנים') + th('מגמה: לפני ' + SPLIT + ' ← מ-' + SPLIT) + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
                     '<div style="display:flex;gap:4px;align-items:center;font-size:10px;color:#8ab;margin-bottom:12px;flex-wrap:wrap">מכפיל משוקלל: ' +
                     HEAT.map((h, i) => '<span style="background:' + h[1] + ';color:' + heatInk(i ? HEAT[i - 1][0] : 1) + ';padding:1px 6px;border-radius:3px">' +
                         (i === 0 ? '&lt;2' : h[0] === Infinity ? '≥' + HEAT[i - 1][0] : HEAT[i - 1][0] + '–' + h[0]) + '</span>').join('') +
                     '<span style="margin-right:8px">· המספר הקטן = מספר תכניות · לחיצה על תא = רשימת התכניות</span></div>';
 
-                // ── drill-down plan list (selected cell, else all) ──
+                // ── drill-down plan list (selected cell, else all in scope) ──
                 const inCell = (r) => {
                     if (!cell) return true;
                     const [rk, ck] = cell.split('|');
                     const rowOk = rk === '*' || rowOf(r) === rk || (geo === 'sub' && rk.indexOf(' › ') < 0 && r.minhak === rk);
                     return rowOk && (ck === '*' || colOf(r.year) === ck);
                 };
-                const listRows = plans.filter(r => r.mult != null && inCell(r)).sort((a, b) => (a.year || 9999) - (b.year || 9999) || b.mult - a.mult);
+                const listRows = valid.filter(inCell).sort((a, b) => (a.year || 9999) - (b.year || 9999) || b.mult - a.mult);
                 const cellLabel = cell ? cell.split('|').map((s, i) => s === '*' ? (i ? 'כל השנים' : 'כל האזורים') : s).join(' · ') : 'כל התכניות';
                 const planTable = '<h4 style="color:#7fe0cf;margin:4px 0 6px;font-size:13px">📋 ' + esc(cellLabel) + ' (' + listRows.length + ')' +
                     (cell ? ' <a href="#" id="rmdash-clearcell" style="color:#9bd6f0;font-size:11px;font-weight:normal">הצג הכל</a>' : '') + '</h4>' +
@@ -14020,29 +14102,31 @@ function planPermitHafrashUse(taba) {
                         '<td style="padding:4px;text-align:center">' + n0(r.uin) + '</td>' +
                         '<td style="padding:4px;text-align:center">' + n0(r.uadd) + '</td>' +
                         '<td style="padding:4px;text-align:center">' + n0(r.uin + r.uadd) + '</td>' +
-                        '<td style="padding:4px;text-align:center;font-weight:bold;color:' + heat(r.mult) + '">' + m2(r.mult) +
-                            (r.mismatch ? ' <span title="טבלה 5 (הגיליון) ו-XPLAN מדווחים יח&quot;ד שונות לתכנית זו" style="color:#f2a65a;cursor:help">⚠</span>' : '') + '</td>' +
+                        '<td style="padding:4px;text-align:center;font-weight:bold;color:' + heat(r.mult) + '">' + m2(r.mult) + '</td>' +
                         '</tr>').join('') + '</tbody></table></div>';
 
-                // ── toolbar toggles ──
+                // ── toolbar ──
                 const chip = (group, val, label, active) =>
                     '<button data-rm="' + group + '" data-val="' + val + '" style="background:' + (active ? '#26a69a' : '#12222a') + ';color:' + (active ? '#fff' : '#9cc') + ';border:1px solid #26a69a;padding:4px 10px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:6px">' + label + '</button>';
                 const grp = (label, html) => '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:#7aa;margin-left:2px">' + label + '</span>' + html + '</div>';
-                const toolbar = '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px">' +
-                    grp('שורות:', chip('geo', 'minhak', 'מינהל קהילתי', geo === 'minhak') + chip('geo', 'sub', 'תת-שכונה', geo === 'sub')) +
+                const sel = (id, value, opts, allLabel) => '<select id="' + id + '" style="background:#12222a;color:#dde;border:1px solid #26a69a;border-radius:6px;padding:4px 6px;font-family:inherit;font-size:12px">' +
+                    '<option value="">' + allLabel + '</option>' + opts.map(v => '<option value="' + esc(v) + '"' + (v === value ? ' selected' : '') + '>' + esc(v) + '</option>').join('') + '</select>';
+                const toolbar = '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;align-items:center">' +
+                    grp('סינון:', sel('rmdash-min', fMin, allMins, 'כל המינהלים') + (fMin ? sel('rmdash-sub', fSub, subsOfMin, 'כל תתי-השכונות') : '')) +
+                    (fMin ? '' : grp('שורות:', chip('geo', 'minhak', 'מינהל קהילתי', geo === 'minhak') + chip('geo', 'sub', 'תת-שכונה', geo === 'sub'))) +
                     grp('עמודות:', chip('bin', 'year', 'שנה', bin === 'year') + chip('bin', 'period', 'תקופות', bin === 'period')) +
                     grp('סטטוס:', chip('sc', 'active', 'פעילות', sc === 'active') + chip('sc', 'approved', 'מאושרות', sc === 'approved') + chip('sc', 'all', 'הכל', sc === 'all')) +
-                    grp('מקור יח"ד:', chip('src', 'gs', 'טבלה 5 (מאומת)', src === 'gs') + chip('src', 'xp', 'XPLAN', src === 'xp')) +
                     '</div>';
+                const chartTabs = '<div style="display:flex;gap:6px;margin-bottom:8px">' +
+                    chip('view', 'trend', '📉 מגמה לפי אזור', view === 'trend') + chip('view', 'plans', '⚫ כל התכניות לפי שנה', view === 'plans') + '</div>';
 
                 const fetched = (gd.xplanDates || {}).fetched || '';
                 const note = '<div style="font-size:10px;color:#7aa;margin-top:10px;line-height:1.6">' +
-                    '<b>מכפיל</b> = (יח"ד קיים + תוספת) ÷ יח"ד קיים. <b>משוקלל</b> = סך המוצע ÷ סך הקיים בקבוצה (תכנית גדולה משפיעה יותר); החציון מוצג בריחוף על תא. ' +
-                    '<b>שנת קליטה</b> = "תאריך קבלת תכנית" (receiving_date) ב-XPLAN' + (fetched ? ', נמשך ' + esc(fetched) : '') + '. ' +
-                    'נכללות תכניות שסווגו "התחדשות עירונית" / "פינוי בינוי". ' +
-                    (src === 'gs' ? 'יח"ד מהגיליון (מאומת מול טבלה 5); ⚠ מסמן תכנית ש-XPLAN מדווח לה מספרים אחרים. '
-                                  : 'יח"ד כפי ש-XPLAN מדווח (pq_120 / delta_120) — לא מאומת; ערכים שאינם יכולים להיות יח"ד (מ"ר, שליליים) נפסלו. ') +
-                    'לא נכללו במכפיל: ' + noIn + ' תכניות ללא מצב נכנס (0 יח"ד קיימות — בנייה על מגרש ריק)' +
+                    '<b>מכפיל</b> = (יח"ד קיים + תוספת) ÷ יח"ד קיים, לפי טבלה 5 (הגיליון). <b>משוקלל</b> = סך המוצע ÷ סך הקיים בקבוצה (תכנית גדולה משפיעה יותר); החציון מוצג בריחוף על תא. ' +
+                    '<b>שנת קליטה</b> = "תאריך קבלת תכנית" (receiving_date) ב-XPLAN' + (fetched ? ', נמשך ' + esc(fetched) : '') + ' — זה הנתון היחיד שנלקח מ-XPLAN. ' +
+                    '<b>מגמה</b> = מכפיל משוקלל של תיקים שנקלטו לפני ' + SPLIT + ' מול ' + SPLIT + ' ואילך; מוצגת רק כשיש ≥2 תכניות בכל צד, ושינוי של עד ±0.15 נחשב יציב. בתקופה עם תכנית אחת–שתיים המכפיל רגיש מאוד לתכנית בודדת. ' +
+                    'נכללות תכניות שסווגו "התחדשות עירונית" / "פינוי בינוי"; תת-שכונה משויכת למינהל שאליו היא שייכת. ' +
+                    'לא נכללו במכפיל: ' + noIn + ' תכניות ללא מצב נכנס (0 יח"ד קיימות)' +
                     (noAdd ? ', ' + noAdd + ' ללא תוספת יח"ד (שינוי קווי בניין / שטחים בלבד)' : '') +
                     (noData ? ', ' + noData + ' ללא נתוני יח"ד' : '') +
                     (excludedStatus ? ', ' + excludedStatus + ' שהוחרגו לפי סינון הסטטוס' : '') + '.' +
@@ -14050,23 +14134,26 @@ function planPermitHafrashUse(taba) {
                     '</div>';
 
                 const prev = document.getElementById('rmdash-result');
+                const keepScroll = prev ? prev.scrollTop : 0;
                 if (prev) prev.remove();
                 const div = document.createElement('div');
                 div.id = 'rmdash-result';
                 div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(14,22,28,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #26a69a;direction:rtl;width:min(1040px,96vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
                 document.body.appendChild(div);
+                const scopeTitle = fSub ? ' — ' + fSub : fMin ? ' — ' + fMin : '';
                 const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #1f3a44">' +
-                    '<h3 id="rmdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#5ee0c8;font-size:16px;outline:none;border-bottom:1px dashed #2e6a66;padding-bottom:2px;cursor:text">📈 מכפילי התחדשות עירונית לפי שנת קליטת התיק</h3>' +
+                    '<h3 id="rmdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#5ee0c8;font-size:16px;outline:none;border-bottom:1px dashed #2e6a66;padding-bottom:2px;cursor:text">📈 מכפילי התחדשות עירונית לפי שנת קליטת התיק' + esc(scopeTitle) + '</h3>' +
                     '<button id="rmdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button></div>';
                 const footer = '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">' +
                     '<button id="rmdash-csv" style="background:#26a69a;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                     '<button id="rmdash-print" style="background:#12222a;border:1px solid #26a69a;color:#bfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה / PDF</button>' +
                     impLinkBtnHtml('rmdash-link') + '</div>';
                 div.innerHTML = head + toolbar + (valid.length
-                    ? kpis + chart + table + planTable + note
+                    ? kpis + chartTabs + (view === 'trend' ? trendChart : scatter) + table + planTable + note
                     : '<div style="color:#9cc;padding:16px;text-align:center">אין תכניות התחדשות עם מצב נכנס בסינון הנוכחי.</div>' + note) + footer;
+                div.scrollTop = keepScroll;
 
-                const params = { src, sc, geo, bin };
+                const params = { sc, geo, bin, view, min: fMin, sub: fSub };
                 setImpReport('renewalMultDash', params);
                 wireImpLinkBtn('rmdash-link', 'renewalMultDash', params);
                 const rerender = (patch) => renderRenewalMultiplierDashboard(Object.assign({}, params, { cell }, patch));
@@ -14077,6 +14164,10 @@ function planPermitHafrashUse(taba) {
                     if (patch.geo || patch.bin) patch.cell = null;
                     rerender(patch);
                 }));
+                const selMin = document.getElementById('rmdash-min');
+                if (selMin) selMin.addEventListener('change', () => rerender({ min: selMin.value, sub: '', cell: null }));
+                const selSub = document.getElementById('rmdash-sub');
+                if (selSub) selSub.addEventListener('change', () => rerender({ sub: selSub.value, cell: null }));
                 div.querySelectorAll('td[data-cell]').forEach(td => td.addEventListener('click', () => {
                     const k = td.getAttribute('data-cell');
                     rerender({ cell: cell === k ? null : k });
@@ -14090,24 +14181,25 @@ function planPermitHafrashUse(taba) {
                 document.getElementById('rmdash-csv').addEventListener('click', () => {
                     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
                     const lines = [];
-                    lines.push(['מכפיל משוקלל לפי ' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + ' ושנת קליטה (מקור יח"ד: ' + (src === 'gs' ? 'טבלה 5' : 'XPLAN') + ')'].map(q).join(','));
-                    lines.push([geo === 'sub' ? 'מינהל' : '', geo === 'sub' ? 'תת-שכונה' : 'מינהל'].concat(cols).concat(['כל השנים', 'תכניות', 'יח"ד קיים', 'יח"ד מוצע', 'חציון']).map(q).join(','));
+                    lines.push([q('מכפיל משוקלל (טבלה 5) לפי ' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + ' ושנת קליטה (XPLAN)' + scopeTitle)].join(','));
+                    lines.push(['מינהל', 'תת-שכונה'].concat(cols).concat(['כל השנים', 'תכניות', 'יח"ד קיים', 'יח"ד מוצע', 'חציון', 'מכפיל לפני ' + SPLIT, 'מכפיל מ-' + SPLIT, 'שינוי']).map(q).join(','));
                     const mRow = (label1, label2, list) => {
-                        const a = aggr(list);
+                        const a = aggr(list), t = trendOf(list);
                         return [q(label1), q(label2)].concat(cols.map(c => { const x = aggr(list.filter(r => colOf(r.year) === c)); return x.n ? x.w.toFixed(2) : ''; }))
-                            .concat([a.w == null ? '' : a.w.toFixed(2), a.n, a.uin, a.utot, a.med == null ? '' : a.med.toFixed(2)]).join(',');
+                            .concat([a.w == null ? '' : a.w.toFixed(2), a.n, a.uin, a.utot, a.med == null ? '' : a.med.toFixed(2),
+                                t.e.n ? t.e.w.toFixed(2) : '', t.l.n ? t.l.w.toFixed(2) : '', t.ok ? t.d.toFixed(2) : '']).join(',');
                     };
                     rowKeys.forEach(rk => {
-                        const parts = geo === 'sub' ? rk.split(' › ') : ['', rk];
+                        const parts = geo === 'sub' ? rk.split(' › ') : [rk, ''];
                         lines.push(mRow(parts[0], parts[1], valid.filter(r => rowOf(r) === rk)));
                     });
-                    lines.push(mRow('', 'סה"כ', valid));
+                    lines.push(mRow('סה"כ', '', valid));
                     lines.push('');
-                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת', 'מוצע', 'מכפיל', 'פער טבלה5/XPLAN'].map(q).join(','));
+                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת', 'מוצע', 'מכפיל'].map(q).join(','));
                     plans.slice().sort((a, b) => (a.year || 9999) - (b.year || 9999)).forEach(r => lines.push([
                         q(r.id), q(r.name), q(r.minhak), q(r.sub), q(r.recv || ''), r.year || '', q(r.status),
                         r.uin == null ? '' : r.uin, r.uadd == null ? '' : r.uadd, (r.uin == null || r.uadd == null) ? '' : r.uin + r.uadd,
-                        r.mult == null ? '' : r.mult.toFixed(2), r.mismatch ? 'כן' : ''].join(',')));
+                        r.mult == null ? '' : r.mult.toFixed(2)].join(',')));
                     const title = (document.getElementById('rmdash-title') || {}).textContent || 'מכפילי התחדשות';
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
@@ -14121,7 +14213,7 @@ function planPermitHafrashUse(taba) {
                     const win = window.open('', '_blank');
                     if (!win) return;
                     win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
-                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222;background:#fff}h3{color:#00796b;margin:0 0 8px}h4{color:#00796b}table{border-collapse:collapse;font-size:11px;width:100%}th,td{border:1px solid #ccc;padding:3px}th{background:#e0f2f1;color:#004d40}button{display:none!important}svg{background:#0f1c22;border-radius:6px}div[style*="max-height"]{max-height:none!important;overflow:visible!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222;background:#fff}h3{color:#00796b;margin:0 0 8px}h4{color:#00796b}table{border-collapse:collapse;font-size:11px;width:100%}th,td{border:1px solid #ccc;padding:3px}th{background:#e0f2f1;color:#004d40}button,select{display:none!important}svg{background:#0f1c22;border-radius:6px}div[style*="max-height"]{max-height:none!important;overflow:visible!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>');
                     win.document.write('<h3>' + esc(title) + '</h3>');
                     win.document.write(div.innerHTML.replace(/<h3[\s\S]*?<\/h3>/, ''));
                     win.document.close();
@@ -16586,7 +16678,7 @@ function planPermitHafrashUse(taba) {
                     const gen = {
                         populationDash: () => openPopulationDashboard(ip.min || undefined),
                         constructionDash: () => openConstructionDashboard(),
-                        renewalMultDash: () => openRenewalMultiplierDashboard({ src: ip.src, sc: ip.sc, geo: ip.geo, bin: ip.bin }),
+                        renewalMultDash: () => openRenewalMultiplierDashboard({ sc: ip.sc, geo: ip.geo, bin: ip.bin, view: ip.view, min: ip.min, sub: ip.sub }),
                         subDash: () => renderSubDashboard(ip.sub || dashSub),
                         minhakDash: () => renderMinhakDashboard(ip.min || reportsMenuMinahak),
                     }[params.impreport];

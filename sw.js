@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v98-public-area-parsing';
+const CACHE_VERSION = 'v99-renewal-trend';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
