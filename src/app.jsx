@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-renewal-potential';
+        const APP_VERSION = '2026-09-24-renewal-size-public';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13818,7 +13818,7 @@ function planPermitHafrashUse(taba) {
                 const fSub = fMin ? (o.sub || '') : '';                                     // sub filter (within minhak)
                 const geo = (fMin || o.geo === 'sub') ? 'sub' : 'minhak';                   // row grouping
                 const bin = o.bin === 'period' ? 'period' : 'year';                         // matrix columns
-                const view = o.view === 'plans' ? 'plans' : 'trend';                        // chart
+                const view = ['plans', 'size', 'public'].includes(o.view) ? o.view : 'trend';   // chart / analysis tab
                 const cell = o.cell || null;                                                // drill-down "row|col"
                 // Start year. Before ~2020 renewal files were sporadic (1–5 a year), so by default
                 // they are left out of everything — charts, trend line, KPIs and table alike — rather
@@ -14132,6 +14132,160 @@ function planPermitHafrashUse(taba) {
                     return '<div style="background:#0f1c22;border:1px solid #1f3a44;border-radius:8px;padding:10px 10px 6px;margin-bottom:12px">' + s + legend + '</div>';
                 })();
 
+                // ── shared helpers for the two analysis tabs ──
+                // Spearman rank correlation (ties → average rank) + a rough t-test (|t| ≥ 2 ≈ significant).
+                const spearman = (xs, ys) => {
+                    const n = xs.length;
+                    if (n < 5) return null;
+                    const rank = (a) => {
+                        const idx = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]);
+                        const r = new Array(n);
+                        for (let i = 0; i < n;) {
+                            let j = i; while (j + 1 < n && idx[j + 1][0] === idx[i][0]) j++;
+                            for (let k = i; k <= j; k++) r[idx[k][1]] = (i + j) / 2 + 1;
+                            i = j + 1;
+                        }
+                        return r;
+                    };
+                    const rx = rank(xs), ry = rank(ys);
+                    const mx = rx.reduce((a, b) => a + b, 0) / n, my = ry.reduce((a, b) => a + b, 0) / n;
+                    let sxy = 0, sxx = 0, syy = 0;
+                    for (let i = 0; i < n; i++) { sxy += (rx[i] - mx) * (ry[i] - my); sxx += (rx[i] - mx) ** 2; syy += (ry[i] - my) ** 2; }
+                    if (!sxx || !syy) return null;
+                    const rho = sxy / Math.sqrt(sxx * syy);
+                    const t = Math.abs(rho) < 1 ? rho * Math.sqrt((n - 2) / (1 - rho * rho)) : Infinity;
+                    return { rho, n, sig: Math.abs(t) >= 2 };
+                };
+                const rhoWords = (c, what) => {
+                    if (!c) return 'מעט מדי תכניות לחישוב קשר.';
+                    const a = Math.abs(c.rho);
+                    const strength = a < 0.1 ? 'אין קשר' : a < 0.3 ? 'קשר חלש' : a < 0.5 ? 'קשר בינוני' : 'קשר חזק';
+                    return strength + (a < 0.1 ? '' : (c.rho > 0 ? ' חיובי' : ' שלילי')) + ' — ρ=<bdi dir="ltr">' + c.rho.toFixed(2) + '</bdi> (' + c.n + ' תכניות' +
+                        (c.sig ? ', מובהק' : ', לא מובהק') + ')' + (a >= 0.1 ? '. ' + what(c.rho > 0) : '.');
+                };
+                const medianOf = (arr) => { if (!arr.length) return null; const q = arr.slice().sort((a, b) => a - b), m = q.length >> 1; return q.length % 2 ? q[m] : (q[m - 1] + q[m]) / 2; };
+                // strip of dots on a multiplier axis (numeric axis runs left→right, 1 … MMAX)
+                const MMAX = 10;
+                const strip = (list, W, H) => {
+                    const sx = (m) => 6 + (Math.min(m, MMAX) - 1) / (MMAX - 1) * (W - 12);
+                    let g = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:' + H + 'px;display:block" preserveAspectRatio="none">';
+                    [2, 3, 4, 5, 6, 8].forEach(m => { g += '<line x1="' + sx(m) + '" x2="' + sx(m) + '" y1="0" y2="' + H + '" stroke="#223a44" stroke-width="0.6"/>'; });
+                    list.forEach((r, i) => {
+                        const jy = H / 2 + ((i * 37) % 11 - 5) * (H / 16);
+                        g += '<circle class="rm-dot" data-id="' + esc(r.id) + '" cx="' + sx(r.mult).toFixed(1) + '" cy="' + jy.toFixed(1) + '" r="3.2" fill="' + rowColor(rowOf(r)) + '" fill-opacity="0.7" style="cursor:pointer"><title>' +
+                            esc(r.id + ' — ' + r.name + '\nמכפיל ' + m2(r.mult) + ' (' + n0(r.uin) + ' → ' + n0(r.uin + r.uadd) + ' יח"ד)') + '</title></circle>';
+                    });
+                    return g + '</svg>';
+                };
+                const stripAxis = (W) => {
+                    const sx = (m) => 6 + (m - 1) / (MMAX - 1) * (W - 12);
+                    return '<svg viewBox="0 0 ' + W + ' 14" style="width:100%;height:14px;display:block" preserveAspectRatio="none">' +
+                        [1, 2, 3, 4, 5, 6, 8, 10].map(m => '<text x="' + sx(m) + '" y="11" fill="#6f8f99" font-size="9" text-anchor="middle">' + (m === MMAX ? '≥' + m : m) + '</text>').join('') + '</svg>';
+                };
+                const sectionBox = (title, findings, body, foot) =>
+                    '<div style="margin-bottom:12px"><div style="font-size:12px;color:#bcd;line-height:1.7;margin-bottom:8px;background:#12222a;border-radius:6px;padding:6px 10px">' +
+                    '<b style="color:#5ee0c8">' + title + '</b><br>' + findings + '</div>' + body +
+                    (foot ? '<div style="font-size:10px;color:#7aa;margin-top:4px;line-height:1.5">' + foot + '</div>' : '') + '</div>';
+
+                // ── tab: multiplier by size of the existing building (units_in) ──
+                const SIZE_BANDS = [
+                    { lo: 1, hi: 9, label: 'עד 9 יח"ד' }, { lo: 10, hi: 29, label: '10–29' }, { lo: 30, hi: 79, label: '30–79' },
+                    { lo: 80, hi: 199, label: '80–199' }, { lo: 200, hi: Infinity, label: '200+' },
+                ];
+                const sizeView = (() => {
+                    if (view !== 'size' || !valid.length) return '';
+                    const c = spearman(valid.map(r => r.uin), valid.map(r => r.mult));
+                    const bands = SIZE_BANDS.map(b => {
+                        const list = valid.filter(r => r.uin >= b.lo && r.uin <= b.hi);
+                        return { b, list, a: aggr(list) };
+                    }).filter(x => x.list.length);
+                    const hi = bands.slice().sort((x, y) => (y.a.med || 0) - (x.a.med || 0))[0];
+                    const lo = bands.slice().sort((x, y) => (x.a.med || 0) - (y.a.med || 0))[0];
+                    const findings = rhoWords(c, (pos) => pos ? 'ככל שהבניין הקיים גדול יותר, המכפיל גבוה יותר.' : 'ככל שהבניין הקיים קטן יותר, המכפיל גבוה יותר.') +
+                        (hi && lo && hi !== lo ? '<br>החציון הגבוה: <b>' + esc(hi.b.label) + '</b> (' + m2(hi.a.med) + ', ' + hi.a.n + ' תכניות) · הנמוך: <b>' + esc(lo.b.label) + '</b> (' + m2(lo.a.med) + ', ' + lo.a.n + ').' : '');
+                    const W = 360;
+                    const rows = bands.map(x =>
+                        '<tr style="border-bottom:1px solid #1d2f36">' +
+                        '<td style="padding:5px 7px;text-align:right;white-space:nowrap;color:#dde;font-weight:bold">' + esc(x.b.label) + '</td>' +
+                        '<td style="padding:5px;text-align:center">' + x.a.n + '</td>' +
+                        '<td style="padding:5px;text-align:center;white-space:nowrap"><bdi dir="ltr">' + n0(x.a.uin) + ' → ' + n0(x.a.utot) + '</bdi></td>' +
+                        '<td style="padding:5px;text-align:center;font-weight:bold;color:' + heat(x.a.w) + '">' + m2(x.a.w) + '</td>' +
+                        '<td style="padding:5px;text-align:center;color:#9bd6f0">' + m2(x.a.med) + '</td>' +
+                        '<td style="padding:2px 6px;width:' + W + 'px">' + strip(x.list, W, 34) + '</td></tr>').join('');
+                    const body = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#12262e">' +
+                        ['גודל הבניין הקיים', 'תכניות', 'קיים → מוצע', 'מכפיל משוקלל', 'חציון', ''].map(t => '<th style="padding:5px;color:#7fe0cf;font-size:11px">' + t + '</th>').join('') +
+                        '</tr><tr><td colspan="5"></td><td style="padding:0 6px">' + stripAxis(W) + '</td></tr></thead><tbody>' + rows + '</tbody></table></div>';
+                    return sectionBox('האם המכפיל נקבע לפי גודל המבנה הקיים?', findings, body,
+                        'גודל = יח"ד קיימות בתכנית (מצב נכנס). נקודה = תכנית, על ציר מכפיל 1–10 (שמאל→ימין); לחיצה = מעבר למפה. ' +
+                        'ρ = מתאם דרגות ספירמן בין יח"ד קיימות למכפיל — עמיד לחריגים ולא מניח קשר קווי. ' +
+                        'שים לב: תכנית קטנה רגישה מאוד — בניין של 4 דירות שהופך ל-20 הוא מכפיל 5, ולכן הפיזור בקבוצה הקטנה רחב מטבעו.');
+                })();
+
+                // ── tab: multiplier vs public area per added unit (reuses ratioRows of the public-ratio report) ──
+                const MULT_BANDS = [
+                    { lo: 0, hi: 2.5, label: 'עד 2.5' }, { lo: 2.5, hi: 3.5, label: '2.5–3.5' },
+                    { lo: 3.5, hi: 4.5, label: '3.5–4.5' }, { lo: 4.5, hi: Infinity, label: '4.5+' },
+                ];
+                const publicView = (() => {
+                    if (view !== 'public' || !valid.length) return '';
+                    const rr = (typeof ratioRows === 'function' ? ratioRows() : null) || { rows: [] };
+                    const byPlan = {};
+                    rr.rows.forEach(x => { byPlan[x.plan] = x; });
+                    // added units = this mode's addition (approved, or approved + channels in potential mode)
+                    const withPub = valid.map(r => ({ r, x: byPlan[r.id] })).filter(o2 => o2.x && o2.x.known && o2.r.uadd > 0)
+                        .map(o2 => ({ ...o2.r, brown: o2.x.brown || 0, open: o2.x.open || 0, bpu: (o2.x.brown || 0) / o2.r.uadd, opu: (o2.x.open || 0) / o2.r.uadd }));
+                    const missing = valid.length - withPub.length;
+                    if (!withPub.length) return sectionBox('מכפיל מול שטחי ציבור', 'אין נתוני הפרשה לתכניות בסינון הנוכחי.', '', '');
+                    const c = spearman(withPub.map(r => r.mult), withPub.map(r => r.bpu));
+                    const cO = spearman(withPub.map(r => r.mult), withPub.map(r => r.opu));
+                    const bands = MULT_BANDS.map(b => {
+                        const list = withPub.filter(r => r.mult >= b.lo && r.mult < b.hi);
+                        const ua = list.reduce((a, r) => a + r.uadd, 0);
+                        const br = list.reduce((a, r) => a + r.brown, 0), op = list.reduce((a, r) => a + r.open, 0);
+                        return { b, list, ua, br, op, bpuW: ua ? br / ua : null, opuW: ua ? op / ua : null,
+                            bpuMed: medianOf(list.map(r => r.bpu)), zero: list.filter(r => !r.brown).length };
+                    }).filter(x => x.list.length);
+                    const first = bands[0], last = bands[bands.length - 1];
+                    const findings = '<b>מבני ציבור (מ"ר בנוי ליח"ד נוספת):</b> ' + rhoWords(c, (pos) => pos ? 'תכניות עם מכפיל גבוה נותנות יותר ציבור לכל יח"ד שהן מוסיפות.' : 'ככל שהמכפיל עולה, ההפרשה לכל יח"ד נוספת קטנה — המכפיל עולה מהר יותר מהציבור.') +
+                        '<br><b>שטח פתוח (מ"ר קרקע ליח"ד נוספת):</b> ' + rhoWords(cO, (pos) => pos ? 'מכפיל גבוה בא עם יותר שטח פתוח ליח"ד.' : 'מכפיל גבוה בא עם פחות שטח פתוח ליח"ד.') +
+                        (first && last && first !== last ? '<br>בקבוצת המכפיל ' + esc(first.b.label) + ': <bdi dir="ltr">' + (first.bpuW == null ? '—' : first.bpuW.toFixed(1)) + '</bdi> מ"ר ציבור ליח"ד (משוקלל), ' + Math.round(first.zero / first.list.length * 100) + '% בלי הפרשה בנויה · ' +
+                            'ב-' + esc(last.b.label) + ': <bdi dir="ltr">' + (last.bpuW == null ? '—' : last.bpuW.toFixed(1)) + '</bdi> מ"ר, ' + Math.round(last.zero / last.list.length * 100) + '% בלי הפרשה.' : '');
+                    // scatter: x = multiplier, y = built public m² per added unit
+                    const W = 900, H = 240, L0 = 40, R0 = 12, T0 = 10, B0 = 24, YMAX = 40;
+                    const sx = (m) => L0 + (Math.min(m, MMAX) - 1) / (MMAX - 1) * (W - L0 - R0);
+                    const sy = (v) => T0 + (1 - Math.min(v, YMAX) / YMAX) * (H - T0 - B0);
+                    let g = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block">';
+                    [0, 10, 20, 30, 40].forEach(v => { g += '<line x1="' + L0 + '" x2="' + (W - R0) + '" y1="' + sy(v) + '" y2="' + sy(v) + '" stroke="#223a44" stroke-width="0.6"/><text x="' + (L0 - 6) + '" y="' + (sy(v) + 3.5) + '" fill="#8ab" font-size="10" text-anchor="end">' + (v === YMAX ? '≥' + v : v) + '</text>'; });
+                    [1, 2, 3, 4, 5, 6, 8, 10].forEach(m => { g += '<text x="' + sx(m) + '" y="' + (H - 7) + '" fill="#8ab" font-size="10" text-anchor="middle">' + (m === MMAX ? '≥' + m : m) + '</text>'; });
+                    MULT_BANDS.slice(1).forEach(b => { g += '<line x1="' + sx(b.lo) + '" x2="' + sx(b.lo) + '" y1="' + T0 + '" y2="' + (H - B0) + '" stroke="#2e5560" stroke-dasharray="2,3"/>'; });
+                    withPub.forEach(r => {
+                        g += '<circle class="rm-dot" data-id="' + esc(r.id) + '" cx="' + sx(r.mult).toFixed(1) + '" cy="' + sy(r.bpu).toFixed(1) + '" r="' + Math.max(2.5, Math.min(9, Math.sqrt(r.uadd) / 2.5)).toFixed(1) +
+                            '" fill="' + rowColor(rowOf(r)) + '" fill-opacity="0.65" stroke="#0b1418" stroke-width="0.8" style="cursor:pointer"><title>' +
+                            esc(r.id + ' — ' + r.name + '\nמכפיל ' + m2(r.mult) + ' · +' + n0(r.uadd) + ' יח"ד\nציבור בנוי ' + n0(r.brown) + ' מ"ר = ' + r.bpu.toFixed(1) + ' ליח"ד · שטח פתוח ' + n0(r.open) + ' מ"ר = ' + r.opu.toFixed(1) + ' ליח"ד') + '</title></circle>';
+                    });
+                    g += '</svg>';
+                    const chartBox = '<div style="background:#0f1c22;border:1px solid #1f3a44;border-radius:8px;padding:8px 10px 4px;margin-bottom:8px">' +
+                        '<div style="font-size:11px;color:#9cc;margin-bottom:2px">מ"ר מבני ציבור בנויים ליח"ד נוספת (אנכי) מול מכפיל (אופקי) — נקודה = תכנית, גודל = יח"ד נוספות</div>' + g + '</div>';
+                    const tbl = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#12262e">' +
+                        ['קבוצת מכפיל', 'תכניות', 'יח"ד נוספות', 'ציבור בנוי (מ"ר)', 'מ"ר ציבור ליח"ד (משוקלל)', 'חציון לתכנית', 'בלי הפרשה בנויה', 'שטח פתוח ליח"ד (מ"ר קרקע)']
+                            .map(t => '<th style="padding:5px;color:#7fe0cf;font-size:11px">' + t + '</th>').join('') + '</tr></thead><tbody>' +
+                        bands.map(x => '<tr style="border-bottom:1px solid #1d2f36">' +
+                            '<td style="padding:5px 7px;text-align:right;font-weight:bold;color:#dde"><bdi dir="ltr">' + esc(x.b.label) + '</bdi></td>' +
+                            '<td style="padding:5px;text-align:center">' + x.list.length + '</td>' +
+                            '<td style="padding:5px;text-align:center">' + n0(x.ua) + '</td>' +
+                            '<td style="padding:5px;text-align:center">' + n0(x.br) + '</td>' +
+                            '<td style="padding:5px;text-align:center;font-weight:bold;color:#d4a373">' + (x.bpuW == null ? '—' : x.bpuW.toFixed(1)) + '</td>' +
+                            '<td style="padding:5px;text-align:center;color:#c9a">' + (x.bpuMed == null ? '—' : x.bpuMed.toFixed(1)) + '</td>' +
+                            '<td style="padding:5px;text-align:center;color:#e8a0a0">' + x.zero + ' (' + Math.round(x.zero / x.list.length * 100) + '%)</td>' +
+                            '<td style="padding:5px;text-align:center;color:#7cc26b">' + (x.opuW == null ? '—' : x.opuW.toFixed(1)) + '</td></tr>').join('') +
+                        '</tbody></table>';
+                    return sectionBox('האם מכפיל גבוה בא עם יותר שטחי ציבור?', findings, chartBox + tbl,
+                        '<b>ציבור בנוי</b> = שב"צ יוצא + הפרשה מבונה (מ"ר בנוי; כששני השדות זהים — נספר פעם אחת), <b>שטח פתוח</b> = שצ"פ + שבילים + כיכרות (מ"ר קרקע, מייעודי הקרקע) — ' +
+                        'אותו חישוב של דוח "מ"ר הפרשה ציבורית ליח"ד", ושני האפיקים לא נסכמים. המכנה = יח"ד נוספות' + (potMode ? ' כולל ערוצי הפוטנציאל שנבחרו — ההפרשה לא גדלה איתם, ולכן היחס יורד' : ' (מאושרות)') + '. ' +
+                        'ρ = מתאם דרגות ספירמן. ⚠️ ההפרשה ליח"ד עולה שיטתית עם גודל התכנית, כך שחלק מהקשר עשוי לנבוע מגודל ולא מהמכפיל עצמו. ' +
+                        (missing ? missing + ' תכניות בלי נתוני הפרשה לא נכללו.' : ''));
+                })();
+
                 // ── matrix: rows × columns, cell = weighted multiplier + plan count, plus a trend column ──
                 const cellHtml = (list, key) => {
                     const a = aggr(list);
@@ -14220,8 +14374,9 @@ function planPermitHafrashUse(taba) {
                     grp('שנת קליטה:', chip('from', String(DEFAULT_FROM), 'מ-' + DEFAULT_FROM, fromYear === DEFAULT_FROM) + chip('from', 'all', 'כל השנים', !fromYear)) +
                     grp('סטטוס:', chip('sc', 'active', 'פעילות', sc === 'active') + chip('sc', 'approved', 'מאושרות', sc === 'approved') + chip('sc', 'all', 'הכל', sc === 'all')) +
                     '</div>';
-                const chartTabs = '<div style="display:flex;gap:6px;margin-bottom:8px">' +
-                    chip('view', 'trend', '📉 מגמה לפי אזור', view === 'trend') + chip('view', 'plans', '⚫ כל התכניות לפי שנה', view === 'plans') + '</div>';
+                const chartTabs = '<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">' +
+                    chip('view', 'trend', '📉 מגמה לפי אזור', view === 'trend') + chip('view', 'plans', '⚫ כל התכניות לפי שנה', view === 'plans') +
+                    chip('view', 'size', '🏢 לפי גודל המבנה הקיים', view === 'size') + chip('view', 'public', '🏛️ מכפיל מול שטחי ציבור', view === 'public') + '</div>';
 
                 const fetched = (gd.xplanDates || {}).fetched || '';
                 const note = '<div style="font-size:10px;color:#7aa;margin-top:10px;line-height:1.6">' +
@@ -14256,7 +14411,7 @@ function planPermitHafrashUse(taba) {
                     '<button id="rmdash-print" style="background:#12222a;border:1px solid #26a69a;color:#bfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה / PDF</button>' +
                     impLinkBtnHtml('rmdash-link') + '</div>';
                 div.innerHTML = head + toolbar + (valid.length
-                    ? kpis + chartTabs + (view === 'trend' ? trendChart : scatter) + table + planTable + note
+                    ? kpis + chartTabs + (view === 'trend' ? trendChart : view === 'size' ? sizeView : view === 'public' ? publicView : scatter) + table + planTable + note
                     : '<div style="color:#9cc;padding:16px;text-align:center">אין תכניות התחדשות עם מצב נכנס בסינון הנוכחי.</div>' + note) + footer;
                 div.scrollTop = keepScroll;
 
@@ -14291,6 +14446,9 @@ function planPermitHafrashUse(taba) {
 
                 document.getElementById('rmdash-csv').addEventListener('click', () => {
                     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const pubRows = {};
+                    ((typeof ratioRows === 'function' ? ratioRows() : null) || { rows: [] }).rows.forEach(x => { if (x.known) pubRows[x.plan] = x; });
+                    const pubOf = (r) => pubRows[r.id] || null;
                     const extraSrcLabel = [['b', 'הערת טבלה 5'], ['c', 'מותנות'], ['r', 'תכנית מגדילה']].filter(([k]) => chOn(k)).map(x => x[1]).join(' + ') || 'ללא ערוצים';
                     const lines = [];
                     lines.push([q((potMode ? 'מכפיל פוטנציאלי משוקלל (' + extraSrcLabel + ')' : 'מכפיל משוקלל (טבלה 5)') + ' לפי ' + (geo === 'sub' ? 'תת-שכונה' : 'מינהל קהילתי') + ' ושנת קליטה (XPLAN)' + scopeTitle)].join(','));
@@ -14307,13 +14465,14 @@ function planPermitHafrashUse(taba) {
                     });
                     lines.push(mRow('סה"כ', '', valid));
                     lines.push('');
-                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה (מפה)', 'תת-שכונה בגיליון', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת מאושרת', 'מכפיל מאושר', 'הערת טבלה 5', 'מותנות', 'תכנית מגדילה', 'יח"ד מגדילה', 'תוספת בערוצים שנבחרו', 'מוצע', 'מכפיל' + (potMode ? ' פוטנציאלי' : ''), 'מוזגה לתכנית בסיס'].map(q).join(','));
+                    lines.push(['תכנית', 'שם', 'מינהל', 'תת-שכונה (מפה)', 'תת-שכונה בגיליון', 'תאריך קליטה', 'שנת קליטה', 'סטטוס', 'יח"ד קיים', 'תוספת מאושרת', 'מכפיל מאושר', 'הערת טבלה 5', 'מותנות', 'תכנית מגדילה', 'יח"ד מגדילה', 'תוספת בערוצים שנבחרו', 'מוצע', 'מכפיל' + (potMode ? ' פוטנציאלי' : ''), 'מוזגה לתכנית בסיס', 'ציבור בנוי מ"ר', 'שטח פתוח מ"ר קרקע', 'ציבור בנוי ליח"ד נוספת'].map(q).join(','));
                     plans.slice().sort((a, b) => (a.year || 9999) - (b.year || 9999)).forEach(r => lines.push([
                         q(r.id), q(r.name), q(r.minhak), q(r.sub), q(r.sheetSub), q(r.recv || ''), r.year || '', q(r.status),
                         r.uin == null ? '' : r.uin, r.uaddA == null ? '' : r.uaddA, r.multA == null ? '' : r.multA.toFixed(2),
                         r.exB || '', r.exC || '', q(r.raiser ? r.raiser.plan_name : ''), r.raiser ? (parseFloat(r.raiser.raise) || '') : '', r.extra || '',
                         (r.uin == null || r.uadd == null) ? '' : r.uin + r.uadd,
-                        r.mult == null ? '' : r.mult.toFixed(2), folded.has(r.id) ? 'כן' : ''].join(',')));
+                        r.mult == null ? '' : r.mult.toFixed(2), folded.has(r.id) ? 'כן' : '',
+                        pubOf(r) ? pubOf(r).brown : '', pubOf(r) ? pubOf(r).open : '', (pubOf(r) && r.uadd > 0) ? (pubOf(r).brown / r.uadd).toFixed(1) : ''].join(',')));
                     const title = (document.getElementById('rmdash-title') || {}).textContent || 'מכפילי התחדשות';
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
