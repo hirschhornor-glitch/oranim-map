@@ -297,6 +297,26 @@ def _resolve_columns(columns) -> dict:
 
     mapping: dict = {}
 
+    # The UNIT lives in level 0 of the multi-index: 'מ"ר' normally, but some plans
+    # state the building areas as a PERCENT OF THE LOT and print '% מתא שטח' there:
+    #
+    #   ('מ"ר',        'שטחי בניה', 'מעל הכניסה הקובעת', 'עיקרי')   ← normal
+    #   ('% מתא שטח',  'שטחי בניה', 'מעל הכניסה הקובעת', 'עיקרי')   ← percent
+    #
+    # Read as מ"ר, those percentages are off by a factor of the lot size: 101-1115484
+    # parsed to public_building_sqm=795 (230+200+365) where the true figure is 38,621,
+    # and the sheet recorded 1,145 — the percentages summed as areas. See
+    # project_table5_percent_format.
+    #
+    # '% מתא שטח' also heads the תכסית column (101-0771550), which is a coverage
+    # percentage and genuinely not an area — harmless, because only the semantic AREA
+    # columns below are scaled.
+    def _is_pct(idx):
+        for i, levels in cols:
+            if i == idx:
+                return any("% מתא שטח" in lev for lev in levels)
+        return False
+
     # 1. יעוד ראשי
     mapping["yiyud"] = find_one(lambda L: "יעוד ראשי" in L)
     # 2. שימוש
@@ -356,7 +376,14 @@ def _resolve_columns(columns) -> dict:
         lambda L: "מספר קומות" in L and "מתחת לכניסה הקובעת" in L
     )
 
-    return {k: v for k, v in mapping.items() if v is not None}
+    out = {k: v for k, v in mapping.items() if v is not None}
+    # Which of the mapped AREA columns are a percentage of the lot rather than מ"ר.
+    # Kept under a reserved key; every other entry stays a plain name→index.
+    out["_pct_area_cols"] = sorted(
+        k for k in ("primary_above", "service_above", "primary_below", "service_below",
+                    "total_building", "total_above", "total_below")
+        if out.get(k) is not None and _is_pct(out[k]))
+    return out
 
 
 def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
@@ -417,11 +444,24 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
     mapping = _resolve_columns(t.columns)
     result.column_mapping = mapping
 
+    _pct_cols = set(mapping.get("_pct_area_cols") or ())
+
     def g(row, key):
         idx = mapping.get(key)
-        if idx is None:
+        if idx is None or not isinstance(idx, int):
             return None
         return row.iloc[idx] if idx < len(row) else None
+
+    def area(row, key):
+        """An area column, in מ"ר — converting from a percent of the lot when the
+        header says so. A percent row with no readable גודל מגרש מוחלט yields 0
+        rather than the raw percentage: a missing figure is recoverable, a figure
+        wrong by a factor of the lot size is not."""
+        v = _to_float(g(row, key))
+        if key not in _pct_cols:
+            return v
+        plot = _to_float(g(row, "plot_size"))
+        return round(v * plot / 100.0, 2) if (v and plot) else 0.0
 
     rows_data: List[XlsxRow] = []
     for _, raw in t.iterrows():
@@ -431,13 +471,13 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
             parcel  = _clean(g(raw, "parcel")),
             location= _clean(g(raw, "location")),
             plot_size_sqm     = _to_float(g(raw, "plot_size")),
-            primary_above_sqm = _to_float(g(raw, "primary_above")),
-            service_above_sqm = _to_float(g(raw, "service_above")),
-            primary_below_sqm = _to_float(g(raw, "primary_below")),
-            service_below_sqm = _to_float(g(raw, "service_below")),
-            total_building_sqm = _to_float(g(raw, "total_building")),
-            total_above_sqm   = _to_float(g(raw, "total_above")),
-            total_below_sqm   = _to_float(g(raw, "total_below")),
+            primary_above_sqm = area(raw, "primary_above"),
+            service_above_sqm = area(raw, "service_above"),
+            primary_below_sqm = area(raw, "primary_below"),
+            service_below_sqm = area(raw, "service_below"),
+            total_building_sqm = area(raw, "total_building"),
+            total_above_sqm   = area(raw, "total_above"),
+            total_below_sqm   = area(raw, "total_below"),
             units             = _to_float(g(raw, "units")),
             height_m          = _to_float(g(raw, "height")),
             floors_above      = _to_float(g(raw, "floors_above")),
