@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v106-renewal-map-b';
+const CACHE_VERSION = 'v107-renewal-fold-b';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

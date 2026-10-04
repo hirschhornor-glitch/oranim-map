@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-04-renewal-map-b';
+        const APP_VERSION = '2026-10-04-renewal-fold-b';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13834,7 +13834,14 @@ function planPermitHafrashUse(taba) {
             //    (receiving_date) via data/xplan_plan_dates.json (scripts/fetch_xplan_plan_dates.py). ──
             function openRenewalMultiplierDashboard(opts) {
                 const gd = geoDataRef.current || {};
-                if (gd.xplanDates && gd.sub_neighborhoods) { renderRenewalMultiplierDashboard(opts || {}); return; }
+                // The extra-unit channels and the amendment fold read window globals that the app's
+                // stage-2 load fills in later; a dashboard opened from a link can beat that load and
+                // render without them (an amendment plan then stands alone — see the fold below).
+                const empty = (o2) => !o2 || !Object.keys(o2).length;
+                const needWin = (key, url, pick) => !empty(window[key]) ? Promise.resolve() :
+                    fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(d => { if (empty(window[key])) window[key] = pick(d); }).catch(() => {});
+                const winReady = !empty(window.__planRaisers) && !empty(window.__unitBonus) && !empty(window.__maintenanceFund);
+                if (gd.xplanDates && gd.sub_neighborhoods && winReady) { renderRenewalMultiplierDashboard(opts || {}); return; }
                 const prev = document.getElementById('rmdash-result');
                 if (prev) prev.remove();
                 const loading = document.createElement('div');
@@ -13844,7 +13851,10 @@ function planPermitHafrashUse(taba) {
                 document.body.appendChild(loading);
                 const need = (key, url) => gd[key] ? Promise.resolve() :
                     fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(d => { geoDataRef.current[key] = d; });
-                Promise.all([need('xplanDates', 'data/xplan_plan_dates.json'), need('sub_neighborhoods', GEOJSON_FILES.sub_neighborhoods)])
+                Promise.all([need('xplanDates', 'data/xplan_plan_dates.json'), need('sub_neighborhoods', GEOJSON_FILES.sub_neighborhoods),
+                    needWin('__planRaisers', 'data/plan_raisers.json', d => (d && d.by_taba) || {}),
+                    needWin('__unitBonus', 'data/unit_bonus.json', d => (d && d.by_plan) || {}),
+                    needWin('__maintenanceFund', 'data/maintenance_fund.json', d => d || {})])
                     .then(() => renderRenewalMultiplierDashboard(opts || {}))
                     .catch(() => { loading.textContent = 'שגיאה בטעינת נתוני XPLAN / תתי-שכונות.'; });
             }
@@ -13963,13 +13973,25 @@ function planPermitHafrashUse(taba) {
                         status: normalizeStatus(String(p.status_mavat || '').trim()) || '', uin, uaddA: uadd, eligible,
                         exB, exC: planConditionalUnits(p) || 0, exR: raiser ? (parseFloat(raiser.raise) || 0) : 0, raiser });
                 });
-                // A raiser that is itself a renewal plan here would count the same units twice
-                // (101-1350594 lifts 101-1002054 from 440 to 474 and also stands alone at ×1.08).
-                // With the 'r' channel on, its increase is credited to the base plan and the raiser
-                // row is folded away — but only when the base is in this list; otherwise the raiser stays.
-                const scopedIds = new Set(scoped.map(r => r.id));
-                const folded = new Set();
-                if (chOn('r')) scoped.forEach(r => { if (r.raiser && scopedIds.has(r.raiser.plan_name)) folded.add(r.raiser.plan_name); });
+                // A raiser over a RENEWAL plan is an amendment, not a renewal of standing buildings: its
+                // "existing" units are the base plan's approved total. 101-1350594 (2024) takes 101-1002054's
+                // 440 approved units to 474 and stood alone at ×1.08 — with 440 'existing' units it carried
+                // 27% of קטמונים' weight and alone flipped that trend from +0.17 to −0.34 a year, and pulled
+                // the 2024 cell to 1.30. So such amendment rows never stand alone, in either mode (whatever
+                // the base's status or year); with the 'r' channel on, the increase is credited to the base.
+                const renewalBaseIds = new Set();
+                (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
+                    const q = f.properties || {};
+                    if (isRenewalMultPlan(q)) renewalBaseIds.add(String(q.plan_name || '').trim());
+                });
+                // plan_raisers.json is keyed by the BASE plan's taba → raiser plan_name → its base plan_name
+                const raiserBase = {};
+                (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
+                    const q = f.properties || {};
+                    const rs = (window.__planRaisers || {})[String(q.taba || '').trim()];
+                    if (rs && rs.plan_name) raiserBase[rs.plan_name] = String(q.plan_name || '').trim();
+                });
+                const folded = new Set(Object.keys(raiserBase).filter(id => renewalBaseIds.has(raiserBase[id])));
                 scoped.forEach(r => {
                     r.exR = (chOn('r') && r.raiser) ? r.exR : 0;
                     r.extra = (chOn('b') ? r.exB : 0) + (chOn('c') ? r.exC : 0) + r.exR;
@@ -14436,7 +14458,8 @@ function planPermitHafrashUse(taba) {
                     (noAdd ? ', ' + noAdd + ' ללא תוספת יח"ד (שינוי קווי בניין / שטחים בלבד)' : '') +
                     (noData ? ', ' + noData + ' ללא נתוני יח"ד' : '') +
                     (excludedStatus ? ', ' + excludedStatus + ' שהוחרגו לפי סינון הסטטוס' : '') +
-                    (excludedEarly ? ', ' + excludedEarly + ' שנקלטו לפני ' + fromYear + ' (תכניות ספורדיות — "כל השנים" מחזיר אותן)' : '') + '.' +
+                    (excludedEarly ? ', ' + excludedEarly + ' שנקלטו לפני ' + fromYear + ' (תכניות ספורדיות — "כל השנים" מחזיר אותן)' : '') +
+                    (foldedN ? ', ' + foldedN + ' תכניות-תיקון שמגדילות תכנית התחדשות קודמת (ה"קיים" שלהן הוא יח"ד שאושרו בתכנית הבסיס, לא בניינים עומדים' + (potMode && chOn('r') ? '; התוספת שלהן נזקפת לתכנית הבסיס' : '') + ')' : '') + '.' +
                     (valid.some(r => r.estYear) ? ' <b>≈ / נקודה חלולה</b> = ' + valid.filter(r => r.estYear).length + ' תכניות שאינן ב-XPLAN (נדחו / נגנזו / נקלטו לאחרונה); השנה שלהן <b>משוערת</b> ממספר התכנית, שמוקצה לפי סדר הקליטה (בבדיקה על התכניות המתוארכות: שנה מדויקת ב-55%, עד שנה אחת ב-91%).' : '') +
                     (valid.some(r => r.year == null) ? ' "' + NO_DATE + '" = תכנית שאינה ב-XPLAN ושמספרה אינו מאפשר אומדן.' : '') +
                     (sc === 'rejected' ? ' ⚠️ לתכניות שנדחו/נגנזו יש נתוני יח"ד רק לחלק קטן מהן — הגיליון לא עוקב אחריהן, ו-Mavat חוסם את דף התכנית הגנוזה.' : '') +
