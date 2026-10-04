@@ -730,3 +730,20 @@
 {"ts": "2026-10-04 01:11:18", "taba": 1444603, "plan_name": "101-1444603", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-04 01:11:18", "taba": 1551068, "plan_name": "101-1551068", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-04 09:24:38", "taba": 1589860, "plan_name": "101-1589860", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-04 15:43:57", "taba": 110775, "plan_name": "101-0110775", "status": "נגנזה", "field": "plan_type", "old": "התחדשות עירונית", "new": "עיבוי שטחים חומים"}
+{"ts": "2026-10-04 15:43:57", "taba": 383109, "plan_name": "101-0383109", "status": "אישור", "field": "plan_type", "old": "התחדשות עירונית", "new": "עיבוי שטחים חומים"}
+{"ts": "2026-10-04 15:43:57", "taba": 115220, "plan_name": "101-0115220", "status": "נדחתה", "field": "plan_type", "old": "התחדשות עירונית", "new": "תשתיות"}
+{"ts": "2026-10-04 15:43:57", "taba": 115220, "plan_name": "101-0115220", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-04 15:43:57", "taba": 581850, "plan_name": "101-0581850", "status": "אישור", "field": "plan_type", "old": "", "new": "התחדשות עירונית"}
+{"ts": "2026-10-04 15:43:57", "taba": 1475052, "plan_name": "101-1475052", "status": "במילוי תנאים להפקדה", "field": "plan_type", "old": "", "new": "התחדשות עירונית"}
+{"ts": "2026-10-04 15:43:57", "taba": 1475052, "plan_name": "101-1475052", "status": "במילוי תנאים להפקדה", "field": "SUB_N", "old": "", "new": "רסקו - גבעת הורדים"}
+{"ts": "2026-10-04 15:43:57", "taba": 1475052, "plan_name": "101-1475052", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-04 15:43:57", "taba": 1449511, "plan_name": "101-1449511", "status": "בבדיקה תכנונית", "field": "plan_type", "old": "", "new": "התחדשות עירונית"}
+{"ts": "2026-10-04 15:43:57", "taba": 1449511, "plan_name": "101-1449511", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": "", "new": "קטמון הישנה"}
+{"ts": "2026-10-04 15:43:57", "taba": 1449511, "plan_name": "101-1449511", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-04 15:43:57", "taba": 1554773, "plan_name": "101-1554773", "status": "בבדיקה תכנונית", "field": "plan_type", "old": "", "new": "התחדשות עירונית"}
+{"ts": "2026-10-04 15:43:57", "taba": 1554773, "plan_name": "101-1554773", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": "", "new": "גוננים"}
+{"ts": "2026-10-04 15:43:57", "taba": 1554773, "plan_name": "101-1554773", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-04 15:43:57", "taba": 1563642, "plan_name": "101-1563642", "status": "בבדיקה תכנונית", "field": "plan_type", "old": "", "new": "התחדשות עירונית"}
+{"ts": "2026-10-04 15:43:57", "taba": 1563642, "plan_name": "101-1563642", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": "", "new": "פת"}
+{"ts": "2026-10-04 15:43:57", "taba": 1563642, "plan_name": "101-1563642", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
