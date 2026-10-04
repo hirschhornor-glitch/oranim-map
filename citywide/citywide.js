@@ -245,6 +245,9 @@
       ].concat(REAL_COLS),
       detail: function (r) {
         var h = "";
+        if (r.fund.conditional_units_quote)
+          h += '<div class="quote"><b>הציטוט שממנו נקבע מספר היח"ד המותנות:</b> ' +
+               esc(r.fund.conditional_units_quote) + "</div>";
         if (r.fund.mechanism) h += '<div class="quote"><b>המנגנון:</b> ' + esc(r.fund.mechanism) + "</div>";
         if (r.fund.amount_text) h += '<div class="quote"><b>ציטוט הסכום:</b> ' + esc(r.fund.amount_text) + "</div>";
         h += realDetail(r.plan);
