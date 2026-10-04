@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-04T13:43:00",
+ "generated_at": "2026-10-04T13:51:38",
  "scope": "כלל עירוני — ירושלים",
  "totals": {
   "archive_plans": 4604,
@@ -10,10 +10,10 @@
   "fund_with_amount": 77,
   "fund_total_ils": 1009157183,
   "rental": 154,
-  "fund_with_units": 95,
+  "fund_with_units": 97,
   "rental_with_units": 76,
   "rental_units_total": 7510,
-  "conditional_units_total": 1787,
+  "conditional_units_total": 1820,
   "rental_review": 0,
   "rental_units_visual": 10,
   "rental_units_derived": 2372,
@@ -877,8 +877,8 @@
    "fund": {
     "conditional_units_t5": 7,
     "conditional_units_state": "value",
-    "conditional_units_read": "prose",
-    "conditional_units_quote": "עיקרי הוראות התכנית, סעיף 11: 'קביעת הוראות וזכויות בניה \"מותנות\" למגורים בהיקף של 7 יח\"ד נוספות וקומה \"מותנת\" שמימושה מותנה בהקמת קרן לתחזוקה ארוכת טווח למבנה'. דף ההסבר בעמ' 2 חוזר על אותו מספר.",
+    "conditional_units_read": "xlsx",
+    "conditional_units_quote": null,
     "amount_ils": null,
     "amount_text": "",
     "section": "6.2",
@@ -1729,8 +1729,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005081390/310",
    "fund": {
-    "conditional_units_t5": null,
-    "conditional_units_state": "none_in_table",
+    "conditional_units_t5": 14,
+    "conditional_units_state": "value",
     "conditional_units_read": "xlsx",
     "conditional_units_quote": null,
     "amount_ils": null,
@@ -2145,8 +2145,8 @@
    "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005109268/310",
    "fund": {
-    "conditional_units_t5": null,
-    "conditional_units_state": "none_in_table",
+    "conditional_units_t5": 19,
+    "conditional_units_state": "value",
     "conditional_units_read": "xlsx",
     "conditional_units_quote": null,
     "amount_ils": null,
