@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-04-renewal-fold-c';
+        const APP_VERSION = '2026-10-04-rental-subset';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -6180,28 +6180,26 @@ function planPermitHafrashUse(taba) {
                         if (p._rental_raw === undefined) p._rental_raw = p.rental;
                     }
                 }
+                // `rental` is a SUBSET of `units_total` — the GS column holds the Table 5 total,
+                // which already counts the rental rows (Table 5 matched units_total, never
+                // units_total + rental, on every rental plan with a cached table). Adding it on
+                // top double-counted: 101-1261510 showed 660 for a 440-unit Table 5.
+                // Only lift the total when rental exceeds it — then it cannot be a subset.
                 function foldRental(gd) {
                     if (!gd.plans || !gd.plans.features) return;
-                    let foldedCount = 0;
+                    let liftedCount = 0;
                     for (const f of gd.plans.features) {
                         const p = f.properties;
                         const rawTotal = parseFloat(p._units_total_raw ?? p.units_total) || 0;
                         const rental = parseFloat(p._rental_raw ?? p.rental) || 0;
                         const inn = parseFloat(p.units_in) || 0;
-                        if (rawTotal > 0 || rental > 0) {
-                            const effTotal = rawTotal + rental;
-                            p.units_total = effTotal;
-                            p.units_add = Math.max(effTotal - inn, 0);
-                            if (rental > 0) foldedCount++;
-                        } else {
-                            const storedAdd = parseFloat(p.units_add) || 0;
-                            if (rental > 0 || storedAdd > 0) {
-                                p.units_add = storedAdd + rental;
-                                if (rental > 0) foldedCount++;
-                            }
+                        if (rental > rawTotal) {
+                            p.units_total = rental;
+                            p.units_add = Math.max(rental - inn, 0);
+                            liftedCount++;
                         }
                     }
-                    if (foldedCount > 0) console.log(`[Units] Folded rental into ${foldedCount} plans`);
+                    if (liftedCount > 0) console.log(`[Units] rental exceeded units_total in ${liftedCount} plans — total lifted to rental`);
                 }
                 function rebuildPlanByTaba(gd) {
                     const planByTaba = {};
@@ -16022,12 +16020,12 @@ function planPermitHafrashUse(taba) {
                         // Skip rejected/archived plans for units_add
                         const status = (p.status_mavat || '').trim();
                         const isRejected = status === 'נגנזה/נדחתה' || status === 'נגנזה' || status === 'נדחתה';
-                        // GS `rental` is separate from units_total (geojson folds it via foldRental();
-                        // CSV path does not, so fold it here). `conditional_housing` is a subset of
-                        // units_total → already in units_add; not added.
+                        // GS `rental` and `conditional_housing` are subsets of units_total → already
+                        // in units_add. Only the part of rental exceeding units_total is added
+                        // (mirrors foldRental()).
                         const addBase = parseInt(p.units_add) || 0;
-                        const rentalVal = parseInt(p.rental) || 0;
-                        const addVal = isRejected ? 0 : (addBase + rentalVal);
+                        const rentalExcess = Math.max((parseInt(p.rental) || 0) - (parseInt(p.units_total) || 0), 0);
+                        const addVal = isRejected ? 0 : (addBase + rentalExcess);
                         const inVal = parseInt(p.units_in) || 0;
                         byMinahak[m].units_in += inVal;
                         byMinahak[m].units_add += addVal;
@@ -25776,8 +25774,8 @@ function planPermitHafrashUse(taba) {
                 html += '<div class="popup-body" style="padding:8px 16px">';
 
                 // Section: יח"ד
-                // Note: units_total here is already the EFFECTIVE total (raw + rental) — applied at parse time.
-                // The rental field remains preserved as a breakdown ("מתוכם שכירות").
+                // Note: units_total is the Table 5 total and already includes rental (see foldRental()).
+                // The rental field is shown as a breakdown ("מתוכם שכירות").
                 const uIn = v(props.units_in);
                 const uOut = v(props.units_total);
                 if (uIn != null || uOut != null) {
