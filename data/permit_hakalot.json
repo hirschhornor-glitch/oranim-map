@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-16T09:32:52",
+ "generated_at": "2026-10-05T01:22:52",
  "source": "YK proc 242700451 (החלטות ועדה בתיק הרישוי)",
  "by_permit": {
   "2023/0107.02": {
@@ -107,10 +107,10 @@
    ],
    "publication_36": [],
    "taba": "666032",
+   "no_unit_hakala": true,
    "source": "נוסח הודעה לפי סעיף 149 מיום 14/02/2023 — ההקלה היחידה שפורסמה בתיק, ואינה על יח\"ד. 392 מול 356 בתב\"ע מכוסים בהערת טבלה 5 (תוספת עד 10%).",
    "checked": "2026-09-16",
-   "manual": true,
-   "no_unit_hakala": true
+   "manual": true
   },
   "2021/0112.00": {
    "units": null,
@@ -170,7 +170,7 @@
     }
    ],
    "publication_36": [],
-   "taba": "205054"
+   "taba": "518159"
   },
   "2016/0077.00": {
    "units": null,
@@ -290,10 +290,10 @@
    ],
    "publication_36": [],
    "taba": "98251",
+   "no_unit_hakala": true,
    "source": "נוסח הודעה לפי סעיף 149 מיום 08/05/2021 — אין הקלה ליח\"ד",
    "checked": "2026-09-16",
-   "manual": true,
-   "no_unit_hakala": true
+   "manual": true
   },
   "2020/0375.00": {
    "units": 213,
@@ -366,10 +366,10 @@
    ],
    "publication_36": [],
    "taba": "98251",
+   "no_unit_hakala": true,
    "source": "נוסח הודעה לפי סעיף 149 מיום 08/05/2021 — אין הקלה ליח\"ד",
    "checked": "2026-09-16",
-   "manual": true,
-   "no_unit_hakala": true
+   "manual": true
   },
   "2022/0248.01": {
    "units": 44,

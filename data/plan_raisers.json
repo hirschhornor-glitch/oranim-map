@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-16T09:41:02",
+ "generated_at": "2026-10-05T01:22:57",
  "min_overlap": 0.5,
  "count": 58,
  "raise_units_total": 659,
@@ -12,8 +12,8 @@
    "units_in": 13,
    "raise": 5,
    "plan_type": "",
-   "approved": "12/07/2026",
-   "status": "הפקדה להתנגדויות/השגות",
+   "approved": "02/10/2026",
+   "status": "הכרעה בהתנגדויות / אישור",
    "overlap": 0.975,
    "base_units": 13
   },

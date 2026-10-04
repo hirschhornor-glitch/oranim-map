@@ -1,25 +1,29 @@
 {
-  "generated_at": "2026-09-22T07:02:36",
+  "generated_at": "2026-10-05T01:20:36",
   "sources": [
     {
       "file": "all_permits.json",
       "label": "היתרים לפי תב\"ע",
       "refresh": "דו-שבועי (סריקה)",
-      "records": 775,
+      "records": 776,
       "last_publish": "2026-09-15",
-      "age_days": 7,
-      "status": "green",
-      "notes": []
+      "age_days": 20,
+      "status": "red",
+      "notes": [
+        "נסרק 2026-10-03 אך פורסם לאחרונה 2026-09-15 — פער סריקה↔פרסום"
+      ]
     },
     {
       "file": "tama38_permits.json",
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
-      "records": 1349,
+      "records": 1350,
       "last_publish": "2026-09-15",
-      "age_days": 7,
-      "status": "green",
-      "notes": []
+      "age_days": 20,
+      "status": "red",
+      "notes": [
+        "נסרק 2026-10-03 אך פורסם לאחרונה 2026-09-15 — פער סריקה↔פרסום"
+      ]
     },
     {
       "file": "extra_permits.json",
@@ -27,7 +31,7 @@
       "refresh": "לפי צורך",
       "records": 18,
       "last_publish": "2026-06-29",
-      "age_days": 85,
+      "age_days": 98,
       "status": "info",
       "notes": []
     },
@@ -35,10 +39,10 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 18,
-      "last_publish": "2026-09-14",
-      "age_days": 8,
-      "status": "green",
+      "records": 13,
+      "last_publish": "2026-09-22",
+      "age_days": 13,
+      "status": "yellow",
       "notes": []
     },
     {
@@ -47,7 +51,7 @@
       "refresh": "שבועי",
       "records": 0,
       "last_publish": "2026-08-30",
-      "age_days": 23,
+      "age_days": 36,
       "status": "red",
       "notes": []
     },
@@ -57,7 +61,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 81,
+      "age_days": 94,
       "status": "info",
       "notes": []
     },
@@ -65,9 +69,9 @@
       "file": "tree_permits.json",
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
-      "records": 6,
-      "last_publish": "2026-09-21",
-      "age_days": 1,
+      "records": 2,
+      "last_publish": "2026-10-02",
+      "age_days": 3,
       "status": "green",
       "notes": []
     },
@@ -77,7 +81,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 93,
+      "age_days": 106,
       "status": "info",
       "notes": []
     },
@@ -85,28 +89,28 @@
       "file": "occupancy_status.json",
       "label": "מאוכלס (טופס 4)",
       "refresh": "לפי צורך",
-      "records": 48,
-      "last_publish": "2026-09-01",
-      "age_days": 21,
+      "records": 49,
+      "last_publish": "2026-10-04",
+      "age_days": 1,
       "status": "info",
       "notes": []
     }
   ],
   "scan": {
-    "date": "2026-09-13",
+    "date": "2026-10-03",
     "removed_flag": false,
-    "raw": "2026-09-13T07:27:28 | date=2026-09-13 | all=new:0,status:18,removed:0 | tama38=new:0,status:13,removed:0",
+    "raw": "2026-10-03T23:43:56 | date=2026-10-03 | all=new:0,status:0,removed:0 | tama38=new:0,status:0,removed:0",
     "all": {
       "new": 0,
-      "status": 18,
+      "status": 0,
       "removed": 0
     },
     "tama38": {
       "new": 0,
-      "status": 13,
+      "status": 0,
       "removed": 0
     },
-    "age_days": 9
+    "age_days": 2
   },
   "committee_audit": {
     "date": "2026-09-14",
@@ -158,14 +162,19 @@
       "count": 13
     },
     {
+      "log": "tama38_dev_backfill_last.log",
+      "sample": "YK throttled this run — will retry tomorrow.",
+      "count": 13
+    },
+    {
       "log": "tama38_floors_refetch.log",
       "sample": "459/459 1911/0130.03   empty/throttled — skip (will retry)",
       "count": 24
     },
     {
       "log": "tama38_street_harvest_last_run.log",
-      "sample": "[04:43:59]    cooldown 90s (throttle recovery)...",
-      "count": 90
+      "sample": "- <launching> C:\\Users\\orlev\\AppData\\Local\\ms-playwright\\chromium-1208\\chrome-win64\\chrome.exe --disable-field-trial-config --disable-background-networking --di",
+      "count": 96
     }
   ]
 }
