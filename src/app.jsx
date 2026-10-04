@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-04-renewal-fold-b';
+        const APP_VERSION = '2026-10-04-renewal-fold-c';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2066,6 +2066,13 @@ function planPermitHafrashUse(taba) {
             const uin = ok(p && p.units_in), uadd = ok(p && p.units_add);
             return (uin > 0 && uadd > 0) ? { mult: (uin + uadd) / uin, uin, uadd } : null;
         }
+        // Rights-increase amendments over an earlier renewal plan that plan_raisers.json did not
+        // detect (its test needs units_in ≈ the base's total or a הגדלת זכויות type). amendment → base.
+        // User rule (2026-10-04): a plan on top of an existing plan that only adds rights is not a
+        // renewal of standing buildings and must not stand alone — it drags the multiplier down.
+        const RENEWAL_AMENDMENTS = {
+            '101-1422401': '101-0547992',   // שער דרום – תוספת קומות בבניין C (350→414) over שער דרום (158→302)
+        };
         const RENEWAL_MULT_HEAT = [[2, '#27404f'], [3, '#2b6a78'], [4, '#2d9387'], [5, '#5cb57f'], [6, '#a9cd6a'], [Infinity, '#f0d45a']];
         function renewalMultColor(v) { return (RENEWAL_MULT_HEAT.find(h => v < h[0]) || RENEWAL_MULT_HEAT[RENEWAL_MULT_HEAT.length - 1])[1]; }
         const RENEWAL_APPROVED_STATUSES = ['אישור', 'מאושרת', 'תבע מאושרת', 'תחילת תוקף', 'הכרעה בהתנגדויות / אישור'];
@@ -13927,6 +13934,21 @@ function planPermitHafrashUse(taba) {
                 };
 
 
+                // Manual amendments (RENEWAL_AMENDMENTS) as raiser records on their base: raise = the
+                // amendment's total minus the base's total (what it adds on top of the approved base).
+                const propsById = {};
+                (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
+                    const q = f.properties || {}; const k = String(q.plan_name || '').trim();
+                    if (k && !propsById[k]) propsById[k] = q;
+                });
+                const totOf = (q) => (parseFloat(q && q.units_in) || 0) + (parseFloat(q && q.units_add) || 0);
+                const manualRaiserByBase = {};
+                Object.keys(RENEWAL_AMENDMENTS).forEach(am => {
+                    const base = RENEWAL_AMENDMENTS[am];
+                    if (propsById[am] && propsById[base])
+                        manualRaiserByBase[base] = { plan_name: am, raise: Math.max(0, totOf(propsById[am]) - totOf(propsById[base])) };
+                });
+
                 // ── one record per renewal plan (status-scoped, before the geographic filter) ──
                 const seen = new Set();
                 const scoped = [];
@@ -13968,7 +13990,7 @@ function planPermitHafrashUse(taba) {
                     let exB = planBonusUnits(p);
                     const cap = planUnitCap(p);
                     if (!exB && cap && cap.max_units) exB = Math.max(0, Math.round(cap.max_units - (uin + uadd)));
-                    const raiser = (window.__planRaisers || {})[String(p.taba || '').trim()] || null;
+                    const raiser = (window.__planRaisers || {})[String(p.taba || '').trim()] || manualRaiserByBase[id] || null;
                     scoped.push({ id, taba: String(p.taba || '').trim(), name: p.plan_name_he || p.plan_summary || id, minhak, sub, sheetSub, subFromMap: !!mapSub, year, estYear: !!estYear, recv: x ? x.recv : null,
                         status: normalizeStatus(String(p.status_mavat || '').trim()) || '', uin, uaddA: uadd, eligible,
                         exB, exC: planConditionalUnits(p) || 0, exR: raiser ? (parseFloat(raiser.raise) || 0) : 0, raiser });
@@ -13982,7 +14004,9 @@ function planPermitHafrashUse(taba) {
                 const renewalBaseIds = new Set();
                 (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
                     const q = f.properties || {};
-                    if (isRenewalMultPlan(q)) renewalBaseIds.add(String(q.plan_name || '').trim());
+                    // only a LIVE base makes the later plan an amendment: ניקנור 30's 101-1155092 was
+                    // archived, so 101-1430339 over it is the real renewal (14 standing units), not an amendment
+                    if (isRenewalMultPlan(q) && statusGroupKey(q.status_mavat) !== 'rejected') renewalBaseIds.add(String(q.plan_name || '').trim());
                 });
                 // plan_raisers.json is keyed by the BASE plan's taba → raiser plan_name → its base plan_name
                 const raiserBase = {};
@@ -13991,6 +14015,7 @@ function planPermitHafrashUse(taba) {
                     const rs = (window.__planRaisers || {})[String(q.taba || '').trim()];
                     if (rs && rs.plan_name) raiserBase[rs.plan_name] = String(q.plan_name || '').trim();
                 });
+                Object.keys(RENEWAL_AMENDMENTS).forEach(am => { raiserBase[am] = RENEWAL_AMENDMENTS[am]; });
                 const folded = new Set(Object.keys(raiserBase).filter(id => renewalBaseIds.has(raiserBase[id])));
                 scoped.forEach(r => {
                     r.exR = (chOn('r') && r.raiser) ? r.exR : 0;
