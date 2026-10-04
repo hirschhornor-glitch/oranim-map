@@ -729,3 +729,4 @@
 {"ts": "2026-10-04 01:11:18", "taba": 1398130, "plan_name": "101-1398130", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-04 01:11:18", "taba": 1444603, "plan_name": "101-1444603", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-04 01:11:18", "taba": 1551068, "plan_name": "101-1551068", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-04 09:24:38", "taba": 1589860, "plan_name": "101-1589860", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
