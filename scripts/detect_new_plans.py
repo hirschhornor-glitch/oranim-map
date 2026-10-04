@@ -19,6 +19,7 @@ import json
 import os
 import ssl
 import sys
+import time
 import argparse
 import base64
 from datetime import datetime
@@ -362,13 +363,22 @@ def fetch_xplan_plans(bbox_itm):
             'resultOffset':      offset,
             'resultRecordCount': MAX_PER_REQUEST,
         }
-        try:
-            resp = _SESSION.get(XPLAN_URL, params=params, timeout=60, verify=False)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            print(f"  Error fetching offset={offset}: {e}")
-            break
+        # iplan intermittently times out; retry with backoff before giving up.
+        # A failure mid-pagination returns [] (not a partial list) so the caller
+        # aborts instead of treating a truncated fetch as the full plan set.
+        data = None
+        for attempt in range(1, 5):
+            try:
+                resp = _SESSION.get(XPLAN_URL, params=params, timeout=120, verify=False)
+                resp.raise_for_status()
+                data = resp.json()
+                break
+            except Exception as e:
+                print(f"  Error fetching offset={offset} (attempt {attempt}/4): {e}")
+                if attempt < 4:
+                    time.sleep(30 * attempt)
+        if data is None:
+            return []
 
         feats = data.get('features', [])
         all_features.extend(feats)
