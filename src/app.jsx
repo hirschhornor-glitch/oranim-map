@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-09-24-renewal-est-year';
+        const APP_VERSION = '2026-10-04-renewal-map-b';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2050,6 +2050,24 @@ function planPermitHafrashUse(taba) {
 
         // ---- מוסדות חינוך בקרבת התחדשות עירונית מאושרת (edu_renewal_proximity) ----
         const RENEWAL_PLAN_TYPES = ['התחדשות עירונית', 'פינוי בינוי', 'עיבוי'];
+        // Urban-renewal MULTIPLIER scope (dashboard + map layer). Narrower than RENEWAL_PLAN_TYPES
+        // (no עיבוי): a multiplier needs an existing stock being replaced. An untyped plan counts when
+        // its own name says it is renewal (פנמה 2-6, ברוריה 1, אריה בעהם … were missing before).
+        const RENEWAL_MULT_PLAN_TYPES = new Set(['התחדשות עירונית', 'פינוי בינוי']);
+        const RENEWAL_NAME_RX = /התחדשות עירונית|פינוי\s*-?\s*בינוי|הריסת (?:מבנה|בניין|בנין)/;
+        function isRenewalMultPlan(p) {
+            const t = String((p && p.plan_type) || '').trim();
+            if (RENEWAL_MULT_PLAN_TYPES.has(t)) return true;
+            return !t && RENEWAL_NAME_RX.test(((p && p.plan_name_he) || '') + ' ' + ((p && p.plan_summary) || ''));
+        }
+        // Approved multiplier (Table 5 units) or null when it isn't one: needs existing AND added units.
+        function renewalMultOf(p) {
+            const ok = (v) => { const f = parseFloat(v); return (isFinite(f) && f >= 0 && f <= 20000) ? f : null; };
+            const uin = ok(p && p.units_in), uadd = ok(p && p.units_add);
+            return (uin > 0 && uadd > 0) ? { mult: (uin + uadd) / uin, uin, uadd } : null;
+        }
+        const RENEWAL_MULT_HEAT = [[2, '#27404f'], [3, '#2b6a78'], [4, '#2d9387'], [5, '#5cb57f'], [6, '#a9cd6a'], [Infinity, '#f0d45a']];
+        function renewalMultColor(v) { return (RENEWAL_MULT_HEAT.find(h => v < h[0]) || RENEWAL_MULT_HEAT[RENEWAL_MULT_HEAT.length - 1])[1]; }
         const RENEWAL_APPROVED_STATUSES = ['אישור', 'מאושרת', 'תבע מאושרת', 'תחילת תוקף', 'הכרעה בהתנגדויות / אישור'];
         const EDU_RENEWAL_RADIUS_M = 50;
         const EDU_AGE_BUCKETS = [
@@ -3718,12 +3736,19 @@ function planPermitHafrashUse(taba) {
             let n = 0;
             gd.plans.features.forEach(f => {
                 const p = f.properties || {};
+                // The curated sub-neighborhood is the sheet's SUB_N column (synced into plans.geojson
+                // as SUB_N). `sub_neighborhood` is a legacy field the sync never updates: it disagreed
+                // with the map polygon on ~100 plans that SUB_N already had right (24 tagged קטמונים
+                // that sit in גוננים, e.g. רשב"ג 48; 11 קריית שמואל that sit in רסקו). SUB_N wins when set.
+                const curated = String(p.SUB_N || '').trim();
+                if (curated) p.sub_neighborhood = curated;
                 const subRaw = (p.sub_neighborhood || p.neighborhood || '').trim();
                 let sub = subRaw ? (SUB_NORMALIZE[subRaw] || subRaw) : '';
                 let canonical = sub ? SUB_TO_MINAHAK[sub] : null;
                 // 2nd-pass: if the plan name explicitly mentions a known sub
-                // (e.g. "שכונת גבעת שקד"), prefer that over the CSV's sub.
-                const blob = ((p.plan_summary || '') + ' ' + (p.plan_name_he || '')).trim();
+                // (e.g. "שכונת גבעת שקד"), prefer that over the CSV's sub — but only when the
+                // sheet has no curated SUB_N; a human-set value is not second-guessed by a name.
+                const blob = curated ? '' : ((p.plan_summary || '') + ' ' + (p.plan_name_he || '')).trim();
                 if (blob) {
                     for (const hint of PLAN_NAME_SUB_HINTS) {
                         if (!hint.sub) continue;
@@ -3766,6 +3791,15 @@ function planPermitHafrashUse(taba) {
         // לייב יפה St — actually ארנונה/בקעה רבתי — tagged as פת/גוננים).
         // Runs after applyMinahakOverrides so name-based hints take precedence
         // when the centroid happens to fall just over a border.
+        // A sub-neighborhood polygon can cross a community-council (minahak) boundary. The
+        // "רסקו - גבעת הורדים" polygon has a third of its area inside גינות העיר — that part is
+        // קרית שמואל (טשרניחובסקי, הרצוג, דב קמחי…), which MINAHAK_SUBS lists under גינות העיר.
+        // Keyed "sub|minahak" → the name of that side. The minahak polygon is authoritative.
+        const SUB_MINAHAK_SPLIT = { 'רסקו|גינות העיר': 'קרית שמואל' };
+        function splitSubLabel(sub, minahak) {
+            const s = SUB_NORMALIZE[sub] || sub;
+            return SUB_MINAHAK_SPLIT[s + '|' + minahak] || sub;
+        }
         function applyMinahakOverridesByGeometry(gd) {
             if (!gd || !gd.plans || !gd.plans.features) return 0;
             const minahakLayers = [
@@ -3787,6 +3821,10 @@ function planPermitHafrashUse(taba) {
                 if (containing && (p.minahak || '').trim() !== containing.name) {
                     p.minahak = containing.name;
                     n++;
+                }
+                if (containing) {
+                    const relabel = splitSubLabel(String(p.sub_neighborhood || '').trim(), containing.name);
+                    if (relabel !== String(p.sub_neighborhood || '').trim()) p.sub_neighborhood = relabel;
                 }
             });
             if (n > 0) console.log('[MinahakGeom] overrode', n, 'plans via centroid-in-polygon');
@@ -4217,6 +4255,7 @@ function planPermitHafrashUse(taba) {
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
             const [showHeatMap, setShowHeatMap] = useState(false);
+            const [showMultMap, setShowMultMap] = useState(false);   // מפת מכפילי התחדשות
             const [densityMode, setDensityMode] = useState('planned'); // 'planned' = units_total | 'realized' = issued-permit units
             const [showCommerceHeatMap, setShowCommerceHeatMap] = useState(false);
             const [showAnnotations, setShowAnnotations] = useState(false);
@@ -13793,8 +13832,6 @@ function planPermitHafrashUse(taba) {
             //    the year the plan file was received. Multiplier = (units_in + units_add) / units_in,
             //    units from the sheet (Table 5 always wins). XPLAN supplies ONLY the receiving year
             //    (receiving_date) via data/xplan_plan_dates.json (scripts/fetch_xplan_plan_dates.py). ──
-            // Narrower than the global RENEWAL_PLAN_TYPES (which adds עיבוי): a multiplier needs an existing stock being replaced.
-            const RENEWAL_MULT_PLAN_TYPES = new Set(['התחדשות עירונית', 'פינוי בינוי']);
             function openRenewalMultiplierDashboard(opts) {
                 const gd = geoDataRef.current || {};
                 if (gd.xplanDates && gd.sub_neighborhoods) { renderRenewalMultiplierDashboard(opts || {}); return; }
@@ -13879,7 +13916,6 @@ function planPermitHafrashUse(taba) {
                     return best ? (SUB_NORMALIZE[best] || best) : null;
                 };
 
-                const RENEWAL_NAME_RX = /התחדשות עירונית|פינוי\s*-?\s*בינוי|הריסת (?:מבנה|בניין|בנין)/;
 
                 // ── one record per renewal plan (status-scoped, before the geographic filter) ──
                 const seen = new Set();
@@ -13887,11 +13923,7 @@ function planPermitHafrashUse(taba) {
                 let excludedStatus = 0, excludedEarly = 0;
                 (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
                     const p = f.properties || {};
-                    // Typed renewal, or an untyped plan whose own name says it is one (5 such plans with
-                    // existing + added units — פנמה 2-6, ברוריה 1, אריה בעהם … — were missing).
-                    const ptype = String(p.plan_type || '').trim();
-                    if (!RENEWAL_MULT_PLAN_TYPES.has(ptype) &&
-                        !(!ptype && RENEWAL_NAME_RX.test((p.plan_name_he || '') + ' ' + (p.plan_summary || '')))) return;
+                    if (!isRenewalMultPlan(p)) return;
                     const id = String(p.plan_name || '').trim();
                     if (!id || seen.has(id)) return;
                     seen.add(id);
@@ -13912,10 +13944,13 @@ function planPermitHafrashUse(taba) {
                     const sheetSub = SUB_NORMALIZE[rawSub] || (SUB_TO_MINAHAK[rawSub] ? rawSub : null)
                         || SUB_NORMALIZE[firstSub] || firstSub || '';
                     const mapSub = spatialSub(f.geometry);
-                    const sub = mapSub || sheetSub || 'לא ידוע';
-                    // A sub belongs to exactly one minhak, so its canonical minhak wins over the row's tag —
-                    // otherwise one sub splits across several minhak groups.
-                    const minhak = SUB_TO_MINAHAK[sub] || MIN_NORM[p.minahak] || p.minahak || 'לא ידוע';
+                    // minahak = the community-council polygon (p.minahak is already corrected by
+                    // applyMinahakOverridesByGeometry); the sub's canonical minahak only as a fallback.
+                    // A sub polygon that crosses a minahak boundary takes that side's name
+                    // (רסקו inside גינות העיר = קרית שמואל), so a sub never splits across two groups.
+                    const subRaw0 = mapSub || sheetSub || '';
+                    const minhak = MIN_NORM[p.minahak] || String(p.minahak || '').trim() || SUB_TO_MINAHAK[SUB_NORMALIZE[subRaw0] || subRaw0] || 'לא ידוע';
+                    const sub = splitSubLabel(subRaw0, minhak) || 'לא ידוע';
                     // No added units (a building-line / area-only amendment tagged as renewal) is not a
                     // multiplier story — a 1.00 there would only drag the averages down.
                     const eligible = uin > 0 && uadd > 0;
@@ -14006,8 +14041,8 @@ function planPermitHafrashUse(taba) {
                 const noAdd = plans.filter(r => r.mult == null && r.uin > 0 && !(r.uaddA > 0)).length;
                 const noData = plans.filter(r => r.mult == null && !folded.has(r.id)).length - noIn - noAdd;
 
-                const HEAT = [[2, '#27404f'], [3, '#2b6a78'], [4, '#2d9387'], [5, '#5cb57f'], [6, '#a9cd6a'], [Infinity, '#f0d45a']];
-                const heat = (v) => (HEAT.find(h => v < h[0]) || HEAT[HEAT.length - 1])[1];
+                const HEAT = RENEWAL_MULT_HEAT;
+                const heat = renewalMultColor;
                 const heatInk = (v) => v >= 5 ? '#10202a' : '#eaf6f4';
                 const trendBadge = (t, big) => {
                     if (!t.ok) return '<span style="color:#56707a" title="נדרשות לפחות 4 תכניות ב-3 שנות קליטה שונות">—</span>';
@@ -14421,6 +14456,7 @@ function planPermitHafrashUse(taba) {
                 const footer = '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">' +
                     '<button id="rmdash-csv" style="background:#26a69a;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                     '<button id="rmdash-print" style="background:#12222a;border:1px solid #26a69a;color:#bfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה / PDF</button>' +
+                    '<button id="rmdash-map" style="background:#12222a;border:1px solid #26a69a;color:#bfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🗺️ הצג במפה</button>' +
                     impLinkBtnHtml('rmdash-link') + '</div>';
                 div.innerHTML = head + toolbar + (valid.length
                     ? kpis + chartTabs + (view === 'trend' ? trendChart : view === 'size' ? sizeView : view === 'public' ? publicView : scatter) + table + planTable + note
@@ -14432,6 +14468,10 @@ function planPermitHafrashUse(taba) {
                 wireImpLinkBtn('rmdash-link', 'renewalMultDash', params);
                 const rerender = (patch) => renderRenewalMultiplierDashboard(Object.assign({}, params, { cell }, patch));
                 document.getElementById('rmdash-close').addEventListener('click', () => { div.remove(); setImpReport(null); });
+                document.getElementById('rmdash-map').addEventListener('click', () => {
+                    div.remove(); setImpReport(null);
+                    setShowHeatMap(false); setShowCommerceHeatMap(false); setShowMultMap(true);
+                });
                 div.querySelectorAll('button[data-rm]').forEach(b => b.addEventListener('click', () => {
                     const patch = {}; patch[b.getAttribute('data-rm')] = b.getAttribute('data-val');
                     // row/column keys change with geo/bin, so a selected cell would point nowhere
@@ -17675,7 +17715,7 @@ function planPermitHafrashUse(taba) {
                 }
 
                 // --- Plans layer ---
-                if (layers['plans'] && gd.plans && !showHeatMap && !showCommerceHeatMap) {
+                if (layers['plans'] && gd.plans && !showHeatMap && !showCommerceHeatMap && !showMultMap) {
                     const zoom = map.getZoom();
                     // Auto-wrap text at ~20 chars (QGIS autoWrapLength=20)
                     function autoWrap(txt, maxLen) {
@@ -23134,6 +23174,45 @@ function planPermitHafrashUse(taba) {
                     geoLayersRef.current.heatmap = heatLayer;
                 }
 
+                // Urban-renewal multiplier layer — renewal plans coloured by approved multiplier
+                // (units_in + units_add) / units_in, same scope + colour scale as the dashboard.
+                // Renewal plans with no multiplier (0 existing or 0 added) are drawn as a grey outline
+                // so they don't silently vanish.
+                if (showMultMap && gd.plans) {
+                    const seenM = new Set();
+                    const multLayer = L.geoJSON(gd.plans, {
+                        pane: 'plansPane',
+                        filter: f => {
+                            const p = f.properties || {};
+                            if (!f.geometry || !isRenewalMultPlan(p)) return false;
+                            if (statusGroupKey(p.status_mavat) === 'rejected') return false;
+                            if (!planInMinahak(p)) return false;
+                            return true;
+                        },
+                        style: f => {
+                            const m = renewalMultOf(f.properties);
+                            return m ? { fillColor: renewalMultColor(m.mult), fillOpacity: 0.78, color: '#10202a', weight: 0.8 }
+                                     : { fillColor: '#9aa', fillOpacity: 0.08, color: '#9aa', weight: 1, dashArray: '3,3' };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const m = renewalMultOf(p);
+                            const nm = String(p.plan_name_he || p.plan_summary || p.plan_name || '').replace(/</g, '&lt;');
+                            const tip = m
+                                ? `<b>מכפיל ${m.mult.toFixed(2)}</b><br><span style="font-size:11px">${nm}</span><br><span style="opacity:.75;font-size:11px">${Math.round(m.uin)} → ${Math.round(m.uin + m.uadd)} יח"ד · ${normalizeStatus(String(p.status_mavat || '').trim())}</span>`
+                                : `<span style="font-size:11px">${nm}</span><br><span style="opacity:.75;font-size:11px">אין מכפיל — ${parseFloat(p.units_in) > 0 ? 'אין תוספת יח"ד' : 'אין יח"ד קיימות'}</span>`;
+                            layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                                const mapped = mapPlanProps(p);
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(e.latlng).setContent(buildPlanPopup(mapped, { properties: mapped }, null)).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.multmap = multLayer;
+                }
+
                 // Commerce/Employment heat map — existing (landuse) + future (plans)
                 if (showCommerceHeatMap) {
                     function geojsonAreaSqmC(geom) {
@@ -23285,7 +23364,7 @@ function planPermitHafrashUse(taba) {
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets, permitStageFilter]);
+                showHeatMap, densityMode, showCommerceHeatMap, showMultMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets, permitStageFilter]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -28705,7 +28784,7 @@ function planPermitHafrashUse(taba) {
                             {/* ══ יח"ד ══ */}
                             <div style={{position:'relative'}}>
                             <button
-                                className={`toolbar-btn ${(showUnits || showHeatMap) ? 'active' : ''}`}
+                                className={`toolbar-btn ${(showUnits || showHeatMap || showMultMap) ? 'active' : ''}`}
                                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'units-group' ? null : 'units-group'); }}
                                 title='יח"ד'
                             >
@@ -28722,11 +28801,18 @@ function planPermitHafrashUse(taba) {
                                         <span className="sub-label">טבלה</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${showHeatMap ? 'sub-active' : ''}`} data-tip="מפת צפיפות — יח&quot;ד לדונם" onClick={() => {
-                                        setShowHeatMap(prev => { if (!prev) setShowCommerceHeatMap(false); return !prev; });
+                                        setShowHeatMap(prev => { if (!prev) { setShowCommerceHeatMap(false); setShowMultMap(false); } return !prev; });
                                         setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="10" r="6" opacity="0.5" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="5" opacity="0.4" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="5.5" opacity="0.45" fill="currentColor" stroke="none"/><circle cx="10" cy="11" r="2" opacity="0.9" fill="currentColor" stroke="none"/></svg>
                                         <span className="sub-label">צפיפות</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${showMultMap ? 'sub-active' : ''}`} data-tip="מכפילי התחדשות עירונית — יח&quot;ד מוצע ÷ קיים" onClick={() => {
+                                        setShowMultMap(prev => { if (!prev) { setShowHeatMap(false); setShowCommerceHeatMap(false); } return !prev; });
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="13" width="4" height="8"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="3" width="4" height="18"/></svg>
+                                        <span className="sub-label">מכפיל</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${showMimush ? 'sub-active' : ''}`} data-tip="אחוזי מימוש ושלביות לפי מינהל" onClick={() => { openMimushModal(); setActiveDropdown(null); }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
@@ -29090,6 +29176,33 @@ function planPermitHafrashUse(taba) {
                         )}
 
                         {/* Area select result is rendered via DOM in the areaFinished useEffect */}
+
+                        {/* Renewal-multiplier layer legend */}
+                        {showMultMap && (
+                            <div style={{position:'absolute', bottom:40, left:10, zIndex:1001, background:'rgba(15,15,30,0.92)', backdropFilter:'blur(8px)',
+                                borderRadius:10, padding:'12px 16px', direction:'rtl', border:'1px solid #2a2a4a', maxWidth:300}}>
+                                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,marginBottom:6}}>
+                                    <span style={{color:'#5ee0c8',fontWeight:'bold',fontSize:13}}>מכפיל התחדשות — מוצע ÷ קיים</span>
+                                    <button onClick={() => setShowMultMap(false)} style={{background:'none',border:'none',color:'#888',cursor:'pointer',fontSize:16}}>×</button>
+                                </div>
+                                <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:6}}>
+                                    {RENEWAL_MULT_HEAT.map((h, i) => (
+                                        <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+                                            <div style={{width:26,height:10,borderRadius:3,background:h[1]}}></div>
+                                            <span style={{color:'#aaa',fontSize:9}}>{i === 0 ? '<2' : (h[0] === Infinity ? '≥' + RENEWAL_MULT_HEAT[i - 1][0] : RENEWAL_MULT_HEAT[i - 1][0] + '–' + h[0])}</span>
+                                        </div>
+                                    ))}
+                                    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2,marginRight:6}}>
+                                        <div style={{width:26,height:10,borderRadius:3,border:'1px dashed #9aa'}}></div>
+                                        <span style={{color:'#aaa',fontSize:9}}>אין מכפיל</span>
+                                    </div>
+                                </div>
+                                <div style={{color:'#aaa',fontSize:10,lineHeight:1.5}}>
+                                    תכניות התחדשות פעילות (ללא נדחו/נגנזו), יח"ד לפי טבלה 5. רחף לפרטים · לחיצה = כרטיס התכנית ·{' '}
+                                    <a href="#" onClick={e => { e.preventDefault(); openRenewalMultiplierDashboard(); }} style={{color:'#64b5f6'}}>לדשבורד</a>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Heat map legend */}
                         {showHeatMap && (
