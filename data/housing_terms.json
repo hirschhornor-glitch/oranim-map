@@ -1,27 +1,27 @@
 {
- "generated_at": "2026-10-04T11:05:48",
+ "generated_at": "2026-10-04T13:28:57",
  "scope": "כלל עירוני — ירושלים",
  "totals": {
-  "archive_plans": 4571,
-  "read_text": 3749,
+  "archive_plans": 4604,
+  "read_text": 3781,
   "read_ocr": 831,
-  "unreadable": 1,
-  "fund": 104,
+  "unreadable": 2,
+  "fund": 105,
   "fund_with_amount": 77,
-  "fund_total_ils": 1008453445,
-  "rental": 151,
+  "fund_total_ils": 1009157183,
+  "rental": 154,
   "fund_with_units": 92,
-  "rental_with_units": 72,
-  "rental_units_total": 7305,
+  "rental_with_units": 76,
+  "rental_units_total": 7510,
   "conditional_units_total": 1742,
   "rental_review": 0,
   "rental_units_visual": 10,
-  "rental_units_derived": 2285,
-  "rental_units_derived_plans": 14,
+  "rental_units_derived": 2372,
+  "rental_units_derived_plans": 16,
   "rental_units_disputed_dropped": 4,
   "special_housing_plans": 11,
   "special_housing_units": 2093,
-  "rental_plus_special": 9398
+  "rental_plus_special": 9603
  },
  "rows": [
   {
@@ -2747,6 +2747,43 @@
    }
   },
   {
+   "plan": "101-0993139",
+   "name": "דיור להשכרה במרכז אורנים, רח' ש\"י עגנון בירושלים.",
+   "name_src": "gs",
+   "status": "נדחתה",
+   "sub_neighborhood": "רסקו",
+   "minahak": "גוננים",
+   "units_total": 120.0,
+   "in_oranim": true,
+   "source": "text",
+   "pages": 17,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005150560/310",
+   "rental": {
+    "units_t5": 84,
+    "units_state": "value",
+    "units_read": "pct",
+    "restates_plan": null,
+    "units_quote": "70% מסך יחידות הדיור המוצעות בתכנית מיועדות להשכרה",
+    "units_pct": 70,
+    "units_base": 120,
+    "units_base_src": "table5:total_residential_units",
+    "units_from_scan": false,
+    "units_disputed": null,
+    "special_units": null,
+    "special_moved_to_rental": null,
+    "special_is_rental": false,
+    "special_rows": [],
+    "duration": "20",
+    "duration_source": "תוספת שישית",
+    "review": false,
+    "keys_found": 27,
+    "evidence": [
+     "R:ורישום תשע\"ב 2011 בדבר ייעוד הדירות להשכרה לתקופה הנקובה בסעיף 1 לעיל 5 בחלוף תקופת ההשכרה י",
+     "D[20]:(no explicit term — long-term/Sixth-Addendum statutory default)"
+    ]
+   }
+  },
+  {
    "plan": "101-0993907",
    "name": "פינוי בינוי ברחובות אלקחי דרזנר ורזיאל, ארמון הנציב ירושלים",
    "name_src": "worklist",
@@ -3553,6 +3590,42 @@
     "conditional_units": null,
     "floors": null,
     "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.12"
+   }
+  },
+  {
+   "plan": "101-1067719",
+   "name": "תחנת רכבת החאן ירושלים - בינוי משלים",
+   "name_src": "gs",
+   "status": "נדחתה",
+   "sub_neighborhood": "מתחם הרכבת",
+   "minahak": "בקעה רבתי",
+   "units_total": 169,
+   "in_oranim": true,
+   "source": "text",
+   "pages": 20,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005211828/310",
+   "rental": {
+    "units_t5": 114,
+    "units_state": "value",
+    "units_read": "xlsx",
+    "restates_plan": null,
+    "units_quote": null,
+    "units_pct": null,
+    "units_base": null,
+    "units_base_src": null,
+    "units_from_scan": false,
+    "units_disputed": null,
+    "special_units": null,
+    "special_moved_to_rental": null,
+    "special_is_rental": true,
+    "special_rows": [],
+    "duration": null,
+    "duration_source": "שימוש מותר",
+    "review": false,
+    "keys_found": 2,
+    "evidence": [
+     "R:32 ) 9( 8 ) 10 ( מסילה מאושרת מגורים להשכרה 2 תוספת בינוי מכח תכנית זו 6900 2100 9000 114 8 )"
+    ]
    }
   },
   {
@@ -5341,8 +5414,8 @@
     "conditional_units_t5": 12,
     "conditional_units_state": "value",
     "conditional_units_read": "xlsx",
-    "amount_ils": 8183000,
-    "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה סך של8,183,000 צמוד למדד מחירים לצרכן הידוע ליום28.8.23 . 8.",
+    "amount_ils": 8886738,
+    "amount_text": "שיעור הכספים שיופקד בקרן התחזוקה יהיה סך של8,886,738 . ש\"ח 8.",
     "section": "6.3.4",
     "conditional_units": null,
     "floors": 40,
@@ -5628,7 +5701,7 @@
    "units_total": 470,
    "in_oranim": true,
    "source": "text",
-   "pages": 22,
+   "pages": 24,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005328242/310",
    "fund": {
     "conditional_units_t5": 12,
@@ -5659,9 +5732,9 @@
     "duration": "20",
     "duration_source": "הוראות התכנית",
     "review": false,
-    "keys_found": 15,
+    "keys_found": 18,
     "evidence": [
-     "R:רות תיקבענה כדירות בשימוש של \"דירות להשכרה\" לתקופה של 20 שנים לפחות. יח\"ד אלו יחויבו בהשכרה ",
+     "R: להשכרה לטווח ארוך : א. תמהיל דירות להשכרה לפחות 5% מהדירות בשטח של עד 30 מ\"ר )ובהן יהיה ממ\"",
      "D[20]:קבענה כדירות בשימוש של \"דירות להשכרה\" לתקופה של 20 שנים לפחות. יח\"ד אלו יחויבו בהשכרה של 20 ש"
     ]
    }
@@ -6042,6 +6115,30 @@
    }
   },
   {
+   "plan": "101-1291525",
+   "name": "התחדשות עירונית-דרך חברון/עין גדי/שלום יהודה",
+   "name_src": "worklist",
+   "status": "במילוי תנאים להפקדה",
+   "sub_neighborhood": "תלפיות ארנונה",
+   "minahak": "בקעה רבתי",
+   "units_total": 255,
+   "in_oranim": true,
+   "source": "text",
+   "pages": 24,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005352382/310",
+   "fund": {
+    "conditional_units_t5": null,
+    "conditional_units_state": "none_in_table",
+    "conditional_units_read": "xlsx",
+    "amount_ils": null,
+    "amount_text": "",
+    "section": "6",
+    "conditional_units": null,
+    "floors": 32,
+    "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6"
+   }
+  },
+  {
    "plan": "101-1296284",
    "name": "בניין הקרן לירושלים-מגורים, מגורים מיוחד, מסחר ותעסוקה",
    "name_src": "gs",
@@ -6051,7 +6148,7 @@
    "units_total": 130,
    "in_oranim": true,
    "source": "text",
-   "pages": 21,
+   "pages": 22,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005355990/310",
    "rental": {
     "units_t5": 45,
@@ -6826,7 +6923,7 @@
    "units_total": 100,
    "in_oranim": true,
    "source": "text",
-   "pages": 21,
+   "pages": 28,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005419352/310",
    "fund": {
     "conditional_units_t5": 10,
@@ -6837,7 +6934,7 @@
     "section": "6.4.1",
     "conditional_units": null,
     "floors": 33,
-    "mechanism": "זכויות מותנות שטחי בנייה נוספים, מעבר לשטח הכולל המותר לבנייה למגורים שמוסד התכנון היה מאשר בתכנית במצב הדברים הרגיל, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.4.1"
+    "mechanism": "זכויות מותנות שטחי בנייה נוספים, אשר הקמתם תהיה מותנית בהקמת קרן תחזוקה, כמפורט בסעיף6.4.1"
    }
   },
   {
@@ -6985,14 +7082,14 @@
    "units_total": 64,
    "in_oranim": true,
    "source": "text",
-   "pages": 17,
+   "pages": 19,
    "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005434196/310",
    "rental": {
-    "units_t5": null,
-    "units_state": "none_in_table",
-    "units_read": "xlsx",
+    "units_t5": 4,
+    "units_state": "value",
+    "units_read": "prose",
     "restates_plan": null,
-    "units_quote": null,
+    "units_quote": "בבנייןC יותרו שימושים עבור 4 יח\"ד למגורים, דיור להשכרה ל 15 שנים, מסחר, הפרשות מבונות לצרכי ציבור ושימושים שיתופיים עבור דיירי המתחם כדוגמת תעסוקה שיתופית ומועדון .דיירים הוראות 4.1.2 בינוי הוראות בינוי 1 :.מרפסות .א.",
     "units_pct": null,
     "units_base": null,
     "units_base_src": null,
@@ -7005,10 +7102,10 @@
     "duration": "15",
     "duration_source": "הוראות התכנית",
     "review": false,
-    "keys_found": 16,
+    "keys_found": 14,
     "evidence": [
      "R:שכרה. לא ניתן יהיה למכור את ,הדירות להשכרה )לרבות שטחי חניה ומחסנים מוצמדים אליהן(, באופן נפ",
-     "D[15]: יח\"ד בבנייןC לשימוש של \"דיור להשכרה\" בלבד לתקופה של 15 שנים מיום מתן תעודת גמר למבנה לפי החוק לעי"
+     "D[15]:שים עבור 4 יח\"ד למגורים, דיור להשכרה ל 15 שנים, מסחר, הפרשות מבונות לצרכי ציבור ושימ"
     ]
    }
   },
@@ -7228,6 +7325,43 @@
     "conditional_units": null,
     "floors": null,
     "mechanism": "קביעת הוראות לזכויות מותנות למגורים עבור קרן תחזוקה ארוכת טווח למגדלים שם התכנית: מגדל מאוחדת הטורים- 101-1439322 :'תכנית מס 7 : מונה תדפיס הוראות- 14 מתוך9 עמוד- 14:05 14/08/2025 :מועד הפקה תכנון זמין 7 מונה הדפסה תכנון זמין 7 מונה הדפסה תכנון זמין 7 מונה הדפסה טבלת יעודי קרקע ותאי שטח בתכנית3. טבלת יעודי קרקע ותאי שטח בתכנית3.1 תאי שטח יעוד 136מגורים מסחר ותעסוקה תאי שטח כפופים יעוד סימון בתשריט"
+   }
+  },
+  {
+   "plan": "101-1442656",
+   "name": "הקמת בניין מגורים, אלעזר בן יאיר 18, ירושלים",
+   "name_src": "worklist",
+   "status": "במילוי תנאים להפקדה",
+   "sub_neighborhood": "גוננים",
+   "minahak": "גוננים",
+   "units_total": 17,
+   "in_oranim": true,
+   "source": "text",
+   "pages": 17,
+   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005446436/310",
+   "rental": {
+    "units_t5": 3,
+    "units_state": "value",
+    "units_read": "pct",
+    "restates_plan": null,
+    "units_quote": "15% מיחידות הדיור המוצעות בתכנית מיועדות להשכרה",
+    "units_pct": 15,
+    "units_base": 21,
+    "units_base_src": "table5:total_units",
+    "units_from_scan": false,
+    "units_disputed": null,
+    "special_units": null,
+    "special_moved_to_rental": null,
+    "special_is_rental": false,
+    "special_rows": [],
+    "duration": "15",
+    "duration_source": "הוראות התכנית",
+    "review": false,
+    "keys_found": 3,
+    "evidence": [
+     "R:ם 4.1.1 1 מגורים 2 .. מגורים להשכרה ארוכת טווח הוראות 4.1.2 בינוי :הנחיות כלליות 1 בחלקה 91 ו 52",
+     "D[15]: הדיור המוצעות בתכנית מיועדות להשכרה לתקופה של- 15 שנים לפחות מיום .מתן טופס אכלוס, ובתקופה ז"
+    ]
    }
   },
   {
