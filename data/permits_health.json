@@ -1,29 +1,25 @@
 {
-  "generated_at": "2026-10-05T01:20:36",
+  "generated_at": "2026-10-05T05:10:41",
   "sources": [
     {
       "file": "all_permits.json",
       "label": "היתרים לפי תב\"ע",
       "refresh": "דו-שבועי (סריקה)",
       "records": 776,
-      "last_publish": "2026-09-15",
-      "age_days": 20,
-      "status": "red",
-      "notes": [
-        "נסרק 2026-10-03 אך פורסם לאחרונה 2026-09-15 — פער סריקה↔פרסום"
-      ]
+      "last_publish": "2026-10-05",
+      "age_days": 0,
+      "status": "green",
+      "notes": []
     },
     {
       "file": "tama38_permits.json",
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1350,
-      "last_publish": "2026-09-15",
-      "age_days": 20,
-      "status": "red",
-      "notes": [
-        "נסרק 2026-10-03 אך פורסם לאחרונה 2026-09-15 — פער סריקה↔פרסום"
-      ]
+      "last_publish": "2026-10-05",
+      "age_days": 0,
+      "status": "green",
+      "notes": []
     },
     {
       "file": "extra_permits.json",
@@ -39,7 +35,7 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 13,
+      "records": 14,
       "last_publish": "2026-09-22",
       "age_days": 13,
       "status": "yellow",
@@ -97,20 +93,20 @@
     }
   ],
   "scan": {
-    "date": "2026-10-03",
+    "date": "2026-10-04",
     "removed_flag": false,
-    "raw": "2026-10-03T23:43:56 | date=2026-10-03 | all=new:0,status:0,removed:0 | tama38=new:0,status:0,removed:0",
+    "raw": "2026-10-05T01:23:00 | date=2026-10-04 | all=new:1,status:14,removed:0 | tama38=new:1,status:17,removed:0",
     "all": {
-      "new": 0,
-      "status": 0,
+      "new": 1,
+      "status": 14,
       "removed": 0
     },
     "tama38": {
-      "new": 0,
-      "status": 0,
+      "new": 1,
+      "status": 17,
       "removed": 0
     },
-    "age_days": 2
+    "age_days": 1
   },
   "committee_audit": {
     "date": "2026-09-14",
