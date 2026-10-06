@@ -2,12 +2,12 @@
  "count": 36,
  "by_tik": {
   "1971/1425.03": {
-   "developer": "טרספולסקי",
+   "developer": "טרספולסקי יגאל ברגמן ומשה",
    "developer_parts": [
     {
      "applicant": "טרספולסקי",
      "group": "יגאל ברגמן ומשה",
-     "name": "טרספולסקי"
+     "name": "טרספולסקי יגאל ברגמן ומשה"
     }
    ],
    "architect": "משה חיים שפירא",
@@ -16,12 +16,12 @@
    "minahak": "גינות העיר"
   },
   "2015/0763.00": {
-   "developer": "סן מרטין 32",
+   "developer": "סן מרטין 32 תמ\"א 38",
    "developer_parts": [
     {
      "applicant": "סן מרטין 32",
      "group": "תמ\"א 38",
-     "name": "סן מרטין 32"
+     "name": "סן מרטין 32 תמ\"א 38"
     }
    ],
    "architect": "רועי אלרואי",
@@ -30,12 +30,12 @@
    "minahak": "גוננים"
   },
   "2015/0871.00": {
-   "developer": "שלמה אורי",
+   "developer": "שלמה אורי לומברוזו",
    "developer_parts": [
     {
      "applicant": "שלמה אורי",
      "group": "לומברוזו",
-     "name": "שלמה אורי"
+     "name": "שלמה אורי לומברוזו"
     }
    ],
    "architect": "סטפן יצח קטורזה",
@@ -44,12 +44,12 @@
    "minahak": "גינות העיר"
   },
   "2015/0562.00": {
-   "developer": "מיכאל דוד",
+   "developer": "מיכאל דוד מוס",
    "developer_parts": [
     {
      "applicant": "מיכאל דוד",
      "group": "מוס",
-     "name": "מיכאל דוד"
+     "name": "מיכאל דוד מוס"
     }
    ],
    "architect": "סטפן יצח קטורזה",
@@ -58,12 +58,12 @@
    "minahak": "גינות העיר"
   },
   "2015/0865.00": {
-   "developer": "תמ\"א 38 בע\"מ",
+   "developer": "בניין שלם תמ\"א 38 בע\"מ",
    "developer_parts": [
     {
      "applicant": "תמ\"א 38 בע\"מ",
      "group": "בניין שלם",
-     "name": "תמ\"א 38 בע\"מ"
+     "name": "בניין שלם תמ\"א 38 בע\"מ"
     }
    ],
    "architect": "שרון דיאנה אברמסון",
@@ -91,12 +91,12 @@
    "minahak": "גינות העיר"
   },
   "2015/0210.00": {
-   "developer": "ישראל אה",
+   "developer": "ישראל אה ריבלין",
    "developer_parts": [
     {
      "applicant": "ישראל אה",
      "group": "ריבלין",
-     "name": "ישראל אה"
+     "name": "ישראל אה ריבלין"
     }
    ],
    "architect": "יצחק קטורזה",
@@ -105,12 +105,12 @@
    "minahak": "גינות העיר"
   },
   "2016/1107.00": {
-   "developer": "התחדשות בע\"מ",
+   "developer": "י.ד בראזני התחדשות בע\"מ",
    "developer_parts": [
     {
      "applicant": "התחדשות בע\"מ",
      "group": "י.ד בראזני",
-     "name": "התחדשות בע\"מ"
+     "name": "י.ד בראזני התחדשות בע\"מ"
     }
    ],
    "architect": "גיא איגרא",
@@ -133,17 +133,17 @@
    "minahak": "גינות העיר"
   },
   "2018/0089.00": {
-   "developer": "יונתן שמעון / זרגרי",
+   "developer": "יונתן שמעון טויטו / זרגרי עצמון",
    "developer_parts": [
     {
      "applicant": "יונתן שמעון",
      "group": "טויטו",
-     "name": "יונתן שמעון"
+     "name": "יונתן שמעון טויטו"
     },
     {
      "applicant": "זרגרי",
      "group": "עצמון",
-     "name": "זרגרי"
+     "name": "זרגרי עצמון"
     }
    ],
    "architect": "יעקב קנטור",
@@ -152,12 +152,12 @@
    "minahak": "בקעה רבתי"
   },
   "2019/0589.00": {
-   "developer": "אמיר",
+   "developer": "אמיר כהן",
    "developer_parts": [
     {
      "applicant": "אמיר",
      "group": "כהן",
-     "name": "אמיר"
+     "name": "אמיר כהן"
     }
    ],
    "architect": "מטיו אהר רוזנשיין",
@@ -166,47 +166,102 @@
    "minahak": "גינות העיר"
   },
   "2026/0075.00": {
-   "developer": "מנחם / פנחס",
+   "developer": "מנחם מנדלוביץ / פנחס דרנגר",
    "architect": "דב",
    "units": null,
    "minahak": "גינות העיר",
-   "is_residents": false
+   "is_residents": false,
+   "developer_parts": [
+    {
+     "applicant": "מנחם",
+     "group": "מנדלוביץ",
+     "name": "מנחם מנדלוביץ"
+    },
+    {
+     "applicant": "פנחס",
+     "group": "דרנגר",
+     "name": "פנחס דרנגר"
+    }
+   ]
   },
   "2026/0113.00": {
-   "developer": "18 בע\"מ / חגית",
+   "developer": "שנהב התחדשות עירונית עין צורים 18 בע\"מ / חגית בן אהרון",
    "architect": "נורית",
    "units": 52,
    "minahak": "בקעה רבתי",
-   "is_residents": false
+   "is_residents": false,
+   "developer_parts": [
+    {
+     "applicant": "18 בע\"מ",
+     "group": "שנהב התחדשות עירונית עין צורים",
+     "name": "שנהב התחדשות עירונית עין צורים 18 בע\"מ"
+    },
+    {
+     "applicant": "חגית",
+     "group": "בן אהרון",
+     "name": "חגית בן אהרון"
+    }
+   ]
   },
   "2026/0032.00": {
-   "developer": "עירונית בע\"מ / זקלין",
+   "developer": "מבוא יורם 8. התחדשות עירונית בע\"מ / זקלין שרמן",
    "architect": "ראובן",
    "units": null,
    "minahak": "גינות העיר",
-   "is_residents": false
+   "is_residents": false,
+   "developer_parts": [
+    {
+     "applicant": "עירונית בע\"מ",
+     "group": "מבוא יורם 8. התחדשות",
+     "name": "מבוא יורם 8. התחדשות עירונית בע\"מ"
+    },
+    {
+     "applicant": "זקלין",
+     "group": "שרמן",
+     "name": "זקלין שרמן"
+    }
+   ]
   },
   "2026/0146.00": {
-   "developer": "שופן 2 התחדשות עירונית / אברהם",
+   "developer": "שופן 2 התחדשות עירונית / אברהם ארנסטר",
    "architect": "מיכל",
    "units": null,
    "minahak": "גינות העיר",
-   "is_residents": false
+   "is_residents": false,
+   "developer_parts": [
+    {
+     "applicant": "יואב ביסראור",
+     "group": "שופן 2 התחדשות עירונית",
+     "name": "שופן 2 התחדשות עירונית"
+    },
+    {
+     "applicant": "אברהם",
+     "group": "ארנסטר",
+     "name": "אברהם ארנסטר"
+    }
+   ]
   },
   "2026/0258.00": {
-   "developer": "הלל",
+   "developer": "הלל הדס קפיטל",
    "architect": "פרץ פרי",
    "units": null,
    "minahak": "גינות העיר",
-   "is_residents": false
+   "is_residents": false,
+   "developer_parts": [
+    {
+     "applicant": "הלל",
+     "group": "הדס קפיטל",
+     "name": "הלל הדס קפיטל"
+    }
+   ]
   },
   "2014/1008": {
-   "developer": "מרדכי",
+   "developer": "מרדכי ימין",
    "developer_parts": [
     {
      "applicant": "מרדכי",
      "group": "ימין",
-     "name": "מרדכי"
+     "name": "מרדכי ימין"
     }
    ],
    "architect": "יובל תאודור",
@@ -229,12 +284,12 @@
    "minahak": "גינות העיר"
   },
   "2012/511": {
-   "developer": "עו\"ד אליהו גרינבוים",
+   "developer": "עו\"ד אליהו גרינבוים ע\"י יפוי כח",
    "developer_parts": [
     {
      "applicant": "עו\"ד אליהו גרינבוים",
      "group": "ע\"י יפוי כח",
-     "name": "עו\"ד אליהו גרינבוים"
+     "name": "עו\"ד אליהו גרינבוים ע\"י יפוי כח"
     }
    ],
    "architect": "חיים שחר",
@@ -262,12 +317,12 @@
    "minahak": "בקעה רבתי"
   },
   "2013/658": {
-   "developer": "בע\"מ",
+   "developer": "ריש לקיש בע\"מ",
    "developer_parts": [
     {
      "applicant": "בע\"מ",
      "group": "ריש לקיש",
-     "name": "בע\"מ"
+     "name": "ריש לקיש בע\"מ"
     }
    ],
    "architect": "יובל רחמ בר",
@@ -276,12 +331,12 @@
    "minahak": "גינות העיר"
   },
   "2013/823": {
-   "developer": "ע\"י יפוי כח",
+   "developer": "ע\"י יפוי כח אדריכל אריה פרייברגר",
    "developer_parts": [
     {
      "applicant": "ע\"י יפוי כח",
      "group": "אדריכל אריה פרייברגר",
-     "name": "ע\"י יפוי כח"
+     "name": "ע\"י יפוי כח אדריכל אריה פרייברגר"
     }
    ],
    "architect": "אריה פרייברגר",
@@ -290,12 +345,12 @@
    "minahak": "גינות העיר"
   },
   "2013/1072": {
-   "developer": "22",
+   "developer": "22 רבקה",
    "developer_parts": [
     {
      "applicant": "22",
      "group": "רבקה",
-     "name": "22"
+     "name": "22 רבקה"
     }
    ],
    "architect": "פרץ פרי חמם",
@@ -304,12 +359,12 @@
    "minahak": "בקעה רבתי"
   },
   "2014/0048": {
-   "developer": "שלמה",
+   "developer": "שלמה זוהר",
    "developer_parts": [
     {
      "applicant": "שלמה",
      "group": "זוהר",
-     "name": "שלמה"
+     "name": "שלמה זוהר"
     }
    ],
    "architect": "דוד בלצקי",
@@ -318,12 +373,12 @@
    "minahak": "גינות העיר"
   },
   "2014/358.01": {
-   "developer": "4 בעמ",
+   "developer": "מנוס-אלעזר המודעי 4 בעמ",
    "developer_parts": [
     {
      "applicant": "4 בעמ",
      "group": "מנוס-אלעזר המודעי",
-     "name": "4 בעמ"
+     "name": "מנוס-אלעזר המודעי 4 בעמ"
     }
    ],
    "architect": "יובל בר",
@@ -340,12 +395,12 @@
    "minahak": "גינות העיר"
   },
   "2009/808.3": {
-   "developer": "אברהם",
+   "developer": "אברהם אברמן עבור 10 בעלים",
    "developer_parts": [
     {
      "applicant": "אברהם",
      "group": "אברמן עבור 10 בעלים",
-     "name": "אברהם"
+     "name": "אברהם אברמן עבור 10 בעלים"
     }
    ],
    "architect": "מטיו אהר רוזנשיין",
@@ -354,12 +409,12 @@
    "minahak": "גינות העיר"
   },
   "2014/889": {
-   "developer": "ע\"י עו\"ד בלאו צבי",
+   "developer": "ע\"י עו\"ד בלאו צבי גרינבויים אליהו",
    "developer_parts": [
     {
      "applicant": "ע\"י עו\"ד בלאו צבי",
      "group": "גרינבויים אליהו",
-     "name": "ע\"י עו\"ד בלאו צבי"
+     "name": "ע\"י עו\"ד בלאו צבי גרינבויים אליהו"
     }
    ],
    "architect": "ירחמיאל וויס",
@@ -368,17 +423,17 @@
    "minahak": "גינות העיר"
   },
   "2015/62": {
-   "developer": "ניהול נכסים / __שרמן",
+   "developer": "ניהול נכסים יורו י.פ / __שרמן זקלין",
    "developer_parts": [
     {
      "applicant": "ניהול נכסים",
      "group": "יורו י.פ",
-     "name": "ניהול נכסים"
+     "name": "ניהול נכסים יורו י.פ"
     },
     {
      "applicant": "__שרמן",
      "group": "זקלין",
-     "name": "__שרמן"
+     "name": "__שרמן זקלין"
     }
    ],
    "architect": "משה זיידמן",
@@ -387,12 +442,12 @@
    "minahak": "בקעה רבתי"
   },
   "2014/0801": {
-   "developer": "אברהם",
+   "developer": "אברהם גרינבוים",
    "developer_parts": [
     {
      "applicant": "אברהם",
      "group": "גרינבוים",
-     "name": "אברהם"
+     "name": "אברהם גרינבוים"
     }
    ],
    "architect": "דוד בלצקי",
@@ -401,12 +456,12 @@
    "minahak": "גינות העיר"
   },
   "2015/209": {
-   "developer": "איתן",
+   "developer": "איתן גבאי",
    "developer_parts": [
     {
      "applicant": "איתן",
      "group": "גבאי",
-     "name": "איתן"
+     "name": "איתן גבאי"
     }
    ],
    "architect": "מנדי רוזנפלד",
@@ -415,17 +470,17 @@
    "minahak": "גינות העיר"
   },
   "2010/771": {
-   "developer": "כדורי",
+   "developer": "כדורי יצחק / כדורי אברהם",
    "developer_parts": [
     {
      "applicant": "כדורי",
      "group": "יצחק",
-     "name": "כדורי"
+     "name": "כדורי יצחק"
     },
     {
      "applicant": "כדורי",
      "group": "אברהם",
-     "name": "כדורי"
+     "name": "כדורי אברהם"
     }
    ],
    "architect": "הרצל שואעי",
@@ -434,7 +489,7 @@
    "minahak": "גינות העיר"
   },
   "2008/624": {
-   "developer": "יומרים השקעות / רן",
+   "developer": "יומרים השקעות / רן פליישר",
    "developer_parts": [
     {
      "applicant": "יומרים השקעות",
@@ -444,7 +499,7 @@
     {
      "applicant": "רן",
      "group": "פליישר",
-     "name": "רן"
+     "name": "רן פליישר"
     }
    ],
    "architect": "אדריכלים ביקסון-בר דור",
@@ -461,12 +516,12 @@
    "minahak": "גינות העיר"
   },
   "2010/671": {
-   "developer": "ישי",
+   "developer": "ישי דוד",
    "developer_parts": [
     {
      "applicant": "ישי",
      "group": "דוד",
-     "name": "ישי"
+     "name": "ישי דוד"
     }
    ],
    "architect": "רמדאן דבש",
@@ -475,12 +530,12 @@
    "minahak": "בקעה רבתי"
   },
   "2011/967": {
-   "developer": "אורן",
+   "developer": "אורן בן טובים",
    "developer_parts": [
     {
      "applicant": "אורן",
      "group": "בן טובים",
-     "name": "אורן"
+     "name": "אורן בן טובים"
     }
    ],
    "architect": "מטיו אהר רוזנשיין",
