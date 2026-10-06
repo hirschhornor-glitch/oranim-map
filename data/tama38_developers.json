@@ -1,5 +1,5 @@
 {
- "count": 16,
+ "count": 36,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי",
@@ -11,8 +11,9 @@
     }
    ],
    "architect": "משה חיים שפירא",
-   "units": null,
-   "is_residents": false
+   "units": 5,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   },
   "2015/0763.00": {
    "developer": "סן מרטין 32",
@@ -24,8 +25,9 @@
     }
    ],
    "architect": "רועי אלרואי",
-   "units": null,
-   "is_residents": false
+   "units": 12,
+   "is_residents": false,
+   "minahak": "גוננים"
   },
   "2015/0871.00": {
    "developer": "שלמה אורי",
@@ -37,8 +39,9 @@
     }
    ],
    "architect": "סטפן יצח קטורזה",
-   "units": null,
-   "is_residents": false
+   "units": 10,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   },
   "2015/0562.00": {
    "developer": "מיכאל דוד",
@@ -50,8 +53,9 @@
     }
    ],
    "architect": "סטפן יצח קטורזה",
-   "units": null,
-   "is_residents": false
+   "units": 3,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   },
   "2015/0865.00": {
    "developer": "תמ\"א 38 בע\"מ",
@@ -64,7 +68,8 @@
    ],
    "architect": "שרון דיאנה אברמסון",
    "units": null,
-   "is_residents": false
+   "is_residents": false,
+   "minahak": "גוננים"
   },
   "2016/0077.00": {
    "developer": "בית דירות בע\"מ / חיים שחר",
@@ -82,7 +87,8 @@
    ],
    "architect": "אדריכלים י מולכו",
    "units": 14,
-   "is_residents": false
+   "is_residents": false,
+   "minahak": "גינות העיר"
   },
   "2015/0210.00": {
    "developer": "ישראל אה",
@@ -94,8 +100,9 @@
     }
    ],
    "architect": "יצחק קטורזה",
-   "units": null,
-   "is_residents": false
+   "units": 8,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   },
   "2016/1107.00": {
    "developer": "התחדשות בע\"מ",
@@ -107,8 +114,9 @@
     }
    ],
    "architect": "גיא איגרא",
-   "units": null,
-   "is_residents": false
+   "units": 14,
+   "is_residents": false,
+   "minahak": "גוננים"
   },
   "2016/0984.00": {
    "developer": "די וורולי סיאני הנדסה בע\"מ",
@@ -121,7 +129,8 @@
    ],
    "architect": "סלמה מילסון ארד",
    "units": null,
-   "is_residents": false
+   "is_residents": false,
+   "minahak": "גינות העיר"
   },
   "2018/0089.00": {
    "developer": "יונתן שמעון / זרגרי",
@@ -138,8 +147,9 @@
     }
    ],
    "architect": "יעקב קנטור",
-   "units": null,
-   "is_residents": false
+   "units": 1,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
   },
   "2019/0589.00": {
    "developer": "אמיר",
@@ -151,8 +161,9 @@
     }
    ],
    "architect": "מטיו אהר רוזנשיין",
-   "units": null,
-   "is_residents": false
+   "units": 4,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   },
   "2026/0075.00": {
    "developer": "מנחם / פנחס",
@@ -188,6 +199,294 @@
    "units": null,
    "minahak": "גינות העיר",
    "is_residents": false
+  },
+  "2014/1008": {
+   "developer": "מרדכי",
+   "developer_parts": [
+    {
+     "applicant": "מרדכי",
+     "group": "ימין",
+     "name": "מרדכי"
+    }
+   ],
+   "architect": "יובל תאודור",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2011/1034": {
+   "developer": "החברה לפיתוח ולחיזוק מבנים",
+   "developer_parts": [
+    {
+     "applicant": "החברה לפיתוח ולחיזוק מבנים",
+     "group": "",
+     "name": "החברה לפיתוח ולחיזוק מבנים"
+    }
+   ],
+   "architect": "רננה ניל חרג",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2012/511": {
+   "developer": "עו\"ד אליהו גרינבוים",
+   "developer_parts": [
+    {
+     "applicant": "עו\"ד אליהו גרינבוים",
+     "group": "ע\"י יפוי כח",
+     "name": "עו\"ד אליהו גרינבוים"
+    }
+   ],
+   "architect": "חיים שחר",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2013/0179": {
+   "developer": "חברת האלונים ירושלים בע\"מ / דיסטלמן עדייה חברת אלונים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "חברת האלונים ירושלים בע\"מ",
+     "group": "",
+     "name": "חברת האלונים ירושלים בע\"מ"
+    },
+    {
+     "applicant": "עדיה פלו",
+     "group": "דיסטלמן עדייה חברת אלונים בע\"מ",
+     "name": "דיסטלמן עדייה חברת אלונים בע\"מ"
+    }
+   ],
+   "architect": "פרי חמם",
+   "units": 14,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2013/658": {
+   "developer": "בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "ריש לקיש",
+     "name": "בע\"מ"
+    }
+   ],
+   "architect": "יובל רחמ בר",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2013/823": {
+   "developer": "ע\"י יפוי כח",
+   "developer_parts": [
+    {
+     "applicant": "ע\"י יפוי כח",
+     "group": "אדריכל אריה פרייברגר",
+     "name": "ע\"י יפוי כח"
+    }
+   ],
+   "architect": "אריה פרייברגר",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2013/1072": {
+   "developer": "22",
+   "developer_parts": [
+    {
+     "applicant": "22",
+     "group": "רבקה",
+     "name": "22"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": 28,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2014/0048": {
+   "developer": "שלמה",
+   "developer_parts": [
+    {
+     "applicant": "שלמה",
+     "group": "זוהר",
+     "name": "שלמה"
+    }
+   ],
+   "architect": "דוד בלצקי",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2014/358.01": {
+   "developer": "4 בעמ",
+   "developer_parts": [
+    {
+     "applicant": "4 בעמ",
+     "group": "מנוס-אלעזר המודעי",
+     "name": "4 בעמ"
+    }
+   ],
+   "architect": "יובל בר",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2014/0490": {
+   "developer": "",
+   "developer_parts": [],
+   "architect": "יובל בר וגלית שיפמן - נתן",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2009/808.3": {
+   "developer": "אברהם",
+   "developer_parts": [
+    {
+     "applicant": "אברהם",
+     "group": "אברמן עבור 10 בעלים",
+     "name": "אברהם"
+    }
+   ],
+   "architect": "מטיו אהר רוזנשיין",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2014/889": {
+   "developer": "ע\"י עו\"ד בלאו צבי",
+   "developer_parts": [
+    {
+     "applicant": "ע\"י עו\"ד בלאו צבי",
+     "group": "גרינבויים אליהו",
+     "name": "ע\"י עו\"ד בלאו צבי"
+    }
+   ],
+   "architect": "ירחמיאל וויס",
+   "units": 19,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2015/62": {
+   "developer": "ניהול נכסים / __שרמן",
+   "developer_parts": [
+    {
+     "applicant": "ניהול נכסים",
+     "group": "יורו י.פ",
+     "name": "ניהול נכסים"
+    },
+    {
+     "applicant": "__שרמן",
+     "group": "זקלין",
+     "name": "__שרמן"
+    }
+   ],
+   "architect": "משה זיידמן",
+   "units": 1,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2014/0801": {
+   "developer": "אברהם",
+   "developer_parts": [
+    {
+     "applicant": "אברהם",
+     "group": "גרינבוים",
+     "name": "אברהם"
+    }
+   ],
+   "architect": "דוד בלצקי",
+   "units": 3,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2015/209": {
+   "developer": "איתן",
+   "developer_parts": [
+    {
+     "applicant": "איתן",
+     "group": "גבאי",
+     "name": "איתן"
+    }
+   ],
+   "architect": "מנדי רוזנפלד",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2010/771": {
+   "developer": "כדורי",
+   "developer_parts": [
+    {
+     "applicant": "כדורי",
+     "group": "יצחק",
+     "name": "כדורי"
+    },
+    {
+     "applicant": "כדורי",
+     "group": "אברהם",
+     "name": "כדורי"
+    }
+   ],
+   "architect": "הרצל שואעי",
+   "units": 1,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2008/624": {
+   "developer": "יומרים השקעות / רן",
+   "developer_parts": [
+    {
+     "applicant": "יומרים השקעות",
+     "group": "",
+     "name": "יומרים השקעות"
+    },
+    {
+     "applicant": "רן",
+     "group": "פליישר",
+     "name": "רן"
+    }
+   ],
+   "architect": "אדריכלים ביקסון-בר דור",
+   "units": 8,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "1996/566.2": {
+   "developer": "",
+   "developer_parts": [],
+   "architect": "חיים שחר",
+   "units": 3,
+   "is_residents": true,
+   "minahak": "גינות העיר"
+  },
+  "2010/671": {
+   "developer": "ישי",
+   "developer_parts": [
+    {
+     "applicant": "ישי",
+     "group": "דוד",
+     "name": "ישי"
+    }
+   ],
+   "architect": "רמדאן דבש",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2011/967": {
+   "developer": "אורן",
+   "developer_parts": [
+    {
+     "applicant": "אורן",
+     "group": "בן טובים",
+     "name": "אורן"
+    }
+   ],
+   "architect": "מטיו אהר רוזנשיין",
+   "units": 1,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   }
  }
 }
