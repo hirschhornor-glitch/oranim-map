@@ -263,8 +263,9 @@ async def run(limit=None, only=None, debug=False):
         try:
             await page.goto(f"{MAVAT_BASE}/SV4/1/{todo[0]['agam_id']}/310",
                             wait_until='domcontentloaded', timeout=120000)
-        except Exception:
-            pass
+        except Exception as e:
+            # Was `pass` — a dead Mavat looked like a quiet week (2026-10-06 audit).
+            print(f"  ⚠ warm-up navigation failed: {str(e)[:120]}", flush=True)
         try:
             await page.wait_for_function(
                 "() => document.body.innerText.length > 500", timeout=20000)
@@ -277,16 +278,24 @@ async def run(limit=None, only=None, debug=False):
             print(f"\n[{i+1}/{len(todo)}] {pn} (taba={taba}, agam={agam})...")
             entry = dict(plan); entry['status'] = 'pending'; entry['doc_names'] = []
             try:
+                # Navigation / render failures used to be swallowed and the plan then
+                # recorded as 'no_decision_doc' — indistinguishable from "not published
+                # yet" (1583848 sat at no_decision_doc for four weeks, 2026-10-06 audit).
+                # Now a page that never renders, or has no "החלטות מוסדות תכנון" section,
+                # is an ERROR (status error_render — retried next run, fails the exit code).
+                render_problem = ''
                 try:
                     await page.goto(f"{MAVAT_BASE}/SV4/1/{agam}/310",
                                     wait_until='domcontentloaded', timeout=20000)
-                except Exception:
-                    pass
+                except Exception as e:
+                    render_problem = f"goto failed: {str(e)[:100]}"
+                rendered = True
                 try:
                     await page.wait_for_function(
                         "() => document.body.innerText.length > 500", timeout=12000)
                 except Exception:
                     await page.wait_for_timeout(5000)
+                    rendered = await page.evaluate("() => document.body.innerText.length > 500")
 
                 # Expand: open the section first (meeting list renders after), WAIT, then
                 # open each meeting (files lazy-load on expand). Retry until icons visible.
@@ -298,8 +307,27 @@ async def run(limit=None, only=None, debug=False):
                     await page.wait_for_timeout(2200)
                     if exp.get('visible', 0) > 0:
                         break
-                if debug:
-                    print(f"    section: {sec}  expand: {exp}")
+                # Printed every run (was --debug only) so a render problem is visible in the log.
+                print(f"    section: {sec}  expand: {exp}")
+                if not rendered:
+                    render_problem = (render_problem + '; ' if render_problem else '') + 'page never rendered'
+                elif not sec.get('found'):
+                    render_problem = (render_problem + '; ' if render_problem else '') + \
+                        "section 'החלטות מוסדות תכנון' not found"
+                elif not exp.get('meetings'):
+                    # A plan in "במילוי תנאים להפקדה" was heard by a committee, so an
+                    # empty meeting list means the list failed to render, not "no doc yet".
+                    render_problem = (render_problem + '; ' if render_problem else '') + \
+                        'section found but no meetings rendered'
+                if render_problem and not (sec.get('found') and exp.get('meetings')):
+                    print(f"  → ERROR (render): {render_problem}")
+                    entry['status'] = 'error_render'
+                    entry['error_reason'] = render_problem
+                    stats['errors'] += 1
+                    index[taba] = entry
+                    save_index(index)
+                    await page.wait_for_timeout(2000)
+                    continue
 
                 if debug:
                     html = await page.content()
@@ -344,7 +372,8 @@ async def run(limit=None, only=None, debug=False):
                     print(f"  ⚠ no meeting on status date {status_date}; using {chosen.get('date')}")
 
                 if not chosen:
-                    print("  → no 'מסמך החלטות' PDF found (maybe not published yet)")
+                    print(f"  → no 'מסמך החלטות' PDF found among {exp.get('meetings')} meeting(s) "
+                          f"(maybe not published yet)")
                     entry['status'] = 'no_decision_doc'
                     stats['no_doc'] += 1
                 else:
@@ -393,6 +422,7 @@ async def run(limit=None, only=None, debug=False):
     print(f"PDFs → {OUTPUT_DIR}\\101-<taba>.pdf   index → {INDEX_FILE}")
     print("Next: read each new PDF and add a structured entry to decision_summaries.json")
     print(f"{'='*60}")
+    return stats
 
 
 if __name__ == '__main__':
@@ -402,4 +432,9 @@ if __name__ == '__main__':
     ap.add_argument('--debug', action='store_true', help='dump page HTML to decisions/_debug/')
     args = ap.parse_args()
     only = [t.strip() for t in args.only.split(',')] if args.only else None
-    asyncio.run(run(limit=args.limit, only=only, debug=args.debug))
+    stats = asyncio.run(run(limit=args.limit, only=only, debug=args.debug))
+    # Non-zero on any error so weekly_decision_docs_scan.py alerts instead of
+    # reporting "nothing to send" over a broken scrape (2026-10-06 audit).
+    if stats and stats.get('errors'):
+        print(f"EXIT 1: {stats['errors']} plan(s) failed (render/download/error)")
+        sys.exit(1)

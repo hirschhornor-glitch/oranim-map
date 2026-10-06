@@ -339,9 +339,51 @@ def _commit_and_push_paths(relative_paths: list, message: str,
                 _pop_wip(repo_dir, wip)
 
 
+def _pending_mirrored_scripts(root_dir: str, repo_dir: str) -> list:
+    """Repo-relative scripts/*.py that are modified-but-uncommitted AND already equal
+    to their root working copy — i.e. a previous mirror copied them but its commit
+    or push failed (_commit_and_push_paths undoes the commit with reset --mixed,
+    leaving the copies in the tree). The working-tree compare then saw root == repo
+    and printed "already in sync" forever, never retrying (audit 2026-10-06).
+    Untracked/deleted entries and repo edits that differ from root are left alone."""
+    st = _run(['git', 'status', '--porcelain', '--', SCRIPTS_REPO_SUBDIR + '/'],
+              cwd=repo_dir, check=False)
+    pending = []
+    for line in st.stdout.splitlines():
+        code, path = line[:2], line[3:].strip().strip('"')
+        if 'M' not in code or not path.endswith('.py'):
+            continue
+        name = os.path.basename(path)
+        root_bytes = _norm_bytes(os.path.join(root_dir, name))
+        if root_bytes is not None and root_bytes == _norm_bytes(os.path.join(repo_dir, path)):
+            pending.append(f"{SCRIPTS_REPO_SUBDIR}/{name}")
+    return pending
+
+
+def _push_unpushed_scripts_commits(repo_dir: str) -> bool:
+    """A mirror commit whose `git push` itself failed stays committed locally (no
+    reset), so the next run also saw "in sync" and never pushed it (audit
+    2026-10-06). If HEAD has unpushed commits touching scripts/, push now."""
+    ahead = _run(['git', 'rev-list', '--count', 'origin/master..HEAD', '--',
+                  SCRIPTS_REPO_SUBDIR + '/'], cwd=repo_dir, check=False)
+    n = ahead.stdout.strip()
+    if ahead.returncode != 0 or not n.isdigit():
+        print("[git_sync] ERROR: could not count unpushed scripts/ commits.", file=sys.stderr)
+        return False
+    if int(n) == 0:
+        return True
+    print(f"[git_sync] {n} unpushed commit(s) touching scripts/ — pushing.")
+    with repo_lock('mirror push unpushed'):
+        push = _run(['git', 'push', 'origin', 'master'], cwd=repo_dir, check=False)
+    if push.returncode != 0:
+        print("[git_sync] ERROR: push of unpushed scripts/ commits failed.", file=sys.stderr)
+        return False
+    return True
+
+
 def mirror_scripts_to_repo(root_dir: str = SCRIPTS_ROOT_DIR,
                            repo_dir: str = REPO_DIR,
-                           push: bool = True) -> list:
+                           push: bool = True):
     """Mirror the working-copy scripts at `root_dir` INTO the repo's scripts/ folder.
 
     Direction is FIXED: root is the declared source of truth. Only files that
@@ -351,11 +393,19 @@ def mirror_scripts_to_repo(root_dir: str = SCRIPTS_ROOT_DIR,
     scripts/ once (and commit); it stays mirrored thereafter.
 
     Content is compared line-ending-insensitively, so a pure CRLF/LF difference is
-    never mirrored. Returns the list of repo-relative paths updated (empty if in
-    sync). When push=False the files are copied but not committed (dry inspection).
+    never mirrored. Returns (changed, ok): the repo-relative paths updated (empty if
+    in sync) and False if the pull, commit or push failed. It used to return only
+    the list and swallow every failure, so the CLI always said "mirror done" and
+    exited 0 (audit 2026-10-06). When push=False the files are copied but not
+    committed (dry inspection).
     """
     # Refresh repo copies first so the comparison and the push start from the tip.
-    pull_before_read(repo_dir)
+    # A failed pull used to be ignored; a diverged repo can't be pushed anyway.
+    if not pull_before_read(repo_dir):
+        print("[git_sync] ERROR: pull failed — mirror skipped.", file=sys.stderr)
+        return [], False
+    # Copies left uncommitted by an earlier failed mirror are pending work, too.
+    pending = _pending_mirrored_scripts(root_dir, repo_dir) if push else []
     repo_scripts = os.path.join(repo_dir, SCRIPTS_REPO_SUBDIR)
     changed = []
     for repo_path in sorted(glob.glob(os.path.join(repo_scripts, '*.py'))):
@@ -368,18 +418,27 @@ def mirror_scripts_to_repo(root_dir: str = SCRIPTS_ROOT_DIR,
             continue  # identical content (ignoring line endings)
         shutil.copyfile(root_path, repo_path)
         changed.append(f"{SCRIPTS_REPO_SUBDIR}/{name}")
-    if not changed:
+    if pending:
+        print(f"[git_sync] {len(pending)} script(s) copied by an earlier run but never "
+              "committed/pushed: " + ", ".join(os.path.basename(p) for p in pending))
+    to_commit = sorted(set(changed) | set(pending))
+    if not to_commit:
         print("[git_sync] scripts already in sync — nothing to mirror.")
-        return []
-    print(f"[git_sync] mirrored {len(changed)} script(s) root -> repo: "
-          + ", ".join(os.path.basename(c) for c in changed))
+        return [], (_push_unpushed_scripts_commits(repo_dir) if push else True)
+    if changed:
+        print(f"[git_sync] mirrored {len(changed)} script(s) root -> repo: "
+              + ", ".join(os.path.basename(c) for c in changed))
     if push:
         ok = _commit_and_push_paths(
-            changed, f"chore: mirror {len(changed)} script(s) from working root", repo_dir)
+            to_commit, f"chore: mirror {len(to_commit)} script(s) from working root", repo_dir)
         if not ok:
-            print("[git_sync] WARNING: files copied but push failed — see errors above.",
+            print("[git_sync] ERROR: files copied but commit/push failed — see errors above.",
                   file=sys.stderr)
-    return changed
+            return to_commit, False
+        # "nothing staged" (line-ending-only pending) returns True without pushing:
+        # make sure nothing committed is left behind origin.
+        return to_commit, _push_unpushed_scripts_commits(repo_dir)
+    return to_commit, True
 
 
 def commit_and_push_after_write(
@@ -434,6 +493,73 @@ def commit_and_push_after_write(
                 _pop_wip(repo_dir, wip)
 
 
+MIRROR_LOG = r"C:\ORANIM\permits_scan_reports\script_mirror_last_run.log"
+
+
+class _Tee:
+    def __init__(self, *streams):
+        self.streams = [s for s in streams if s is not None]
+
+    def write(self, s):
+        for st in self.streams:
+            try:
+                st.write(s)
+            except Exception:
+                pass
+        return len(s)
+
+    def flush(self):
+        for st in self.streams:
+            try:
+                st.flush()
+            except Exception:
+                pass
+
+
+def _mirror_cli(push: bool) -> int:
+    """`git_sync.py mirror` as run nightly by Oranim_ScriptMirror_Daily. It had no
+    log, ignored pull/push failures and always exited 0 with "mirror done", so a
+    stuck mirror went unnoticed (audit 2026-10-06). Now: rotated log + stdout,
+    exit 1 and an alert email on any failure."""
+    sys.path.insert(0, SCRIPTS_ROOT_DIR)
+    try:
+        from rotate_log import rotate
+        rotate(MIRROR_LOG)
+    except Exception as e:  # rotation must never block the job itself
+        print(f"[rotate_log] {e}")
+    try:
+        log = open(MIRROR_LOG, 'w', encoding='utf-8', buffering=1)
+        sys.stdout = _Tee(sys.stdout, log)
+        sys.stderr = _Tee(sys.stderr, log)
+    except OSError as e:
+        print(f"[git_sync] cannot open log {MIRROR_LOG}: {e}")
+    print(f"[git_sync] mirror run {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    try:
+        changed, ok = mirror_scripts_to_repo(push=push)
+        err = ''
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        changed, ok, err = [], False, repr(e)
+    if ok:
+        print(f"[git_sync] mirror done: {len(changed)} script(s) updated.")
+        return 0
+    print(f"[git_sync] mirror FAILED ({len(changed)} script(s) pending) — exit 1", file=sys.stderr)
+    sys.stdout.flush()
+    try:
+        from ops_alert import send_alert, log_tail
+        from pathlib import Path
+        send_alert("סנכרון סקריפטים לרפו נכשל",
+                   "ה-mirror הלילי של הסקריפטים ל-oranim-app/scripts נכשל (pull/commit/push).\n"
+                   "הקבצים יישארו ממתינים וינוסו שוב בריצה הבאה.\n"
+                   + (f"{err}\n" if err else "")
+                   + f"pending: {', '.join(changed) or '-'}\n\nlog: {MIRROR_LOG}\n\n"
+                   + log_tail(Path(MIRROR_LOG), 40))
+    except Exception as e:
+        print(f"[git_sync] alert failed: {e}", file=sys.stderr)
+    return 1
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -444,5 +570,4 @@ if __name__ == '__main__':
                     help="copy changed scripts into the repo but do not commit/push")
     _args = ap.parse_args()
     if _args.command == 'mirror':
-        _changed = mirror_scripts_to_repo(push=not _args.no_push)
-        print(f"[git_sync] mirror done: {len(_changed)} script(s) updated.")
+        sys.exit(_mirror_cli(push=not _args.no_push))

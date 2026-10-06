@@ -29,6 +29,7 @@ import time
 import argparse
 import datetime
 import smtplib
+import subprocess
 from email.mime.text import MIMEText
 
 ROOT = r"C:\ORANIM"
@@ -99,11 +100,59 @@ def _check_missing_deps(grace_seconds=0):
     return missing, fresh
 
 
-def _email_alert(diverged, missing):
+REPO_DIR = os.path.dirname(REPO_SCRIPTS)
+
+
+def _git(*args):
+    r = subprocess.run(['git', *args], cwd=REPO_DIR, capture_output=True,
+                       text=True, encoding='utf-8', errors='replace')
+    if r.returncode != 0:
+        raise RuntimeError(f"git {' '.join(args)}: {r.stderr.strip()[:200]}")
+    return r.stdout
+
+
+def _check_git_state(grace_seconds=0):
+    """Third guard: the pair-diff compares WORKING TREES only. When the nightly
+    mirror copied files but its commit/push failed, root == repo working tree and
+    this check said "all in sync" while origin never got the change (audit
+    2026-10-06). Flags (a) uncommitted changes under scripts/ and (b) local
+    commits touching scripts/ that are not on origin/master. No fetch — compares
+    against the last-known origin/master. Returns (issues, fresh)."""
+    issues, fresh = [], []
+    now = time.time()
+
+    def _add(line, rel):
+        issues.append(line)
+        p = os.path.join(REPO_DIR, rel)
+        if os.path.exists(p) and now - os.path.getmtime(p) < grace_seconds:
+            fresh.append(line)
+
+    try:
+        for line in _git('status', '--porcelain', '--', 'scripts/').splitlines():
+            rel = line[3:].strip().strip('"')
+            _add(f"{rel}: uncommitted in repo (git status '{line[:2].strip()}') "
+                 "— never reached origin", rel)
+        ahead = int(_git('rev-list', '--count', 'origin/master..HEAD', '--', 'scripts/').strip() or 0)
+        if ahead:
+            for rel in _git('diff', '--name-only', 'origin/master...HEAD', '--', 'scripts/').split():
+                _add(f"{rel}: committed locally, not pushed ({ahead} unpushed commit(s) in scripts/)", rel)
+    except Exception as e:
+        issues.append(f"git state check failed: {e}")
+    return issues, fresh
+
+
+def _email_alert(diverged, missing, git_issues=()):
+    """Returns True if the alert was sent. A failure used to be one easily-missed
+    print line in a long batch log (audit 2026-10-06) — now shouted on stderr."""
     if not EMAIL_PASSWORD:
-        print("[mirror-check] GMAIL_APP_PASSWORD not set — skipping email alert")
-        return
+        print("[mirror-check] ERROR: GMAIL_APP_PASSWORD not set — alert email NOT sent",
+              file=sys.stderr)
+        return False
     body = ""
+    if git_issues:
+        body += ("סקריפטים שהועתקו לרפו אבל לא נדחפו ל-GitHub "
+                 "(לא committed / committed בלי push):\n\n"
+                 + "\n".join(git_issues) + "\n\n")
     if diverged:
         body += ("הסקריפטים הבאים שונים בין C:\\ORANIM לבין oranim-app\\scripts.\n"
                  "צריך להחליט כיוון סנכרון (לא תמיד העותק החדש הוא הנכון!) ולדחוף.\n\n"
@@ -114,7 +163,7 @@ def _email_alert(diverged, missing):
                  + "\n".join(missing) + "\n\n")
     body += "בדיקה: python check_script_mirrors.py"
     msg = MIMEText(body, 'plain', 'utf-8')
-    n = len(diverged) + len(missing)
+    n = len(diverged) + len(missing) + len(git_issues)
     msg['Subject'] = f"[Oranim] {n} בעיות סנכרון סקריפטים בין לוקאל לרפו"
     msg['From'] = EMAIL_SENDER
     msg['To'] = EMAIL_RECIPIENT
@@ -123,8 +172,11 @@ def _email_alert(diverged, missing):
             s.login(EMAIL_SENDER, EMAIL_PASSWORD)
             s.send_message(msg)
         print(f"[mirror-check] alert emailed to {EMAIL_RECIPIENT}")
+        return True
     except Exception as e:
-        print(f"[mirror-check] email failed: {e}")
+        print(f"[mirror-check] ERROR: alert email FAILED — findings above were NOT "
+              f"delivered: {e}", file=sys.stderr)
+        return False
 
 
 def main(email=False, grace_minutes=60):
@@ -154,9 +206,11 @@ def main(email=False, grace_minutes=60):
 
     missing, fresh_missing = _check_missing_deps(grace_seconds)
     fresh.update(fresh_missing)
+    git_issues, fresh_git = _check_git_state(grace_seconds)
+    fresh.update(fresh_git)
 
     print(f"[mirror-check] {pairs} mirrored scripts checked")
-    if not diverged and not missing:
+    if not diverged and not missing and not git_issues:
         print("[mirror-check] all in sync")
         return 0
     def _show(line):
@@ -170,17 +224,25 @@ def main(email=False, grace_minutes=60):
         print(f"[mirror-check] {len(missing)} MISSING DEPENDENCIES in repo:")
         for m in missing:
             print(_show(m))
+    if git_issues:
+        print(f"[mirror-check] {len(git_issues)} NOT ON ORIGIN (repo working tree matches, "
+              "but uncommitted/unpushed):")
+        for g in git_issues:
+            print(_show(g))
 
     if not email:
         print("[mirror-check] --email not given — report only, no alert sent")
         return 1
     mail_div = [d for d in diverged if d not in fresh]
     mail_missing = [m for m in missing if m not in fresh]
-    if not mail_div and not mail_missing:
+    mail_git = [g for g in git_issues if g not in fresh]
+    if not mail_div and not mail_missing and not mail_git:
         print(f"[mirror-check] all findings edited within {grace_minutes}min "
               "(still in flight) — no alert sent")
         return 1
-    _email_alert(mail_div, mail_missing)
+    # Exit stays 1 (= findings, advisory) either way; an email failure is shouted
+    # by _email_alert on stderr rather than changing the batch's contract.
+    _email_alert(mail_div, mail_missing, mail_git)
     return 1
 
 

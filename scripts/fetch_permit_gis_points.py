@@ -70,6 +70,12 @@ def fetch_points():
                   "spatialRel": "esriSpatialRelIntersects",
                   "outFields": "tik_num", "outSR": "4326",
                   "resultOffset": offset, "resultRecordCount": PAGE})
+        # An ArcGIS error payload (HTTP 200, {"error": ...}, no "features") used to
+        # read as the empty last page, silently truncating the point set mid-scan
+        # (2026-10-06 audit). Abort instead — the caller keeps the previous file.
+        if not isinstance(d, dict) or "error" in d:
+            raise SystemExit(f"ArcGIS query failed at offset {offset}: "
+                             f"{str(d.get('error') if isinstance(d, dict) else d)[:200]}")
         page = d.get("features", [])
         if not page:
             break
