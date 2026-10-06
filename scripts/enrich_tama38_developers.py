@@ -73,6 +73,19 @@ def name_of(b):
     return (prati or mish), ""
 
 
+def full_name(p, m):
+    """YK splits one name over prati/mishpaha, and the developer used to be prati
+    alone: '4 בעמ' for מנוס-אלעזר המודעי 4 בעמ, 'התחדשות בע"מ' for י.ד בראזני,
+    'אמיר' for אמיר כהן. Person: prati + mishpaha. Company whose tail (בע"מ...)
+    sits in prati: mishpaha + prati. Company only in mishpaha: mishpaha (prati is
+    then a contact person — 'עדיה פלו' / 'חברת אלונים בע"מ')."""
+    if any(w in p for w in COMPANY_MARK):
+        return f"{m} {p}".strip()
+    if any(w in m for w in COMPANY_MARK):
+        return m
+    return f"{p} {m}".strip()
+
+
 def extract(bili):
     """Return (developer_str, developer_parts, architect, is_residents)."""
     if not isinstance(bili, list):
@@ -90,11 +103,7 @@ def extract(bili):
         if any(w in full for w in RESIDENTS):
             residents = True
             continue
-        # prefer the token that looks like a company/group
-        pick = p
-        if not any(w in p for w in COMPANY_MARK) and any(w in m for w in COMPANY_MARK):
-            pick = m
-        parts.append({"applicant": p, "group": m, "name": pick or full})
+        parts.append({"applicant": p, "group": m, "name": full_name(p, m) or full})
     dev = " / ".join(dict.fromkeys(x["name"] for x in parts if x["name"]))
     return dev, parts, arch, residents
 
