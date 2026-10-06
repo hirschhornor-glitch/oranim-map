@@ -234,8 +234,10 @@ def extract_dev(bili):
         p, m = _clean(b.get("prati")), _clean(b.get("mishpaha"))
         full = (p + (" " + m if m else "")).strip()
         if any(w in full for w in RESIDENTS): residents = True; continue
-        pick = p
-        if not any(w in p for w in COMPANY_MARK) and any(w in m for w in COMPANY_MARK): pick = m
+        # Full name, not prati alone — same rule as enrich_tama38_developers.full_name.
+        if any(w in p for w in COMPANY_MARK): pick = f"{m} {p}".strip()
+        elif any(w in m for w in COMPANY_MARK): pick = m
+        else: pick = f"{p} {m}".strip()
         if pick: parts.append(pick)
     return " / ".join(dict.fromkeys(parts)), arch, residents
 
