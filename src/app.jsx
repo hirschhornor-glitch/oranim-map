@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-05-permits';
+        const APP_VERSION = '2026-10-06-parksum';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -15008,6 +15008,47 @@ function planPermitHafrashUse(taba) {
                 feats('roads').forEach(f => { const c = geomCentroid(f.geometry); if (!c || !pip(c, polyCoords)) return; const s = (((f.properties || {}).street || '') + '').trim(); if (s) streetSet.add(s); });
                 const streets = [...streetSet].sort((a, b) => a.localeCompare(b, 'he'));
 
+                // ── חניה — joined through the תב"עות inside the polygon, exactly like permits:
+                // the parking balance lives per plan in window.__parking (read off each plan's
+                // נספח תנועה), not as its own geometry layer.
+                // Three outcomes are kept apart on purpose: a plan with a balance, a plan proven
+                // to have NO traffic appendix at all, and a plan nobody has checked. Folding the
+                // last two together would make an unchecked plan look like a finding.
+                const PK = window.__parking || { plans: {}, no_traffic_appendix: [] };
+                const pkMap = PK.plans || {};
+                const pkNoApp = new Set(PK.no_traffic_appendix || []);
+                const parking = { withBalance: 0, noAppendix: 0, unchecked: 0,
+                    units: 0, req: 0, prov: 0, res: 0, nonres: 0, guests: 0,
+                    bikes: 0, moto: 0, acc: 0, oper: 0, rows: [] };
+                { const seenPk = new Set();
+                  plansInside.forEach(x => {
+                    const taba = String(x.props.taba || '').trim();
+                    if (!taba || seenPk.has(taba)) return; seenPk.add(taba);
+                    const rec = pkMap[taba];
+                    if (!rec) { if (pkNoApp.has(taba)) parking.noAppendix++; else parking.unchecked++; return; }
+                    parking.withBalance++;
+                    const units = Number(rec.units) || 0;
+                    const req = Number(rec.req_private) || 0;
+                    const prov = Number(rec.prov_private) || 0;
+                    const res = Number(rec.prov_residential) || Number(rec.req_residential) || 0;
+                    parking.units += units; parking.req += req; parking.prov += prov; parking.res += res;
+                    // clamp per plan — two plans whose residential was read off a different column
+                    // than the grand total must not shave spaces off everyone else's contribution
+                    parking.nonres += Math.max(0, req - res);
+                    parking.guests += Number(rec.guests) || 0;
+                    parking.bikes += Number(rec.bikes_prov || rec.bikes_req) || 0;
+                    parking.moto += Number(rec.moto_prov || rec.moto_req) || 0;
+                    parking.acc += Number(rec.accessible) || 0;
+                    parking.oper += Number(rec.operational) || 0;
+                    parking.rows.push({
+                        name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '',
+                        taba: x.props.plan_name || taba, units, req, prov, res,
+                        nonres: Math.max(0, req - res), ratio: parkResRatio(rec),
+                        partial: rec.coverage === 'partial', feat: x.feat,
+                    });
+                  });
+                  parking.rows.sort((a, b) => (b.req || 0) - (a.req || 0)); }
+
                 const existing = { moch, eduInst, eduStudents, eduList, shchunaCount, demo, green, sportCount, trees, commerceIn, employment, commerceProposed, employmentProposed, commerceRows, consCity, yiud };
 
                 setFullAreaReport({
@@ -15018,6 +15059,7 @@ function planPermitHafrashUse(taba) {
                     occupiedUnits,
                     permits: { totalPermits, totalIncludedUnits, stageAgg, catAgg, rows: permitRows },
                     projector: { count: projCount, byDomain: projector },
+                    parking,
                     masterPlans,
                     existing,
                 });
@@ -34268,6 +34310,20 @@ function planPermitHafrashUse(taba) {
                                         Object.entries(d.permits.catAgg).forEach(([cat,a]) => lines.push(['היתרים — קטגוריה', getPermitCategoryLabel(cat), String(a.count)+' היתרים', String(Math.round(a.units))]));
                                         d.projector.byDomain.forEach(dm => lines.push(['פרויקטור', dm.label, dm.names.join(' · '), String(dm.count)]));
                                         d.masterPlans.forEach(mp => { mp.zones.forEach(z => { const fl = z.floorsMax!=null ? (z.floorsMin!=null&&z.floorsMin!==z.floorsMax ? z.floorsMin+'-'+z.floorsMax : String(z.floorsMax))+' קומות' : ''; const fr = z.farMax!=null ? ((z.farMin!=null&&z.farMin!==z.farMax ? z.farMin+'-'+z.farMax : z.farMax))+'% תכס' : ''; lines.push(['תכנית אב — '+mp.name, z.name, [fl,fr].filter(Boolean).join(' · '), '']); }); if (mp.cons.total) lines.push(['תכנית אב — '+mp.name, 'מבני שימור', "א'="+mp.cons['א']+" ב'="+mp.cons['ב']+" ג'="+mp.cons['ג'], String(mp.cons.total)]); });
+                                        if (d.parking && (d.parking.withBalance || d.parking.noAppendix)) {
+                                            const k = 'חניה';
+                                            lines.push([k, 'מקומות חניה נדרשים (רכב פרטי)', '', String(d.parking.req)]);
+                                            if (d.parking.prov) lines.push([k, 'מקומות חניה מוצעים', '', String(d.parking.prov)]);
+                                            lines.push([k, 'מגורים (כולל אורחים)', d.parking.guests ? 'מהם אורחים ' + d.parking.guests : '', String(d.parking.res)]);
+                                            lines.push([k, 'לא-מגורים (מסחר/תעסוקה/ציבור יחד)', 'הפרש סה"כ פחות מגורים', String(d.parking.nonres)]);
+                                            if (d.parking.units) lines.push([k, 'חניות מגורים ליח"ד', (d.parking.res / d.parking.units).toFixed(2), String(Math.round(d.parking.units))]);
+                                            if (d.parking.acc) lines.push([k, 'חניות נגישות', '', String(d.parking.acc)]);
+                                            if (d.parking.oper) lines.push([k, 'חניה תפעולית', '', String(d.parking.oper)]);
+                                            if (d.parking.bikes) lines.push([k, 'אופניים', '', String(d.parking.bikes)]);
+                                            if (d.parking.moto) lines.push([k, 'אופנועים', '', String(d.parking.moto)]);
+                                            lines.push([k, 'כיסוי', d.parking.withBalance + ' עם מאזן / ' + d.parking.noAppendix + ' ללא נספח / ' + d.parking.unchecked + ' לא נבדקו', '']);
+                                            d.parking.rows.forEach(r => lines.push([k + ' — לפי תכנית', r.name, r.taba + ' · נדרש ' + r.req + ' · מגורים ' + r.res + ' · לא-מגורים ' + r.nonres, String(Math.round(r.units || 0))]));
+                                        }
                                         const ex = d.existing;
                                         if (ex) {
                                             if (ex.moch.total) { lines.push(['מצב קיים — מבני ציבור','מוסדות (משב"ש)', Math.round(ex.moch.area)+' מ"ר', String(ex.moch.total)]); Object.entries(ex.moch.byCat).forEach(([c,n])=>lines.push(['מצב קיים — מבני ציבור', c, '', String(n)])); (ex.moch.list||[]).forEach(m=>lines.push(['מצב קיים — מוסד ('+m.cat+')', m.name, m.address||'', ''])); }
@@ -34339,7 +34395,7 @@ function planPermitHafrashUse(taba) {
                                     const rowStyle = {display:'flex',justifyContent:'space-between',padding:'2px 0',fontSize:12};
                                     const STAGE_COLORS = {pre_licensing:'#90a4ae', licensing:'#42a5f5', issued:'#66bb6a', done:'#bdbdbd'};
                                     // Thematic per-section colors (matches the app palette: כחול=היתרים, חום=ציבור, ירוק=שצ"פ, סגול=מסחר)
-                                    const secColors = { plans:'#e94560', tama:'#ff8a65', permits:'#42a5f5', projector:'#ffa726', master:'#ffd479', inst:'#bcaaa4', green:'#66bb6a', commerce:'#b07fd6' };
+                                    const secColors = { plans:'#e94560', tama:'#ff8a65', permits:'#42a5f5', projector:'#ffa726', master:'#ffd479', inst:'#bcaaa4', green:'#66bb6a', commerce:'#b07fd6', parking:'#26a69a' };
                                     const toggleSec = k => setFullAreaCollapsed(s => ({ ...s, [k]: !s[k] }));
                                     const toggleTbl = id => setFullReportTables(s => ({ ...s, [id]: !s[id] }));
                                     // Clickable "📋 detail" toggle row that reveals a record-level table.
@@ -34370,6 +34426,7 @@ function planPermitHafrashUse(taba) {
                                         ex && (ex.moch.total||ex.eduInst||ex.shchunaCount) && {k:'inst', label:'מבני ציבור'},
                                         ex && (ex.green.count||ex.sportCount||(ex.trees.shimur+ex.trees.krita+ex.trees.haataka)) && {k:'green', label:'ירוק ועצים'},
                                         ex && (ex.commerceIn||ex.employment||ex.commerceProposed||ex.employmentProposed||ex.yiud.total) && {k:'commerce', label:'מסחר/יעודים'},
+                                        d.parking && (d.parking.withBalance||d.parking.noAppendix) && {k:'parking', label:'חניה'},
                                     ].filter(Boolean);
                                     const navTo = k => { setFullAreaCollapsed(s => ({ ...s, [k]: false })); const el = document.getElementById('fa-' + k); if (el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 30); };
                                     return (
@@ -34566,7 +34623,34 @@ function planPermitHafrashUse(taba) {
                                                     {Object.entries(ex.yiud.byYeud).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([y,ar]) => (<div key={y} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{y}</span><span style={{color:'#c2c9d4'}}>{fmtArea(ar)}</span></div>))}
                                             </>)}
 
-                                            {d.plans.count === 0 && d.permits.totalPermits === 0 && d.projector.count === 0 && d.masterPlans.length === 0 && d.tama.count === 0 && !hasExisting && (
+                                            {d.parking && (d.parking.withBalance > 0 || d.parking.noAppendix > 0) && section('parking', '🅿️ חניה בתחום האזור', <>
+                                                {d.parking.withBalance > 0 && <>
+                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מקומות חניה לרכב פרטי</span><span style={{color:'#c2c9d4'}}>נדרש <b style={{color:'#fff'}}>{fmt(d.parking.req)}</b>{d.parking.prov ? <> · מוצע <b style={{color:'#fff'}}>{fmt(d.parking.prov)}</b></> : null}</span></div>
+                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מגורים (כולל אורחים)</span><span><b style={{color:'#26a69a'}}>{fmt(d.parking.res)}</b>{d.parking.guests ? <span style={{color:'#9aa6b2'}}> · מהם אורחים {fmt(d.parking.guests)}</span> : null}</span></div>
+                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>לא-מגורים (מסחר/תעסוקה/ציבור יחד)</span><span><b style={{color:'#b39ddb'}}>{fmt(d.parking.nonres)}</b>{d.parking.req ? <span style={{color:'#9aa6b2'}}> · {Math.round(d.parking.nonres / d.parking.req * 100)}%</span> : null}</span></div>
+                                                    {d.parking.units > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>חניות מגורים ליח"ד (משוקלל)</span><span><b style={{color:'#26a69a'}}>{(d.parking.res / d.parking.units).toFixed(2)}</b><span style={{color:'#9aa6b2'}}> ({fmt(d.parking.res)} ל-{fmt(d.parking.units)} יח"ד)</span></span></div>}
+                                                    {(d.parking.acc || d.parking.oper || d.parking.bikes || d.parking.moto) > 0 && (
+                                                        <div style={{...rowStyle, fontSize:11, color:'#9aa6b2'}}><span>נוספים</span><span>
+                                                            {d.parking.acc ? 'נגישות ' + fmt(d.parking.acc) + ' · ' : ''}
+                                                            {d.parking.oper ? 'תפעולית ' + fmt(d.parking.oper) + ' · ' : ''}
+                                                            {d.parking.bikes ? 'אופניים ' + fmt(d.parking.bikes) + ' · ' : ''}
+                                                            {d.parking.moto ? 'אופנועים ' + fmt(d.parking.moto) : ''}
+                                                        </span></div>
+                                                    )}
+                                                </>}
+                                                <div style={{...rowStyle, fontSize:11, color:'#9aa6b2', borderTop:'1px dashed #2a2a3e', marginTop:5, paddingTop:5}}>
+                                                    <span>כיסוי</span>
+                                                    <span>{d.parking.withBalance} עם מאזן · {d.parking.noAppendix} ללא נספח תנועה{d.parking.unchecked ? ' · ' + d.parking.unchecked + ' לא נבדקו' : ''}</span>
+                                                </div>
+                                                <div style={{color:'#7f8c99',fontSize:10,marginTop:4,whiteSpace:'normal',lineHeight:1.45}}>הסכום הוא על התכניות שמרכזן בתוך הפוליגון. 'לא-מגורים' הוא הפרש בין הסה"כ למגורים — הנספחים לא פורטו לפי שימוש.</div>
+                                                {d.parking.rows.length > 0 && detailRow('parking', 'פירוט לפי תכנית (' + d.parking.rows.length + ')')}
+                                                {fullReportTables['parking'] && (
+                                                    <table style={tblWrap}><thead><tr><th style={th}>תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>יח"ד</th><th style={th}>נדרש</th><th style={th}>מגורים</th><th style={th}>לא-מגורים</th><th style={th}>מגורים/יח"ד</th></tr></thead>
+                                                    <tbody>{d.parking.rows.map((r,i)=>(<tr key={i} onClick={()=>zoomTo(r.feat)} title={r.feat?'הצג על המפה':''} style={{cursor:r.feat?'pointer':'default'}}><td style={{...td,color:r.feat?'#9fd6ff':'#dfe3ea'}}>{r.name}{r.partial?' ⚠️':''}</td><td style={td}>{r.taba}</td><td style={td}>{r.units?Math.round(r.units).toLocaleString():'—'}</td><td style={td}>{r.req||'—'}</td><td style={td}>{r.res||'—'}</td><td style={td}>{r.nonres||'—'}</td><td style={{...td,color:'#26a69a'}}>{r.ratio!=null?r.ratio.toFixed(2):'—'}</td></tr>))}</tbody></table>
+                                                )}
+                                            </>)}
+
+                                            {d.plans.count === 0 && d.permits.totalPermits === 0 && d.projector.count === 0 && d.masterPlans.length === 0 && d.tama.count === 0 && !hasExisting && !(d.parking && (d.parking.withBalance || d.parking.noAppendix)) && (
                                                 <div style={{textAlign:'center',color:'#888',padding:'20px 0'}}>לא נמצא מידע בתוך האזור שנבחר</div>
                                             )}
                                         </>
@@ -38918,7 +39002,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 ? 1 - v.req_private / v.req_private_full_standard : null;
                             return {
                                 taba, plan_name: '101-' + String(taba).padStart(7, '0'),
-                                title: v.plan_name || '', minahak: v.minahak || '', sub: v.sub_neighborhood || '',
+                                title: v.plan_name || '', minahak: v.minahak || '',
+                                // Always through SUB_NORMALIZE — the app's single source for merging
+                                // duplicate sub-neighborhood spellings. Grouping on the raw value split
+                                // א.ת. תלפיות into two rows that are one area on the ground.
+                                sub: (SUB_NORMALIZE[v.sub_neighborhood] || v.sub_neighborhood) || '',
                                 status: v.status || '', units,
                                 req: v.req_private || null, prov: v.prov_private || null,
                                 full: v.req_private_full_standard || null,
@@ -38927,6 +39015,13 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 confidence: v.confidence || '', notes: v.notes || '',
                                 partial: v.coverage === 'partial',
                                 gap: v.units_gap_vs_gs || 0,
+                                guests: v.guests || 0,
+                                bikes: v.bikes_prov || v.bikes_req || 0,
+                                moto: v.moto_prov || v.moto_req || 0,
+                                accessible: v.accessible || 0,
+                                operational: v.operational || 0,
+                                // residential read off a different column than the grand total
+                                residFlag: !!v.resid_exceeds_total,
                             };
                         });
 
@@ -38955,6 +39050,25 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const totUnits = solid.reduce((s2, r) => s2 + r.units, 0);
                         const cutRows = solid.filter(r => r.cut != null);
                         const medCut = med(cutRows.map(r => r.cut));
+
+                        // Absolute space counts. The appendix tables give a grand total for
+                        // private cars and a residential sub-total (מגורים + אורחים); everything
+                        // else — מסחר, תעסוקה, מבני ציבור, מלונאות, חינוך — is the DIFFERENCE
+                        // between them, not a figure read per use. Presenting it as one
+                        // 'לא-מגורים' bucket is the honest resolution of what was recorded.
+                        const sum = (f2) => solid.reduce((a, r) => a + (f2(r) || 0), 0);
+                        const sums = {
+                            req: sum(r => r.req), prov: sum(r => r.prov),
+                            res: sum(r => r.resSpaces), guests: sum(r => r.guests),
+                            bikes: sum(r => r.bikes), moto: sum(r => r.moto),
+                            acc: sum(r => r.accessible), oper: sum(r => r.operational),
+                        };
+                        // clamp per plan, not on the totals — otherwise two mis-read plans
+                        // would quietly shave spaces off every other plan's contribution
+                        sums.nonres = solid.reduce((a, r) =>
+                            a + Math.max(0, (r.req || 0) - (r.resSpaces || 0)), 0);
+                        const residFlagged = solid.filter(r => r.residFlag).length;
+                        const nrPct = sums.req ? Math.round(sums.nonres / sums.req * 100) : 0;
 
                         // Area roll-up is UNIT-WEIGHTED (total spaces / total units), never a
                         // mean of per-plan ratios — a 20-unit plan must not move an area.
@@ -39070,6 +39184,28 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     {tile('יח"ד מכוסות', totUnits.toLocaleString('he-IL'), '', '#90caf9', 'rgba(144,202,249,0.12)')}
                                     {tile('חציון חניות מגורים ליח"ד', f2(medRes), 'צבע בטבלה לפי סטייה מהחציון', '#27ae60', 'rgba(39,174,96,0.12)')}
                                     {tile('חציון הפחתת תקן', pct(medCut), cutRows.length + ' תכניות שהציגו תקן מלא ומופחת', '#5dade2', 'rgba(93,173,226,0.12)')}
+                                </div>
+
+                                {/* Absolute space counts — how many parking spaces the sample adds up to. */}
+                                <div style={{ padding: '9px 16px', borderBottom: '1px solid #2a2a4a', fontSize: 11.5, color: '#c5cee0' }}>
+                                    <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'baseline' }}>
+                                        <span style={{ color: '#4dd0e1', fontWeight: 700, fontSize: 12.5 }}>סה"כ מקומות חניה לרכב פרטי</span>
+                                        <span>נדרש <b style={{ color: '#fff' }}>{nf(sums.req)}</b></span>
+                                        <span>מוצע <b style={{ color: '#fff' }}>{nf(sums.prov)}</b></span>
+                                        <span style={{ color: '#26a69a' }}>מגורים (כולל אורחים) <b>{nf(sums.res)}</b></span>
+                                        <span style={{ color: '#b39ddb' }}>לא-מגורים <b>{nf(sums.nonres)}</b> ({nrPct}%)</span>
+                                        {sums.guests ? <span style={{ color: '#8a9bc0' }}>מהם אורחים {nf(sums.guests)}</span> : null}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4, color: '#8a9bc0', fontSize: 11 }}>
+                                        {sums.acc ? <span>חניות נגישות {nf(sums.acc)}</span> : null}
+                                        {sums.oper ? <span>חניה תפעולית {nf(sums.oper)}</span> : null}
+                                        {sums.bikes ? <span>אופניים {nf(sums.bikes)}</span> : null}
+                                        {sums.moto ? <span>אופנועים {nf(sums.moto)}</span> : null}
+                                    </div>
+                                    <div style={{ color: '#7f8c99', fontSize: 10, marginTop: 4, whiteSpace: 'normal', lineHeight: 1.45 }}>
+                                        ℹ️ הנספחים רושמים סה"כ לרכב פרטי ותת-סך למגורים; <b>השורה 'לא-מגורים' היא הפרש בין השניים</b> — מסחר, תעסוקה, מבני ציבור, מלונאות וחינוך יחד ולא לפי שימוש. פירוט לפי שימוש דורש קריאה חוזרת של הטבלאות.
+                                        {residFlagged ? <span style={{ color: '#e67e22' }}> · ⚠️ ב-{residFlagged} תכניות סך המגורים גדול מהסה"כ שנרשם — התרומה שלהן ל'לא-מגורים' אפס.</span> : null}
+                                    </div>
                                 </div>
 
                                 <div style={{ padding: '8px 16px', borderBottom: '1px solid #2a2a4a', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 11 }}>
