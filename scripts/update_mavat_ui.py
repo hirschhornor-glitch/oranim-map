@@ -138,8 +138,10 @@ def save_revival_pending(rows_to_check, progress):
         if not res or res.get('error') or not res.get('new_status'):
             continue
         new_date = (res.get('new_date') or '').strip()
-        if (res['new_status'] == item['current_status']
-                and (not new_date or new_date == (item.get('current_date') or '').strip())):
+        # Status changes only. A date-only difference is mostly stale history on
+        # terminal plans (the first collect run held 129 of them next to the 3
+        # real status changes), and the weekly write phase applies status anyway.
+        if res['new_status'] == item['current_status']:
             continue
         pending[item['agam_id']] = {
             'plan_name': item.get('plan_name', ''), 'plan_name_he': item.get('plan_name_he', ''),
