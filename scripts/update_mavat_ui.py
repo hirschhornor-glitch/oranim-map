@@ -41,6 +41,9 @@ SHEET_ID      = "1_AcuuA1CNPh6jXc_lZKNghfpEF1aDPV8Zci8QPz2WVE"
 BROWSER_DATA      = r"C:\ORANIM\.browser_data"
 BROWSER_DATA_JLM  = r"C:\ORANIM\.browser_data_jlm"
 PROGRESS_FILE     = r"C:\ORANIM\mavat_ui_sync_progress.json"
+# Changes found by the monthly revival sweep (--include-terminal --collect-only),
+# held for the next weekly run to re-verify, apply and report in its one email.
+REVIVAL_PENDING   = r"C:\ORANIM\revival_pending.json"
 LOG_FILE          = r"C:\ORANIM\mavat_sync.log"
 PLANS_GEOJSON     = r"C:\ORANIM\oranim-app\data\plans.geojson"
 LANDUSE_GEOJSON   = r"C:\ORANIM\oranim-app\data\landuse_xplan.geojson"
@@ -115,6 +118,55 @@ TERMINAL_STATUSES = {
     "נגנזה/נדחתה",
     "ביטול פרסום",
 }
+
+def load_revival_pending():
+    try:
+        with open(REVIVAL_PENDING, encoding='utf-8') as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_revival_pending(rows_to_check, progress):
+    """Collect-only: record every plan whose live status or date differs from the
+    sheet, merged into REVIVAL_PENDING. Nothing is written to GS / geojson and no
+    email goes out; the weekly run re-verifies these, applies and reports them."""
+    pending = load_revival_pending()
+    found = 0
+    for item in rows_to_check:
+        res = progress.get(item['agam_id'])
+        if not res or res.get('error') or not res.get('new_status'):
+            continue
+        new_date = (res.get('new_date') or '').strip()
+        if (res['new_status'] == item['current_status']
+                and (not new_date or new_date == (item.get('current_date') or '').strip())):
+            continue
+        pending[item['agam_id']] = {
+            'plan_name': item.get('plan_name', ''), 'plan_name_he': item.get('plan_name_he', ''),
+            'minhak': item.get('minhak', ''),
+            'old_status': item['current_status'], 'old_date': item.get('current_date', ''),
+            'new_status': res['new_status'], 'new_date': new_date,
+            'found_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        }
+        found += 1
+        log_msg(f"  PENDING {item.get('plan_name', '')}: {item['current_status']} ({item.get('current_date', '')})"
+                f" -> {res['new_status']} ({new_date})")
+    with open(REVIVAL_PENDING, 'w', encoding='utf-8') as f:
+        json.dump(pending, f, ensure_ascii=False, indent=1)
+    log_msg(f"collect-only: {found} change(s) held for the weekly run "
+            f"({len(pending)} pending in {os.path.basename(REVIVAL_PENDING)}). "
+            f"No GS / geojson writes, no email.")
+
+
+def clear_revival_pending(pending, progress):
+    """Drop the pending plans this weekly run checked without error; keep the rest
+    (restricted / failed) for next week."""
+    left = {aid: v for aid, v in pending.items()
+            if aid not in progress or progress[aid].get('error')}
+    with open(REVIVAL_PENDING, 'w', encoding='utf-8') as f:
+        json.dump(left, f, ensure_ascii=False, indent=1)
+    log_msg(f"REVIVAL PENDING: {len(pending) - len(left)} verified and cleared, {len(left)} kept.")
+
 
 def log_msg(msg):
     print(msg, flush=True)
@@ -1731,6 +1783,9 @@ async def main():
     ONLY_STATUS = None
     PLANS_FILTER = None  # optional set of plan_name values to restrict to
     INCLUDE_TERMINAL = "--include-terminal" in sys.argv  # monthly revival sweep
+    # Collect-only: scrape, then hand the changes to the weekly run instead of
+    # writing / emailing — one report, from one weekly check (user, 2026-10-06).
+    COLLECT_ONLY = "--collect-only" in sys.argv
     for arg in sys.argv[1:]:
         if arg.startswith('--only-status='):
             ONLY_STATUS = arg.split('=', 1)[1]
@@ -1806,6 +1861,36 @@ async def main():
                     'current_date': row[COL_MAVAT_DATE - 1].strip() if len(row) >= COL_MAVAT_DATE else "",
                 })
     
+    # The weekly run (no filters, not the sweep itself) also re-checks the plans
+    # the monthly revival sweep flagged. Their sheet status is often terminal
+    # (נדחתה / נגנזה), so the status gate above would never select them.
+    pending = {}
+    weekly_run = not (INCLUDE_TERMINAL or COLLECT_ONLY or ONLY_STATUS or PLANS_FILTER is not None)
+    if weekly_run:
+        pending = load_revival_pending()
+        if pending:
+            have = {r['agam_id'] for r in rows_to_check}
+            added_p = 0
+            for row_idx, row in enumerate(all_data[1:], start=2):
+                agam_id = row[COL_AGAM_ID - 1].strip() if len(row) >= COL_AGAM_ID else ""
+                if agam_id.endswith('.0'):
+                    agam_id = agam_id[:-2]
+                if agam_id in pending and agam_id not in have:
+                    rows_to_check.append({
+                        'row': row_idx,
+                        'plan_name': row[COL_PLAN_NAME - 1].strip() if len(row) >= COL_PLAN_NAME else "",
+                        'plan_name_he': row[COL_PLAN_NAME_HE - 1].strip() if len(row) >= COL_PLAN_NAME_HE else "",
+                        'minhak': row[COL_MINHAK - 1].strip() if len(row) >= COL_MINHAK else "",
+                        'agam_id': agam_id,
+                        'current_status': row[COL_STATUS_MAVAT - 1].strip() if len(row) >= COL_STATUS_MAVAT else "",
+                        'current_date': row[COL_MAVAT_DATE - 1].strip() if len(row) >= COL_MAVAT_DATE else "",
+                    })
+                    have.add(agam_id)
+                    added_p += 1
+            log_msg(f"REVIVAL PENDING: {len(pending)} plan(s) flagged by the monthly sweep "
+                    f"({added_p} outside the weekly status scope, added): "
+                    + ", ".join(v.get('plan_name', k) for k, v in list(pending.items())[:10]))
+
     if ONLY_STATUS:
         log_msg(f"FILTER OVERRIDE: only checking status='{ONLY_STATUS}'")
     log_msg(f"Found {len(rows_to_check)} plans with target statuses (total).")
@@ -2028,6 +2113,11 @@ async def main():
                 
             await context.close()
             
+    if COLLECT_ONLY:
+        save_revival_pending(rows_to_check, progress)
+        log_msg(f"\nDone (collect-only)! {datetime.now().strftime('%H:%M:%S')}")
+        return
+
     # ── Update Google Sheets phase ──
     log_msg("\n=== Updating Google Sheets ===")
     
@@ -2216,6 +2306,9 @@ async def main():
 
     # ── Send email if anything changed ──
     send_email_notification(updates, objection_results, xplan_report)
+
+    if pending:
+        clear_revival_pending(pending, progress)
 
     log_msg(f"\nDone! {datetime.now().strftime('%H:%M:%S')}")
 
