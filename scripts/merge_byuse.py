@@ -19,22 +19,8 @@ resolution is to show the residual rather than to force a split.
 import glob, json, os, sys
 
 sys.stdout.reconfigure(encoding='utf-8')
-# ── Paths ─────────────────────────────────────────────────────
-# Two roots on purpose:
-#   EVIDENCE — small, irreplaceable provenance kept IN the repo: the hand-read
-#              balance tables, the per-use pass, the base corrections and the
-#              per-plan document lists. Re-deriving these means re-reading
-#              hundreds of sheets by eye, so they are versioned.
-#   WORK     — the bulky downloads (pdf/, crops/, zips/ — ~2.5 GB). Regenerable
-#              from Mavat with fetch_traffic_appendices.py, so they stay local.
-#              Override with the TRAFFIC_WORK_DIR environment variable.
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-EVIDENCE = os.path.join(_REPO, 'data', 'parking_evidence')
-DATA = os.path.join(_REPO, 'data')
-WORK = os.environ.get('TRAFFIC_WORK_DIR', r'C:\ORANIM\traffic_appendices')
-OUT = EVIDENCE
-PARK = os.path.join(DATA, 'parking.json')
+OUT = r'C:\ORANIM\traffic_appendices'
+PARK = r'C:\ORANIM\oranim-app\data\parking.json'
 
 BUCKETS = ['מסחר', 'תעסוקה', 'ציבור', 'חינוך', 'מלונאות', 'אחר']
 ALIAS = {'משרדים': 'תעסוקה', 'תעסוקה/משרדים': 'תעסוקה', 'מבני ציבור': 'ציבור',

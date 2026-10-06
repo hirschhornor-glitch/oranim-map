@@ -246,7 +246,9 @@ def run_valency_stage():
             _problem(f"valency download {_rc_text(rc)} — extracted only the PDFs already on disk")
 
     # 2. Extract valency from all PDFs (deterministic, no network).
-    rc = _run([sys.executable, EXTRACT_SCRIPT], timeout=1800)
+    #    --delete-after: surveys aren't kept after analysis (2026-10-06); each PDF
+    #    goes to the Recycle Bin once its result is cached, and stays in the output.
+    rc = _run([sys.executable, EXTRACT_SCRIPT, "--delete-after"], timeout=1800)
     if rc != 0:
         print(f"[valency] extract exited {rc} — aborting valency stage.")
         FAILED["valency"] = f"extract {_rc_text(rc)}"
@@ -330,7 +332,7 @@ def run_tama38_stage(recheck_empty=True):
 
     # 3. Rebuild the count file (keyed by tik) and 4. the valency file.
     rc1 = _run([sys.executable, TAMA38_COUNT_BUILD], timeout=300)
-    rc2 = _run([sys.executable, TAMA38_VAL_SCRIPT], timeout=1800)
+    rc2 = _run([sys.executable, TAMA38_VAL_SCRIPT, "--delete-after"], timeout=1800)
     if rc1 != 0 or rc2 != 0:
         print(f"[tama38] build exited counts={rc1} valency={rc2} — aborting tama38 stage.")
         FAILED["tama38"] = f"build counts={_rc_text(rc1)} valency={_rc_text(rc2)}"

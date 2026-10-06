@@ -20,24 +20,11 @@ import argparse, asyncio, json, os, re, sys, time
 sys.stdout.reconfigure(encoding='utf-8')
 from playwright.async_api import async_playwright
 
-# ── Paths ─────────────────────────────────────────────────────
-# Two roots on purpose:
-#   EVIDENCE — small, irreplaceable provenance kept IN the repo: the hand-read
-#              balance tables, the per-use pass, the base corrections and the
-#              per-plan document lists. Re-deriving these means re-reading
-#              hundreds of sheets by eye, so they are versioned.
-#   WORK     — the bulky downloads (pdf/, crops/, zips/ — ~2.5 GB). Regenerable
-#              from Mavat with fetch_traffic_appendices.py, so they stay local.
-#              Override with the TRAFFIC_WORK_DIR environment variable.
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-EVIDENCE = os.path.join(_REPO, 'data', 'parking_evidence')
-DATA = os.path.join(_REPO, 'data')
-WORK = os.environ.get('TRAFFIC_WORK_DIR', r'C:\ORANIM\traffic_appendices')
-BROWSER_DATA = os.environ.get("TRAFFIC_BROWSER_DATA", r"C:\ORANIM\.browser_data_traffic")
-OUTDIR = WORK
+DATA = r"C:\ORANIM\oranim-app\data"
+BROWSER_DATA = r"C:\ORANIM\.browser_data_traffic"
+OUTDIR = r"C:\ORANIM\traffic_appendices"
 PDFDIR = os.path.join(OUTDIR, 'pdf')
-INDEX = os.path.join(EVIDENCE, 'doc_index.json')   # versioned: proves which docs each plan has
+INDEX = os.path.join(OUTDIR, 'doc_index.json')
 os.makedirs(PDFDIR, exist_ok=True)
 
 # What counts as the traffic/parking appendix.
