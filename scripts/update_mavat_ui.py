@@ -933,6 +933,77 @@ def update_geojson_objections(results):
         log_msg(f"Failed to update GeoJSON objection dates: {e}")
 
 
+def sync_status_dates(rows_to_check, progress):
+    """Write Mavat's status date to GS (+ last_modified) and plans.geojson for
+    checked plans whose status is unchanged but whose date differs. The status
+    path writes the date only together with a status change, so a plan whose date
+    moved under the same status kept the old one, and a new plan stayed with no
+    date until its first status change. The 2026-10-06 sweep found 129 such gaps:
+    19 active plans had none, and 101-1003177 (re-deposited 27/08/2026) showed a
+    closed objection window because the app's "stored end < status date -> +60"
+    rule had no date to compare against. Returns the list of fixes written."""
+    fixes = []
+    for r in rows_to_check:
+        res = progress.get(r['agam_id'])
+        if not res or res.get('error') or not res.get('new_status'):
+            continue
+        if res['new_status'] != r['current_status']:
+            continue                         # the status path writes these
+        nd = (res.get('new_date') or '').strip()
+        if re.fullmatch(r'\d{2}/\d{2}/\d{4}', nd) and nd != (r.get('current_date') or '').strip():
+            fixes.append({'plan_name': r['plan_name'], 'row': r['row'],
+                          'old_date': (r.get('current_date') or '').strip(), 'new_date': nd})
+    if not fixes:
+        return []
+
+    sheet = get_sheet()
+    fresh = sheet.get_all_values()
+    if not fresh or not fresh[0] or fresh[0][0].strip() != 'agam_id':
+        log_msg("FATAL: GS row 1 is not the header — skipping status-date sync.")
+        return []
+    row_by_plan = {}
+    for i, row in enumerate(fresh[1:], start=2):
+        if len(row) >= COL_PLAN_NAME and row[COL_PLAN_NAME - 1].strip():
+            row_by_plan[row[COL_PLAN_NAME - 1].strip()] = i
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    batch, written = [], []
+    for fx in fixes:
+        row = fx['row']
+        at = fresh[row - 1][COL_PLAN_NAME - 1].strip() if row - 1 < len(fresh) and len(fresh[row - 1]) >= COL_PLAN_NAME else ''
+        if at != fx['plan_name']:
+            row = row_by_plan.get(fx['plan_name'])
+            if row is None:
+                log_msg(f"  SKIP date for {fx['plan_name']}: not found in fresh sheet")
+                continue
+        batch.append({'range': gspread.utils.rowcol_to_a1(row, COL_MAVAT_DATE), 'values': [[fx['new_date']]]})
+        batch.append({'range': gspread.utils.rowcol_to_a1(row, COL_LAST_MODIFIED), 'values': [[now]]})
+        written.append(fx)
+        log_msg(f"  DATE {fx['plan_name']}: {fx['old_date'] or '(empty)'} -> {fx['new_date']}")
+    if batch:
+        sheet.spreadsheet.values_batch_update({'valueInputOption': 'RAW', 'data': batch})
+        log_msg(f"Updated status date on {len(written)} plan(s) in Google Sheets (status unchanged)")
+
+    try:
+        by_name = {fx['plan_name']: fx['new_date'] for fx in written}
+        with open(PLANS_GEOJSON, encoding='utf-8') as f:
+            geojson = json.load(f)
+        n = 0
+        for feat in geojson['features']:
+            pn = feat['properties'].get('plan_name')
+            if pn in by_name and feat['properties'].get('mavat_date') != by_name[pn]:
+                feat['properties']['mavat_date'] = by_name[pn]
+                n += 1
+        if n:
+            with open(PLANS_GEOJSON, 'w', encoding='utf-8') as f:
+                json.dump(geojson, f, ensure_ascii=False)
+            commit_and_push_after_write(
+                'data/plans.geojson', f'data: status-date sync ({n} plans) (update_mavat_ui)')
+        log_msg(f"Updated mavat_date on {n} feature(s) in plans.geojson")
+    except Exception as e:
+        log_msg(f"Failed to update GeoJSON mavat_date: {e}")
+    return written
+
+
 def update_geojson_objection_btn(progress, rows_to_check):
     """Update plans.geojson with has_objection_btn from progress."""
     try:
@@ -2283,6 +2354,13 @@ async def main():
         sheet.spreadsheet.values_batch_update({'valueInputOption': 'RAW', 'data': btn_batch})
         log_msg(f"Updated {len(btn_batch)} rows with has_objection_btn in Google Sheets")
     update_geojson_objection_btn(progress, rows_to_check)
+
+    # ── Status date for plans whose status did not change ──
+    # Before the objection-date step, so its re-read of the sheet sees the dates.
+    try:
+        sync_status_dates(rows_to_check, progress)
+    except Exception as e:
+        log_msg(f"status-date sync failed: {e}")
 
     # ── Fetch objection dates via YK Jerusalem API (for all plans in הפקדה status) ──
     # Re-fetch all_data first so it includes the has_objection_btn updates we just made
