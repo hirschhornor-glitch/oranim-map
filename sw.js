@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v112-byuse3';
+const CACHE_VERSION = 'v113-byuse4';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
