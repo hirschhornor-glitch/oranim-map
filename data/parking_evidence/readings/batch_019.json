@@ -1,0 +1,36 @@
+{
+ "1121920": {
+  "plan_name": "משולש פת",
+  "units_in_table": 585,
+  "req_private": 737,
+  "req_private_full_standard": 789,
+  "prov_private": null,
+  "req_residential": 644,
+  "guests": 59,
+  "bikes_req": 645,
+  "moto_req": 111,
+  "operational": 4,
+  "accessible": 14,
+  "standard": "1:1 ליח\"ד + 10% אורחים; שאר השימושים בתקן אזור עתיר תח\"צ (מסחר 1:60, משרדים 1:280)",
+  "source": {"crop": "crops/1121920/doc6_p0_rescue1250_1250.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "תא 1-5 מאוחד. 585 יח\"ד בטבלה מול 552 ב-GS. תקן עתיר תח\"צ חוסך 52 מקומות מול התקן המלא (737 מול 789). לא-מגורים 93 (מסחר 1,999 מ\"ר, משרדים 5,250, בי\"ס 12 כיתות, 6 גנים, 3 מעונות, בית כנסת 570). אותר ב-OCR rescue."
+ },
+ "987016": {
+  "plan_name": "סן-מרטין 1",
+  "units_in_table": 330,
+  "req_private": 407,
+  "req_private_full_standard": 452,
+  "prov_private": 407,
+  "req_residential": 363,
+  "guests": 33,
+  "bikes_req": 340,
+  "moto_req": 44,
+  "operational": 2,
+  "accessible": 9,
+  "standard": "תקן אחיד 1:1 לכל יח\"ד (עד ומעל 95 מ\"ר) + 10% אורחים; לא-מגורים בתקן עתיר תח\"צ",
+  "source": {"crop": "crops/987016/doc3_p0_k0.png", "doc": "נספח תנועה 18/06/2024"},
+  "confidence": "high",
+  "notes": "124 יח\"ד עד 95 + 206 מעל 95 = 330, תואם במדויק ל-GS. מאזן 0 בכל הקטגוריות. ההיצע 407 על 6 מפלסים (51/74/74/74/74/60). הערה בגיליון: מדיניות המחוזית מ-8.4.19 מאפשרת עד 1.5 חניות ליח\"ד ללא תלות בגודל."
+ }
+}

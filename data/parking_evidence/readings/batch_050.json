@@ -1,0 +1,34 @@
+{
+ "1437755": {
+  "plan_name": "בן גמלא 6-10",
+  "units_in_table": 132,
+  "req_private": 152,
+  "prov_private": 153,
+  "req_residential": 145,
+  "guests": 13,
+  "bikes_req": 132,
+  "moto_req": 13,
+  "operational": 1,
+  "accessible": 4,
+  "standard": "1:1 לכל דירה; 10% אורחים (1:10); גן ילדים 1:40 עם תקן מופחת",
+  "source": {"crop": "crops/1437755/doc4_p0_rescue1250_1250.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "132 יח\"ד תואם במדויק ל-GS. חניה מתוכננת 153 על 4 מפלסים (37/46/46/24). לא-מגורים 7 בלבד (2 כיתות גן). חניות האופניים ממוקמות במחסנים. אותר ב-OCR rescue."
+ },
+ "1115450": {
+  "plan_name": "פת / קנאי הגליל",
+  "units_in_table": 117,
+  "req_private": 185,
+  "prov_private": null,
+  "req_residential": 158,
+  "guests": 16,
+  "bikes_req": 129,
+  "moto_req": 27,
+  "operational": 1,
+  "accessible": 6,
+  "standard": "1:1 לדירה 45-95 מ\"ר; 1.5:1 מעל 95 מ\"ר; 1:10 אורחים; משרדים 1:280 (עתיר תח\"צ)",
+  "source": {"crop": "crops/1115450/doc9_p0_k0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "3 תאי שטח: 1 (93 יח\"ד + מסחר 530 מ\"ר + משרדים 1,350) דרישה 143; 2 (24 יח\"ד) 39; 3 (3 כיתות מעון) 3. סכום היח\"ד 117 תואם במדויק ל-GS. הטבלה מפרידה במפורש בין 'דיירים' ל'אורחים' בכל שורת מגורים."
+ }
+}

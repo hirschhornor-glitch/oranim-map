@@ -1,0 +1,33 @@
+{
+ "1002054": {
+  "plan_name": "מתחם 15 - יצחק שדה 16-17",
+  "units_in_table": null,
+  "req_private": null,
+  "prov_private": 487,
+  "prov_residential": 450,
+  "bikes_prov": 260,
+  "moto_prov": 55,
+  "operational": 3,
+  "standard": "לא מוצג בגיליון תקן מגורים; חניה תפעולית מסחר 1:400",
+  "source": {"crop": "crops/1002054/doc13_p0_k0.png", "doc": "נספח תנועה"},
+  "confidence": "medium",
+  "notes": "בגיליון רק 'טבלת חניות מתוכננות': 5 מרתפים M1-M5 × 90 רכב = 450 חניות דיירים, + 37 חניות מסחר/ציבורי בקומה 0. אין טבלת דרישה."
+ },
+ "1002625": {
+  "plan_name": "ביתילי - פייר קניג 39",
+  "units_in_table": 148,
+  "req_private": 504,
+  "prov_private": 504,
+  "req_residential": 174,
+  "prov_residential": null,
+  "guests": 15,
+  "bikes_req": 191,
+  "moto_req": 50,
+  "operational": 4,
+  "accessible": 14,
+  "standard": "0.2 עד 55 מ\"ר; 1 עד 95; 1.33 מעל 95; 10% אורחים (אזור עתיר תח\"צ 5166ב)",
+  "source": {"crop": "crops/1002625/doc10_p0_k0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "מאזן חניה: דרוש 504 = מוצע 504 (מאזן 0). רוב הדרישה אינה מגורים — מרפאות 4,120 מ\"ר דורשות 206 מקומות. סה\"כ כולל נכים 518."
+ }
+}

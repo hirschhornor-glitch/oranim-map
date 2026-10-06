@@ -1,0 +1,37 @@
+{
+ "1301753": {
+  "plan_name": "עמק רפאים 59",
+  "units_in_table": 117,
+  "req_private": 145,
+  "req_private_full_standard": 160,
+  "prov_private": 155,
+  "req_residential": 129,
+  "prov_residential": 137,
+  "guests": 12,
+  "bikes_req": 120,
+  "moto_req": 16,
+  "operational": 1,
+  "accessible": 5,
+  "standard": "הגיליון מציג שלושה תקנים במקביל — גבוה (2:1 מעל 95 מ\"ר), בינוני (1.33:1), נמוך (1:1); התכנית מיושמת לפי הנמוך",
+  "source": {"crop": "crops/1301753/doc7_p0_k0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "15 יח\"ד מעל 95 + 102 עד 95 = 117, תואם במדויק ל-GS. גיליון נדיר שמציג את שלוש רמות התקן זו לצד זו: 160 / 150 / 145 — פער של 10% בלבד כי רק 15 מהיח\"ד גדולות. חניה מתוכננת 155 על 4 מפלסים."
+ },
+ "1469246": {
+  "plan_name": "עין גדי - דרך חברון, צומת הבנקים",
+  "units_in_table": 120,
+  "req_private": 146,
+  "req_private_full_standard": 164,
+  "prov_private": 152,
+  "req_residential": 132,
+  "guests": 12,
+  "bikes_req": 125,
+  "moto_req": 18,
+  "operational": 1,
+  "accessible": 6,
+  "standard": "אזור עתיר תח\"צ: 1:1 ליח\"ד (זהה בשני התקנים); 10% אורחים; מסחר 1:60 במקום 1:25; ציבורי 1:100 במקום 1:50",
+  "source": {"crop": "crops/1469246/doc6_p0_rescue3750_1250.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "120 יח\"ד תואם במדויק ל-GS. ההפחתה לעתיר תח\"צ נוגעת רק ללא-מגורים (32→14) כי המגורים כבר 1:1. חניה מתוכננת 152 על 5 מפלסים (23/31/32/32/34). אותר ב-OCR rescue."
+ }
+}

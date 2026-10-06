@@ -1,0 +1,29 @@
+{
+ "808451": {
+  "plan_name": "תוספת בנייה מקור חיים 34",
+  "units_in_table": 51,
+  "req_private": 65,
+  "prov_private": 65,
+  "req_residential": 63,
+  "guests": 0,
+  "bikes_req": 51,
+  "accessible": 3,
+  "standard": "⚠️ 1:1 ליח\"ד מתחת 95 מ\"ר, **1:2 מעל 95 מ\"ר**",
+  "source": {"crop": "crops/808451/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "12 יח\"ד מעל 95 מ\"ר (24 מקומות) + 39 מתחת 95 (39) = 51 יח\"ד. מאזן 0. ניתן למקם עד 50% ממקומות חניית האופניים מחוץ לבניין. אותר ב-OCR rescue."
+ },
+ "1097682": {
+  "plan_name": "הגדלת אחוזי בנייה ותוספת יח\"ד, שרפאת",
+  "units_in_table": 7,
+  "req_private": 7,
+  "prov_private": 7,
+  "req_residential": 7,
+  "guests": 0,
+  "bikes_req": 7,
+  "standard": "1:1 ליח\"ד",
+  "source": {"crop": "crops/1097682/doc3_p0_rescue2500_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "7 יח\"ד, 7 מקומות, יחס 1.00. מאזן 0. אותר ב-OCR rescue."
+ }
+}

@@ -1,0 +1,99 @@
+{
+ "1095330": {
+  "plan_name": "רג'ואן הגדול / הסדנא - פייר קניג",
+  "units_in_table": 636,
+  "req_private": 890,
+  "prov_private": 890,
+  "req_residential": 700,
+  "guests": 64,
+  "bikes_req": 741,
+  "bikes_prov": 105,
+  "moto_req": 265,
+  "moto_prov": 205,
+  "operational": 5,
+  "accessible": 18,
+  "standard": "1:1 לכל יח\"ד (עד ומעל 95 מ\"ר); 10% אורחים; תקן 5166ב אזור עתיר תח\"צ",
+  "source": {
+   "crop": "crops/1095330/doc15_p0_k0.png",
+   "doc": "נספח תנועה"
+  },
+  "confidence": "high",
+  "notes": "246 יח\"ד עד 95 מ\"ר + 390 מעל 95. לא-מגורים 190 (תעסוקה 17,500 מ\"ר=63, מסחר 2,500=38, ציבור 89). היצע = דרישה במדויק."
+ },
+ "1024645": {
+  "plan_name": "מתחם המושבות / חסדא",
+  "units_in_table": 512,
+  "req_private": 563,
+  "req_private_full_standard": 620,
+  "prov_private": 563,
+  "req_residential": 521,
+  "guests": 51,
+  "bikes_req": 519,
+  "moto_req": 65,
+  "accessible": 6,
+  "standard": "תקן 5166ב מופחת: 0.2 עד 55 מ\"ר, 1:1 מעל 55, 10% אורחים; ציבורי/מסחר 50%",
+  "source": {
+   "crop": "crops/1024645/doc21_p0_k0.png",
+   "doc": "נספח תנועה"
+  },
+  "confidence": "high",
+  "notes": "3 מקבצים — בניינים מרקמיים A-D (143 יח\"ד): 162; מגדל A (212 יח\"ד): 214; מגדל B (157 יח\"ד): 187. חניה מתוכננת = דרישה מופחתת בכל אחד."
+ },
+ "1033869": {
+  "plan_name": "מתחם 01 - בר יוחאי 1-3",
+  "units_in_table": 363,
+  "req_private": 412,
+  "req_private_full_standard": 547,
+  "prov_private": 421,
+  "req_residential": 367,
+  "guests": 36,
+  "bikes_req": 387,
+  "moto_req": 65,
+  "operational": 6,
+  "accessible": 9,
+  "standard": "1:1 לכל דירה; 0.2 לדירה מתחת 55 מ\"ר; 10% אורחים; תקן מופחת 50% לשימושים לא-מגורים",
+  "source": {
+   "crop": "crops/1033869/doc13_p0_k0.png",
+   "doc": "נספח תנועה"
+  },
+  "confidence": "high",
+  "notes": "323 יח\"ד רגילות + 40 קטנות. חניה מתוכננת 421 ב-6 מפלסים (-1..-6). לא-מגורים: מסחר 1,500 מ\"ר=25, משרדים 2,275=8, גן 670=9, בית כנסת 300=3."
+ },
+ "1219724": {
+  "plan_name": "מתחם שער האומן",
+  "units_in_table": 336,
+  "req_private": 504,
+  "prov_private": 596,
+  "req_residential": 356,
+  "guests": null,
+  "bikes_req": 338,
+  "moto_req": null,
+  "operational": 6,
+  "standard": "0.5 ליח\"ד קטנה; 1:1 עד 95 מ\"ר; 1:1.33 מעל 95 מ\"ר (תקן עיריית ירושלים, אזור עתיר תח\"צ)",
+  "source": {
+   "crop": "crops/1219724/doc10_p0_k0.png",
+   "doc": "נספח תנועה"
+  },
+  "confidence": "medium",
+  "notes": "3 מגרשים: 101 (מגורים+מסחר+תעסוקה) דרישה 437/היצע 439; 201 (משטרה+מסחר+תעסוקה) דרישה 41 אך היצע בפועל 127; 301 (בי\"ס+גן+בית כנסת) דרישה 26/היצע 30. חפיפת שימושים הורידה את מגרש 101 ל-429."
+ },
+ "1010123": {
+  "plan_name": "פינוי בינוי שלום יהודה 13-27",
+  "units_in_table": 429,
+  "req_private": 492,
+  "prov_private": null,
+  "req_residential": 472,
+  "guests": 43,
+  "bikes_req": 432,
+  "moto_req": 47,
+  "operational": 2,
+  "accessible": 9,
+  "standard": "1:1 לכל יח\"ד + 10% אורחים (החלטת ועדה 23.01.16 סעיף 22, אזור עתיר תח\"צ)",
+  "source": {
+   "crop": "crops/123/doc12_p0_k0.png",
+   "doc": "נספח תנועה"
+  },
+  "confidence": "high",
+  "notes": "95 יח\"ד קטנות + 334 גדולות. מסחר 800 מ\"ר=14. בי\"ס 12 כיתות ובית כנסת 250 מ\"ר ללא דרישת חניה (מפרץ הורדה). אין טבלת היצע בגיליון."
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "756106": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 9,
+  "req_private": 12,
+  "prov_private": 12,
+  "req_residential": 12,
+  "guests": 0,
+  "bikes_req": 9,
+  "moto_req": 2,
+  "standard": "1.33:1 לכל יח\"ד; אופניים 1:1; אופנועים 1:6",
+  "source": {"crop": "crops/756106/doc3_p0_rescue0_0.png", "doc": "נספח תנועה 16/06/2022, אושר 11/07/2022"},
+  "confidence": "high",
+  "notes": "9 יח\"ד, 12 מקומות, מאזן 0 בשלוש הקטגוריות. אותר ב-OCR rescue."
+ },
+ "1031640": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 10,
+  "req_private": 13,
+  "prov_private": 13,
+  "req_residential": 13,
+  "guests": 0,
+  "bikes_req": 10,
+  "moto_req": 1,
+  "standard": "1:1.33 לכל יח\"ד; אופניים 1:1; אופנועים 1:10",
+  "source": {"crop": "crops/1031640/doc3_p0_rescue0_0.png", "doc": "נספח תנועה 22/08/2022, אושר 29/08/2022"},
+  "confidence": "high",
+  "notes": "10 יח\"ד, 13 מקומות. החניה בקומת מרתף אחת עם רמפה. אותר ב-OCR rescue."
+ }
+}

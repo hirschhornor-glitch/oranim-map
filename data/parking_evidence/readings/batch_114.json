@@ -1,0 +1,30 @@
+{
+ "1188333": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 9,
+  "req_private": 14,
+  "prov_private": 14,
+  "req_residential": 14,
+  "guests": 0,
+  "bikes_req": 9,
+  "moto_req": 1,
+  "accessible": 1,
+  "standard": "⚠️ תכנית 5166ב **אזור תקן חניה גבוה**: 1:1 ליח\"ד עד 95 מ\"ר, **2:1 מעל 95**",
+  "source": {"crop": "crops/1188333/doc4_p0_rescue2500_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "4 יח\"ד עד 95 מ\"ר (4 מקומות) + 5 מעל 95 (10) = 9 יח\"ד, יחס 1.56. דרישת הדו-גלגלי לפי תקן ארצי 2016. גובה אנכי מינימלי בחניון מקורה 2.20 מ'. אותר ב-OCR rescue."
+ },
+ "68593": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 12,
+  "req_private": 21,
+  "prov_private": 21,
+  "req_residential": 21,
+  "guests": 0,
+  "bikes_req": 21,
+  "standard": "⚠️ תקן 5166ב' **אזור תקן גבוה**: 1:1 ליח\"ד עד 95 מ\"ר, **2:1 מעל 95**",
+  "source": {"crop": "crops/68593/doc4_p0_rescue11250_0.png", "doc": "נספח תנועה"},
+  "confidence": "medium",
+  "notes": "3 יח\"ד עד 95 מ\"ר (3 מקומות) + 9 מעל 95 (18) = 12 יח\"ד, יחס 1.75. מאזן 0. ⚠️ הגיליון משורטט הפוך (180°) — הפענוח נעשה מהתמונה ההפוכה. אותר ב-OCR rescue."
+ }
+}

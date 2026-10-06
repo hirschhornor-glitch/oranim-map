@@ -1,0 +1,19 @@
+{
+ "833038": {
+  "plan_name": "מתחם בזק",
+  "units_in_table": 134,
+  "req_private": 147,
+  "prov_private": 176,
+  "req_residential": 123,
+  "prov_residential": 152,
+  "guests": 14,
+  "bikes_req": 154,
+  "moto_req": 36,
+  "operational": 2,
+  "accessible": 8,
+  "standard": "תקן מופחת — 109 מקומות ל-134 יח\"ד בדרישה (≈0.81), 138 בפועל",
+  "source": {"crop": "crops/833038/doc15_p0_rescue0_0.png", "doc": "נספח תנועה 03/02/2026"},
+  "confidence": "medium",
+  "notes": "הדרישה למגורים (109) נמוכה ממספר היח\"ד, אך ההיצע בפועל 138 — התכנית מספקת מעבר לתקן. ההיצע פרוס על 4 מפלסים (36/50/52 מגורים + 11 מסחר ו-13 משרדים בקומה -1). אותר ב-OCR rescue."
+ }
+}

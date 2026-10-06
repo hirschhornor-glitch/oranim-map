@@ -1,0 +1,51 @@
+{
+ "1372788": {
+  "plan_name": "מגורים",
+  "units_in_table": 14,
+  "req_private": 19,
+  "prov_private": 20,
+  "req_residential": 19,
+  "prov_residential": 20,
+  "guests": 0,
+  "bikes_req": 14,
+  "bikes_prov": 14,
+  "moto_req": 2,
+  "moto_prov": 2,
+  "accessible": 1,
+  "standard": "1:1.33 ליח\"ד — כל 14 היח\"ד מעל 95 מ\"ר; אופניים 1:1; אופנועים 1:10",
+  "source": {"crop": "crops/1372788/doc6_p0_rescue0_0.png", "doc": "נספח תנועה 04/05/2026, אושר 11/08/2026"},
+  "confidence": "high",
+  "notes": "14 יח\"ד מעל 95 מ\"ר × 1.33 = 19 מקומות (יחס 1.36). ההיצע 20 = 19 מ\"ח + חניית נכה, פרוס על 4 מפלסי מרתף (-1 עד -4) עם רמפה רציפה."
+ },
+ "1278654": {
+  "plan_name": "מגורים",
+  "units_in_table": 13,
+  "req_private": 26,
+  "prov_private": 29,
+  "req_residential": 26,
+  "prov_residential": 29,
+  "guests": 0,
+  "bikes_req": 13,
+  "bikes_prov": 13,
+  "moto_req": 2,
+  "moto_prov": 2,
+  "accessible": 1,
+  "standard": "⚠️ תקן חניה 5166 ב' — **תקן חניה גבוה**: כל 13 היח\"ד מעל 95 מ\"ר ולכן **2:1**; אופניים 1:1; אופנועים 1:5-10",
+  "source": {"crop": "crops/1278654/doc7_p0_rescue0_1250.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "13 יח\"ד × 2 = 26 מקומות — **יחס 2.00**. ההיצע 29, עודף +3. הגיליון מחייב גובה ראש 2.20 מ' נטו בחניון (2.45 מ' בחניית נכה גבוה) ומחסנים של 6 מ\"ר ומעלה לחניות האופניים."
+ },
+ "141010": {
+  "plan_name": "מגורים",
+  "units_in_table": 13,
+  "req_private": 18,
+  "prov_private": 18,
+  "req_residential": 18,
+  "prov_residential": 18,
+  "guests": 0,
+  "standard": "⚠️ 1:1 ליח\"ד קטנה מ-95 מ\"ר, **2:1 ליח\"ד מעל 95**",
+  "source": {"crop": "crops/141010/doc7_p0_rescue1250_0.png", "doc": "תכנית תנועה - נספח מס' 2, 20.12.2016 (משה אלבוחר)"},
+  "confidence": "high",
+  "notes": "8 יח\"ד מתחת 95 מ\"ר (8 מקומות) + 5 מעל 95 (10) = 13 יח\"ד, 18 מקומות (יחס 1.38). מאזן 0 — 8 מקומות במרתף -1 ו-10 במרתף -2. שורת 'מגורים קיים' ריקה — כל היח\"ד חדשות."
+ }
+}

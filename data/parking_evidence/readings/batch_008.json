@@ -1,0 +1,34 @@
+{
+ "1133180": {
+  "plan_name": "התחדשות עירונית דרך חברון 108-110",
+  "units_in_table": 230,
+  "req_private": 263,
+  "prov_private": null,
+  "req_residential": 253,
+  "guests": 23,
+  "bikes_req": 231,
+  "operational": 1,
+  "accessible": 6,
+  "standard": "תקן חניה נמוך בהתאם למדיניות רק\"ל: 1:1 ליח\"ד + 10% אורחים; בית כנסת פטור",
+  "source": {"crop": "crops/1133180/doc16_p0_k0.png", "doc": "נספח תנועה, אושר 02/04/2025"},
+  "confidence": "high",
+  "notes": "לא-מגורים 10 בלבד (מעונות 5, מסחר 5, בית כנסת פטור). הטבלה מונה 230 יח\"ד מול 234 ב-GS."
+ },
+ "1063957": {
+  "plan_name": "סן מרטין 22+26 / בר יוחאי 12-14",
+  "units_in_table": 447,
+  "req_private": 543,
+  "req_private_full_standard": 558,
+  "prov_private": 554,
+  "req_residential": 492,
+  "guests": 45,
+  "bikes_req": 475,
+  "moto_req": 73,
+  "operational": 4,
+  "accessible": 11,
+  "standard": "1:1 ליח\"ד + 10% אורחים; מסחר וציבור בתקן מופחת",
+  "source": {"crop": "crops/1063957/doc14_p0_kY.png", "doc": "תנועה חתום לאישור 13/07/2025"},
+  "confidence": "high",
+  "notes": "ההיצע 554 פרוס על 6 מפלסי חניון (35/108/107/102/102/100). מבנה ציבור נפרד (תא 2, 2,125 מ\"ר) דורש 25. הטבלה לא אותרה אוטומטית — נמצאה ב-OCR של הגיליון (ocr_grep_sheet)."
+ }
+}

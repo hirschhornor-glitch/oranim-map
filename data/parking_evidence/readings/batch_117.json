@@ -1,0 +1,27 @@
+{
+ "225276": {
+  "plan_name": "מבנה מגורים - בית הערבה 16",
+  "units_in_table": 9,
+  "req_private": 13,
+  "prov_private": 13,
+  "req_residential": 13,
+  "guests": 0,
+  "standard": "⚠️ 1:1 ליח\"ד עד 95 מ\"ר, **2:1 מעל 95 מ\"ר**",
+  "source": {"crop": "crops/225276/tbl.png", "doc": "נספח תנועה 21/02/2016"},
+  "confidence": "high",
+  "notes": "5 יח\"ד עד 95 מ\"ר (5 מקומות) + 4 מעל 95 (8) = 9 יח\"ד, יחס 1.44. ההיצע פרוס על קומות מרתף (7 בקומה -2 ועוד). אותר ב-OCR rescue."
+ },
+ "998336": {
+  "plan_name": "מגורים - בית צפאפא/שרפאת",
+  "units_in_table": 8,
+  "req_private": 10,
+  "prov_private": 10,
+  "req_residential": 10,
+  "guests": 0,
+  "bikes_req": 8,
+  "standard": "1:1.33 ליח\"ד מעל 95 מ\"ר; 1:1 עד 95",
+  "source": {"crop": "crops/998336/doc3_p0_rescue0_0.png", "doc": "נספח תנועה 16/04/2023"},
+  "confidence": "high",
+  "notes": "5 יח\"ד מעל 95 מ\"ר (7 מקומות) + 3 עד 95 (3) = 8 יח\"ד, מאזן 0. אותר ב-OCR rescue."
+ }
+}

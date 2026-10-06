@@ -1,0 +1,29 @@
+{
+ "915769": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 16,
+  "req_private": 16,
+  "prov_private": 16,
+  "req_residential": 16,
+  "guests": 0,
+  "bikes_req": 16,
+  "moto_req": 2,
+  "standard": "1:1 ליח\"ד עד 95 מ\"ר",
+  "source": {"crop": "crops/915769/doc3_p0_rescue0_1250.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "16 יח\"ד, כולן עד 95 מ\"ר, יחס מגורים 1.00 בדיוק. מאזן 0 בשלוש הקטגוריות. אותר ב-OCR rescue."
+ },
+ "448951": {
+  "plan_name": "מגורים - בית צפאפא",
+  "units_in_table": 13,
+  "req_private": 15,
+  "prov_private": 15,
+  "req_residential": 15,
+  "guests": 0,
+  "bikes_req": 13,
+  "standard": "1:1 ליח\"ד קיימות; 1:1.33 לדירות מתוכננות מעל 95 מ\"ר",
+  "source": {"crop": "crops/448951/doc9_p0_rescue0_1250.png", "doc": "נספח תנועה וחניה 27.03.18"},
+  "confidence": "high",
+  "notes": "7 יח\"ד קיימות (7 מקומות) + 6 מתוכננות מעל 95 מ\"ר (8) = 13 יח\"ד, 15 מקומות. הגיליון מבחין בין מתקני חניה (מכפילים) לחניה רגילה. אותר ב-OCR rescue."
+ }
+}

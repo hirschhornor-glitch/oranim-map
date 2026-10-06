@@ -1,0 +1,29 @@
+{
+ "861393": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 15,
+  "req_private": 30,
+  "prov_private": 30,
+  "req_residential": 30,
+  "guests": 0,
+  "bikes_req": 15,
+  "bikes_prov": 16,
+  "moto_req": 3,
+  "standard": "⚠️ **1:2 — שני מקומות לכל יח\"ד** (כולן מעל 95 מ\"ר)",
+  "source": {"crop": "crops/861393/tbl.png", "doc": "נספח תנועה 09-01-2021"},
+  "confidence": "high",
+  "notes": "יחס 2.00 — 15 יח\"ד מקבלות 30 מקומות. מאזן 0 ברכב פרטי. אותר ב-OCR rescue."
+ },
+ "104273": {
+  "plan_name": "קורא הדורות 13",
+  "units_in_table": 15,
+  "req_private": 20,
+  "prov_private": 20,
+  "req_residential": 20,
+  "guests": 0,
+  "standard": "⚠️ **אזור תקן גבוה** (5166ב', רמת שירות 1-2): 1:1 ליח\"ד עד 95 מ\"ר, **2:1 מעל 95**",
+  "source": {"crop": "crops/104273/doc6_p0_rescue2500_0.png", "doc": "נספח תנועה, אושר 17-05-2016"},
+  "confidence": "high",
+  "notes": "10 יח\"ד עד 95 מ\"ר (10 מקומות) + 5 מעל 95 (10) = 15 יח\"ד, יחס 1.33. גובה חופשי 2.20 מ' בכל נקודה בחניון ובגישה אליו. אותר ב-OCR rescue."
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "1102136": {
+  "plan_name": "תוספת יח\"ד",
+  "units_in_table": 4,
+  "req_private": 6,
+  "prov_private": 6,
+  "req_residential": 6,
+  "guests": 0,
+  "bikes_req": 4,
+  "moto_req": 1,
+  "standard": "1:1.33 ליח\"ד המוצעות; ⚠️ 4 היח\"ד הקיימות לפי היתר 1985/698 — **לא תוכנן להן חניה כלל**",
+  "source": {"crop": "crops/1102136/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "הטבלה מפרידה בין 4 יח\"ד קיימות (ללא חניה מתוכננת, לפי ההיתר ההיסטורי) ל-4 יח\"ד מוצעות שמקבלות 6 מקומות. אם סופרים את כל 8 היח\"ד היחס יורד ל-0.75. אותר ב-OCR rescue."
+ },
+ "911610": {
+  "plan_name": "תוספת שתי קומות על בניין קיים, בית צפאפא",
+  "units_in_table": 4,
+  "req_private": 6,
+  "prov_private": 6,
+  "req_residential": 5,
+  "guests": 0,
+  "bikes_req": 4,
+  "moto_req": 1,
+  "standard": "1:1 ליח\"ד קיימות (לפי היתר 1987.65); 1:1.33 ליח\"ד מוצעות; מסחר 1:25",
+  "source": {"crop": "crops/911610/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה 25.11.2021"},
+  "confidence": "high",
+  "notes": "2 יח\"ד קיימות + 2 מוצעות = 4, מאזן 0. מסחר 29 מ\"ר דורש מקום אחד. אותר ב-OCR rescue."
+ }
+}

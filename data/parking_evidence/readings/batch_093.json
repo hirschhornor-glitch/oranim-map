@@ -1,0 +1,32 @@
+{
+ "613570": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 40,
+  "req_private": 59,
+  "prov_private": 59,
+  "req_residential": 57,
+  "guests": 0,
+  "bikes_req": 41,
+  "moto_req": 5,
+  "accessible": 2,
+  "standard": "⚠️ 1:1 ליח\"ד עד 95 מ\"ר, **2:1 מעל 95 מ\"ר**; הדרישה נגזרת מתב\"ע 126631",
+  "source": {"crop": "crops/613570/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "23 יח\"ד עד 95 + 17 מעל 95 = 40, תואם במדויק ל-GS. מאזן 0. ⚠️ 19 מתוך 59 החניות חסומות; ההיצע פרוס על 3 קומות חניון + 2 מקומות על הכביש, עם מתקני חניה מדגם N-4402. אותר ב-OCR rescue."
+ },
+ "975912": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 23,
+  "req_private": 29,
+  "prov_private": 29,
+  "req_residential": 27,
+  "guests": 0,
+  "bikes_req": 25,
+  "bikes_prov": 26,
+  "moto_req": 4,
+  "standard": "1:1.33 ליח\"ד מעל 95 מ\"ר; 1:1 מתחת 95; ציבורי 1:50",
+  "source": {"crop": "crops/975912/doc4_p0_rescue0_0.png", "doc": "נספח תנועה 23/04/2024, אושר 12/09/2024"},
+  "confidence": "high",
+  "notes": "12 יח\"ד מעל 95 + 11 מתחת = 23. מאזן 0 ברכב פרטי. ההיצע פרוס על שני מפלסי חניון (-9.10 ו--11.80) עם רמזורי כניסה. אותר ב-OCR rescue."
+ }
+}

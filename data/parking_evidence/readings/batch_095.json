@@ -1,0 +1,30 @@
+{
+ "666594": {
+  "plan_name": "מגורים ומועדון שכונתי",
+  "units_in_table": 16,
+  "req_private": 23,
+  "prov_private": 23,
+  "req_residential": 21,
+  "guests": 0,
+  "bikes_req": 17,
+  "bikes_prov": 18,
+  "moto_req": 3,
+  "standard": "1:1.33 ליח\"ד; מועדון שכונתי 1:50",
+  "source": {"crop": "crops/666594/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "16 יח\"ד (21 מקומות) + מועדון שכונתי 80 מ\"ר (2) = 23, מאזן 0. אותר ב-OCR rescue."
+ },
+ "1163088": {
+  "plan_name": "תוספת יח\"ד",
+  "units_in_table": 15,
+  "req_private": 19,
+  "prov_private": 19,
+  "req_residential": 19,
+  "guests": 0,
+  "bikes_req": 15,
+  "standard": "1:1.33 ליח\"ד — גם לקיימות (לפי היתר 2017-515.1) וגם למוצעות",
+  "source": {"crop": "crops/1163088/doc3_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "6 יח\"ד קיימות (8 מקומות) + 9 מוצעות (11) = 15 יח\"ד, 19 מקומות. כאן בניגוד לתכניות דומות גם היח\"ד הקיימות מחויבות בתקן מלא. אותר ב-OCR rescue."
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "1229517": {
+  "plan_name": "רג'ואן - התעשייה",
+  "units_in_table": 86,
+  "req_private": 193,
+  "prov_private": null,
+  "req_residential": 127,
+  "guests": 12,
+  "bikes_req": 86,
+  "moto_req": 17,
+  "accessible": 7,
+  "standard": "1:1.33 לכל יח\"ד; 10% אורחים; מסחר 1:25; מבני ציבור 1:40",
+  "source": {"crop": "crops/1229517/doc17_p0_rescue1250_1250.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "86 יח\"ד תואם במדויק ל-GS. מבני ציבור 2,150 מ\"ר דורשים 54 מקומות — 28% מכלל הדרישה. בנוסף לנדרש מתוכננים 5 מקומות לרכב רגיל ו-2 לרכב גבוה (נגישות). אותר ב-OCR rescue."
+ },
+ "1389568": {
+  "plan_name": "דובנוב 16",
+  "units_in_table": 92,
+  "req_private": 171,
+  "prov_private": null,
+  "req_residential": 155,
+  "guests": 0,
+  "bikes_req": 100,
+  "moto_req": 27,
+  "bus": 2,
+  "accessible": 2,
+  "standard": "⚠️ תקן 5166ב **אזור תקן חניה גבוה**: 1:1 ליח\"ד עד 95 מ\"ר, **2:1 מעל 95 מ\"ר**",
+  "source": {"crop": "crops/1389568/doc4_p0_rescue2500_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "29 יח\"ד עד 95 + 63 מעל 95 = 92 (GS 97). יחס מגורים 1.68. אין שורת אורחים. גלריות/אומנות/תרבות 800 מ\"ר דורשות 16 מקומות ו-2 חניות אוטובוס. אותר ב-OCR rescue."
+ }
+}

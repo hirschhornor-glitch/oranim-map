@@ -1,0 +1,31 @@
+{
+ "1442656": {
+  "plan_name": "בניין מגורים - אלעזר בן יאיר 18",
+  "units_in_table": 21,
+  "req_private": 27,
+  "prov_private": 27,
+  "req_residential": 27,
+  "guests": 0,
+  "bikes_req": 21,
+  "moto_req": 2,
+  "accessible": 1,
+  "standard": "תקן 5166/5166ב + מדיניות מינהל התכנון לצירי רק\"ל: 1:1 ליח\"ד עד 95 מ\"ר, 1.5:1 מעל 95",
+  "source": {"crop": "crops/1442656/doc5_p0_rescue1250_0.png", "doc": "נספח תנועה 11.5.2025"},
+  "confidence": "high",
+  "notes": "10 יח\"ד עד 95 + 11 מעל 95 = 21, תואם במדויק ל-GS. מאזן 0 בכל הקטגוריות. כל החניה למגורים. אותר ב-OCR rescue."
+ },
+ "942672": {
+  "plan_name": "תוספת יח\"ד",
+  "units_in_table": 10,
+  "req_private": 13,
+  "prov_private": 13,
+  "req_residential": 13,
+  "guests": 0,
+  "bikes_req": 10,
+  "moto_req": 2,
+  "standard": "1:1.33 ליח\"ד מעל 95 מ\"ר",
+  "source": {"crop": "crops/942672/doc4_p0_rescue0_0.png", "doc": "נספח תנועה, אושר 28/11/2022"},
+  "confidence": "high",
+  "notes": "7 יח\"ד מאושרות + 3 מוצעות = 10, כולן מעל 95 מ\"ר. מאזן 0. יחס מגורים 1.30. אותר ב-OCR rescue."
+ }
+}

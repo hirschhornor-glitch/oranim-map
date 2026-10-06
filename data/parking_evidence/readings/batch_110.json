@@ -1,0 +1,31 @@
+{
+ "1345420": {
+  "plan_name": "בניין מגורים - דרך בית לחם",
+  "units_in_table": 19,
+  "req_private": 19,
+  "prov_private": 19,
+  "req_residential": 19,
+  "guests": 0,
+  "bikes_req": 19,
+  "moto_req": 2,
+  "accessible": 1,
+  "standard": "תקן 5166/5166ב — **תקן נמוך**: 1:1 ליח\"ד עד 95 מ\"ר; אופניים ואופנועים לפי תקן ארצי 2016",
+  "source": {"crop": "crops/1345420/doc6_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "19 יח\"ד, יחס 1.00 בדיוק, מאזן 0. החניה במתקן רובוטי (ARK automated parking system) על 3 מפלסים. חניות האופניים במחסנים ששטחם מעל 6 מ\"ר. אותר ב-OCR rescue."
+ },
+ "1032291": {
+  "plan_name": "בניין מגורים - רחוב אביטל",
+  "units_in_table": 22,
+  "req_private": 25,
+  "prov_private": 25,
+  "req_residential": 25,
+  "guests": 0,
+  "bikes_req": 22,
+  "moto_req": 10,
+  "standard": "⚠️ תקן 5166ב': 1:1 ליח\"ד מתחת 95 מ\"ר, **1:2 מעל 95 מ\"ר**",
+  "source": {"crop": "crops/1032291/doc6_p0_rescue0_0.png", "doc": "נספח תנועה 18/09/2022, אושר 15/12/2022"},
+  "confidence": "high",
+  "notes": "3 יח\"ד מעל 95 מ\"ר (6 מקומות) + 19 מתחת (19) = 22 יח\"ד. מאזן 0. החניות תוכננו לפי רמת שירות ו'; גובה ראש 2.20 מ' נטו במרתפים. אותר ב-OCR rescue."
+ }
+}

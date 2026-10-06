@@ -1,0 +1,57 @@
+{
+ "1255397": {
+  "plan_name": "מגורים - תוספת יח\"ד",
+  "units_in_table": 8,
+  "req_private": 10,
+  "prov_private": 11,
+  "req_residential": 10,
+  "prov_residential": 11,
+  "guests": 0,
+  "bikes_req": 6,
+  "moto_req": 1,
+  "accessible": 1,
+  "standard": "תקן ירושלים 5166ב' — **אזור בינוני**: 1:1.33 ליח\"ד; **2 היח\"ד הקיימות לפי היתר 1997/476** (2 מקומות); אופניים ואופנועים לפי תקן ארצי 2016",
+  "source": {"crop": "crops/1255397/doc3_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "2 יח\"ד קיימות עם 2 חניות מוכרות בהיתר + 6 יח\"ד חדשות × 1.33 = 8 = סה\"כ 8 יח\"ד ו-10 מקומות + חניית נכה (יחס 1.25). ההיצע ממומש במתקן חניה מכני (KLAUS multibase G63) בהתקנה חיצונית."
+ },
+ "868158": {
+  "plan_name": "מגורים - שרפת",
+  "units_in_table": 8,
+  "req_private": 11,
+  "prov_private": 11,
+  "req_residential": 11,
+  "prov_residential": 11,
+  "guests": 0,
+  "standard": "1:1.33 ליח\"ד — כל 8 היח\"ד מעל 95 מ\"ר",
+  "source": {"crop": "crops/868158/doc3_p0_rescue1250_0.png", "doc": "נספח תנועה 13-06"},
+  "confidence": "high",
+  "notes": "8 יח\"ד מעל 95 מ\"ר × 1.33 = 11 מקומות, מאזן 0 (יחס 1.38). גוש 30915 בשרפת."
+ },
+ "226886": {
+  "plan_name": "טלביה - רח' פינסקר 8",
+  "units_in_table": 4,
+  "req_private": 4,
+  "prov_private": 6,
+  "req_residential": 4,
+  "prov_residential": 6,
+  "guests": 0,
+  "standard": "1:1 ליח\"ד חדשה מתחת 95 מ\"ר",
+  "source": {"crop": "crops/226886/doc8_p0_rescue0_0.png", "doc": "נספח תנועה 10/05/2015, אושר 08/05/2016"},
+  "confidence": "high",
+  "notes": "4 יח\"ד חדשות קטנות מ-95 מ\"ר → 4 מקומות דרושים (יחס 1.00). ההיצע 6 — **עודף +2** — ממומש ב-2 **מכפילי חניה (wohr parklift 463)** בני 3 חניות כל אחד, בחצר, בשל מגבלות מגרש בטלביה."
+ },
+ "764613": {
+  "plan_name": "מגורים",
+  "units_in_table": 5,
+  "req_private": 7,
+  "prov_private": 7,
+  "req_residential": 7,
+  "prov_residential": 7,
+  "guests": 0,
+  "standard": "1:1.33 ליח\"ד — כל 5 היח\"ד מעל 95 מ\"ר",
+  "source": {"crop": "crops/764613/doc4_p0_rescue0_1250.png", "doc": "נספח תנועה 14/05/2019"},
+  "confidence": "high",
+  "notes": "5 יח\"ד מעל 95 מ\"ר × 1.33 = 7 מקומות, מאזן 0 (יחס 1.40). ההיצע כולו בקומת מרתף -1 (מפלס -2.50) עם רמפה בשיפוע 15%."
+ }
+}

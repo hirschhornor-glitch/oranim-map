@@ -1,0 +1,27 @@
+{
+ "950642": {
+  "plan_name": "הקמת שני בניינים חדשים בני 6 קומות",
+  "units_in_table": 32,
+  "req_private": 66,
+  "prov_private": 66,
+  "req_residential": 64,
+  "guests": 0,
+  "standard": "⚠️ תקן 5166ב': **2:1 לכל יח\"ד**; גן ילדים 1:1 לכיתה",
+  "source": {"crop": "crops/950642/doc4_p0_rescue3750_0.png", "doc": "נספח תנועה וחניה 04/04/2024"},
+  "confidence": "high",
+  "notes": "יחס מגורים 2.00 — 32 יח\"ד מקבלות 64 מקומות. גן ילדים של 2 כיתות דורש 2 נוספים. החניות תוכננו לפי רמת שירות 1. אותר ב-OCR rescue."
+ },
+ "854604": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 24,
+  "req_private": 47,
+  "prov_private": 47,
+  "req_residential": 47,
+  "guests": 0,
+  "bikes_req": 24,
+  "standard": "⚠️ **1:2 (שני מקומות) ליח\"ד מעל 95 מ\"ר**; 1:1 עד 95",
+  "source": {"crop": "crops/854604/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "23 יח\"ד מעל 95 מ\"ר (46 מקומות) + יח\"ד אחת עד 95 (1) = 24 יח\"ד, יחס 1.96. מאזן 0. ההיצע בקומת חניה אחת (מפלס -3.40). אותר ב-OCR rescue."
+ }
+}

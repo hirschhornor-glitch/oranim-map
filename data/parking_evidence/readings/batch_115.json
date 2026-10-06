@@ -1,0 +1,29 @@
+{
+ "1551068": {
+  "plan_name": "מגורים - בית צפאפא/שרפת",
+  "units_in_table": 10,
+  "req_private": 14,
+  "prov_private": 14,
+  "req_residential": 14,
+  "guests": 0,
+  "bikes_req": 10,
+  "moto_req": 1,
+  "accessible": 1,
+  "standard": "תקן חניה ירושלים 5166ב' — **אזור תקן בינוני**: 1:1.33 ליח\"ד; דו-גלגלי לפי תקן ארצי 2016",
+  "source": {"crop": "crops/1551068/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "10 יח\"ד, 14 מקומות (מתוכם 1 נכה), מאזן 0. חניות האופניים סופקו בקומות קרקע ו-א'. אותר ב-OCR rescue."
+ },
+ "343202": {
+  "plan_name": "מגורים - בית צפאפא, גוש 30277 חלקה 27",
+  "units_in_table": 9,
+  "req_private": 12,
+  "prov_private": 12,
+  "req_residential": 12,
+  "guests": 0,
+  "standard": "1:1.33 ליח\"ד — חל גם על הקיימות וגם על המוצעות",
+  "source": {"crop": "crops/343202/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "4 יח\"ד קיימות + 5 מוצעות = 9 יח\"ד, 12 מקומות, מאזן 0. אותר ב-OCR rescue."
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "1336049": {
+  "plan_name": "מתחם ברוריה אאורה",
+  "units_in_table": 202,
+  "req_private": 220,
+  "prov_private": 229,
+  "req_residential": 202,
+  "guests": 0,
+  "bikes_req": 208,
+  "moto_req": 208,
+  "operational": 4,
+  "accessible": 9,
+  "standard": "1:1 לכל יח\"ד; מסחר 1:60; ציבורי 1:100",
+  "source": {"crop": "crops/1336049/doc9_p0_rescue5000_0.png + 6250_0", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "202 יח\"ד תואם במדויק ל-GS, יחס מגורים 1.00. חניה מתוכננת 229 = 220 רגילות + 9 נכים, על 5 מפלסים (15/40/51/55/59). 202 חניות האופניים ממוקמות במחסנים. אותר ב-OCR rescue."
+ }
+}

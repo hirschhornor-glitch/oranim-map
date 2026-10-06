@@ -1,0 +1,28 @@
+{
+ "886556": {
+  "plan_name": "בניין מגורים בן 5 קומות - בית צפאפא",
+  "units_in_table": 9,
+  "req_private": 11,
+  "prov_private": 11,
+  "req_residential": 11,
+  "guests": 0,
+  "bikes_req": 9,
+  "moto_req": 1,
+  "standard": "1:1.33 ליח\"ד מעל 95 מ\"ר; 1:1 עד 95; אופנוע אחד לכל 5 עד 10 יח\"ד",
+  "source": {"crop": "crops/886556/tbl.png", "doc": "נספח תנועה 04/08/2021"},
+  "confidence": "high",
+  "notes": "7 יח\"ד מעל 95 מ\"ר (9 מקומות) + 2 עד 95 (2) = 9 יח\"ד, יחס 1.22. אותר ב-OCR rescue."
+ },
+ "621318": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 9,
+  "req_private": 12,
+  "prov_private": 12,
+  "req_residential": 12,
+  "guests": 0,
+  "standard": "1:1.33 ליח\"ד",
+  "source": {"crop": "crops/621318/doc3_p0_rescue0_0.png", "doc": "נספח תנועה 10/01/2021, אושר 07/03/2021"},
+  "confidence": "high",
+  "notes": "9 יח\"ד → 12 מקומות, יחס 1.33. ההיצע בקומת חניון אחת (מפלס -3.35). אותר ב-OCR rescue."
+ }
+}

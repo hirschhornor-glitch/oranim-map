@@ -1,0 +1,18 @@
+{
+ "1309061": {
+  "plan_name": "כ\"ט בנובמבר 28",
+  "units_in_table": 93,
+  "req_private": 111,
+  "prov_private": 115,
+  "req_residential": 103,
+  "guests": 10,
+  "bikes_req": 95,
+  "bikes_prov": 95,
+  "moto_req": 23,
+  "accessible": 4,
+  "standard": "1:1 לכל יח\"ד + 10% אורחים; מסחר 1:60; ציבור 1:50",
+  "source": {"crop": "crops/1309061/doc7_p0_rescue2500_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "93 יח\"ד תואם במדויק ל-GS. מוצע 115 מול נדרש 111 — ההפרש הוא 4 חניות נכים נוספות (3 למגורים, 1 לציבור). 95 חניות אופניים: 78 במתקני קשירה + 17 במחסנים דירתיים. אותר ב-OCR rescue."
+ }
+}

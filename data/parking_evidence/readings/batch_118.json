@@ -1,0 +1,29 @@
+{
+ "675660": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 8,
+  "req_private": 11,
+  "prov_private": 11,
+  "req_residential": 11,
+  "guests": 0,
+  "bikes_req": 8,
+  "standard": "1:1.33 ליח\"ד",
+  "source": {"crop": "crops/675660/doc4_p0_rescue1250_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "8 יח\"ד → 11 מקומות, יחס 1.375. אותר ב-OCR rescue."
+ },
+ "1106483": {
+  "plan_name": "בניין מגורים",
+  "units_in_table": 5,
+  "req_private": 10,
+  "prov_private": 10,
+  "req_residential": 10,
+  "guests": 0,
+  "bikes_req": 5,
+  "moto_req": 1,
+  "standard": "⚠️ תקן 5166/5166ב **תקן גבוה**: **2:1 ליח\"ד מעל 95 מ\"ר**",
+  "source": {"crop": "crops/1106483/doc9_p0_rescue0_0.png", "doc": "נספח תנועה 02/04/2024, אושר 02/05/2024"},
+  "confidence": "high",
+  "notes": "5 יח\"ד, כולן מעל 95 מ\"ר → 10 מקומות, יחס 2.00. מאזן 0. חניות האופניים מוצעות במחסנים ובחניון; כל החניות לרמת שירות 1 לפי הנחיות משה\"ת. אותר ב-OCR rescue."
+ }
+}

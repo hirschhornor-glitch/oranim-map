@@ -1,0 +1,41 @@
+{
+ "367870": {
+  "plan_name": "מגורים",
+  "units_in_table": 10,
+  "req_private": 10,
+  "prov_private": 10,
+  "req_residential": 10,
+  "prov_residential": 10,
+  "guests": 0,
+  "standard": "לפי תקן חניה ארצי יוני 2016: 1:1 לדירה עד 90 מ\"ר שטחים עיקריים",
+  "source": {"crop": "crops/367870/doc3_p0_rescue3750_1250.png", "doc": "נספח תנועה (ג.הנדסה אזורית תנועה ותחבורה)"},
+  "confidence": "high",
+  "notes": "6 דירות עד 90 מ\"ר (6 מקומות) + 4 דירות עתידיות עד 90 מ\"ר לפי תב\"ע מקודמת (4) = 10 יח\"ד, 10 מקומות — יחס 1.00, מאזן 0. ⚠️ הגיליון משתמש בסף **90 מ\"ר** (התקן הארצי) ולא 95 מ\"ר (תקן ירושלים)."
+ },
+ "627703": {
+  "plan_name": "מגורים",
+  "units_in_table": 9,
+  "req_private": 10,
+  "prov_private": 10,
+  "req_residential": 10,
+  "prov_residential": 10,
+  "guests": 0,
+  "standard": "1:1 ליח\"ד קטנה, 1.33:1 ליח\"ד גדולה",
+  "source": {"crop": "crops/627703/doc4_p0_rescue0_0.png", "doc": "נספח תנועה, הופקד 03/09/2019, אושר 18/11/2019"},
+  "confidence": "high",
+  "notes": "6 יח\"ד בתקן 1:1 (6 מקומות) + 3 יח\"ד בתקן 1.33:1 (4) = 9 יח\"ד, 10 מקומות דרושים ומוצעים (יחס 1.11)."
+ },
+ "639344": {
+  "plan_name": "מגורים",
+  "units_in_table": 9,
+  "req_private": 12,
+  "prov_private": 12,
+  "req_residential": 12,
+  "prov_residential": 12,
+  "guests": 0,
+  "standard": "1.33:1 ליח\"ד מעל 95 מ\"ר",
+  "source": {"crop": "crops/639344/doc3_p0_rescue3750_0.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "9 יח\"ד — כולן מעל 95 מ\"ר — × 1.33 = 12 מקומות, מאזן 0 (יחס 1.33)."
+ }
+}

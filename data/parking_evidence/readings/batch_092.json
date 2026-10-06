@@ -1,0 +1,32 @@
+{
+ "1277243": {
+  "plan_name": "בניין מגורים ברח' אביטל 4",
+  "units_in_table": 37,
+  "req_private": 42,
+  "prov_private": 42,
+  "req_residential": 37,
+  "guests": 0,
+  "bikes_req": 37,
+  "moto_req": 4,
+  "accessible": 3,
+  "standard": "תקן 5166/5166ב מוגדר 'תקן גבוה', בפועל 1:1 ליח\"ד עד 95 מ\"ר; גן ילדים 1:40",
+  "source": {"crop": "crops/1277243/doc6_p0_rescue1250_0.png", "doc": "נספח תנועה מס' 2"},
+  "confidence": "high",
+  "notes": "37 יח\"ד תואם במדויק ל-GS, יחס מגורים 1.00. גן ילדים 109 מ\"ר דורש 3. מאזן 0 כולל 3 חניות נגישות (1 ציבורית לרכב גבוה, 1 גבוה + 1 רגיל למגורים). אותר ב-OCR rescue."
+ },
+ "1359686": {
+  "plan_name": "בניין מגורים - אבא בוטח",
+  "units_in_table": 12,
+  "req_private": 16,
+  "prov_private": 17,
+  "req_residential": 16,
+  "guests": 0,
+  "bikes_req": 12,
+  "moto_req": 3,
+  "accessible": 1,
+  "standard": "1:1.3 ליח\"ד",
+  "source": {"crop": "crops/1359686/doc4_p0_rescue1250_1250.png", "doc": "נספח תנועה"},
+  "confidence": "high",
+  "notes": "12 יח\"ד, דרוש 16 ומתוכנן 17 — המקום הנוסף הוא לרכב נכה. אותר ב-OCR rescue."
+ }
+}
