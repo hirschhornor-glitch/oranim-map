@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-06-byuse4';
+        const APP_VERSION = '2026-10-06-parkdash';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4026,7 +4026,7 @@ function planPermitHafrashUse(taba) {
             const [extraUnitsReport, setExtraUnitsReport] = useState(false);
             const [extraUnitsFilter, setExtraUnitsFilter] = useState({ src: '', minahak: '', q: '' });
             const [parkingReport, setParkingReport] = useState(false);
-            const [parkFilter, setParkFilter] = useState({ minahak: 'all', sub: 'all', band: 'all', q: '' });
+            const [parkFilter, setParkFilter] = useState({ minahak: 'all', sub: 'all', band: 'all', status: 'all', q: '' });
             const [prFilter, setPrFilter] = useState({ year: '', status: '', minahak: '', build: '', flag: '', minUnits: 0 });
             const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
@@ -17066,8 +17066,8 @@ function planPermitHafrashUse(taba) {
                         ser: () => ({ min: publicNeedsMinahak }),
                         apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
                     { key: 'parking', isOpen: () => parkingReport, open: () => setParkingReport(true),
-                        ser: () => ({ minahak: parkFilter.minahak, sub: parkFilter.sub, band: parkFilter.band, q: parkFilter.q }),
-                        apply: p => setParkFilter({ minahak: p.minahak || 'all', sub: p.sub || 'all', band: p.band || 'all', q: p.q || '' }) },
+                        ser: () => ({ minahak: parkFilter.minahak, sub: parkFilter.sub, band: parkFilter.band, status: parkFilter.status, q: parkFilter.q }),
+                        apply: p => setParkFilter({ minahak: p.minahak || 'all', sub: p.sub || 'all', band: p.band || 'all', status: p.status || 'all', q: p.q || '' }) },
                 ];
             }
 
@@ -31196,7 +31196,7 @@ function planPermitHafrashUse(taba) {
                                 { icon:'🏪', title:'סיכום מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה לפי מינהל', onClick:() => go(() => fetchCommerceData()) },
                             ]},
                             { key:'transport', title:'🅿️ תנועה וחניה', color:'#00838f', bg:'rgba(0,131,143,0.06)', items:[
-                                { icon:'🅿️', title:'יחס חניה ליח"ד', desc:'מקומות חניה שכל תכנית מספקת לכל יח"ד — נקרא מטבלת מאזן החניה בנספח התנועה; כולל תקן מלא מול מופחת וחתך אזורי', onClick:() => go(() => { setParkFilter({ minahak:'all', sub:'all', band:'all', q:'' }); setParkingReport(true); }) },
+                                { icon:'🅿️', title:'מאזן חניה', desc:'כל נושא החניה מטבלאות המאזן שבנספחי התנועה: סך המקומות, תמהיל לפי שימוש, יחס ליח"ד, תקן מלא מול מופחת וחתך אזורי', onClick:() => go(() => { setParkFilter({ minahak:'all', sub:'all', band:'all', status:'all', q:'' }); setParkingReport(true); }) },
                             ]},
                             { key:'status', title:'📋 סטטוס ותהליך תכנוני', color:'#78909c', bg:'rgba(120,144,156,0.06)', items:[
                                 { icon:'🚧', title:'דוח מימוש', desc:'שלביות ביצוע לפי מינהל ותכנית', onClick:() => go(() => openMimushModal()) },
@@ -39035,6 +39035,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 full: v.req_private_full_standard || null,
                                 resSpaces, resRatio, totSpaces, totRatio, cut,
                                 band: BAND(resRatio), standard: v.standard || '',
+                                sgroup: statusGroupKey(normalizeStatus(v.status || '')),
                                 confidence: v.confidence || '', notes: v.notes || '',
                                 partial: v.coverage === 'partial',
                                 gap: v.units_gap_vs_gs || 0,
@@ -39062,6 +39063,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (f.minahak !== 'all' && r.minahak !== f.minahak) return false;
                             if (f.sub !== 'all' && r.sub !== f.sub) return false;
                             if (f.band !== 'all' && r.band !== f.band) return false;
+                            if (f.status !== 'all' && r.sgroup !== f.status) return false;
                             if (q && ![r.plan_name, r.title, r.sub, r.minahak, r.standard].join(' ').toLowerCase().includes(q)) return false;
                             return true;
                         }).sort((a, b) => b.units - a.units);
@@ -39219,7 +39221,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         <div className="units-overlay" onClick={() => setParkingReport(false)}>
                             <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(1180px,97vw)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                                 <div className="units-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                                    <h2 style={{ margin: 0, color: '#4dd0e1', fontSize: 17 }}>🅿️ יחס חניה ליח"ד</h2>
+                                    <h2 style={{ margin: 0, color: '#4dd0e1', fontSize: 17 }}>🅿️ מאזן חניה</h2>
                                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                         <button onClick={printReport} style={{ background: '#3a5a8c', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>📄 הדפסה / PDF</button>
                                         <button onClick={exportCSV} style={{ background: '#2d6a4f', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>📊 ייצוא אקסל</button>
@@ -39250,15 +39252,44 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         {sums.bikes ? <span>אופניים {nf(sums.bikes)}</span> : null}
                                         {sums.moto ? <span>אופנועים {nf(sums.moto)}</span> : null}
                                     </div>
-                                    {Object.keys(useTot).length > 0 && (
-                                        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 6, paddingTop: 5, borderTop: '1px dashed #2a2a4a', fontSize: 11 }}>
-                                            <span style={{ color: '#8a9bc0' }}>מהם לפי שימוש:</span>
-                                            {USE_ORDER.filter(u => useTot[u]).map(u => (
-                                                <span key={u} style={{ color: USE_COLOR[u] }}>{u} <b>{nf(useTot[u])}</b></span>
-                                            ))}
-                                            {useUnsplit ? <span style={{ color: '#7f8c99' }}>לא מפולח <b>{nf(useUnsplit)}</b></span> : null}
-                                        </div>
-                                    )}
+                                    {/* Use mix as a dashboard row: each use gets its own tile with the
+                                        count, its share of the non-residential total, and a bar. The
+                                        share denominator is the attributed total (uses + unattributed),
+                                        so the bars always add to 100% of what the sheets actually say. */}
+                                    {Object.keys(useTot).length > 0 && (() => {
+                                        const den = USE_ORDER.reduce((a, u) => a + (useTot[u] || 0), 0) + useUnsplit;
+                                        const cells = USE_ORDER.filter(u => useTot[u])
+                                            .map(u => ({ k: u, n: useTot[u], c: USE_COLOR[u] }));
+                                        if (useUnsplit) cells.push({ k: 'לא מפולח', n: useUnsplit, c: '#5b6676', faint: true });
+                                        return (
+                                            <div style={{ marginTop: 10, paddingTop: 9, borderTop: '1px solid #2a2a4a' }}>
+                                                <div style={{ color: '#8a9bc0', fontSize: 11, marginBottom: 7 }}>
+                                                    תמהיל החניה הלא-מגורים — {nf(den)} מקומות
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                                    {cells.map(c => {
+                                                        const pc = den ? Math.round(c.n / den * 100) : 0;
+                                                        return (
+                                                            <div key={c.k} style={{
+                                                                flex: '1 1 118px', minWidth: 118, background: 'rgba(255,255,255,0.03)',
+                                                                border: '1px solid #2a2a4a', borderTop: '3px solid ' + c.c,
+                                                                borderRadius: 7, padding: '7px 10px'
+                                                            }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                                                    <span style={{ color: c.faint ? '#8a9bc0' : '#dfe3ea', fontSize: 11.5 }}>{c.k}</span>
+                                                                    <span style={{ color: '#7f8c99', fontSize: 10 }}>{pc}%</span>
+                                                                </div>
+                                                                <div style={{ color: c.c, fontWeight: 700, fontSize: 19, lineHeight: 1.25 }}>{nf(c.n)}</div>
+                                                                <div style={{ height: 4, borderRadius: 3, background: '#20203a', marginTop: 3 }}>
+                                                                    <div style={{ height: '100%', borderRadius: 3, background: c.c, width: pc + '%' }}></div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                     <div style={{ color: '#7f8c99', fontSize: 10, marginTop: 4, whiteSpace: 'normal', lineHeight: 1.45 }}>
                                         ℹ️ הנספחים רושמים סה"כ לרכב פרטי ותת-סך למגורים; <b>'לא-מגורים' הוא הפרש בין השניים</b>, והפילוח לפי שימוש נקרא מטבלאות המאזן במעבר שני. 'אחר' אינו שימוש קרקע אלא שורות שהגיליון מונה בנפרד — חניות נכים, חניה ציבורית לפי החלטת ועדה והתחייבויות יזם; 'לא מפולח' הוא יתרה שהגיליון עצמו לא ייחס לשימוש — חניות נכים שנוספו מעל שורת הסיכום, זיכוי חפיפת שימושים שניתן על הסה"כ בלבד, או שגיאות חשבון בגיליון.
                                         {residFlagged ? <span style={{ color: '#e67e22' }}> · ⚠️ ב-{residFlagged} תכניות סך המגורים גדול מהסה"כ שנרשם — התרומה שלהן ל'לא-מגורים' אפס.</span> : null}
@@ -39282,6 +39313,15 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         <option value="low">{BAND_LABEL.low}</option>
                                         <option value="mid">{BAND_LABEL.mid}</option>
                                         <option value="high">{BAND_LABEL.high}</option>
+                                    </select>
+                                    <span style={{ color: '#aab' }}>סטטוס:</span>
+                                    {/* Status groups come from STATUS_GROUP_DEFS — the app's single
+                                        source. Never a local status map inside a report. */}
+                                    <select value={f.status} onChange={e => set('status', e.target.value)} style={SEL}>
+                                        <option value="all">הכל</option>
+                                        {STATUS_GROUP_DEFS.filter(g => rows.some(r => r.sgroup === g.key)).map(g => (
+                                            <option key={g.key} value={g.key}>{g.label}</option>
+                                        ))}
                                     </select>
                                     <input type="text" placeholder="חיפוש (תב״ע / שם / תקן)" value={f.q}
                                         onChange={e => set('q', e.target.value)}
