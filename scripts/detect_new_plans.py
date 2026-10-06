@@ -657,6 +657,8 @@ async def enrich_from_mavat(new_plans):
 
     from playwright.async_api import async_playwright
 
+    from yk_profile_lock import hold_mavat_profile
+    hold_mavat_profile("detect_new_plans.py")  # one Mavat-profile user at a time
     async with async_playwright() as p:
         context = await p.chromium.launch_persistent_context(
             BROWSER_DATA,

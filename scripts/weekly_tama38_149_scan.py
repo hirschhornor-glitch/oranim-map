@@ -96,6 +96,13 @@ def yk(proc, params, tries=4):
     return []
 
 
+# Set when the live §149 fetch failed and the scan ran on the cached archive.
+# Such a run finds nothing new by construction, so it must not look like a quiet
+# week: the API was down from ~2026-08-02 and this job reported "nothing new" for
+# two months while classifying the same frozen archive.
+CACHE_FALLBACK = None
+
+
 def load_archive(do_fetch):
     if do_fetch:
         try:
@@ -108,6 +115,9 @@ def load_archive(do_fetch):
                 return rows
         except Exception as e:
             log(f"§149 fetch failed ({e}); using cache")
+            global CACHE_FALLBACK
+            age_d = (time.time() - ARCHIVE_CACHE.stat().st_mtime) / 86400
+            CACHE_FALLBACK = f"{e}"[:200] + f" — cache {ARCHIVE_CACHE.name} is {age_d:.0f} days old"
     return json.load(open(ARCHIVE_CACHE, encoding="utf-8"))
 
 
@@ -416,3 +426,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+    if CACHE_FALLBACK:
+        log(f"!! DEGRADED: ran on the cached §149 archive ({CACHE_FALLBACK}). "
+            f"TAMA 38 published since the cache date are NOT detected.")
+        from ops_alert import send_alert
+        send_alert(f"ביקורת §149 תמ\"א 38 רצה על מטמון — {date.today().isoformat()}",
+                   f"ה-API של §149 לא זמין: {CACHE_FALLBACK}.\n"
+                   f"הסריקה רצה על הארכיב השמור, ולכן תמ\"א 38 חדשות שפורסמו מאז "
+                   f"תאריך המטמון לא נתפסות.\n\n"
+                   f"הרצה חוזרת כשה-API חוזר: py -X utf8 weekly_tama38_149_scan.py --email")
+        sys.exit(2)

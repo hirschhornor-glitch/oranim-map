@@ -1715,10 +1715,18 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     except Exception as e:
         log_msg(f"Failed to send email: {e}")
 
+BROWSER_DEAD = None  # set by main() when the scrape loop lost its browser
+
 async def main():
     log_msg("==================================================")
     log_msg("Starting automated Mavat Status Sync")
     log_msg("==================================================")
+
+    # One Mavat-profile user at a time, taken BEFORE the progress file is
+    # cleared: a concurrent run (enrich's table-5 pass, fetch_decision_docs)
+    # would otherwise kill this run's browser launch or wipe its progress.
+    from yk_profile_lock import hold_mavat_profile
+    hold_mavat_profile("update_mavat_ui.py" + (" --include-terminal" if "--include-terminal" in sys.argv else ""))
 
     ONLY_STATUS = None
     PLANS_FILTER = None  # optional set of plan_name values to restrict to
@@ -1860,6 +1868,7 @@ async def main():
                 except Exception as e:
                     log_msg(f"agam_id resolution step failed (continuing): {e}")
 
+            dead_browser_streak = 0
             for index, item in enumerate(remaining, start=1):
                 aid = item['agam_id']
                 log_msg(f"[{index}/{len(remaining)}] Checking AGAM {aid}...")
@@ -1944,6 +1953,7 @@ async def main():
                                 
                     except Exception as e:
                         result['error'] = 'NAV_ERROR'
+                        result['nav_msg'] = str(e)
                         log_msg(f"  ERR: Navigation error: {str(e)}")
                         # Will retry attempt 2
                     
@@ -1952,6 +1962,22 @@ async def main():
                         continue
                     else:
                         break
+
+                # A dead browser/driver turns every remaining plan into NAV_ERROR and
+                # the run would still "finish". Stop and fail the run at the entry
+                # point (FATAL in the log + alert + exit 1).
+                _closed = (result.get('error') == 'NAV_ERROR'
+                           and re.search(r'closed|disconnected', result.get('nav_msg') or '', re.I))
+                dead_browser_streak = dead_browser_streak + 1 if _closed else 0
+                if dead_browser_streak >= 3:
+                    # Stop scraping but keep going to the write phase, so the plans
+                    # already checked still land; the entry point then fails the run.
+                    global BROWSER_DEAD
+                    BROWSER_DEAD = (f"browser/driver gone — {dead_browser_streak} consecutive "
+                                    f"'{(result.get('nav_msg') or '')[:120]}' at plan "
+                                    f"{index}/{len(remaining)}")
+                    log_msg(f"ABORT scraping: {BROWSER_DEAD}")
+                    break
 
                 # On status change, re-check Table 5 + quantity balance while the
                 # browser is on the plan page — mirrors the land-use check. An
@@ -2194,4 +2220,22 @@ async def main():
     log_msg(f"\nDone! {datetime.now().strftime('%H:%M:%S')}")
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+        if BROWSER_DEAD:
+            raise RuntimeError(BROWSER_DEAD)
+    except Exception:
+        # A crash used to print its traceback to stderr only, which the scheduled
+        # .bat discards: the 2026-10-03 revival sweep died at browser launch and
+        # left nothing in mavat_sync.log after "Starting Playwright".
+        import traceback
+        tb = traceback.format_exc()
+        log_msg(f"FATAL: update_mavat_ui crashed:\n{tb}")
+        try:
+            from ops_alert import send_alert
+            mode = "revival sweep" if "--include-terminal" in sys.argv else "sync"
+            send_alert(f"סנכרון מבאת ({mode}) קרס — {datetime.now():%Y-%m-%d}",
+                       f"update_mavat_ui.py {' '.join(sys.argv[1:])}\n\n{tb[-3000:]}")
+        except Exception as e:
+            log_msg(f"(alert failed: {e})")
+        sys.exit(1)

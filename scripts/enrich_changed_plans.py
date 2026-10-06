@@ -508,11 +508,6 @@ def main():
         if not download_failed:
             done_tabas.append(tb)
 
-    # Drop fully-processed plans from the queue; keep download failures for retry.
-    if not args.single:
-        remaining = eq.dequeue(done_tabas)
-        print(f"\nQueue: removed {len(done_tabas)}, {remaining} remain (retry next run)")
-
     # Write freshly-extracted developers/architects to GS + plans.geojson
     # (single batched run; fill-only + statutory-yazam overwrite policy).
     if any_developer_extracted[0]:
@@ -534,21 +529,40 @@ def main():
     # only as a fallback when that pass is skipped (--no-table5 / --no-download)
     # or fails. --no-email suppresses email on both sides.
     ran_table5 = False
+    table5_failed = False
     if not args.no_table5 and allow_download and rows:
         if not args.no_email:
             _write_enrich_email_payload(rows)
         ok, _ = run_table5([r["plan_name"] for r in rows], allow_download, no_email=args.no_email)
         ran_table5 = ok
+        table5_failed = not ok
         if not ok and not args.no_email:
             _clear_enrich_email_payload()   # update_mavat_ui didn't run — no stale payload
+        if table5_failed:
+            # Say so in the fallback email - it used to look like a clean run.
+            for r in rows:
+                r["note"] = "; ".join(x for x in (
+                    r["note"], "טבלה 5 לא רועננה (update_mavat_ui נכשל) — נשאר בתור") if x)
     if not (ran_table5 and not args.no_email):
         send_email(rows, dry=args.no_email)
+
+    # Drop fully-processed plans from the queue; keep download failures for retry.
+    # Only AFTER the Table-5 pass: it used to dequeue first, so when table 5 failed
+    # (2026-10-04, 101-1589860: browser crash against the weekly sync) the plan was
+    # already gone and its Table 5 was never refreshed.
+    if not args.single:
+        if table5_failed:
+            done_tabas = []
+        remaining = eq.dequeue(done_tabas)
+        print(f"\nQueue: removed {len(done_tabas)}, {remaining} remain (retry next run)"
+              + (" — table 5 FAILED, nothing dequeued" if table5_failed else ""))
 
     print(f"\nDone. {len(rows)} plans. Summary -> {SUMMARY_TXT.name}")
     fq = eq.load_floor_queue()
     if fq:
         print(f"floor_read_queue.json: {len(fq)} plan(s) await a Claude-vision floor read.")
+    return 1 if table5_failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

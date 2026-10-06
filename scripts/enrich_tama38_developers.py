@@ -29,17 +29,31 @@ COMPANY_MARK = ("בע\"מ", "בעמ", "בע'מ", "חברה", "שותפות", 'י
 RESIDENTS = ("הדיירים", "דיירים", "נציגות", "ועד הבית", "בעלי הדירות")
 
 
+def yk_tik(tik):
+    """YK's proc 242700447 only matches the canonical YYYY/NNNN.SS file number.
+    tama38.geojson holds most tiks as 2015/318, 2014/358.01 or 2009/808.3, and YK
+    answers those with an empty list - which this script used to read as a
+    throttle, so the daily backfill "throttled" on every tik from July to October
+    2026 without ever enriching one."""
+    m = re.match(r"^(\d{4})/(\d+)(?:\.(\d+))?$", str(tik).strip())
+    return f"{m.group(1)}/{int(m.group(2)):04d}.{int(m.group(3) or 0):02d}" if m else tik
+
+
 def yk(proc, params, tries=5):
+    """Rows for the query; [] when YK answered but found nothing; None when YK
+    could not be reached (errors / non-JSON - the real throttle)."""
     for a in range(tries):
         try:
-            d = S.post(YK, json={"ProcName": proc, "Cnn": "cnnGisYk", "Parameters": params},
-                       headers=H, timeout=30).json()
-            if d:
+            r = S.post(YK, json={"ProcName": proc, "Cnn": "cnnGisYk", "Parameters": params},
+                       headers=H, timeout=30)
+            r.raise_for_status()
+            d = r.json()
+            if isinstance(d, list):
                 return d
         except Exception:
             pass
         time.sleep(3 * (a + 1))       # 3,6,9,12,15s — grind through soft throttle
-    return []
+    return None
 
 
 def _clean_name(s):
@@ -116,7 +130,18 @@ def main():
         if limit and got >= limit:
             print(f"batch limit {limit} reached; pausing for cooldown", flush=True)
             break
-        d = yk(242700447, {"tikNum": tik, "systemCode": 26400046})
+        d = yk(242700447, {"tikNum": yk_tik(tik), "systemCode": 26400046})
+        if d == []:
+            # YK answered: no such file. Record it so the daily backfill does not
+            # re-ask forever; the empty developer keeps it out of the report.
+            consec_thr = 0
+            by[tik] = {"developer": "", "developer_parts": [], "architect": "",
+                       "units": None, "is_residents": False, "yk_not_found": yk_tik(tik)}
+            json.dump({"count": len(by), "by_tik": by}, open(OUT, "w", encoding="utf-8"),
+                      ensure_ascii=False, indent=1)
+            print(f"[{i}/{n}] N/F {tik} (YK has no {yk_tik(tik)})", flush=True)
+            time.sleep(2.2)
+            continue
         if not d:
             consec_thr += 1
             print(f"[{i}/{n}] THR {tik} (throttled, will resume)", flush=True)

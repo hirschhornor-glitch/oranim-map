@@ -18,6 +18,7 @@ ROOT = Path(r"C:\ORANIM")
 DATA = ROOT / "oranim-app" / "data"
 DEVS = DATA / "tama38_developers.json"
 PYEXE = sys.executable
+STATE = ROOT / "tama38_dev_backfill_state.json"  # last day the backfill made progress
 BATCH = 20
 
 
@@ -34,6 +35,29 @@ def remaining():
     return sum(1 for t in tiks if t not in by), len(tiks)
 
 
+def _track_progress(got, left, total):
+    """Persist the last day the backfill moved; alert at 3 stalled days and every
+    7 days after. Returns the number of days since the last progress."""
+    from datetime import date
+    try:
+        st = json.load(open(STATE, encoding="utf-8"))
+    except (OSError, ValueError):
+        st = {}
+    today = date.today()
+    if got > 0 or "last_progress" not in st:
+        st["last_progress"] = today.isoformat()
+    days = (today - date.fromisoformat(st["last_progress"])).days
+    if days >= 3 and (days - 3) % 7 == 0 and st.get("alerted_on") != today.isoformat():
+        from ops_alert import send_alert, log_tail
+        send_alert(f"backfill יזמי תמ\"א 38 תקוע {days} ימים",
+                   f"מאז {st['last_progress']} לא הועשר אף תיק ({total - left}/{total}, "
+                   f"{left} נותרו).\n\n--- סוף הלוג ---\n"
+                   f"{log_tail(ROOT / 'permits_scan_reports' / 'tama38_dev_backfill_last.log')}")
+        st["alerted_on"] = today.isoformat()
+    STATE.write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8")
+    return days
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     before, total = remaining()
@@ -48,8 +72,13 @@ def main():
     after, _ = remaining()
     got = before - after
     print(f"this run enriched {got}; {after} remaining")
+    stalled = _track_progress(got, after, total)
     if got == 0:
-        print("YK throttled this run — will retry tomorrow."); return
+        # Used to print "will retry tomorrow" and exit 0 - for 79 days straight
+        # (2026-07-19..10-06) while a tik-format bug made every lookup look like a
+        # throttle. A run that enriched nothing is a failed run.
+        print(f"enriched nothing this run ({stalled} day(s) without progress) — exit 1.")
+        sys.exit(1)
 
     # minahak + units on the file
     sh(PYEXE, "-X", "utf8", str(ROOT / "add_tama38_minahak.py"))
