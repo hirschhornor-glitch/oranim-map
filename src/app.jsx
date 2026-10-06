@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-06-parksum';
+        const APP_VERSION = '2026-10-06-byuse2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -15019,7 +15019,7 @@ function planPermitHafrashUse(taba) {
                 const pkNoApp = new Set(PK.no_traffic_appendix || []);
                 const parking = { withBalance: 0, noAppendix: 0, unchecked: 0,
                     units: 0, req: 0, prov: 0, res: 0, nonres: 0, guests: 0,
-                    bikes: 0, moto: 0, acc: 0, oper: 0, rows: [] };
+                    bikes: 0, moto: 0, acc: 0, oper: 0, byUse: {}, byUseUnsplit: 0, rows: [] };
                 { const seenPk = new Set();
                   plansInside.forEach(x => {
                     const taba = String(x.props.taba || '').trim();
@@ -15040,6 +15040,13 @@ function planPermitHafrashUse(taba) {
                     parking.moto += Number(rec.moto_prov || rec.moto_req) || 0;
                     parking.acc += Number(rec.accessible) || 0;
                     parking.oper += Number(rec.operational) || 0;
+                    // per-use split of this plan's non-residential remainder, where the
+                    // balance table broke it down; the residual is carried separately so
+                    // the use rows and the non-residential total stay reconcilable
+                    if (rec.by_use) Object.entries(rec.by_use).forEach(([k, n]) => {
+                        parking.byUse[k] = (parking.byUse[k] || 0) + (Number(n) || 0);
+                    });
+                    parking.byUseUnsplit += Number(rec.by_use_unsplit) || 0;
                     parking.rows.push({
                         name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '',
                         taba: x.props.plan_name || taba, units, req, prov, res,
@@ -34316,6 +34323,8 @@ function planPermitHafrashUse(taba) {
                                             if (d.parking.prov) lines.push([k, 'מקומות חניה מוצעים', '', String(d.parking.prov)]);
                                             lines.push([k, 'מגורים (כולל אורחים)', d.parking.guests ? 'מהם אורחים ' + d.parking.guests : '', String(d.parking.res)]);
                                             lines.push([k, 'לא-מגורים (מסחר/תעסוקה/ציבור יחד)', 'הפרש סה"כ פחות מגורים', String(d.parking.nonres)]);
+                                            Object.entries(d.parking.byUse || {}).forEach(([u, n]) => lines.push([k + ' — לפי שימוש', u, '', String(n)]));
+                                            if (d.parking.byUseUnsplit) lines.push([k + ' — לפי שימוש', 'לא מפולח', 'הגיליון לא ייחס לשימוש', String(d.parking.byUseUnsplit)]);
                                             if (d.parking.units) lines.push([k, 'חניות מגורים ליח"ד', (d.parking.res / d.parking.units).toFixed(2), String(Math.round(d.parking.units))]);
                                             if (d.parking.acc) lines.push([k, 'חניות נגישות', '', String(d.parking.acc)]);
                                             if (d.parking.oper) lines.push([k, 'חניה תפעולית', '', String(d.parking.oper)]);
@@ -34629,6 +34638,20 @@ function planPermitHafrashUse(taba) {
                                                     <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מגורים (כולל אורחים)</span><span><b style={{color:'#26a69a'}}>{fmt(d.parking.res)}</b>{d.parking.guests ? <span style={{color:'#9aa6b2'}}> · מהם אורחים {fmt(d.parking.guests)}</span> : null}</span></div>
                                                     <div style={rowStyle}><span style={{color:'#cfd3dc'}}>לא-מגורים (מסחר/תעסוקה/ציבור יחד)</span><span><b style={{color:'#b39ddb'}}>{fmt(d.parking.nonres)}</b>{d.parking.req ? <span style={{color:'#9aa6b2'}}> · {Math.round(d.parking.nonres / d.parking.req * 100)}%</span> : null}</span></div>
                                                     {d.parking.units > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>חניות מגורים ליח"ד (משוקלל)</span><span><b style={{color:'#26a69a'}}>{(d.parking.res / d.parking.units).toFixed(2)}</b><span style={{color:'#9aa6b2'}}> ({fmt(d.parking.res)} ל-{fmt(d.parking.units)} יח"ד)</span></span></div>}
+                                                    {(Object.keys(d.parking.byUse || {}).length > 0 || d.parking.byUseUnsplit > 0) && (() => {
+                                                        const UO = ['מסחר','תעסוקה','ציבור','חינוך','מלונאות','אחר'], UC = {'מסחר':'#b07fd6','תעסוקה':'#e06bc0','ציבור':'#bcaaa4','חינוך':'#64b5f6','מלונאות':'#ffa726','אחר':'#90a4ae'};
+                                                        return (
+                                                            <div style={{...rowStyle, fontSize:11, alignItems:'flex-start'}}>
+                                                                <span style={{color:'#9aa6b2'}}>מהם לפי שימוש</span>
+                                                                <span style={{textAlign:'left'}}>
+                                                                    {UO.filter(u => d.parking.byUse[u]).map(u => (
+                                                                        <span key={u} style={{color:UC[u], marginRight:8}}>{u} <b>{fmt(d.parking.byUse[u])}</b></span>
+                                                                    ))}
+                                                                    {d.parking.byUseUnsplit ? <span style={{color:'#7f8c99', marginRight:8}}>לא מפולח <b>{fmt(d.parking.byUseUnsplit)}</b></span> : null}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                     {(d.parking.acc || d.parking.oper || d.parking.bikes || d.parking.moto) > 0 && (
                                                         <div style={{...rowStyle, fontSize:11, color:'#9aa6b2'}}><span>נוספים</span><span>
                                                             {d.parking.acc ? 'נגישות ' + fmt(d.parking.acc) + ' · ' : ''}
@@ -39022,6 +39045,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 operational: v.operational || 0,
                                 // residential read off a different column than the grand total
                                 residFlag: !!v.resid_exceeds_total,
+                                byUse: v.by_use || null,
+                                // part of the non-residential remainder the sheet never
+                                // broke down by use — carried so the category totals and
+                                // the grand total can never drift apart
+                                byUseUnsplit: v.by_use_unsplit || 0,
                             };
                         });
 
@@ -39069,6 +39097,26 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             a + Math.max(0, (r.req || 0) - (r.resSpaces || 0)), 0);
                         const residFlagged = solid.filter(r => r.residFlag).length;
                         const nrPct = sums.req ? Math.round(sums.nonres / sums.req * 100) : 0;
+
+                        // Per-use split of the non-residential remainder, read off the balance
+                        // tables in a second pass. USE_ORDER is fixed so the strip reads the same
+                        // whatever the filter; 'לא מפולח' is the residual the sheets never
+                        // attributed (accessible bays added above the sub-total, a use-overlap
+                        // credit taken on the total only, or the sheet's own arithmetic slips).
+                        const USE_ORDER = ['מסחר', 'תעסוקה', 'ציבור', 'חינוך', 'מלונאות', 'אחר'];
+                        const USE_COLOR = { 'מסחר': '#b07fd6', 'תעסוקה': '#e06bc0', 'ציבור': '#bcaaa4',
+                                            'חינוך': '#64b5f6', 'מלונאות': '#ffa726', 'אחר': '#90a4ae' };
+                        const useTot = {};
+                        let useUnsplit = 0, useRead = 0;
+                        solid.forEach(r => {
+                            if (r.byUse) {
+                                useRead++;
+                                Object.entries(r.byUse).forEach(([k, n]) => { useTot[k] = (useTot[k] || 0) + (n || 0); });
+                            }
+                            useUnsplit += r.byUseUnsplit || 0;
+                        });
+                        // plans with a zero remainder need no reading — they are split by definition
+                        const useCovered = useRead + solid.filter(r => r.req && r.resSpaces && r.req === r.resSpaces).length;
 
                         // Area roll-up is UNIT-WEIGHTED (total spaces / total units), never a
                         // mean of per-plan ratios — a 20-unit plan must not move an area.
@@ -39202,8 +39250,17 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         {sums.bikes ? <span>אופניים {nf(sums.bikes)}</span> : null}
                                         {sums.moto ? <span>אופנועים {nf(sums.moto)}</span> : null}
                                     </div>
+                                    {Object.keys(useTot).length > 0 && (
+                                        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 6, paddingTop: 5, borderTop: '1px dashed #2a2a4a', fontSize: 11 }}>
+                                            <span style={{ color: '#8a9bc0' }}>מהם לפי שימוש:</span>
+                                            {USE_ORDER.filter(u => useTot[u]).map(u => (
+                                                <span key={u} style={{ color: USE_COLOR[u] }}>{u} <b>{nf(useTot[u])}</b></span>
+                                            ))}
+                                            {useUnsplit ? <span style={{ color: '#7f8c99' }}>לא מפולח <b>{nf(useUnsplit)}</b></span> : null}
+                                        </div>
+                                    )}
                                     <div style={{ color: '#7f8c99', fontSize: 10, marginTop: 4, whiteSpace: 'normal', lineHeight: 1.45 }}>
-                                        ℹ️ הנספחים רושמים סה"כ לרכב פרטי ותת-סך למגורים; <b>השורה 'לא-מגורים' היא הפרש בין השניים</b> — מסחר, תעסוקה, מבני ציבור, מלונאות וחינוך יחד ולא לפי שימוש. פירוט לפי שימוש דורש קריאה חוזרת של הטבלאות.
+                                        ℹ️ הנספחים רושמים סה"כ לרכב פרטי ותת-סך למגורים; <b>'לא-מגורים' הוא הפרש בין השניים</b>, והפילוח לפי שימוש נקרא מטבלאות המאזן במעבר שני. 'אחר' אינו שימוש קרקע אלא שורות שהגיליון מונה בנפרד — חניות נכים, חניה ציבורית לפי החלטת ועדה והתחייבויות יזם; 'לא מפולח' הוא יתרה שהגיליון עצמו לא ייחס לשימוש — חניות נכים שנוספו מעל שורת הסיכום, זיכוי חפיפת שימושים שניתן על הסה"כ בלבד, או שגיאות חשבון בגיליון.
                                         {residFlagged ? <span style={{ color: '#e67e22' }}> · ⚠️ ב-{residFlagged} תכניות סך המגורים גדול מהסה"כ שנרשם — התרומה שלהן ל'לא-מגורים' אפס.</span> : null}
                                     </div>
                                 </div>

@@ -22,6 +22,14 @@
    "ratio_req": 1.281,
    "ratio_prov": 1.73,
    "ratio_res_req": 1.127,
+   "by_use": {
+    "מסחר": 57,
+    "תעסוקה": 37,
+    "חינוך": 22,
+    "ציבור": 8
+   },
+   "by_use_unsplit": 67,
+   "base_uncertain": "⚠️ שלוש ספירות שונות ולא מתיישבות של אותה טבלה: הרישום המקורי 1,400 מגורים, הקורא האוטומטי 1,458, וספירה ידנית של עמודת 'פרטי' נותנת 1,419 מגורים + 124 שימושים + 39 נכים = 1,582 מול 1,591 שהגיליון מסכם בשורות התאים. בנוסף תא שטח 401 (38 מקומות) יושב מחוץ לסה\"כ, ושורה אחת ממזגת 'מלונות ותעסוקה' 9,450 מ\"ר. התכנית מסומנת לבדיקה ידנית ולא שונתה — החלפת מספר לא-ודאי באחר אינה שיפור.",
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -45,6 +53,12 @@
    "units_basis": "appendix",
    "ratio_req": 1.149,
    "ratio_res_req": 0.94,
+   "by_use": {
+    "מסחר": 270,
+    "מלונאות": 232,
+    "תעסוקה": 106,
+    "חינוך": 125
+   },
    "minahak": "גבעת המטוס",
    "sub_neighborhood": "גבעת המטוס",
    "status": "אישור"
@@ -73,6 +87,10 @@
    "ratio_prov": 1.129,
    "ratio_res_req": 1.1,
    "ratio_res_prov": 1.1,
+   "by_use": {
+    "מסחר": 25,
+    "חינוך": 34
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -96,6 +114,13 @@
    "units_basis": "appendix",
    "ratio_req": 1.125,
    "ratio_res_req": 0.94,
+   "by_use": {
+    "מסחר": 163,
+    "תעסוקה": 179,
+    "ציבור": 51,
+    "חינוך": 71
+   },
+   "by_use_over": 1,
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "בבדיקה תכנונית"
@@ -124,6 +149,12 @@
    "ratio_req": 1.463,
    "ratio_prov": 1.389,
    "ratio_res_req": 1.034,
+   "by_use": {
+    "מסחר": 330,
+    "תעסוקה": 107,
+    "ציבור": 97,
+    "חינוך": 52
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "בבדיקה תכנונית"
@@ -172,6 +203,12 @@
    "ratio_req": 3.405,
    "ratio_prov": 3.405,
    "ratio_res_req": 1.176,
+   "by_use": {
+    "מסחר": 68,
+    "תעסוקה": 19,
+    "ציבור": 240,
+    "חינוך": 3
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -200,6 +237,13 @@
    "ratio_req": 1.399,
    "ratio_prov": 1.399,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "תעסוקה": 63,
+    "מסחר": 38,
+    "ציבור": 89,
+    "חינוך": 7
+   },
+   "by_use_over": 7,
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "במילוי תנאים להפקדה"
@@ -226,6 +270,12 @@
    "ratio_req": 1.1,
    "ratio_prov": 1.1,
    "ratio_res_req": 1.018,
+   "by_use": {
+    "חינוך": 5,
+    "מסחר": 19,
+    "ציבור": 14,
+    "תעסוקה": 4
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "המושבה היוונית",
    "status": "בהליך אישור"
@@ -253,6 +303,12 @@
    "ratio_req": 1.135,
    "ratio_prov": 1.16,
    "ratio_res_req": 1.011,
+   "by_use": {
+    "מסחר": 25,
+    "תעסוקה": 8,
+    "חינוך": 9,
+    "ציבור": 3
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -276,6 +332,13 @@
    "ratio_req": 1.5,
    "ratio_prov": 1.774,
    "ratio_res_req": 1.06,
+   "by_use": {
+    "מסחר": 59,
+    "תעסוקה": 62,
+    "חינוך": 20,
+    "ציבור": 6
+   },
+   "by_use_unsplit": 1,
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
@@ -300,6 +363,10 @@
    "units_basis": "appendix",
    "ratio_req": 1.147,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "מסחר": 14,
+    "חינוך": 6
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -326,6 +393,12 @@
    "ratio_req": 1.375,
    "ratio_prov": 1.375,
    "ratio_res_req": 0.981,
+   "by_use": {
+    "מסחר": 20,
+    "תעסוקה": 23,
+    "ציבור": 6,
+    "חינוך": 36
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -352,6 +425,12 @@
    "ratio_req": 2.505,
    "ratio_prov": 2.505,
    "ratio_res_req": 1.364,
+   "by_use": {
+    "מסחר": 135,
+    "תעסוקה": 96,
+    "ציבור": 13,
+    "חינוך": 7
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "בהליך אישור"
@@ -372,6 +451,10 @@
    "units_basis": "gs",
    "ratio_req": 1.175,
    "ratio_prov": 1.58,
+   "by_use": {
+    "ציבור": 195,
+    "מלונאות": 40
+   },
    "minahak": "מינהל מוסדי מלחה",
    "sub_neighborhood": "",
    "status": "אישור"
@@ -400,6 +483,11 @@
    "ratio_req": 1.12,
    "ratio_prov": 1.12,
    "ratio_res_req": 0.94,
+   "by_use": {
+    "ציבור": 14,
+    "מסחר": 11,
+    "חינוך": 11
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -424,6 +512,9 @@
    "ratio_req": 1.385,
    "ratio_prov": 1.385,
    "ratio_res_req": 1.211,
+   "by_use": {
+    "מסחר": 63
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים",
    "status": "אישור"
@@ -449,6 +540,9 @@
    "ratio_prov": 1.65,
    "ratio_res_req": 1.35,
    "ratio_res_prov": 1.525,
+   "by_use": {
+    "ציבור": 5
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "תבע מאושרת"
@@ -473,6 +567,11 @@
    "ratio_req": 2.625,
    "ratio_prov": 2.625,
    "ratio_res_req": 1.75,
+   "by_use": {
+    "מסחר": 17,
+    "תעסוקה": 8,
+    "ציבור": 3
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -497,6 +596,12 @@
    "ratio_req": 3.226,
    "ratio_prov": 3.226,
    "ratio_res_req": 1.274,
+   "by_use": {
+    "מסחר": 35,
+    "מלונאות": 101,
+    "תעסוקה": 10,
+    "ציבור": 18
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -523,6 +628,11 @@
    "ratio_req": 1.24,
    "ratio_prov": 1.24,
    "ratio_res_req": 1.103,
+   "by_use": {
+    "מסחר": 25,
+    "חינוך": 6,
+    "ציבור": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -549,6 +659,11 @@
    "ratio_req": 1.641,
    "ratio_prov": 1.641,
    "ratio_res_req": 1.103,
+   "by_use": {
+    "מסחר": 25,
+    "תעסוקה": 21,
+    "ציבור": 32
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -572,6 +687,12 @@
    "units_basis": "appendix",
    "ratio_req": 0.931,
    "ratio_res_req": 0.665,
+   "by_use": {
+    "ציבור": 39,
+    "חינוך": 18,
+    "מסחר": 7,
+    "תעסוקה": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "במילוי תנאים להפקדה"
@@ -596,6 +717,10 @@
    "units_gap_vs_gs": -4,
    "ratio_req": 1.143,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "חינוך": 5,
+    "מסחר": 5
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "אישור"
@@ -624,6 +749,11 @@
    "ratio_req": 1.215,
    "ratio_prov": 1.239,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "מסחר": 26,
+    "ציבור": 20,
+    "חינוך": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -647,6 +777,12 @@
    "units_basis": "appendix",
    "ratio_req": 1.726,
    "ratio_res_req": 1.006,
+   "by_use": {
+    "מסחר": 3,
+    "חינוך": 46,
+    "אחר": 60
+   },
+   "by_use_unsplit": 4,
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -675,6 +811,10 @@
    "ratio_req": 1.767,
    "ratio_prov": 1.767,
    "ratio_res_req": 1.147,
+   "by_use": {
+    "מסחר": 34,
+    "תעסוקה": 59
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "תבע מאושרת"
@@ -718,6 +858,13 @@
    "ratio_req": 1.467,
    "ratio_prov": 1.984,
    "ratio_res_req": 0.754,
+   "by_use": {
+    "מסחר": 294,
+    "תעסוקה": 742,
+    "חינוך": 16,
+    "ציבור": 15
+   },
+   "by_use_over": 46,
    "minahak": "מינהל מוסדי מלחה",
    "sub_neighborhood": "מרכז ספורט מנחת - מלחה",
    "status": "בבדיקה תכנונית"
@@ -742,6 +889,10 @@
    "ratio_req": 1.192,
    "ratio_prov": 1.192,
    "ratio_res_req": 1.154,
+   "by_use": {
+    "מסחר": 25,
+    "ציבור": 13
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -770,6 +921,12 @@
    "ratio_req": 1.219,
    "ratio_prov": 1.28,
    "ratio_res_req": 0.949,
+   "by_use": {
+    "מסחר": 27,
+    "תעסוקה": 24,
+    "ציבור": 17,
+    "חינוך": 16
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -795,6 +952,10 @@
    "ratio_req": 0.933,
    "ratio_prov": 0.933,
    "ratio_res_req": 0.5,
+   "by_use": {
+    "מסחר": 174,
+    "חינוך": 12
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "במילוי תנאים להפקדה"
@@ -803,7 +964,7 @@
    "plan_name": "שער דרום - תוספת קומות ושימושים",
    "req_private": 528,
    "prov_private": 528,
-   "req_residential": 492,
+   "req_residential": 501,
    "guests": 9,
    "bikes_req": 420,
    "moto_req": 50,
@@ -820,7 +981,13 @@
    "units_basis": "appendix",
    "ratio_req": 1.275,
    "ratio_prov": 1.275,
-   "ratio_res_req": 1.188,
+   "ratio_res_req": 1.21,
+   "by_use": {
+    "מסחר": 19,
+    "תעסוקה": 3,
+    "חינוך": 5
+   },
+   "base_corrected": "req_residential נרשם 492 בלי שורת האורחים. פירוק מלא של הגיליון: 492 מגורים + 9 אורחים + 3 תעסוקה + 19 מסחר + 5 חינוך = 528 = req_private. לכן המגורים כולל אורחים הם 501 והלא-מגורים 27 (ולא 36).",
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -850,6 +1017,12 @@
    "ratio_req": 1.06,
    "ratio_prov": 1.064,
    "ratio_res_req": 0.944,
+   "by_use": {
+    "מסחר": 24,
+    "תעסוקה": 15,
+    "ציבור": 9,
+    "חינוך": 8
+   },
    "minahak": "מינהל מוסדי מלחה",
    "sub_neighborhood": "",
    "status": "אישור"
@@ -873,6 +1046,11 @@
    "units_basis": "appendix",
    "ratio_req": 1.584,
    "ratio_res_req": 1.503,
+   "by_use": {
+    "ציבור": 16,
+    "חינוך": 10,
+    "מסחר": 12
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קריית שמואל",
    "status": "בבדיקה תכנונית"
@@ -900,6 +1078,12 @@
    "ratio_prov": 1.233,
    "ratio_res_req": 0.827,
    "ratio_res_prov": 0.88,
+   "by_use": {
+    "מסחר": 58,
+    "תעסוקה": 54,
+    "ציבור": 80,
+    "אחר": 15
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "במילוי תנאים להפקדה"
@@ -922,6 +1106,12 @@
    "ratio_req": 1.114,
    "ratio_prov": 1.114,
    "ratio_res_req": 0.323,
+   "by_use": {
+    "מסחר": 45,
+    "ציבור": 155,
+    "חינוך": 88,
+    "אחר": 60
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -950,6 +1140,12 @@
    "ratio_prov": 1.223,
    "ratio_res_req": 0.745,
    "ratio_res_prov": 0.753,
+   "by_use": {
+    "מסחר": 254,
+    "ציבור": 41,
+    "חינוך": 24,
+    "אחר": 29
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -976,6 +1172,11 @@
    "ratio_req": 1.329,
    "ratio_prov": 1.319,
    "ratio_res_req": 1.227,
+   "by_use": {
+    "מסחר": 58,
+    "חינוך": 64,
+    "ציבור": 32
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
@@ -1003,14 +1204,22 @@
    "ratio_req": 1.21,
    "ratio_prov": 1.213,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "מסחר": 67,
+    "תעסוקה": 31,
+    "ציבור": 19,
+    "חינוך": 12
+   },
+   "by_use_over": 6,
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "תבע מאושרת"
   },
   "635938": {
    "plan_name": "שכונת מגורים - גבעת משואה צפון",
-   "req_private": 1621,
+   "req_private": 1499,
    "prov_private": 1621,
+   "req_residential": 1175,
    "standard": "⚠️ אזור תקן גבוה לפי תשריט 5166/ב (גבעת משואה) — לפי מספר חדרים בדירה",
    "confidence": "high",
    "notes": "היחס הגבוה ביותר שנמדד: 2.28 מקומות ליח\"ד. הדוח קובע מפורשות: 710 יח\"ד + 6,620 מ\"ר מסחר ותעסוקה + 5,760 מ\"ר מוסדות ציבור דורשים 1,621 מקומות, והמתוכנן בפועל 1,621. פירוק המגורים לא נשלף — טבלה 19 נחתכה בעמוד 34 של הדוח. הטבלה מסווגת דירות לפי 3/4/5 חדרים ומחילה תקן גבוה יותר על 'דירות גדולות'.",
@@ -1018,11 +1227,18 @@
     "text": "crops/635938/doc11_text.txt",
     "doc": "בה\"ת - בדיקת השלכות תחבורתיות 08/12/2021, טבלה 19 מאזן חניה"
    },
-   "units": 710.0,
+   "units": 667.0,
    "units_basis": "appendix",
-   "units_gap_vs_gs": 43,
-   "ratio_req": 2.283,
-   "ratio_prov": 2.283,
+   "ratio_req": 2.247,
+   "ratio_prov": 2.43,
+   "ratio_res_req": 1.762,
+   "by_use": {
+    "מסחר": 120,
+    "תעסוקה": 101,
+    "חינוך": 26,
+    "ציבור": 77
+   },
+   "base_corrected": "הקריאה המקורית לקחה את המספרים מהסיכום המילולי של הדוח (710 יח\"ד / 1,621 מקומות) ולא מטבלה 19. שורת 'סה\"כ כולל' של הטבלה: 667 דירות, 1,538 כולל נכים → 1,499 ללא נכים. מגורים נגזר כהפרש מול 324 שימושים.",
    "minahak": "",
    "sub_neighborhood": "",
    "status": "אישור"
@@ -1049,6 +1265,11 @@
    "ratio_req": 1.208,
    "ratio_prov": 1.227,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "מסחר": 57,
+    "חינוך": 6,
+    "ציבור": 8
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -1076,6 +1297,12 @@
    "ratio_req": 1.202,
    "ratio_prov": 1.202,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "מסחר": 28,
+    "ציבור": 8,
+    "חינוך": 18
+   },
+   "by_use_over": 1,
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -1097,6 +1324,11 @@
    "units_basis": "appendix",
    "ratio_req": 1.345,
    "ratio_res_req": 1.211,
+   "by_use": {
+    "מסחר": 37,
+    "חינוך": 14,
+    "ציבור": 8
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "אישור"
@@ -1120,6 +1352,11 @@
    "units_basis": "appendix",
    "ratio_req": 1.701,
    "ratio_res_req": 1.289,
+   "by_use": {
+    "ציבור": 222,
+    "מסחר": 40,
+    "חינוך": 24
+   },
    "minahak": "מינהל מוסדי מלחה",
    "sub_neighborhood": "בית צפאפא",
    "status": "אישור"
@@ -1144,6 +1381,11 @@
    "ratio_prov": 1.405,
    "ratio_res_req": 1.231,
    "ratio_res_prov": 1.265,
+   "by_use": {
+    "חינוך": 21,
+    "ציבור": 16,
+    "מסחר": 8
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "אישור"
@@ -1188,6 +1430,11 @@
    "ratio_req": 1.626,
    "ratio_prov": 1.626,
    "ratio_res_req": 1.464,
+   "by_use": {
+    "מסחר": 10,
+    "תעסוקה": 34,
+    "חינוך": 5
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -1213,6 +1460,11 @@
    "units_gap_vs_gs": 19,
    "ratio_req": 1.141,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "מסחר": 6,
+    "חינוך": 4,
+    "ציבור": 8
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -1235,6 +1487,10 @@
    "ratio_req": 1.668,
    "ratio_prov": 1.804,
    "ratio_res_req": 1.446,
+   "by_use": {
+    "מסחר": 64,
+    "חינוך": 6
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -1261,6 +1517,13 @@
    "units_gap_vs_gs": 33,
    "ratio_req": 1.26,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "מסחר": 33,
+    "ציבור": 6,
+    "חינוך": 21,
+    "תעסוקה": 19,
+    "אחר": 14
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "פת",
    "status": "אישור"
@@ -1288,6 +1551,13 @@
    "ratio_req": 1.233,
    "ratio_prov": 1.233,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "מסחר": 17,
+    "תעסוקה": 21,
+    "חינוך": 3,
+    "ציבור": 4
+   },
+   "by_use_over": 1,
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -1314,6 +1584,12 @@
    "ratio_req": 1.38,
    "ratio_prov": 1.411,
    "ratio_res_req": 1.312,
+   "by_use": {
+    "מסחר": 3,
+    "תעסוקה": 1,
+    "חינוך": 11,
+    "ציבור": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "תבע מאושרת"
@@ -1337,6 +1613,13 @@
    "units_basis": "appendix",
    "ratio_req": 1.45,
    "ratio_res_req": 1.2,
+   "by_use": {
+    "תעסוקה": 9,
+    "מסחר": 24,
+    "מלונאות": 28,
+    "ציבור": 14,
+    "חינוך": 5
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -1363,6 +1646,11 @@
    "ratio_req": 1.357,
    "ratio_prov": 1.433,
    "ratio_res_req": 1.255,
+   "by_use": {
+    "מסחר": 12,
+    "ציבור": 25,
+    "חינוך": 6
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "בבדיקה תכנונית"
@@ -1388,6 +1676,9 @@
    "ratio_req": 1.143,
    "ratio_prov": 1.143,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 50
+   },
    "minahak": "",
    "sub_neighborhood": "",
    "status": "בבדיקה תכנונית"
@@ -1412,6 +1703,9 @@
    "ratio_req": 2.003,
    "ratio_prov": 2.003,
    "ratio_res_req": 1.9,
+   "by_use": {
+    "אחר": 36
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "במילוי תנאים להפקדה"
@@ -1435,6 +1729,12 @@
    "units_gap_vs_gs": 120,
    "ratio_req": 0.772,
    "ratio_res_req": 0.67,
+   "by_use": {
+    "מסחר": 5,
+    "חינוך": 22,
+    "ציבור": 10,
+    "תעסוקה": 10
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "פת",
    "status": "בבדיקה תכנונית"
@@ -1460,6 +1760,10 @@
    "ratio_req": 1.082,
    "ratio_prov": 1.126,
    "ratio_res_req": 1.047,
+   "by_use": {
+    "ציבור": 7,
+    "חינוך": 5
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "במילוי תנאים להפקדה"
@@ -1485,6 +1789,11 @@
    "ratio_req": 1.253,
    "ratio_prov": 1.253,
    "ratio_res_req": 1.109,
+   "by_use": {
+    "מסחר": 18,
+    "חינוך": 4,
+    "ציבור": 16
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -1509,6 +1818,12 @@
    "units_basis": "appendix",
    "ratio_req": 1.645,
    "ratio_res_req": 1.503,
+   "by_use": {
+    "מסחר": 15,
+    "תעסוקה": 3,
+    "חינוך": 5,
+    "ציבור": 18
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -1536,6 +1851,10 @@
    "ratio_req": 1.625,
    "ratio_prov": 1.625,
    "ratio_res_req": 1.127,
+   "by_use": {
+    "מסחר": 107,
+    "ציבור": 22
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "רחביה",
    "status": "הפקדה להתנגדויות/השגות"
@@ -1560,6 +1879,10 @@
    "units_basis": "appendix",
    "ratio_req": 1.073,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 17,
+    "חינוך": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים",
    "status": "במילוי תנאים להפקדה"
@@ -1586,6 +1909,10 @@
    "ratio_req": 1.23,
    "ratio_prov": 1.226,
    "ratio_res_req": 1.138,
+   "by_use": {
+    "מסחר": 12,
+    "חינוך": 12
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים",
    "status": "בבדיקה תכנונית"
@@ -1612,6 +1939,11 @@
    "ratio_req": 1.992,
    "ratio_prov": 1.992,
    "ratio_res_req": 0.913,
+   "by_use": {
+    "מסחר": 98,
+    "תעסוקה": 140,
+    "ציבור": 47
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "תבע מאושרת"
@@ -1639,6 +1971,12 @@
    "ratio_req": 1.494,
    "ratio_prov": 1.494,
    "ratio_res_req": 1.265,
+   "by_use": {
+    "מסחר": 36,
+    "ציבור": 9,
+    "חינוך": 8
+   },
+   "by_use_unsplit": 4,
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו - גבעת הורדים",
    "status": "בבדיקה תכנונית"
@@ -1664,6 +2002,12 @@
    "ratio_req": 1.945,
    "ratio_prov": 1.945,
    "ratio_res_req": 1.152,
+   "by_use": {
+    "מסחר": 38,
+    "תעסוקה": 137,
+    "ציבור": 21,
+    "חינוך": 7
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -1688,6 +2032,10 @@
    "units_basis": "appendix",
    "ratio_req": 1.656,
    "ratio_res_req": 1.316,
+   "by_use": {
+    "מסחר": 12,
+    "ציבור": 73
+   },
    "minahak": "",
    "sub_neighborhood": "",
    "status": "אישור"
@@ -1713,6 +2061,12 @@
    "ratio_req": 1.935,
    "ratio_prov": 1.844,
    "ratio_res_req": 1.244,
+   "by_use": {
+    "מסחר": 32,
+    "תעסוקה": 29,
+    "ציבור": 122,
+    "חינוך": 30
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -1733,6 +2087,12 @@
    "units_basis": "gs",
    "ratio_req": 1.659,
    "ratio_prov": 1.699,
+   "by_use": {
+    "מסחר": 67,
+    "תעסוקה": 45,
+    "ציבור": 17,
+    "חינוך": 7
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "מאושרת"
@@ -1758,6 +2118,9 @@
    "ratio_req": 1.125,
    "ratio_prov": 1.125,
    "ratio_res_req": 1.098,
+   "by_use": {
+    "מסחר": 9
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "במילוי תנאים להפקדה"
@@ -1805,6 +2168,12 @@
    "ratio_req": 1.946,
    "ratio_prov": 2.033,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "ציבור": 136,
+    "מסחר": 61,
+    "תעסוקה": 33
+   },
+   "by_use_over": 3,
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מתחם הרכבת",
    "status": "אישור"
@@ -1832,6 +2201,12 @@
    "ratio_req": 1.865,
    "ratio_prov": 1.865,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "מסחר": 35,
+    "תעסוקה": 30,
+    "ציבור": 104,
+    "חינוך": 7
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
@@ -1857,6 +2232,13 @@
    "ratio_req": 1.489,
    "ratio_prov": 1.878,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 44,
+    "תעסוקה": 1,
+    "ציבור": 5,
+    "חינוך": 11,
+    "מלונאות": 27
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מתחם הרכבת",
    "status": "אישור"
@@ -1886,6 +2268,10 @@
    "ratio_prov": 2.36,
    "ratio_res_req": 2.3,
    "ratio_res_prov": 2.3,
+   "by_use": {
+    "מסחר": 8,
+    "חינוך": 2
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "תלפיות ארנונה",
    "status": "אישור"
@@ -1912,6 +2298,10 @@
    "ratio_req": 1.089,
    "ratio_prov": 1.134,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 15,
+    "ציבור": 3
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "בבדיקה תכנונית"
@@ -1936,6 +2326,11 @@
    "units_gap_vs_gs": -38,
    "ratio_req": 1.681,
    "ratio_res_req": 1.507,
+   "by_use": {
+    "מסחר": 17,
+    "חינוך": 1,
+    "אחר": 7
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -1958,6 +2353,11 @@
    "units_basis": "appendix",
    "ratio_req": 1.223,
    "ratio_res_req": 1.15,
+   "by_use": {
+    "מסחר": 10,
+    "ציבור": 1,
+    "חינוך": 5
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "תבע מאושרת"
@@ -1984,6 +2384,10 @@
    "ratio_req": 1.253,
    "ratio_prov": 1.266,
    "ratio_res_req": 1.211,
+   "by_use": {
+    "ציבור": 6,
+    "מסחר": 4
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "פת",
    "status": "אישור"
@@ -2012,6 +2416,12 @@
    "ratio_req": 1.866,
    "ratio_prov": 1.866,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "מסחר": 21,
+    "מלונאות": 31,
+    "חינוך": 9,
+    "ציבור": 76
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -2064,6 +2474,10 @@
    "ratio_prov": 1.74,
    "ratio_res_req": 1.692,
    "ratio_res_prov": 1.692,
+   "by_use": {
+    "מסחר": 2,
+    "חינוך": 6
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "תלפיות",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -2092,6 +2506,11 @@
    "ratio_prov": 1.172,
    "ratio_res_req": 1.0,
    "ratio_res_prov": 0.462,
+   "by_use": {
+    "מסחר": 70,
+    "מלונאות": 33,
+    "חינוך": 36
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מתחם הרכבת",
    "status": "נדחתה"
@@ -2120,6 +2539,9 @@
    "ratio_req": 1.164,
    "ratio_prov": 1.164,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "מסחר": 10
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -2143,6 +2565,10 @@
    "units_gap_vs_gs": -5,
    "ratio_req": 1.168,
    "ratio_res_req": 1.098,
+   "by_use": {
+    "מסחר": 6,
+    "אחר": 4
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "במילוי תנאים להפקדה"
@@ -2168,6 +2594,10 @@
    "ratio_req": 1.204,
    "ratio_prov": 1.204,
    "ratio_res_req": 1.106,
+   "by_use": {
+    "מסחר": 5,
+    "ציבור": 9
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "פת",
    "status": "במילוי תנאים להפקדה"
@@ -2246,6 +2676,12 @@
    "ratio_req": 1.449,
    "ratio_prov": 1.449,
    "ratio_res_req": 1.116,
+   "by_use": {
+    "מסחר": 20,
+    "תעסוקה": 22,
+    "ציבור": 8
+   },
+   "by_use_over": 4,
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -2271,6 +2707,13 @@
    "ratio_req": 1.659,
    "ratio_prov": 1.659,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "מסחר": 12,
+    "תעסוקה": 45,
+    "חינוך": 11,
+    "ציבור": 2,
+    "אחר": 7
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -2297,6 +2740,11 @@
    "ratio_req": 1.513,
    "ratio_prov": 1.56,
    "ratio_res_req": 1.167,
+   "by_use": {
+    "מסחר": 16,
+    "תעסוקה": 6,
+    "ציבור": 30
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "במילוי תנאים להפקדה"
@@ -2320,6 +2768,11 @@
    "units_basis": "appendix",
    "ratio_req": 1.257,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "ציבור": 10,
+    "מסחר": 9
+   },
+   "by_use_unsplit": 4,
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "בבדיקה תכנונית"
@@ -2346,6 +2799,9 @@
    "ratio_req": 1.944,
    "ratio_prov": 1.944,
    "ratio_res_req": 1.904,
+   "by_use": {
+    "חינוך": 5
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "בבדיקה תכנונית"
@@ -2401,6 +2857,10 @@
    "ratio_prov": 1.313,
    "ratio_res_req": 0.918,
    "ratio_res_prov": 1.134,
+   "by_use": {
+    "מסחר": 11,
+    "תעסוקה": 13
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "במילוי תנאים להפקדה"
@@ -2421,6 +2881,11 @@
    "units_basis": "appendix",
    "ratio_req": 1.515,
    "ratio_res_req": 1.201,
+   "by_use": {
+    "מסחר": 17,
+    "תעסוקה": 17,
+    "ציבור": 8
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים",
    "status": "אישור"
@@ -2448,6 +2913,11 @@
    "ratio_req": 1.263,
    "ratio_prov": 1.379,
    "ratio_res_req": 1.101,
+   "by_use": {
+    "מסחר": 8,
+    "חינוך": 17,
+    "ציבור": 7
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "הפקדה להתנגדויות/השגות"
@@ -2469,6 +2939,9 @@
    "units_basis": "appendix",
    "ratio_req": 1.235,
    "ratio_res_req": 1.199,
+   "by_use": {
+    "מסחר": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "פת",
    "status": "אישור"
@@ -2495,6 +2968,12 @@
    "ratio_req": 1.767,
    "ratio_prov": 1.767,
    "ratio_res_req": 1.325,
+   "by_use": {
+    "מסחר": 22,
+    "תעסוקה": 19,
+    "ציבור": 8,
+    "חינוך": 4
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -2518,6 +2997,11 @@
    "units_gap_vs_gs": 20,
    "ratio_req": 1.347,
    "ratio_res_req": 1.224,
+   "by_use": {
+    "מסחר": 8,
+    "חינוך": 7,
+    "אחר": 6
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "הפקדה להתנגדויות/השגות"
@@ -2546,6 +3030,10 @@
    "ratio_prov": 1.39,
    "ratio_res_req": 1.206,
    "ratio_res_prov": 1.199,
+   "by_use": {
+    "מסחר": 12,
+    "חינוך": 11
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קריית שמואל",
    "status": "בהליך אישור"
@@ -2572,6 +3060,11 @@
    "ratio_req": 1.748,
    "ratio_prov": 1.748,
    "ratio_res_req": 1.102,
+   "by_use": {
+    "מסחר": 5,
+    "ציבור": 72,
+    "חינוך": 5
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "אישור"
@@ -2598,6 +3091,10 @@
    "ratio_req": 1.708,
    "ratio_prov": 1.923,
    "ratio_res_req": 1.538,
+   "by_use": {
+    "ציבור": 6,
+    "אחר": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "בבדיקה תכנונית"
@@ -2624,6 +3121,9 @@
    "ratio_req": 1.152,
    "ratio_prov": 1.159,
    "ratio_res_req": 1.098,
+   "by_use": {
+    "חינוך": 7
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "במילוי תנאים להפקדה"
@@ -2648,6 +3148,13 @@
    "units_basis": "appendix",
    "ratio_req": 1.581,
    "ratio_res_req": 1.35,
+   "by_use": {
+    "מסחר": 9,
+    "תעסוקה": 5,
+    "ציבור": 2,
+    "חינוך": 5,
+    "אחר": 6
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -2674,6 +3181,10 @@
    "ratio_req": 1.301,
    "ratio_prov": 1.415,
    "ratio_res_req": 1.26,
+   "by_use": {
+    "חינוך": 2
+   },
+   "by_use_unsplit": 3,
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "הפקדה להתנגדויות/השגות"
@@ -2701,6 +3212,9 @@
    "ratio_prov": 1.402,
    "ratio_res_req": 1.426,
    "ratio_res_prov": 1.32,
+   "by_use": {
+    "מסחר": 10
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "אישור"
@@ -2730,6 +3244,10 @@
    "ratio_prov": 1.325,
    "ratio_res_req": 1.103,
    "ratio_res_prov": 1.171,
+   "by_use": {
+    "מסחר": 9,
+    "חינוך": 7
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -2757,6 +3275,10 @@
    "ratio_req": 1.217,
    "ratio_prov": 1.267,
    "ratio_res_req": 1.1,
+   "by_use": {
+    "מסחר": 11,
+    "ציבור": 3
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "תלפיות ארנונה",
    "status": "בבדיקה תכנונית"
@@ -2784,6 +3306,12 @@
    "ratio_req": 2.781,
    "ratio_prov": 2.105,
    "ratio_res_req": 1.798,
+   "by_use": {
+    "מסחר": 41,
+    "תעסוקה": 48,
+    "ציבור": 5,
+    "אחר": 18
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "תבע מאושרת"
@@ -2810,6 +3338,10 @@
    "ratio_req": 2.052,
    "ratio_prov": 1.896,
    "ratio_res_req": 1.771,
+   "by_use": {
+    "מסחר": 23,
+    "ציבור": 4
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים",
    "status": "אישור"
@@ -2838,6 +3370,9 @@
    "ratio_prov": 1.143,
    "ratio_res_req": 0.967,
    "ratio_res_prov": 0.978,
+   "by_use": {
+    "ציבור": 8
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -2865,6 +3400,11 @@
    "ratio_prov": 1.563,
    "ratio_res_req": 1.338,
    "ratio_res_prov": 1.352,
+   "by_use": {
+    "מסחר": 7,
+    "ציבור": 7,
+    "חינוך": 1
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "תבע מאושרת"
@@ -2888,6 +3428,11 @@
    "units_basis": "appendix",
    "ratio_req": 1.948,
    "ratio_res_req": 1.843,
+   "by_use": {
+    "מסחר": 1,
+    "חינוך": 6,
+    "אחר": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -2912,6 +3457,11 @@
    "ratio_req": 1.246,
    "ratio_prov": 1.246,
    "ratio_res_req": 1.096,
+   "by_use": {
+    "מסחר": 4,
+    "ציבור": 9,
+    "אחר": 4
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "תלפיות ארנונה",
    "status": "אישור"
@@ -2940,6 +3490,10 @@
    "ratio_prov": 1.239,
    "ratio_res_req": 1.0,
    "ratio_res_prov": 1.0,
+   "by_use": {
+    "מסחר": 9,
+    "חינוך": 13
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "תבע מאושרת"
@@ -2965,6 +3519,10 @@
    "ratio_req": 1.632,
    "ratio_prov": 1.632,
    "ratio_res_req": 1.5,
+   "by_use": {
+    "מסחר": 11,
+    "חינוך": 3
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "תבע מאושרת"
@@ -2990,6 +3548,9 @@
    "ratio_req": 1.906,
    "ratio_prov": 1.906,
    "ratio_res_req": 1.858,
+   "by_use": {
+    "אחר": 5
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קריית שמואל",
    "status": "בבדיקה תכנונית"
@@ -3015,6 +3576,10 @@
    "ratio_req": 1.895,
    "ratio_prov": 1.895,
    "ratio_res_req": 1.752,
+   "by_use": {
+    "ציבור": 4,
+    "מסחר": 11
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "הפקדה להתנגדויות/השגות"
@@ -3040,6 +3605,10 @@
    "ratio_req": 1.509,
    "ratio_prov": 1.509,
    "ratio_res_req": 1.456,
+   "by_use": {
+    "ציבור": 4,
+    "מסחר": 2
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "אישור"
@@ -3063,6 +3632,12 @@
    "units_basis": "appendix",
    "ratio_req": 1.886,
    "ratio_res_req": 1.211,
+   "by_use": {
+    "חינוך": 42,
+    "מסחר": 10,
+    "ציבור": 7,
+    "אחר": 18
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -3071,7 +3646,7 @@
    "plan_name": "פינוי בינוי סן מרטין 23-25",
    "req_private": 149,
    "prov_private": 149,
-   "req_residential": 144,
+   "req_residential": 127,
    "accessible": 6,
    "standard": "לא מוצג בגיליון פירוט התקן — רק מאזן סופי",
    "confidence": "medium",
@@ -3084,7 +3659,13 @@
    "units_basis": "gs",
    "ratio_req": 1.433,
    "ratio_prov": 1.433,
-   "ratio_res_req": 1.385,
+   "ratio_res_req": 1.221,
+   "by_use": {
+    "מסחר": 12,
+    "ציבור": 5
+   },
+   "by_use_unsplit": 5,
+   "base_corrected": "req_residential נרשם 144, אבל 144 הוא הסה\"כ הכללי של הגיליון ולא תת-הסך למגורים: 127 מגורים + 12 מסחר + 5 מועדון לקשיש = 144. היתרה עד req_private=149 היא 5 חניות נכים. לכן המגורים הם 127 והלא-מגורים 17.",
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "אישור"
@@ -3111,6 +3692,11 @@
    "ratio_prov": 1.279,
    "ratio_res_req": 1.096,
    "ratio_res_prov": 1.106,
+   "by_use": {
+    "מסחר": 9,
+    "ציבור": 4,
+    "אחר": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "תבע מאושרת"
@@ -3139,6 +3725,12 @@
    "ratio_prov": 1.373,
    "ratio_res_req": 1.225,
    "ratio_res_prov": 1.255,
+   "by_use": {
+    "ציבור": 5,
+    "מסחר": 3,
+    "תעסוקה": 2
+   },
+   "by_use_unsplit": 1,
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "בהליך אישור"
@@ -3165,6 +3757,10 @@
    "ratio_req": 1.727,
    "ratio_prov": 1.727,
    "ratio_res_req": 1.621,
+   "by_use": {
+    "מסחר": 4,
+    "ציבור": 3
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "במילוי תנאים להפקדה"
@@ -3190,6 +3786,10 @@
    "ratio_req": 1.462,
    "ratio_prov": 1.462,
    "ratio_res_req": 1.413,
+   "by_use": {
+    "מסחר": 3,
+    "חינוך": 1
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "אישור"
@@ -3213,6 +3813,10 @@
    "units_basis": "appendix",
    "ratio_req": 2.244,
    "ratio_res_req": 1.477,
+   "by_use": {
+    "מסחר": 12,
+    "ציבור": 54
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
@@ -3237,6 +3841,9 @@
    "units_gap_vs_gs": -5,
    "ratio_req": 1.859,
    "ratio_res_req": 1.685,
+   "by_use": {
+    "ציבור": 16
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
    "status": "בבדיקה תכנונית"
@@ -3288,6 +3895,10 @@
    "ratio_req": 1.194,
    "ratio_prov": 1.237,
    "ratio_res_req": 1.108,
+   "by_use": {
+    "ציבור": 7,
+    "מסחר": 1
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "אישור"
@@ -3316,6 +3927,11 @@
    "ratio_prov": 1.467,
    "ratio_res_req": 1.093,
    "ratio_res_prov": 1.16,
+   "by_use": {
+    "מסחר": 16,
+    "תעסוקה": 4,
+    "ציבור": 3
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
@@ -3340,6 +3956,11 @@
    "ratio_req": 1.014,
    "ratio_prov": 1.068,
    "ratio_res_req": 0.89,
+   "by_use": {
+    "מסחר": 7,
+    "תעסוקה": 3
+   },
+   "by_use_over": 1,
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -3366,6 +3987,10 @@
    "ratio_prov": 1.385,
    "ratio_res_req": 1.103,
    "ratio_res_prov": 1.218,
+   "by_use": {
+    "חינוך": 4,
+    "אחר": 9
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "בהליך אישור"
@@ -3392,6 +4017,10 @@
    "ratio_req": 1.386,
    "ratio_prov": 1.414,
    "ratio_res_req": 1.257,
+   "by_use": {
+    "מסחר": 5,
+    "ציבור": 4
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -3417,6 +4046,11 @@
    "ratio_req": 1.5,
    "ratio_prov": 1.655,
    "ratio_res_req": 1.207,
+   "by_use": {
+    "מסחר": 13,
+    "תעסוקה": 2,
+    "ציבור": 2
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -3445,6 +4079,10 @@
    "ratio_prov": 1.283,
    "ratio_res_req": 1.15,
    "ratio_res_prov": 1.167,
+   "by_use": {
+    "מסחר": 4,
+    "ציבור": 3
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "אישור"
@@ -3473,6 +4111,10 @@
    "ratio_prov": 1.809,
    "ratio_res_req": 1.638,
    "ratio_res_prov": 1.67,
+   "by_use": {
+    "ציבור": 8,
+    "מסחר": 3
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -3500,6 +4142,11 @@
    "ratio_req": 1.65,
    "ratio_prov": 1.65,
    "ratio_res_req": 0.425,
+   "by_use": {
+    "מלונאות": 50,
+    "ציבור": 8,
+    "אחר": 40
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "אישור"
@@ -3525,6 +4172,9 @@
    "ratio_req": 1.43,
    "ratio_prov": 1.671,
    "ratio_res_req": 1.405,
+   "by_use": {
+    "ציבור": 2
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -3550,6 +4200,9 @@
    "ratio_req": 0.917,
    "ratio_prov": 0.917,
    "ratio_res_req": 0.889,
+   "by_use": {
+    "אחר": 2
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "תבע מאושרת"
@@ -3575,6 +4228,10 @@
    "ratio_req": 0.765,
    "ratio_prov": 0.809,
    "ratio_res_req": 0.632,
+   "by_use": {
+    "ציבור": 3,
+    "מסחר": 6
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -3597,6 +4254,9 @@
    "units_basis": "gs",
    "ratio_req": 1.297,
    "ratio_prov": 1.297,
+   "by_use": {
+    "מסחר": 8
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו - גבעת הורדים",
    "status": "במילוי תנאים להפקדה"
@@ -3623,6 +4283,10 @@
    "ratio_req": 1.077,
    "ratio_prov": 1.077,
    "ratio_res_req": 0.985,
+   "by_use": {
+    "מסחר": 3,
+    "ציבור": 3
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "תלפיות ארנונה",
    "status": "אישור"
@@ -3649,6 +4313,13 @@
    "ratio_req": 3.067,
    "ratio_prov": 3.067,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 18,
+    "תעסוקה": 9,
+    "ציבור": 61,
+    "חינוך": 4,
+    "אחר": 32
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
@@ -3729,6 +4400,9 @@
    "ratio_req": 1.396,
    "ratio_prov": 1.396,
    "ratio_res_req": 1.34,
+   "by_use": {
+    "חינוך": 3
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "תבע מאושרת"
@@ -3755,6 +4429,9 @@
    "ratio_req": 0.883,
    "ratio_prov": 0.9,
    "ratio_res_req": 0.8,
+   "by_use": {
+    "מסחר": 5
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "תבע מאושרת"
@@ -3781,6 +4458,10 @@
    "ratio_req": 1.264,
    "ratio_prov": 1.245,
    "ratio_res_req": 1.17,
+   "by_use": {
+    "מסחר": 1,
+    "חינוך": 4
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קוממיות - טלביה",
    "status": "תבע מאושרת"
@@ -3806,6 +4487,10 @@
    "ratio_req": 1.458,
    "ratio_prov": 1.458,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "תעסוקה": 11,
+    "מסחר": 11
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -3831,6 +4516,9 @@
    "ratio_req": 1.396,
    "ratio_prov": 1.396,
    "ratio_res_req": 1.354,
+   "by_use": {
+    "אחר": 2
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "תבע מאושרת"
@@ -3856,6 +4544,11 @@
    "ratio_req": 1.723,
    "ratio_prov": 1.723,
    "ratio_res_req": 1.298,
+   "by_use": {
+    "מסחר": 16,
+    "תעסוקה": 2,
+    "ציבור": 2
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "תבע מאושרת"
@@ -3882,6 +4575,9 @@
    "ratio_req": 1.83,
    "ratio_prov": 1.83,
    "ratio_res_req": 1.34,
+   "by_use": {
+    "מסחר": 23
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -3932,6 +4628,10 @@
    "ratio_req": 0.977,
    "ratio_prov": 0.977,
    "ratio_res_req": 0.86,
+   "by_use": {
+    "מסחר": 4,
+    "ציבור": 1
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -3957,6 +4657,9 @@
    "ratio_req": 1.045,
    "ratio_prov": 1.045,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 2
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קוממיות - טלביה",
    "status": "אישור"
@@ -4035,6 +4738,9 @@
    "ratio_req": 2.621,
    "ratio_prov": 2.621,
    "ratio_res_req": 1.241,
+   "by_use": {
+    "מלונאות": 40
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "",
    "status": "אישור"
@@ -4084,6 +4790,9 @@
    "ratio_req": 1.55,
    "ratio_prov": 1.55,
    "ratio_res_req": 1.3,
+   "by_use": {
+    "מסחר": 5
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "תבע מאושרת"
@@ -4230,6 +4939,9 @@
    "ratio_req": 1.5,
    "ratio_prov": 1.5,
    "ratio_res_req": 1.25,
+   "by_use": {
+    "מסחר": 1
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -4255,6 +4967,10 @@
    "ratio_req": 1.135,
    "ratio_prov": 1.135,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "חינוך": 3,
+    "אחר": 2
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -4306,6 +5022,9 @@
    "ratio_req": 1.475,
    "ratio_prov": 1.475,
    "ratio_res_req": 1.425,
+   "by_use": {
+    "ציבור": 2
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -4331,6 +5050,9 @@
    "ratio_req": 1.261,
    "ratio_prov": 1.261,
    "ratio_res_req": 1.174,
+   "by_use": {
+    "ציבור": 2
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -4357,6 +5079,11 @@
    "ratio_req": 1.381,
    "ratio_prov": 1.381,
    "ratio_res_req": 1.119,
+   "by_use": {
+    "מסחר": 3,
+    "תעסוקה": 5,
+    "ציבור": 3
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -4403,6 +5130,9 @@
    "ratio_req": 1.438,
    "ratio_prov": 1.438,
    "ratio_res_req": 1.312,
+   "by_use": {
+    "ציבור": 2
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא",
    "status": "אישור"
@@ -4572,6 +5302,9 @@
    "ratio_req": 1.111,
    "ratio_prov": 1.111,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מלונאות": 1
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
    "status": "אישור"
@@ -4645,6 +5378,9 @@
    "ratio_req": 1.275,
    "ratio_prov": 1.275,
    "ratio_res_req": 1.235,
+   "by_use": {
+    "אחר": 2
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "תבע מאושרת"
@@ -4691,6 +5427,9 @@
    "ratio_req": 1.356,
    "ratio_prov": 1.422,
    "ratio_res_req": 1.089,
+   "by_use": {
+    "מסחר": 12
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "שיכוני תלפיות",
    "status": "תבע מאושרת"
@@ -4885,6 +5624,9 @@
    "ratio_req": 1.111,
    "ratio_prov": 1.111,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 3
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
    "status": "אישור"
@@ -4931,6 +5673,9 @@
    "ratio_req": 2.062,
    "ratio_prov": 2.062,
    "ratio_res_req": 2.0,
+   "by_use": {
+    "חינוך": 2
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -5003,6 +5748,9 @@
    "ratio_req": 1.5,
    "ratio_prov": 1.5,
    "ratio_res_req": 1.333,
+   "by_use": {
+    "מסחר": 4
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "תבע מאושרת"
@@ -5177,6 +5925,9 @@
    "ratio_prov": 1.556,
    "ratio_res_req": 1.0,
    "ratio_res_prov": 1.056,
+   "by_use": {
+    "מסחר": 7
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -5203,6 +5954,10 @@
    "ratio_req": 2.667,
    "ratio_prov": 2.75,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 17,
+    "תעסוקה": 3
+   },
    "minahak": "",
    "sub_neighborhood": "",
    "status": "אישור"
@@ -5608,6 +6363,11 @@
    "ratio_prov": 16.905,
    "ratio_res_req": 1.905,
    "ratio_res_prov": 2.0,
+   "by_use": {
+    "מסחר": 6,
+    "מלונאות": 20,
+    "ציבור": 600
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קטמון הישנה",
    "status": "אישור"
@@ -5632,6 +6392,9 @@
    "ratio_req": 1.389,
    "ratio_prov": 1.389,
    "ratio_res_req": 1.111,
+   "by_use": {
+    "מסחר": 10
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -5656,6 +6419,9 @@
    "ratio_req": 1.824,
    "ratio_prov": 1.824,
    "ratio_res_req": 1.706,
+   "by_use": {
+    "מסחר": 4
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -5683,6 +6449,10 @@
    "ratio_req": 1.321,
    "ratio_prov": 1.321,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 7,
+    "תעסוקה": 2
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -5707,6 +6477,10 @@
    "ratio_req": 1.7,
    "ratio_prov": 1.7,
    "ratio_res_req": 1.4,
+   "by_use": {
+    "חינוך": 3,
+    "מסחר": 6
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "אישור"
@@ -5733,6 +6507,9 @@
    "ratio_prov": 1.5,
    "ratio_res_req": 1.382,
    "ratio_res_prov": 1.265,
+   "by_use": {
+    "ציבור": 2
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קריית שמואל",
    "status": "אישור"
@@ -5759,6 +6536,10 @@
    "ratio_prov": 1.359,
    "ratio_res_req": 1.359,
    "ratio_res_prov": 1.172,
+   "by_use": {
+    "מסחר": 12
+   },
+   "by_use_over": 5,
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "מקור חיים",
    "status": "אישור"
@@ -5787,6 +6568,9 @@
    "ratio_prov": 1.5,
    "ratio_res_req": 1.438,
    "ratio_res_prov": 1.438,
+   "by_use": {
+    "ציבור": 2
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "רסקו",
    "status": "אישור"
@@ -5839,6 +6623,10 @@
    "ratio_prov": 3.467,
    "ratio_res_req": 1.8,
    "ratio_res_prov": 1.8,
+   "by_use": {
+    "תעסוקה": 34,
+    "מסחר": 16
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא,שרפת",
    "status": "תבע מאושרת"
@@ -5893,6 +6681,12 @@
    "ratio_req": 2.667,
    "ratio_prov": 2.833,
    "ratio_res_req": 1.125,
+   "by_use": {
+    "מסחר": 9,
+    "תעסוקה": 9,
+    "ציבור": 16,
+    "אחר": 3
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
    "status": "אישור"
@@ -6111,6 +6905,9 @@
    "ratio_req": 1.158,
    "ratio_prov": 1.368,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "מסחר": 3
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים",
    "status": "בבדיקה תכנונית"
@@ -6189,6 +6986,9 @@
    "ratio_req": 1.056,
    "ratio_prov": 1.333,
    "ratio_res_req": 1.0,
+   "by_use": {
+    "אחר": 1
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "תלפיות",
    "status": "הכרעה בהתנגדויות / אישור"
@@ -6218,6 +7018,9 @@
    "ratio_prov": 1.0,
    "ratio_res_req": 1.0,
    "ratio_res_prov": 1.0,
+   "by_use": {
+    "מסחר": 1
+   },
    "minahak": "בקעה רבתי",
    "sub_neighborhood": "בקעה",
    "status": "אישור"
@@ -6269,6 +7072,9 @@
    "units_basis": "appendix",
    "ratio_req": 2.312,
    "ratio_res_req": 2.0,
+   "by_use": {
+    "מסחר": 5
+   },
    "minahak": "בית צפאפא",
    "sub_neighborhood": "בית צפאפא",
    "status": "אישור"
@@ -6808,6 +7614,10 @@
    "ratio_prov": 1.657,
    "ratio_res_req": 1.457,
    "ratio_res_prov": 1.457,
+   "by_use": {
+    "ציבור": 4,
+    "מסחר": 3
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "גוננים א-ו",
    "status": "אישור"
@@ -6920,6 +7730,10 @@
    "ratio_prov": 1.183,
    "ratio_res_req": 1.07,
    "ratio_res_prov": 1.07,
+   "by_use": {
+    "מסחר": 30,
+    "חינוך": 10
+   },
    "minahak": "גוננים",
    "sub_neighborhood": "קטמונים ח-ט",
    "status": "תבע מאושרת"
@@ -6945,6 +7759,10 @@
    "ratio_prov": 6.0,
    "ratio_res_req": 2.0,
    "ratio_res_prov": 2.042,
+   "by_use": {
+    "מסחר": 28,
+    "מלונאות": 67
+   },
    "minahak": "גינות העיר",
    "sub_neighborhood": "קוממיות - טלביה",
    "status": "אישור"
@@ -6967,6 +7785,10 @@
    "units_gap_vs_gs": -15,
    "ratio_req": 1.67,
    "ratio_res_req": 1.487,
+   "by_use": {
+    "מסחר": 18,
+    "תעסוקה": 3
+   },
    "minahak": "א.ת. תלפיות",
    "sub_neighborhood": "א.ת. תלפיות",
    "status": "במילוי תנאים להפקדה"
