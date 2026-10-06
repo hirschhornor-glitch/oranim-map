@@ -1180,6 +1180,17 @@ def _yk_compute_objection_end(taba, status_date=None):
     if not deposit_steps:
         return _status_fallback('no deposit process in YK')
 
+    # Latest EXECUTED step of the validation process (מתן תוקף). Once the committee
+    # has started validating, the deposit is over - an explicit "תום תקופת" date
+    # before it is the real end, not a stale previous cycle, whatever Mavat's status
+    # date says. 101-1003177: תום 18/08/2026, a lone ילקוט entry 30/08, Mavat status
+    # date 27/08, approved for validation (108ג) 24/09 - the stale-skip below turned
+    # it into "pub(30/08)+60 = 29/10", showing a closed window as open.
+    validation_execs = [d for d in (_parse_dmy(s.get('execDateStr'))
+                                    for s in data if s.get('processText') == 'תהליך מתן תוקף לתכנית')
+                        if d]
+    latest_validation = max(validation_execs) if validation_execs else None
+
     # Explicit "תום תקופת הפקדה" wins — but only if not BEFORE status_date.
     pub_dates = []
     for step in deposit_steps:
@@ -1188,6 +1199,8 @@ def _yk_compute_objection_end(taba, status_date=None):
         if 'תום תקופת' in step_text:
             d = exec_d or _parse_dmy(step.get('planDateStr'))
             if not d: continue
+            if latest_validation and latest_validation >= d:
+                return d.strftime('%d/%m/%Y'), 'explicit (validation started)'
             if status_date and d < status_date:
                 # Stale explicit end-date from a previous cycle. Skip.
                 continue
