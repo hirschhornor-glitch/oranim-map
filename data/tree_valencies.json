@@ -84,6 +84,32 @@
     "total_trees": 12,
     "status": "ok"
   },
+  "1021344": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 104,
+        "shimur": 4
+      },
+      "14-16": {
+        "krita": 32,
+        "shimur": 1
+      },
+      "0-6": {
+        "krita": 4
+      }
+    },
+    "bucket_totals": {
+      "7-13": 108,
+      "14-16": 33,
+      "0-6": 4
+    },
+    "by_reco": {
+      "krita": 140,
+      "shimur": 5
+    },
+    "total_trees": 145,
+    "status": "ok"
+  },
   "1024272": {
     "by_bucket": {
       "7-13": {
@@ -735,6 +761,32 @@
       "lo_nidresh": 12
     },
     "total_trees": 46,
+    "status": "ok"
+  },
+  "1146505": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 8,
+        "shimur": 5
+      },
+      "0-6": {
+        "krita": 1
+      },
+      "14-16": {
+        "haataka": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 13,
+      "0-6": 1,
+      "14-16": 1
+    },
+    "by_reco": {
+      "krita": 9,
+      "haataka": 1,
+      "shimur": 5
+    },
+    "total_trees": 15,
     "status": "ok"
   },
   "1161439": {
@@ -1685,6 +1737,38 @@
     "total_trees": 11,
     "status": "ok"
   },
+  "1375641": {
+    "by_bucket": {
+      "7-13": {
+        "shimur": 5,
+        "krita": 10
+      },
+      "17-20": {
+        "krita": 1
+      },
+      "14-16": {
+        "shimur": 1,
+        "krita": 13,
+        "lo_nidresh": 1
+      },
+      "0-6": {
+        "krita": 2
+      }
+    },
+    "bucket_totals": {
+      "7-13": 15,
+      "17-20": 1,
+      "14-16": 15,
+      "0-6": 2
+    },
+    "by_reco": {
+      "shimur": 6,
+      "krita": 26,
+      "lo_nidresh": 1
+    },
+    "total_trees": 33,
+    "status": "ok"
+  },
   "1377753": {
     "by_bucket": {
       "14-16": {
@@ -1759,6 +1843,42 @@
     },
     "total_trees": 18,
     "status": "ok"
+  },
+  "1389568": {
+    "by_bucket": {
+      "14-16": {
+        "haataka": 9,
+        "krita": 2,
+        "shimur": 13
+      },
+      "17-20": {
+        "haataka": 3,
+        "krita": 4,
+        "shimur": 4
+      },
+      "7-13": {
+        "krita": 4,
+        "shimur": 2
+      },
+      "0-6": {
+        "?": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 24,
+      "17-20": 11,
+      "7-13": 6,
+      "0-6": 1
+    },
+    "by_reco": {
+      "haataka": 12,
+      "krita": 10,
+      "shimur": 19,
+      "?": 1
+    },
+    "total_trees": 42,
+    "status": "partial",
+    "unmapped_rows": 1
   },
   "1394444": {
     "by_bucket": {
@@ -2004,6 +2124,59 @@
     "status": "partial",
     "unmapped_rows": 10
   },
+  "1431808": {
+    "by_bucket": {
+      "7-13": {
+        "shimur": 9,
+        "krita": 12
+      },
+      "14-16": {
+        "krita": 11,
+        "shimur": 6
+      },
+      "0-6": {
+        "krita": 1
+      },
+      "17-20": {
+        "shimur": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 21,
+      "14-16": 17,
+      "0-6": 1,
+      "17-20": 1
+    },
+    "by_reco": {
+      "shimur": 16,
+      "krita": 24
+    },
+    "total_trees": 40,
+    "status": "ok"
+  },
+  "1432244": {
+    "by_bucket": {
+      "0-6": {
+        "?": 33
+      },
+      "7-13": {
+        "shimur": 5,
+        "krita": 15
+      }
+    },
+    "bucket_totals": {
+      "0-6": 33,
+      "7-13": 20
+    },
+    "by_reco": {
+      "?": 33,
+      "shimur": 5,
+      "krita": 15
+    },
+    "total_trees": 53,
+    "status": "partial",
+    "unmapped_rows": 33
+  },
   "1437755": {
     "by_bucket": {
       "7-13": {
@@ -2036,6 +2209,28 @@
     },
     "total_trees": 37,
     "status": "ok"
+  },
+  "1439413": {
+    "by_bucket": {
+      "14-16": {
+        "?": 7,
+        "shimur": 5
+      },
+      "7-13": {
+        "?": 7
+      }
+    },
+    "bucket_totals": {
+      "14-16": 12,
+      "7-13": 7
+    },
+    "by_reco": {
+      "?": 14,
+      "shimur": 5
+    },
+    "total_trees": 19,
+    "status": "partial",
+    "unmapped_rows": 14
   },
   "1444603": {
     "by_bucket": {
@@ -2176,6 +2371,35 @@
     "status": "partial",
     "unmapped_rows": 21
   },
+  "1469246": {
+    "by_bucket": {
+      "7-13": {
+        "haataka": 2,
+        "?": 4,
+        "krita": 1,
+        "shimur": 1
+      },
+      "14-16": {
+        "?": 3,
+        "shimur": 1,
+        "krita": 4,
+        "haataka": 4
+      }
+    },
+    "bucket_totals": {
+      "7-13": 8,
+      "14-16": 12
+    },
+    "by_reco": {
+      "haataka": 6,
+      "?": 7,
+      "shimur": 2,
+      "krita": 5
+    },
+    "total_trees": 20,
+    "status": "partial",
+    "unmapped_rows": 7
+  },
   "1474931": {
     "by_bucket": {
       "0-6": {
@@ -2294,6 +2518,32 @@
       "haataka": 5
     },
     "total_trees": 40,
+    "status": "ok"
+  },
+  "1504364": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 7
+      },
+      "0-6": {
+        "lo_nidresh": 4,
+        "krita": 1
+      },
+      "14-16": {
+        "haataka": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 7,
+      "0-6": 5,
+      "14-16": 1
+    },
+    "by_reco": {
+      "krita": 8,
+      "lo_nidresh": 4,
+      "haataka": 1
+    },
+    "total_trees": 13,
     "status": "ok"
   },
   "1516707": {
@@ -3496,6 +3746,64 @@
     },
     "total_trees": 31,
     "status": "ok"
+  },
+  "תתל/ 108": {
+    "by_bucket": {
+      "14-16": {
+        "haataka": 15,
+        "shimur": 3,
+        "krita": 17
+      },
+      "7-13": {
+        "haataka": 1,
+        "krita": 25
+      },
+      "17-20": {
+        "krita": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 35,
+      "7-13": 26,
+      "17-20": 1
+    },
+    "by_reco": {
+      "haataka": 16,
+      "shimur": 3,
+      "krita": 43
+    },
+    "total_trees": 62,
+    "status": "ok"
+  },
+  "תתל/ 131": {
+    "by_bucket": {
+      "0-6": {
+        "haataka": 3,
+        "?": 8
+      },
+      "14-16": {
+        "?": 262
+      },
+      "7-13": {
+        "?": 38
+      },
+      "17-20": {
+        "?": 2
+      }
+    },
+    "bucket_totals": {
+      "0-6": 11,
+      "14-16": 262,
+      "7-13": 38,
+      "17-20": 2
+    },
+    "by_reco": {
+      "haataka": 3,
+      "?": 310
+    },
+    "total_trees": 313,
+    "status": "partial",
+    "unmapped_rows": 310
   },
   "1320233": {
     "by_bucket": {
