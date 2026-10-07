@@ -1,5 +1,5 @@
 {
- "count": 36,
+ "count": 56,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -542,6 +542,301 @@
    "units": 1,
    "is_residents": false,
    "minahak": "גינות העיר"
+  },
+  "2013/81": {
+   "developer": "משה חן",
+   "developer_parts": [
+    {
+     "applicant": "משה",
+     "group": "חן",
+     "name": "משה חן"
+    }
+   ],
+   "architect": "אנטולי ברושינסקי",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2012/205": {
+   "developer": "מיכאל כהן / פרי חמם",
+   "developer_parts": [
+    {
+     "applicant": "מיכאל",
+     "group": "כהן",
+     "name": "מיכאל כהן"
+    },
+    {
+     "applicant": "פרי",
+     "group": "חמם",
+     "name": "פרי חמם"
+    }
+   ],
+   "architect": "",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2012/809": {
+   "developer": "דני רג'ואן",
+   "developer_parts": [
+    {
+     "applicant": "דני",
+     "group": "רג'ואן",
+     "name": "דני רג'ואן"
+    }
+   ],
+   "architect": "מיקי זיידמן",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2013/779": {
+   "developer": "אסף גולן חברה לבניה בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "חברה לבניה בע\"מ",
+     "group": "אסף גולן",
+     "name": "אסף גולן חברה לבניה בע\"מ"
+    }
+   ],
+   "architect": "פרי חמם",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2013/1000": {
+   "developer": "ענבר קרסני",
+   "developer_parts": [
+    {
+     "applicant": "ענבר",
+     "group": "קרסני",
+     "name": "ענבר קרסני"
+    }
+   ],
+   "architect": "גלית שיפמן נתן",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2014/388": {
+   "developer": "אבי רחמים יזום ופרויקטים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "יזום ופרויקטים בע\"מ",
+     "group": "אבי רחמים",
+     "name": "אבי רחמים יזום ופרויקטים בע\"מ"
+    }
+   ],
+   "architect": "אילן אפרת",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2014/225": {
+   "developer": "ע\"י גרבר דניאל קוזי קאזה בע:\"מ",
+   "developer_parts": [
+    {
+     "applicant": "ע\"י גרבר דניאל",
+     "group": "קוזי קאזה בע:\"מ",
+     "name": "ע\"י גרבר דניאל קוזי קאזה בע:\"מ"
+    }
+   ],
+   "architect": "פרי חמם",
+   "units": 12,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2012/0205.1": {
+   "developer": "מיכאל כהן",
+   "developer_parts": [
+    {
+     "applicant": "מיכאל",
+     "group": "כהן",
+     "name": "מיכאל כהן"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2010/0602": {
+   "developer": "משה חיים בצלאל שפירא",
+   "developer_parts": [
+    {
+     "applicant": "משה חיים בצלאל",
+     "group": "שפירא",
+     "name": "משה חיים בצלאל שפירא"
+    }
+   ],
+   "architect": "משה חיים בצלאל שפירא",
+   "units": 1,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2014/0609": {
+   "developer": "אליהו תוסייה כהן",
+   "developer_parts": [
+    {
+     "applicant": "אליהו",
+     "group": "תוסייה כהן",
+     "name": "אליהו תוסייה כהן"
+    }
+   ],
+   "architect": "חיים שחר",
+   "units": 15,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2015/31": {
+   "developer": "רחל בגומ דיין / זקלין שרמן",
+   "developer_parts": [
+    {
+     "applicant": "רחל בגומ",
+     "group": "דיין",
+     "name": "רחל בגומ דיין"
+    },
+    {
+     "applicant": "זקלין שרמן",
+     "group": "",
+     "name": "זקלין שרמן"
+    }
+   ],
+   "architect": "משה זיידמן",
+   "units": 3,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2015/0161": {
+   "developer": "דדש יצחק עבודו בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "עבודו בע\"מ",
+     "group": "דדש יצחק",
+     "name": "דדש יצחק עבודו בע\"מ"
+    }
+   ],
+   "architect": "פרי חמם",
+   "units": 4,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2015/0107": {
+   "developer": "אלה ליבי אלה / שרמן זקלין",
+   "developer_parts": [
+    {
+     "applicant": "אלה ליבי",
+     "group": "אלה",
+     "name": "אלה ליבי אלה"
+    },
+    {
+     "applicant": "שרמן",
+     "group": "זקלין",
+     "name": "שרמן זקלין"
+    }
+   ],
+   "architect": "יוחאי נהרי",
+   "units": 4,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2015/0346": {
+   "developer": "שמעון ליפסקי",
+   "developer_parts": [
+    {
+     "applicant": "שמעון",
+     "group": "ליפסקי",
+     "name": "שמעון ליפסקי"
+    }
+   ],
+   "architect": "גיא איגרא",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2014/1000": {
+   "developer": "גרי פריגין",
+   "developer_parts": [
+    {
+     "applicant": "גרי",
+     "group": "פריגין",
+     "name": "גרי פריגין"
+    }
+   ],
+   "architect": "דוד בלצקי",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2015/318": {
+   "developer": "גבי פירו",
+   "developer_parts": [
+    {
+     "applicant": "גבי",
+     "group": "פירו",
+     "name": "גבי פירו"
+    }
+   ],
+   "architect": "ארז ניסן",
+   "units": 3,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2015/505": {
+   "developer": "פאול אנט שוראקי",
+   "developer_parts": [
+    {
+     "applicant": "פאול אנט",
+     "group": "שוראקי",
+     "name": "פאול אנט שוראקי"
+    }
+   ],
+   "architect": "אלכסנדר כהן",
+   "units": 17,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2015/337": {
+   "developer": "רן פליישר",
+   "developer_parts": [
+    {
+     "applicant": "רן",
+     "group": "פליישר",
+     "name": "רן פליישר"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": 10,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2015/0518": {
+   "developer": "יעקב יאיר",
+   "developer_parts": [
+    {
+     "applicant": "יעקב",
+     "group": "יאיר",
+     "name": "יעקב יאיר"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2015/0568": {
+   "developer": "בע\"ם מנוס -השומר 10",
+   "developer_parts": [
+    {
+     "applicant": "בע\"ם",
+     "group": "מנוס -השומר 10",
+     "name": "בע\"ם מנוס -השומר 10"
+    }
+   ],
+   "architect": "דוד בלצקי",
+   "units": 15,
+   "is_residents": false,
+   "minahak": "גוננים"
   }
  }
 }
