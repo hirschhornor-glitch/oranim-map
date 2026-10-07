@@ -72,7 +72,7 @@ json.dump([{'row': i, 'plan': pn, 'old_hafrash_sqm': cur} for i, pn, cur, _, _ i
           open(bak, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('\nגיבוי → %s' % bak)
 
-stamp = datetime.datetime.now().strftime('%Y-%m-%d')
+stamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # update_github_data parses the full timestamp
 updates = []
 for i, pn, cur, new, prg in todo:
     updates.append({'range': gspread.utils.rowcol_to_a1(i, COL_HAF), 'values': [[str(int(new))]]})
