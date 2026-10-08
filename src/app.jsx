@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-06-parkdash';
+        const APP_VERSION = '2026-10-08-renewal-out-of-area';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13950,10 +13950,14 @@ function planPermitHafrashUse(taba) {
                 // ── one record per renewal plan (status-scoped, before the geographic filter) ──
                 const seen = new Set();
                 const scoped = [];
-                let excludedStatus = 0, excludedEarly = 0;
+                let excludedStatus = 0, excludedEarly = 0, excludedOut = 0;
                 (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
                     const p = f.properties || {};
                     if (!isRenewalMultPlan(p)) return;
+                    // Outside our community councils: p.minahak is filled by the geometric override for
+                    // every plan inside a minahak polygon, so an empty one means out of area
+                    // (פנמה 2-6, 101-0581850 — 0% inside any minahak, came in via the renewal-name rule).
+                    if (!String(p.minahak || '').trim()) { excludedOut++; return; }
                     const id = String(p.plan_name || '').trim();
                     if (!id || seen.has(id)) return;
                     seen.add(id);
@@ -14482,6 +14486,7 @@ function planPermitHafrashUse(taba) {
                     (noData ? ', ' + noData + ' ללא נתוני יח"ד' : '') +
                     (excludedStatus ? ', ' + excludedStatus + ' שהוחרגו לפי סינון הסטטוס' : '') +
                     (excludedEarly ? ', ' + excludedEarly + ' שנקלטו לפני ' + fromYear + ' (תכניות ספורדיות — "כל השנים" מחזיר אותן)' : '') +
+                    (excludedOut ? ', ' + excludedOut + ' מחוץ לתחום המינהלים' : '') +
                     (foldedN ? ', ' + foldedN + ' תכניות-תיקון שמגדילות תכנית התחדשות קודמת (ה"קיים" שלהן הוא יח"ד שאושרו בתכנית הבסיס, לא בניינים עומדים' + (potMode && chOn('r') ? '; התוספת שלהן נזקפת לתכנית הבסיס' : '') + ')' : '') + '.' +
                     (valid.some(r => r.estYear) ? ' <b>≈ / נקודה חלולה</b> = ' + valid.filter(r => r.estYear).length + ' תכניות שאינן ב-XPLAN (נדחו / נגנזו / נקלטו לאחרונה); השנה שלהן <b>משוערת</b> ממספר התכנית, שמוקצה לפי סדר הקליטה (בבדיקה על התכניות המתוארכות: שנה מדויקת ב-55%, עד שנה אחת ב-91%).' : '') +
                     (valid.some(r => r.year == null) ? ' "' + NO_DATE + '" = תכנית שאינה ב-XPLAN ושמספרה אינו מאפשר אומדן.' : '') +

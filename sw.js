@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v114-parkdash';
+const CACHE_VERSION = 'v115-renewal-out-of-area';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
