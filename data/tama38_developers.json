@@ -1,5 +1,5 @@
 {
- "count": 96,
+ "count": 116,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -1427,6 +1427,306 @@
    "units": null,
    "is_residents": false,
    "minahak": "בקעה רבתי"
+  },
+  "2018/0045": {
+   "developer": "מרדכי בלאו / אביעזר שולה",
+   "developer_parts": [
+    {
+     "applicant": "מרדכי",
+     "group": "בלאו",
+     "name": "מרדכי בלאו"
+    },
+    {
+     "applicant": "אביעזר",
+     "group": "שולה",
+     "name": "אביעזר שולה"
+    }
+   ],
+   "architect": "שמואל יהושע",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0589": {
+   "developer": "צביקה אפרים יוכמן",
+   "developer_parts": [
+    {
+     "applicant": "צביקה אפרים",
+     "group": "יוכמן",
+     "name": "צביקה אפרים יוכמן"
+    }
+   ],
+   "architect": "איתן קימל",
+   "units": 5,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2016/1241": {
+   "developer": "א.ק התחדשות",
+   "developer_parts": [
+    {
+     "applicant": "עירונית",
+     "group": "א.ק התחדשות",
+     "name": "א.ק התחדשות"
+    }
+   ],
+   "architect": "יואל בריידמן",
+   "units": 3,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0592": {
+   "developer": "ל.ל נדלן",
+   "developer_parts": [
+    {
+     "applicant": "נדלן",
+     "group": "ל.ל",
+     "name": "ל.ל נדלן"
+    }
+   ],
+   "architect": "מיכל מאיר",
+   "units": 1,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0325": {
+   "developer": "מייקל וידר",
+   "developer_parts": [
+    {
+     "applicant": "מייקל",
+     "group": "וידר",
+     "name": "מייקל וידר"
+    }
+   ],
+   "architect": "מטיו אהרן רוזנשיין",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2016/0142": {
+   "developer": "נתן עו\"ד ספירו",
+   "developer_parts": [
+    {
+     "applicant": "נתן",
+     "group": "עו\"ד ספירו",
+     "name": "נתן עו\"ד ספירו"
+    }
+   ],
+   "architect": "מיכל דלה פרגולה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0569": {
+   "developer": "קן התור התחדשות עירונית",
+   "developer_parts": [
+    {
+     "applicant": "התחדשות עירונית",
+     "group": "קן התור",
+     "name": "קן התור התחדשות עירונית"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0967": {
+   "developer": "דוד כהן",
+   "developer_parts": [
+    {
+     "applicant": "דוד",
+     "group": "כהן",
+     "name": "דוד כהן"
+    }
+   ],
+   "architect": "אוריה רוזה שוהט",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2016/1105": {
+   "developer": "י.ד בראזני התחדשות בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "התחדשות בע\"מ",
+     "group": "י.ד בראזני",
+     "name": "י.ד בראזני התחדשות בע\"מ"
+    }
+   ],
+   "architect": "גיא יעקב איגרא",
+   "units": 10,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2017/0073": {
+   "developer": "איתמר שלום רואי / פאול ארנסטר",
+   "developer_parts": [
+    {
+     "applicant": "איתמר שלום",
+     "group": "רואי",
+     "name": "איתמר שלום רואי"
+    },
+    {
+     "applicant": "פאול ארנסטר",
+     "group": "",
+     "name": "פאול ארנסטר"
+    }
+   ],
+   "architect": "רננה ניל חרג",
+   "units": 4,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0118": {
+   "developer": "יעקב מאי פיינגולד / בני חי באדי",
+   "developer_parts": [
+    {
+     "applicant": "יעקב מאי",
+     "group": "פיינגולד",
+     "name": "יעקב מאי פיינגולד"
+    },
+    {
+     "applicant": "בני חי באדי",
+     "group": "",
+     "name": "בני חי באדי"
+    }
+   ],
+   "architect": "מטיו אהר רוזנשיין",
+   "units": 8,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0606": {
+   "developer": "יסודות שיתוף בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "יסודות שיתוף",
+     "name": "יסודות שיתוף בע\"מ"
+    }
+   ],
+   "architect": "אלדד נתן",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0928": {
+   "developer": "יצחק דדש",
+   "developer_parts": [
+    {
+     "applicant": "יצחק",
+     "group": "דדש",
+     "name": "יצחק דדש"
+    }
+   ],
+   "architect": "אלדד נתן",
+   "units": 2,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2017/0296": {
+   "developer": "יסודות שיתוף חברה לבניה בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "חברה לבניה בע\"מ",
+     "group": "יסודות שיתוף",
+     "name": "יסודות שיתוף חברה לבניה בע\"מ"
+    }
+   ],
+   "architect": "דוריתה גורן",
+   "units": 10,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0581": {
+   "developer": "יסודות שיתוף חברה לבניה",
+   "developer_parts": [
+    {
+     "applicant": "יסודות שיתוף",
+     "group": "יסודות שיתוף חברה לבניה",
+     "name": "יסודות שיתוף חברה לבניה"
+    }
+   ],
+   "architect": "שגית קרניאל",
+   "units": 4,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2017/0788": {
+   "developer": "יסודות שיתוף בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "יסודות שיתוף",
+     "name": "יסודות שיתוף בע\"מ"
+    }
+   ],
+   "architect": "אלדד נתן",
+   "units": 6,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2018/0176": {
+   "developer": "יתד התחדשות עירונית בע\"מ / שרמן זקלין",
+   "developer_parts": [
+    {
+     "applicant": "עירונית בע\"מ",
+     "group": "יתד התחדשות",
+     "name": "יתד התחדשות עירונית בע\"מ"
+    },
+    {
+     "applicant": "שרמן",
+     "group": "זקלין",
+     "name": "שרמן זקלין"
+    }
+   ],
+   "architect": "פרי חמם",
+   "units": 9,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2018/0638": {
+   "developer": "יסודות שיתוף חברה לבניין",
+   "developer_parts": [
+    {
+     "applicant": "חברה לבניין",
+     "group": "יסודות שיתוף",
+     "name": "יסודות שיתוף חברה לבניין"
+    }
+   ],
+   "architect": "זאב ארד",
+   "units": 23,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2017/1035": {
+   "developer": "קפיטל אב.ה",
+   "developer_parts": [
+    {
+     "applicant": "קפיטל",
+     "group": "אב.ה",
+     "name": "קפיטל אב.ה"
+    }
+   ],
+   "architect": "בועז ביטמן",
+   "units": 4,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2018/0046": {
+   "developer": "קוזי קאזה",
+   "developer_parts": [
+    {
+     "applicant": "קוזי קאזה",
+     "group": "",
+     "name": "קוזי קאזה"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": 20,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   }
  }
 }
