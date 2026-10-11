@@ -681,16 +681,21 @@ async def enrich_from_mavat(new_plans):
         print("\n" + "=" * 60)
         print("If you see a captcha in the browser, please solve it.")
         print("=" * 60)
-        # Best-effort interactive gate. In a real terminal this waits for Enter;
-        # under a non-interactive stdin (background/scheduled run) input() raises
-        # EOFError (even when isatty() lies and returns True), so we fall through
-        # to the polling loop below, which gives time to solve a captcha.
+        # Interactive gate only when a human is at a terminal. Under Task Scheduler
+        # stdin is a live console, so input() does NOT raise EOFError — it blocks
+        # forever (2026-10-11 weekly run hung here). The .bat sets ORANIM_LOGWRAP
+        # and redirects stdout to a log, so either signal means "scheduled": skip
+        # straight to the polling loop below, which gives time to solve a captcha.
+        interactive = (not os.environ.get('ORANIM_LOGWRAP')
+                       and sys.stdin.isatty() and sys.stdout.isatty())
         try:
+            if not interactive:
+                raise EOFError
             input(">>> Press Enter once the Mavat page is loaded "
                   "(or just wait — it will auto-poll)... ")
             await asyncio.sleep(3)
         except (EOFError, OSError):
-            print("Non-interactive stdin: polling the Mavat API for up to 180s "
+            print("Non-interactive run: polling the Mavat API for up to 180s "
                   "while you solve any captcha in the browser window...")
 
         async def _mavat_ok():
