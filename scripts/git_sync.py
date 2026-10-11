@@ -236,12 +236,20 @@ def update_json_and_push(relative_path: str, edit_fn, message: str,
     needs a textual merge — which for single-line JSON always conflicts.
 
     NOTE: any uncommitted changes to relative_path are stashed and restored
-    like other WIP; the file content pushed is pull + edit_fn only.
+    like other WIP; the file content pushed is pull + edit_fn only. After a
+    successful push, edit_fn is re-applied to the restored WIP copy too —
+    otherwise the restored copy (written before our edit) silently undoes the
+    edit the next time anything commits the working-tree file (2026-10-11:
+    detect_new_plans' uncommitted plans.geojson came back over the pushed
+    status sync and the has_objection_btn commit reverted 4 statuses).
     """
     abs_path = os.path.join(repo_dir, relative_path)
     print(f"[git_sync] update_json_and_push: {relative_path}...")
     with repo_lock(f'update {relative_path}'):
         wip = None
+        pushed = False
+        target_dirty = bool(_run(['git', 'status', '--porcelain', '--', relative_path],
+                                 cwd=repo_dir, check=False).stdout.strip())
         try:
             wip = _stash_wip(repo_dir, f'git_sync auto-update: {relative_path}')
             for attempt in range(1, max_attempts + 1):
@@ -267,6 +275,7 @@ def update_json_and_push(relative_path: str, edit_fn, message: str,
                 _assert_committed_matches_disk(repo_dir, relative_path)
                 push = _run(['git', 'push', 'origin', 'master'], cwd=repo_dir, check=False)
                 if push.returncode == 0:
+                    pushed = True
                     return True
                 # Remote moved under us: drop our commit, re-apply on the new tip.
                 # (Everything else is stashed, so --hard only discards our own edit.)
@@ -281,6 +290,25 @@ def update_json_and_push(relative_path: str, edit_fn, message: str,
         finally:
             if wip:
                 _pop_wip(repo_dir, wip)
+                if pushed and target_dirty:
+                    _reapply_edit_on_worktree(abs_path, relative_path, edit_fn)
+
+
+def _reapply_edit_on_worktree(abs_path: str, relative_path: str, edit_fn):
+    """The WIP copy of the file we just pushed was restored from the stash and
+    predates our edit — fold the edit into it so working tree = WIP + edit."""
+    try:
+        with open(abs_path, encoding='utf-8') as f:
+            data = json.load(f)
+        if edit_fn(data):
+            with open(abs_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False)
+        print(f"[git_sync] re-applied edit to the uncommitted local copy of {relative_path} "
+              "(kept its other changes; nothing stale left to be committed later)")
+    except Exception as e:
+        print(f"[git_sync] ERROR: could not re-apply edit to the restored local copy of "
+              f"{relative_path} ({e}) — it predates the pushed edit; a later commit of it "
+              "would revert that edit. Review the working tree.", file=sys.stderr)
 
 
 def _norm_bytes(path: str):
