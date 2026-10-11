@@ -1,7 +1,49 @@
 {
- "scanned": 11,
- "generated": "2026-10-04",
+ "scanned": 7,
+ "candidates": 7,
+ "unverified": [],
+ "generated": "2026-10-11",
  "confirmed_open": [],
- "verify": [],
- "open_in_district": []
+ "verify": [
+  {
+   "tik": "2021/0465.01",
+   "address": "הפלמח 24",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "23/09/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "08/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2021/0465.01",
+   "lnglat": [
+    35.210873,
+    31.767462
+   ],
+   "in_district": true,
+   "category": "verify"
+  }
+ ],
+ "open_in_district": [
+  {
+   "tik": "2021/0465.01",
+   "address": "הפלמח 24",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "23/09/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "08/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2021/0465.01",
+   "lnglat": [
+    35.210873,
+    31.767462
+   ],
+   "in_district": true,
+   "category": "verify"
+  }
+ ]
 }
