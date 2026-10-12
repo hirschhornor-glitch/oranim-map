@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T08:26:13",
+  "generated_at": "2026-10-12T09:48:37",
   "sources": [
     {
       "file": "all_permits.json",
@@ -7,7 +7,7 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 776,
       "last_publish": "2026-10-05",
-      "age_days": 3,
+      "age_days": 7,
       "status": "green",
       "notes": []
     },
@@ -17,7 +17,7 @@
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1350,
       "last_publish": "2026-10-05",
-      "age_days": 3,
+      "age_days": 7,
       "status": "green",
       "notes": []
     },
@@ -27,7 +27,7 @@
       "refresh": "לפי צורך",
       "records": 18,
       "last_publish": "2026-06-29",
-      "age_days": 101,
+      "age_days": 105,
       "status": "info",
       "notes": []
     },
@@ -35,8 +35,8 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 29,
-      "last_publish": "2026-10-08",
+      "records": 30,
+      "last_publish": "2026-10-12",
       "age_days": 0,
       "status": "green",
       "notes": [
@@ -49,7 +49,7 @@
       "refresh": "שבועי",
       "records": 0,
       "last_publish": "2026-08-30",
-      "age_days": 39,
+      "age_days": 43,
       "status": "red",
       "notes": []
     },
@@ -59,7 +59,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 97,
+      "age_days": 101,
       "status": "info",
       "notes": []
     },
@@ -68,8 +68,8 @@
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
       "records": 2,
-      "last_publish": "2026-10-07",
-      "age_days": 1,
+      "last_publish": "2026-10-09",
+      "age_days": 3,
       "status": "green",
       "notes": []
     },
@@ -79,7 +79,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 109,
+      "age_days": 113,
       "status": "info",
       "notes": []
     },
@@ -89,7 +89,7 @@
       "refresh": "לפי צורך",
       "records": 49,
       "last_publish": "2026-10-04",
-      "age_days": 4,
+      "age_days": 8,
       "status": "info",
       "notes": []
     }
@@ -108,16 +108,29 @@
       "status": 17,
       "removed": 0
     },
-    "age_days": 4
+    "age_days": 8
   },
   "committee_audit": {
-    "date": "2026-10-08",
+    "date": "2026-10-12",
     "age_days": 0,
     "status": "green",
-    "checked": 0,
+    "checked": 2,
     "matched": 0,
-    "missing": 0,
-    "missing_list": []
+    "missing": 2,
+    "missing_list": [
+      {
+        "permit_no": "2026/0088.00",
+        "neighborhood": "תלפיות",
+        "address": "קורא הדורות 13, תלפיות",
+        "essence": "בניית בניין חדש בן שש קומות ושתי קומות מרתף עבור 28 יח\"ד"
+      },
+      {
+        "permit_no": "1991/0407.11",
+        "neighborhood": "גבעת הורדים",
+        "address": "ש. טשרניחובסקי 60, גבעת הורדים",
+        "essence": "תוספת בניה להרחבת יח\"ד לפי תכנית 4382"
+      }
+    ]
   },
   "known_failures": [
     {
@@ -126,8 +139,13 @@
       "count": 2
     },
     {
+      "log": "mavat_sync_last_run.log",
+      "sample": "Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...",
+      "count": 2
+    },
+    {
       "log": "tama38_dev_backfill_last.log",
-      "sample": "DONE-DEVELOPERS: 76/279 enriched; 74 with developer; 1 residents-led; 203 still throttled.",
+      "sample": "DONE-DEVELOPERS: 156/279 enriched; 152 with developer; 2 residents-led; 123 still throttled.",
       "count": 1
     },
     {
