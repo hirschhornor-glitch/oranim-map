@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T14:10:26",
+  "generated_at": "2026-10-12T15:40:05",
   "sources": [
     {
       "file": "all_permits.json",
@@ -25,7 +25,7 @@
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
       "refresh": "לפי צורך",
-      "records": 49,
+      "records": 101,
       "last_publish": "2026-10-12",
       "age_days": 0,
       "status": "info",

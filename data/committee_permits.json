@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-12T14:09:09",
+ "generated_at": "2026-10-12T15:39:50",
  "source": "YK API — היתרים שלא היו במאגר: מסדר היום של ועדת הרישוי + משמעותיים מסריקת הרחובות",
- "count": 136,
+ "count": 188,
  "significant": 117,
  "permits": {
   "1957/354.7": {
@@ -5387,6 +5387,2408 @@
     "+53 יח\"ד"
    ],
    "alerted_at": null
+  },
+  "2026/93.0": {
+   "file_number": "2026/0093.00",
+   "status": " תחילת פרסום הבקשה להקלה",
+   "status_date": "29/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, סגירת מרפסת",
+   "request_description": "סגירת מרפסות + בניית מרפסת ",
+   "address": "דוד מרכוס 11",
+   "neighborhood_yk": "טלביה/המוגרבים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "3137",
+    "705426",
+    "9783"
+   ],
+   "parcels": [
+    "30021/63"
+   ],
+   "floors": 4,
+   "matched_tabas": [
+    "705426"
+   ],
+   "taba": "705426",
+   "norm": "2026/93.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1260306",
+    "1348069",
+    "510412",
+    "705426"
+   ],
+   "lat": 31.76941410954923,
+   "lng": 35.21711215398072,
+   "fetched_at": "2026-10-12T15:26:21",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/60.1": {
+   "file_number": "2026/0060.01",
+   "status": "נפתח תיק רישוי",
+   "status_date": "03/05/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניה חדשה- מבנה משולב 75 יחידות דיור ומסחר",
+   "address": "הסדנא 2",
+   "neighborhood_yk": "תלפיות תעשיה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1193531"
+   ],
+   "parcels": [
+    "30187/23"
+   ],
+   "units": 75,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 75,
+   "floors": 13,
+   "matched_tabas": [
+    "1193531"
+   ],
+   "taba": "1193531",
+   "norm": "2026/60.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1549260",
+    "1193531"
+   ],
+   "lat": 31.749871180562323,
+   "lng": 35.21686673470101,
+   "fetched_at": "2026-10-12T15:30:56",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+75 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/57.0": {
+   "file_number": "2026/0057.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "18/02/2026",
+   "request_type": "עבודות הריסה, חפירה ומילוי",
+   "request_description": "חפירה ודיפון+הריסת בניין קיים עבור הקמת מגדל בעירוב שימושים עבור 148 יחידות דיור",
+   "address": "גנרל פייר קניג 37",
+   "neighborhood_yk": "תלפיות תעשיה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1002625"
+   ],
+   "parcels": [
+    "30140/3"
+   ],
+   "units": 148,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 148,
+   "floors": 4,
+   "matched_tabas": [
+    "1002625"
+   ],
+   "taba": "1002625",
+   "norm": "2026/57.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "150805",
+    "1002625"
+   ],
+   "lat": 31.752144035323056,
+   "lng": 35.214555635560465,
+   "fetched_at": "2026-10-12T15:31:00",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "+148 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/452.0": {
+   "file_number": "2026/0452.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "08/10/2026",
+   "request_type": "בניית קיר תומך/מגן, עבודות בדרכים",
+   "request_description": "התווית דרך חדשה, בנית קירות תומכים, מדרכות וגינון.",
+   "address": "משעול זהב מרדכי 4",
+   "neighborhood_yk": "גבעת המטוס",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1095124"
+   ],
+   "parcels": [
+    "30128/19",
+    "30128/22",
+    "30128/23",
+    "30128/24",
+    "30128/3",
+    "30128/4"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "1095124"
+   ],
+   "taba": "1095124",
+   "norm": "2026/452.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "189852"
+   ],
+   "lat": 31.746056798857303,
+   "lng": 35.21129388690106,
+   "fetched_at": "2026-10-12T15:31:03",
+   "category": "drachim",
+   "bucket": "acher",
+   "bucket_label": "אחר",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/434.0": {
+   "file_number": "2026/0434.00",
+   "status": "שולמה מקדמה",
+   "status_date": "07/10/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת שני בניינים חדשים בני 6 קומות הכוללים 32 יחידות דיור.",
+   "address": "",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "14295",
+    "950642"
+   ],
+   "parcels": [
+    "30282/15",
+    "30282/37",
+    "30282/43",
+    "30282/56"
+   ],
+   "units": 32,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 32,
+   "floors": 6,
+   "matched_tabas": [
+    "950642"
+   ],
+   "taba": "950642",
+   "norm": "2026/434.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "950642"
+   ],
+   "lat": 31.73766981573093,
+   "lng": 35.20478223836596,
+   "fetched_at": "2026-10-12T15:31:06",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+32 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/404.0": {
+   "file_number": "2026/0404.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "06/09/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניית קיר תמך בכביש בירושלים, בניית מעלית לחיבור מפלסים בכביש בגין",
+   "address": "שדרות מנחם בגין",
+   "neighborhood_yk": "מנחת",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "13138",
+    "178129",
+    "601898"
+   ],
+   "parcels": [
+    "30460/21",
+    "30460/37",
+    "30460/39",
+    "30460/49"
+   ],
+   "floors": 2,
+   "matched_tabas": [
+    "178129",
+    "601898"
+   ],
+   "taba": "601898",
+   "norm": "2026/404.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "759548",
+    "1590793"
+   ],
+   "lat": 31.75153928920671,
+   "lng": 35.189098625731795,
+   "fetched_at": "2026-10-12T15:31:10",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/394.0": {
+   "file_number": "2026/0394.00",
+   "status": "שולמה מקדמה",
+   "status_date": "06/09/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד",
+   "request_description": "השלמת קומה חמישית ותוספת 3 קומות מלאות וקומה תשיעית בנסיגה 4 ,קומות תת קרקעיות",
+   "address": "דוד המלך 8",
+   "neighborhood_yk": "טלביה/המוגרבים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1160019",
+    "182667",
+    "30036ג"
+   ],
+   "parcels": [
+    "30036/5081"
+   ],
+   "units": 5,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 5,
+   "floors": 9,
+   "matched_tabas": [
+    "1160019",
+    "182667"
+   ],
+   "taba": "1160019",
+   "norm": "2026/394.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1160019",
+    "182667"
+   ],
+   "lat": 31.7769168139741,
+   "lng": 35.22226508012706,
+   "fetched_at": "2026-10-12T15:31:13",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+5 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/375.0": {
+   "file_number": "2026/0375.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "31/08/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת בניין חדש בו 4 קומות מעל קומת חניה, סה\"כ 4 יח\"ד",
+   "address": "",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "327288"
+   ],
+   "parcels": [
+    "30284/31"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [
+    "327288"
+   ],
+   "taba": "327288",
+   "norm": "2026/375.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "327288"
+   ],
+   "lat": 31.746102078476106,
+   "lng": 35.204613416059544,
+   "fetched_at": "2026-10-12T15:31:16",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/321.1": {
+   "file_number": "2026/0321.01",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "30/08/2026",
+   "request_type": "בניה חדשה / בניין חדש, התחדשות עירונית - פינוי בינוי",
+   "request_description": "בקשה לבניה חדשה במסגרת פינוי בינוי, עבור 2 מבני מגורים הכוללים סה\"כ 142 יח\"ד, בנוסף 5 קומות חניון תת\"ק ושילוב של שטחי מסחר ומבני ציבור .",
+   "address": "מרגולין 1",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1242700"
+   ],
+   "parcels": [
+    "30169/179",
+    "30169/36",
+    "30169/37",
+    "30169/38",
+    "30169/96"
+   ],
+   "units": 142,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 142,
+   "floors": 17,
+   "matched_tabas": [
+    "1242700"
+   ],
+   "taba": "1242700",
+   "norm": "2026/321.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1242700"
+   ],
+   "lat": 31.7542454087952,
+   "lng": 35.1951987373166,
+   "fetched_at": "2026-10-12T15:31:44",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+142 יח\"ד",
+    "התחדשות עירונית"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/314.1": {
+   "file_number": "2026/0314.01",
+   "status": "שולמה מקדמה",
+   "status_date": "12/07/2026",
+   "request_type": "התחדשות עירונית - פינוי בינוי, בניה חדשה / בניין חדש",
+   "request_description": "בניית מגדל בגובה של 32 קומות, לצד מבנה מרקמי של 9 קומות על גבי מסד בן 5 קומות בעירוב שימושים הכוללים 301 יח\"ד",
+   "address": "בר יוחאי 18",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1114305",
+    "5/06/04",
+    "511923",
+    "565317",
+    "6176"
+   ],
+   "parcels": [
+    "30199/32",
+    "30199/45",
+    "30199/95"
+   ],
+   "units": 301,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 301,
+   "floors": 37,
+   "matched_tabas": [
+    "1114305",
+    "511923",
+    "565317"
+   ],
+   "taba": "1114305",
+   "norm": "2026/314.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1114305"
+   ],
+   "lat": 31.753163071418697,
+   "lng": 35.193615673250676,
+   "fetched_at": "2026-10-12T15:31:48",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+301 יח\"ד",
+    "התחדשות עירונית"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/286.0": {
+   "file_number": "2026/0286.00",
+   "status": "שולמה מקדמה",
+   "status_date": "10/06/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+   "request_description": "בניין מגורים 42 יח\"ד על גבי מסד קומות ציבוריות",
+   "address": "מקור חיים 13",
+   "neighborhood_yk": "מקור חיים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1048347"
+   ],
+   "parcels": [
+    "30198/44"
+   ],
+   "units": 42,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 42,
+   "floors": 15,
+   "matched_tabas": [
+    "1048347"
+   ],
+   "taba": "1048347",
+   "norm": "2026/286.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1048347",
+    "715235"
+   ],
+   "lat": 31.756409826618295,
+   "lng": 35.213680050370435,
+   "fetched_at": "2026-10-12T15:31:51",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+42 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/234.1": {
+   "file_number": "2026/0234.01",
+   "status": "שולמה מקדמה",
+   "status_date": "07/09/2026",
+   "request_type": "עבודות הריסה, חפירה ומילוי",
+   "request_description": "בקשה להיתר הריסה ודיפון לצורך בניין הכולל חפירת חניון תת קרקעי בן 3 קומות, עבור בניין בן 7 קומות.",
+   "address": "ביתר 15",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1189281",
+    "1471",
+    "1721"
+   ],
+   "parcels": [
+    "30118/61"
+   ],
+   "floors": 7,
+   "matched_tabas": [
+    "1189281"
+   ],
+   "taba": "1189281",
+   "norm": "2026/234.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1189281"
+   ],
+   "lat": 31.75009575431233,
+   "lng": 35.22392747417248,
+   "fetched_at": "2026-10-12T15:32:19",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/230.0": {
+   "file_number": "2026/0230.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "27/05/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "מבנה מגורים בן 10 קומות מעל לקומת מסחר במפלס הרחובוחניה תת קרקעית.  בתכנית מוצעות עד 68 יח\"ד במגוון גדלים ,וכן שימושי מסחר ושימוש ציבורי במפלס הרחוב",
+   "address": "מקור חיים 56",
+   "neighborhood_yk": "מקור חיים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1335298",
+    "430249"
+   ],
+   "parcels": [
+    "30130/6"
+   ],
+   "units": 68,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 68,
+   "floors": 11,
+   "matched_tabas": [
+    "1335298",
+    "430249"
+   ],
+   "taba": "430249",
+   "norm": "2026/230.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1542562",
+    "430249"
+   ],
+   "lat": 31.751918851485936,
+   "lng": 35.21011223736807,
+   "fetched_at": "2026-10-12T15:32:22",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+68 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/224.0": {
+   "file_number": "2026/0224.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "31/08/2026",
+   "request_type": "בניה חדשה / בניין חדש, התחדשות עירונית - פינוי בינוי",
+   "request_description": "פנמה 6 - הקמת 2 מבנים חדשים ל-267 יחידות דיור, ומסחר בקומת הקרקע במסגרת פינוי בינוי",
+   "address": "פנמה 6",
+   "neighborhood_yk": "קרית מנחם",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "581850"
+   ],
+   "parcels": [
+    "30435/115",
+    "30435/141"
+   ],
+   "units": 219,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 219,
+   "floors": 62,
+   "matched_tabas": [
+    "581850"
+   ],
+   "taba": "581850",
+   "norm": "2026/224.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "581850"
+   ],
+   "lat": 31.756799827815335,
+   "lng": 35.16169728104111,
+   "fetched_at": "2026-10-12T15:32:25",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+219 יח\"ד",
+    "התחדשות עירונית"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/208.0": {
+   "file_number": "2026/0208.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "14/06/2026",
+   "request_type": "עבודות הריסה, חפירה ומילוי, בניה חדשה / בניין חדש",
+   "request_description": " הריסה , חפירה ובנית בנין מגורים בן 8 קומות מעל 4 קומות של חניון תת קרקעי . סה\"כ 35 יח\"ד",
+   "address": "אלכסנדריון 0",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1854",
+    "30144ג",
+    "798306"
+   ],
+   "parcels": [
+    "30144/14",
+    "30144/15"
+   ],
+   "units": 35,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 35,
+   "floors": 8,
+   "matched_tabas": [
+    "798306"
+   ],
+   "taba": "798306",
+   "norm": "2026/208.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "798306",
+    "538686"
+   ],
+   "lat": 31.752505176653862,
+   "lng": 35.20352632910936,
+   "fetched_at": "2026-10-12T15:32:28",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+35 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/202.1": {
+   "file_number": "2026/0202.01",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "03/05/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+   "request_description": "בניית מבנה מגורים הכולל 34 יח\"ד ומבנה ציבור בקומת הקרקע. 10 קומות מעל מפלס הכניסה הקובעת ועוד 3 קומות למרתפי חניה, אחסנה וחללים טכנאיים.",
+   "address": "ש. טשרניחובסקי 55",
+   "neighborhood_yk": "גבעת הורדים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "30185ג",
+    "899880"
+   ],
+   "parcels": [
+    "30185/48"
+   ],
+   "units": 34,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 34,
+   "floors": 10,
+   "matched_tabas": [
+    "899880"
+   ],
+   "taba": "899880",
+   "norm": "2026/202.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "899880"
+   ],
+   "lat": 31.764211112908704,
+   "lng": 35.204032896479454,
+   "fetched_at": "2026-10-12T15:32:31",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+34 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/189.1": {
+   "file_number": "2026/0189.01",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "03/05/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, התחדשות עירונית - פינוי בינוי",
+   "request_description": "בניית מבנה מגורים הכולל 80 יח\"ד ומבנה ציבור בקומת הקרקע ו 1-. 10 קומות מעל מפלס הכניסה הקובעת ועוד 5 קומות מרתף למגורים, מבנה ציבור, חניה, אחסנה וחללים טכניים.",
+   "address": "ש. טשרניחובסקי 52,54",
+   "neighborhood_yk": "גבעת הורדים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "899880"
+   ],
+   "parcels": [
+    "30185/40",
+    "30185/41"
+   ],
+   "units": 80,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 80,
+   "floors": 11,
+   "matched_tabas": [
+    "899880"
+   ],
+   "taba": "899880",
+   "norm": "2026/189.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "899880"
+   ],
+   "lat": 31.764301294681744,
+   "lng": 35.20350510930637,
+   "fetched_at": "2026-10-12T15:32:34",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+80 יח\"ד",
+    "התחדשות עירונית"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/126.0": {
+   "file_number": "2026/0126.00",
+   "status": "שולמה מקדמה",
+   "status_date": "18/03/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+   "request_description": "הקמת בניה חדשה סה''''''''כ 34 דירות +מסחר + בניין תעסוקה וצורכי ציבור",
+   "address": "אל ט'הרה סמטה 7 10",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3365",
+    "798439"
+   ],
+   "parcels": [
+    "30277/2"
+   ],
+   "units": 34,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 34,
+   "floors": 10,
+   "matched_tabas": [
+    "798439"
+   ],
+   "taba": "798439",
+   "norm": "2026/126.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "798439"
+   ],
+   "lat": 31.748627069803145,
+   "lng": 35.19767947191286,
+   "fetched_at": "2026-10-12T15:33:05",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+34 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2026/119.0": {
+   "file_number": "2026/0119.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "25/08/2026",
+   "request_type": "רישוי בניה - שימוש חורג מהיתר",
+   "request_description": "שימוש חורג- 3 יחידות מסחר לבית כנסת",
+   "address": "הרכבת 20",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2417",
+    "2417א",
+    "571190",
+    "95612"
+   ],
+   "parcels": [
+    "30003/78"
+   ],
+   "floors": 6,
+   "matched_tabas": [
+    "571190",
+    "95612"
+   ],
+   "taba": "571190",
+   "norm": "2026/119.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "571190",
+    "95612"
+   ],
+   "lat": 31.762235219572947,
+   "lng": 35.219158938461014,
+   "fetched_at": "2026-10-12T15:33:09",
+   "category": "shimush_chorech",
+   "bucket": "shimush_chorag",
+   "bucket_label": "שימוש חורג",
+   "significant": false,
+   "reasons": [
+    "+3 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2025/66.0": {
+   "file_number": "2025/0066.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "28/08/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת 4 בנייני מגורים חדשים וחזית מסחרית בשכונת בית צפאפא",
+   "address": "אל קצ'אייל",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3801",
+    "827956"
+   ],
+   "parcels": [
+    "30507/5071"
+   ],
+   "units": 14,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 14,
+   "floors": 3,
+   "matched_tabas": [
+    "827956"
+   ],
+   "taba": "827956",
+   "norm": "2025/66.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "827956"
+   ],
+   "lat": 31.747689282093656,
+   "lng": 35.201004002740284,
+   "fetched_at": "2026-10-12T15:33:15",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+14 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2025/397.1": {
+   "file_number": "2025/0397.01",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "12/08/2026",
+   "request_type": "חפירה ומילוי",
+   "request_description": "הריסת קירות ומדרגות קיימים, חפירה, דיפון ויציקת רצפה ראשונה עבור חניון תת קרקעי לבינוי מבוקש בתיק 397/2025",
+   "address": "אלכסנדריון",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1854",
+    "2954א",
+    "30144ג",
+    "798306"
+   ],
+   "parcels": [
+    "30144/14",
+    "30144/15",
+    "30144/16",
+    "30144/17",
+    "30144/89",
+    "30144/90",
+    "30144/91"
+   ],
+   "units": 56,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 56,
+   "floors": 9,
+   "matched_tabas": [
+    "798306"
+   ],
+   "taba": "798306",
+   "norm": "2025/397.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1468776",
+    "798306",
+    "528380"
+   ],
+   "lat": 31.7520542539069,
+   "lng": 35.20347356151398,
+   "fetched_at": "2026-10-12T15:33:18",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "+56 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2025/311.0": {
+   "file_number": "2025/0311.00",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "01/02/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד",
+   "request_description": "תוספת בניה ע\"פ תב\"ע",
+   "address": "דרך בית לחם 19",
+   "neighborhood_yk": "גאולים - בקעה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1257252",
+    "30013ג",
+    "3770"
+   ],
+   "parcels": [
+    "30013/8"
+   ],
+   "units_existing": 0,
+   "floors": 3,
+   "matched_tabas": [
+    "1257252"
+   ],
+   "taba": "1257252",
+   "norm": "2025/311.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1257252"
+   ],
+   "lat": 31.76065654339883,
+   "lng": 35.22263138881271,
+   "fetched_at": "2026-10-12T15:33:25",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2025/29.0": {
+   "file_number": "2025/0029.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "31/03/2025",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "בניין חדש: 5 קומות מעל הקרקע (מסחר, משרדים, מגורים-12 יח\"ד) ו-5 קומות מתחת לקרקע (חניה ומסחר).",
+   "address": "אברהם כחילה",
+   "neighborhood_yk": "מנחת",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1095892",
+    "12736",
+    "30452ג",
+    "5322",
+    "644476"
+   ],
+   "parcels": [
+    "30452/38"
+   ],
+   "units": 12,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 12,
+   "floors": 5,
+   "matched_tabas": [
+    "1095892",
+    "644476"
+   ],
+   "taba": "1095892",
+   "norm": "2025/29.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1095892"
+   ],
+   "lat": 31.746893383072955,
+   "lng": 35.18006536921693,
+   "fetched_at": "2026-10-12T15:33:28",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+12 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2025/235.0": {
+   "file_number": "2025/0235.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "26/05/2025",
+   "request_type": "שינויים ללא תוספת שטחים, רישוי בניה - שימוש חורג מהיתר",
+   "request_description": "שימוש חורג ממגורים מסחר ותעסוקה ל 2 גני ילדים",
+   "address": "עמק רפאים 76",
+   "neighborhood_yk": "המושבה היוונית",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1131945"
+   ],
+   "parcels": [
+    "30004/95"
+   ],
+   "floors": 2,
+   "matched_tabas": [
+    "1131945"
+   ],
+   "taba": "1131945",
+   "norm": "2025/235.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1131945"
+   ],
+   "lat": 31.759863769726607,
+   "lng": 35.21518979403534,
+   "fetched_at": "2026-10-12T15:33:31",
+   "category": "shimush_chorech",
+   "bucket": "shimush_chorag",
+   "bucket_label": "שימוש חורג",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2025/216.0": {
+   "file_number": "2025/0216.00",
+   "status": "שולמה מקדמה",
+   "status_date": "10/06/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "היתר בניה לבית מלון בעל 54 חדרים ",
+   "address": "אחד העם 5",
+   "neighborhood_yk": "טלביה/המוגרבים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "0990",
+    "1052901",
+    "548891"
+   ],
+   "parcels": [
+    "30027/29"
+   ],
+   "floors": 7,
+   "matched_tabas": [
+    "1052901",
+    "548891"
+   ],
+   "taba": "1052901",
+   "norm": "2025/216.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "548891",
+    "1052901"
+   ],
+   "lat": 31.773066395810922,
+   "lng": 35.218748947609136,
+   "fetched_at": "2026-10-12T15:33:34",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/81.2": {
+   "file_number": "2024/0081.02",
+   "status": "נפתח תיק רישוי",
+   "status_date": "15/01/2025",
+   "request_type": "בניה חדשה / בניין חדש, ריצוף חצר ועבודות פיתוח",
+   "request_description": "היתר בניה עילי לקומות מסחר, קומות מגורים כולל גג טכני מתחם הרכבת",
+   "address": "דרך בית לחם 0",
+   "neighborhood_yk": "גאולים - בקעה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "30188ג",
+    "653840",
+    "682849"
+   ],
+   "parcels": [
+    "30188/18"
+   ],
+   "units": 116,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 116,
+   "floors": 10,
+   "matched_tabas": [
+    "653840",
+    "682849"
+   ],
+   "taba": "653840",
+   "norm": "2024/81.2",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "653840"
+   ],
+   "lat": 31.763551272715926,
+   "lng": 35.223898635087316,
+   "fetched_at": "2026-10-12T15:34:05",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+116 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/80.2": {
+   "file_number": "2024/0080.02",
+   "status": "נפתח תיק רישוי",
+   "status_date": "24/12/2024",
+   "request_type": "בניה חדשה / בניין חדש, ריצוף חצר ועבודות פיתוח",
+   "request_description": "היתר בניה עילי לקומות מסחר, קומות מגורים כולל גג טכני",
+   "address": "שכ בקעה 0",
+   "neighborhood_yk": "גאולים - בקעה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "30017ג",
+    "4379",
+    "653840"
+   ],
+   "parcels": [
+    "30017/11"
+   ],
+   "units": 60,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 60,
+   "floors": 9,
+   "matched_tabas": [
+    "653840"
+   ],
+   "taba": "653840",
+   "norm": "2024/80.2",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1305739"
+   ],
+   "lat": 31.76531885082489,
+   "lng": 35.22412067899653,
+   "fetched_at": "2026-10-12T15:34:08",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+60 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/509.0": {
+   "file_number": "2024/0509.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "01/12/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, פיתוח שטח ציבורי פתוח, התקנת מעלית פנימית, שינויים בקירות חזית במבנים קיימים, עבודות הריסה",
+   "request_description": "שימור וילה היסטורית ותוספת מעלית וגרם מדרגות חדש, חידוש מבני העזר, הוספת פרגולה, שימור וחידוש גן המוזיאון",
+   "address": "הרב מוהליבר שמואל 6",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1300",
+    "2878",
+    "410282"
+   ],
+   "parcels": [
+    "30012/19",
+    "30012/20"
+   ],
+   "floors": 2,
+   "matched_tabas": [
+    "410282"
+   ],
+   "taba": "410282",
+   "norm": "2024/509.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "410282"
+   ],
+   "lat": 31.76645574804808,
+   "lng": 35.21997241978491,
+   "fetched_at": "2026-10-12T15:34:21",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/466.0": {
+   "file_number": "2024/0466.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "06/08/2026",
+   "request_type": "בניה חדשה / בניין חדש, ריצוף חצר ועבודות פיתוח",
+   "request_description": "בניין חדש בן 7 קומות מעל הקרקע ו-5 קומות תת-קרקעיות לדיור מוגן + מסחר ע''''פ תכנית 101-1218999",
+   "address": "חנוך אלבק",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1218999"
+   ],
+   "parcels": [
+    "30300/9"
+   ],
+   "units": 160,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 160,
+   "floors": 7,
+   "matched_tabas": [
+    "1218999"
+   ],
+   "taba": "1218999",
+   "norm": "2024/466.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1218999",
+    "575456"
+   ],
+   "lat": 31.759429677142574,
+   "lng": 35.22498495398492,
+   "fetched_at": "2026-10-12T15:34:28",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+160 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/385.0": {
+   "file_number": "2024/0385.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "31/12/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניית מבנה חדש לבית כנסת ",
+   "address": "השופט חיים כהן 42",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5303",
+    "889428"
+   ],
+   "parcels": [
+    "30139/384"
+   ],
+   "floors": 2,
+   "matched_tabas": [
+    "889428"
+   ],
+   "taba": "889428",
+   "norm": "2024/385.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1445659"
+   ],
+   "lat": 31.746029071911764,
+   "lng": 35.2191774713919,
+   "fetched_at": "2026-10-12T15:35:21",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/368.0": {
+   "file_number": "2024/0368.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "12/01/2025",
+   "request_type": "עבודות הריסה",
+   "request_description": "הריסה ומילוי + תכנית התארגנות",
+   "address": "כפר עציון 1",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1423",
+    "1423א",
+    "1423ד",
+    "53751",
+    "560110",
+    "823922"
+   ],
+   "parcels": [
+    "30118/91",
+    "30177/18",
+    "30177/19",
+    "30177/20",
+    "30177/21",
+    "30177/22",
+    "30177/23",
+    "30177/90",
+    "30177/91"
+   ],
+   "floors": 9,
+   "matched_tabas": [
+    "560110",
+    "823922"
+   ],
+   "taba": "823922",
+   "norm": "2024/368.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "823922"
+   ],
+   "lat": 31.74621748902693,
+   "lng": 35.22597407424786,
+   "fetched_at": "2026-10-12T15:35:24",
+   "category": "harisa",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/349.0": {
+   "file_number": "2024/0349.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "31/12/2025",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, חפירה ומילוי, ריצוף חצר ועבודות פיתוח, התחדשות עירונית - פינוי בינוי",
+   "request_description": "הקמת שני מבני מגורים חדשים מעל קומות מסחריות ומבנה ציבור וחניונים במסגרת פינוי בינוי",
+   "address": "חוסה דה סן מרטין 28",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1008176"
+   ],
+   "parcels": [
+    "30200/27",
+    "30200/28",
+    "30200/29",
+    "30200/6",
+    "30200/7",
+    "30200/8"
+   ],
+   "units": 242,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 242,
+   "floors": 31,
+   "matched_tabas": [
+    "1008176"
+   ],
+   "taba": "1008176",
+   "norm": "2024/349.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "967653",
+    "1008176"
+   ],
+   "lat": 31.75328047063456,
+   "lng": 35.19570544787913,
+   "fetched_at": "2026-10-12T15:35:27",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+242 יח\"ד",
+    "התחדשות עירונית"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2024/199.0": {
+   "file_number": "2024/0199.00",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "01/12/2025",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי, ממ\"ד, עבודות הריסה",
+   "request_description": "הריסת בניין קיים והקמת מבנה מגורים חדש",
+   "address": "אלכסנדריון 17",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "110510",
+    "30144ג",
+    "4565א"
+   ],
+   "parcels": [
+    "30144/13"
+   ],
+   "units": 20,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 20,
+   "floors": 7,
+   "matched_tabas": [
+    "110510"
+   ],
+   "taba": "110510",
+   "norm": "2024/199.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1571991",
+    "110510"
+   ],
+   "lat": 31.753542291694128,
+   "lng": 35.2028508305833,
+   "fetched_at": "2026-10-12T15:35:37",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+20 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/606.0": {
+   "file_number": "2023/0606.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "01/09/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בית ספר 18 כיתות,מעון יום של 3 כיתות,אולם ספורט,מגרש ספורט,חדר טראפו,ביתן שומר ומאגר מים ",
+   "address": "מעלה זאב",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "250563"
+   ],
+   "parcels": [
+    "30123/112",
+    "30123/115"
+   ],
+   "floors": 6,
+   "matched_tabas": [
+    "250563"
+   ],
+   "taba": "250563",
+   "norm": "2023/606.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "250563"
+   ],
+   "lat": 31.75942229505606,
+   "lng": 35.20713613816284,
+   "fetched_at": "2026-10-12T15:35:47",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/487.0": {
+   "file_number": "2023/0487.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "26/04/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש לדיור מוגן ומסחר",
+   "address": "חנוך אלבק",
+   "neighborhood_yk": "צפון תלפיות",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "2954ג",
+    "2954ה",
+    "575456"
+   ],
+   "parcels": [
+    "30300/9"
+   ],
+   "units": 57,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 57,
+   "floors": 1,
+   "matched_tabas": [
+    "575456"
+   ],
+   "taba": "575456",
+   "norm": "2023/487.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1218999",
+    "575456"
+   ],
+   "lat": 31.75926735039234,
+   "lng": 35.22495325252795,
+   "fetched_at": "2026-10-12T15:35:57",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+57 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/373.0": {
+   "file_number": "2023/0373.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "31/12/2024",
+   "request_type": "רישוי בניה - שימוש חורג מתכנית",
+   "request_description": "שימוש חורג ממגורים לאתר התארגנות והנחת ציוד קבלני",
+   "address": "טבליה",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1103571",
+    "2317",
+    "5834א",
+    "691667"
+   ],
+   "parcels": [
+    "30286/5034"
+   ],
+   "matched_tabas": [
+    "1103571",
+    "691667"
+   ],
+   "taba": "1103571",
+   "norm": "2023/373.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "528661",
+    "211730",
+    "1103571",
+    "691667"
+   ],
+   "lat": 31.741232001521166,
+   "lng": 35.20964724183466,
+   "fetched_at": "2026-10-12T15:36:04",
+   "category": "shimush_chorech",
+   "bucket": "shimush_chorag",
+   "bucket_label": "שימוש חורג",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/362.0": {
+   "file_number": "2023/0362.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "03/03/2024",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "הקמת חדר טנספורמציה לשלושה שנאים מגרש 304",
+   "address": "0",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "560110"
+   ],
+   "parcels": [
+    "30212/79"
+   ],
+   "matched_tabas": [
+    "560110"
+   ],
+   "taba": "560110",
+   "norm": "2023/362.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "560110"
+   ],
+   "lat": 31.743034503871694,
+   "lng": 35.22257516546537,
+   "fetched_at": "2026-10-12T15:36:07",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/361.0": {
+   "file_number": "2023/0361.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "03/03/2024",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "הקמת חדר טנספורמציה לשלושה שנאים מגרש 306",
+   "address": "0",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "560110"
+   ],
+   "parcels": [
+    "30212/81"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "560110"
+   ],
+   "taba": "560110",
+   "norm": "2023/361.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "560110"
+   ],
+   "lat": 31.742132296647497,
+   "lng": 35.224949463876364,
+   "fetched_at": "2026-10-12T15:36:10",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/359.0": {
+   "file_number": "2023/0359.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "03/03/2024",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "הקמת חדר טנספורמציה לשני שנאים מגרש 309",
+   "address": "0",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "560110"
+   ],
+   "parcels": [
+    "30212/83"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "560110"
+   ],
+   "taba": "560110",
+   "norm": "2023/359.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "560110"
+   ],
+   "lat": 31.746100560108733,
+   "lng": 35.2240532789378,
+   "fetched_at": "2026-10-12T15:36:14",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/357.0": {
+   "file_number": "2023/0357.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "06/02/2025",
+   "request_type": "עבודות בדרכים",
+   "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול ",
+   "address": "",
+   "neighborhood_yk": "גאולים - בקעה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "0940",
+    "178129",
+    "2154",
+    "307116",
+    "682849",
+    "תתל/86"
+   ],
+   "parcels": [
+    "30011/79",
+    "30017/10",
+    "30017/11",
+    "30017/12",
+    "30017/13",
+    "30017/14",
+    "30017/5",
+    "30017/6",
+    "30017/8",
+    "30029/11",
+    "30029/46",
+    "30029/56",
+    "30188/1",
+    "30188/2",
+    "30188/27",
+    "30188/29",
+    "30188/4",
+    "30188/5",
+    "30188/7",
+    "30197/115",
+    "30197/116",
+    "30197/161",
+    "30197/163",
+    "30197/165",
+    "30197/168",
+    "30197/170",
+    "30197/173",
+    "30197/176",
+    "30197/197",
+    "30197/66",
+    "30197/68",
+    "30197/77",
+    "30197/78",
+    "30197/79",
+    "30197/80",
+    "30197/81",
+    "30197/82"
+   ],
+   "matched_tabas": [
+    "178129",
+    "307116",
+    "682849"
+   ],
+   "taba": "307116",
+   "norm": "2023/357.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "307116",
+    "1067719"
+   ],
+   "lat": 31.767158587019168,
+   "lng": 35.22426885443185,
+   "fetched_at": "2026-10-12T15:36:24",
+   "category": "drachim",
+   "bucket": "acher",
+   "bucket_label": "אחר",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/287.0": {
+   "file_number": "2023/0287.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "31/07/2025",
+   "request_type": "עבודות הריסה",
+   "request_description": "הריסת שלושה מבנים לצורך לצורך מעבר הקו הכחול של הרכבת הקלה",
+   "address": "דרך חברון 42",
+   "neighborhood_yk": "גאולים - בקעה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "0940",
+    "178129",
+    "682849",
+    "901140"
+   ],
+   "parcels": [
+    "30188/10"
+   ],
+   "floors": 2,
+   "matched_tabas": [
+    "178129",
+    "682849",
+    "901140"
+   ],
+   "taba": "682849",
+   "norm": "2023/287.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "682849"
+   ],
+   "lat": 31.761323669273676,
+   "lng": 35.22422538490863,
+   "fetched_at": "2026-10-12T15:36:31",
+   "category": "harisa",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/248.0": {
+   "file_number": "2023/0248.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "07/04/2025",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+   "request_description": "הריסת מבנים קיימים ובניית מבנה חדש בן 7 קומות מעל קומת חניה ו-22 יח\"ד מתוכם יחידה אחת עבור מבני ציבור עפ\"י תבע 103229",
+   "address": "אביטל 6",
+   "neighborhood_yk": "מקור חיים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1032291"
+   ],
+   "parcels": [
+    "30130/25"
+   ],
+   "units": 22,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 22,
+   "floors": 7,
+   "matched_tabas": [
+    "1032291"
+   ],
+   "taba": "1032291",
+   "norm": "2023/248.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1032291"
+   ],
+   "lat": 31.751846645813675,
+   "lng": 35.21128376280868,
+   "fetched_at": "2026-10-12T15:36:34",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+22 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/211.0": {
+   "file_number": "2023/0211.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "01/07/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין מגורים חדש עם חזית מסחרית בן 10 קומות מעל 4 קומות חניון תת\"ק. סה\"כ 34 יח\"ד.",
+   "address": "יהודה הנשיא 2",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "14042",
+    "1953א",
+    "209593",
+    "2116",
+    "30172ג",
+    "3701א",
+    "3701ב",
+    "4565א",
+    "459339",
+    "912337"
+   ],
+   "parcels": [
+    "30172/198"
+   ],
+   "units": 34,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 34,
+   "floors": 10,
+   "matched_tabas": [
+    "209593",
+    "459339",
+    "912337"
+   ],
+   "taba": "912337",
+   "norm": "2023/211.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "912337",
+    "459339"
+   ],
+   "lat": 31.755841892255038,
+   "lng": 35.199040518412374,
+   "fetched_at": "2026-10-12T15:36:41",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+34 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2023/192.0": {
+   "file_number": "2023/0192.00",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "03/09/2024",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניית שני בניינים חדשים מעל שלוש קומות לחנייה ומחסנים ו20 יח\"ד ברחוב אלד''אהרה ",
+   "address": "אל ט'הרה",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3365",
+    "343202",
+    "961045"
+   ],
+   "parcels": [
+    "30277/23"
+   ],
+   "units": 20,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 20,
+   "matched_tabas": [
+    "343202",
+    "961045"
+   ],
+   "taba": "961045",
+   "norm": "2023/192.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "961045"
+   ],
+   "lat": 31.746904470886864,
+   "lng": 35.1963920369138,
+   "fetched_at": "2026-10-12T15:36:44",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+20 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2022/576.0": {
+   "file_number": "2022/0576.00",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "03/12/2024",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, התקנת מעלית פנימית, ריצוף חצר ועבודות פיתוח",
+   "request_description": "שימור בניין קיים ותוספות בנייה כולל תוספת 4 יח\"ד וקומת חנייה, ע\"פ תב\"ע 820761",
+   "address": "רמבן 16",
+   "neighborhood_yk": "רחביה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "30038ג",
+    "820761",
+    "9988"
+   ],
+   "parcels": [
+    "30038/5016"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [
+    "820761"
+   ],
+   "taba": "820761",
+   "norm": "2022/576.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "820761"
+   ],
+   "lat": 31.77491547697527,
+   "lng": 35.2157193911265,
+   "fetched_at": "2026-10-12T15:36:57",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2022/457.0": {
+   "file_number": "2022/0457.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "31/12/2023",
+   "request_type": "מתקן מכפיל חניה על הקרקע",
+   "request_description": "תוספת מקומות חניה בקרוסלות חניה אוטומטיות במגרש חניה ציבורי קיים",
+   "address": "התעשיה",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "216614"
+   ],
+   "parcels": [
+    "30129/74",
+    "30129/75",
+    "30129/76"
+   ],
+   "matched_tabas": [
+    "216614"
+   ],
+   "taba": "216614",
+   "norm": "2022/457.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1125970",
+    "216614"
+   ],
+   "lat": 31.74822106228772,
+   "lng": 35.21386920224651,
+   "fetched_at": "2026-10-12T15:37:04",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2022/410.1": {
+   "file_number": "2022/0410.01",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "26/02/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בית כנסת ואולם התכנסות לקידוש מעל למבנה מקווה מאושר בבקשה נפרדת",
+   "address": "שכ ארנונה 28",
+   "neighborhood_yk": "רמות רחל, ארנונה החדשה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "560110"
+   ],
+   "parcels": [
+    "30212/45"
+   ],
+   "floors": 4,
+   "matched_tabas": [
+    "560110"
+   ],
+   "taba": "560110",
+   "norm": "2022/410.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "560110"
+   ],
+   "lat": 31.74619076900821,
+   "lng": 35.22389499278609,
+   "fetched_at": "2026-10-12T15:37:20",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2021/50.2": {
+   "file_number": "2021/0050.02",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "20/11/2025",
+   "request_type": "בניה חדשה / בניין חדש, שינויים בקירות חזית במבנים קיימים, תוכנית שינויים",
+   "request_description": "שינויים בתכנית קיימת- הוספת שטחי מחסנים, הוספת גובה לחלק מהקומות, שינוים בפתחים בחיתות, שינוי מיקום ארון לשעוני מים",
+   "address": "",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "53751",
+    "560110"
+   ],
+   "parcels": [
+    "30212/30"
+   ],
+   "floors": 9,
+   "matched_tabas": [
+    "560110"
+   ],
+   "taba": "560110",
+   "norm": "2021/50.2",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "560110"
+   ],
+   "lat": 31.74348514980399,
+   "lng": 35.22442209414942,
+   "fetched_at": "2026-10-12T15:37:53",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2021/321.2": {
+   "file_number": "2021/0321.02",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "25/08/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "שינויים פנימיים בקומת המרתף בנייני מגורים בני 3 קומות כולל מסחר וחניון למגרש ושינוי פרט קיר פיתוח",
+   "address": "0",
+   "neighborhood_yk": "רמות רחל, ארנונה החדשה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "2634ב",
+    "53751",
+    "560110"
+   ],
+   "parcels": [
+    "30212/16",
+    "30212/17",
+    "30212/19"
+   ],
+   "units": 12,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 12,
+   "matched_tabas": [
+    "560110"
+   ],
+   "taba": "560110",
+   "norm": "2021/321.2",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "560110"
+   ],
+   "lat": 31.743196986715876,
+   "lng": 35.221488202996966,
+   "fetched_at": "2026-10-12T15:38:30",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+12 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2020/66.1": {
+   "file_number": "2020/0066.01",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "11/09/2023",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "שינויים פנימיים, המרת שטחי שרות כלליים לשטחי מסחר. ",
+   "address": "ע. רינגלבלום",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "560110"
+   ],
+   "parcels": [
+    "30212/21"
+   ],
+   "matched_tabas": [
+    "560110"
+   ],
+   "taba": "560110",
+   "norm": "2020/66.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "560110"
+   ],
+   "lat": 31.7452889233657,
+   "lng": 35.22389480365941,
+   "fetched_at": "2026-10-12T15:39:03",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2020/203.0": {
+   "file_number": "2020/0203.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "20/09/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניית מבנה מגורים בן 5 קומות מעל קומת חניה",
+   "address": "אל ט'הרה",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "693432"
+   ],
+   "parcels": [
+    "30278/100"
+   ],
+   "units": 9,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 9,
+   "matched_tabas": [
+    "693432"
+   ],
+   "taba": "693432",
+   "norm": "2020/203.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "693432"
+   ],
+   "lat": 31.74596658715671,
+   "lng": 35.19698312217912,
+   "fetched_at": "2026-10-12T15:39:32",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+9 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
+  },
+  "2016/602.1": {
+   "file_number": "2016/0602.01",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "03/11/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת 2 קומות מעל בניין קיים סה\"כ 4 קומות מעל קומת חניה תת קרקעית",
+   "address": "אל בוטמה 6",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3488",
+    "706804"
+   ],
+   "parcels": [
+    "30279/18"
+   ],
+   "units": 8,
+   "units_source": "yk_quantities",
+   "units_existing": 4,
+   "units_added": 4,
+   "matched_tabas": [
+    "706804"
+   ],
+   "taba": "706804",
+   "norm": "2016/602.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "181818"
+   ],
+   "lat": 31.740781002082908,
+   "lng": 35.197511187743366,
+   "fetched_at": "2026-10-12T15:39:45",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:backfill"
   }
  },
  "out_of_area": {
