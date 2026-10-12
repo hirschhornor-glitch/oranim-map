@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-13-appendices-report';
+        const APP_VERSION = '2026-10-13-economic-55';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -37163,7 +37163,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     </div>
                                     {tab === 'economic' && (
                                         <p style={{color: '#bbb', fontSize: 11.5, marginBottom: 8, lineHeight: 1.6}}>
-                                            פער = מכפיל מאושר ÷ מכפיל שהדוח קבע כנדרש − 1. <span style={{color: '#ff6b6b'}}>שלילי</span> = התכנית אושרה במכפיל נמוך מהנדרש לפי הדוח שלה (מועמדת לתקיעה כלכלית).
+                                            פער = יח"ד מאושרות ÷ יח"ד שהדוח קבע כנדרשות − 1 (כשהדוח לא מציין יח"ד — לפי המכפיל). <span style={{color: '#ff6b6b'}}>שלילי</span> = התכנית אושרה עם פחות יח"ד מהנדרש לפי הדוח שלה (מועמדת לתקיעה כלכלית).
                                             {ecoRows.length > 0 && <> · חציון רווח: <b>{medProfit == null ? '-' : medProfit.toFixed(1) + '%'}</b> · מתחת לנדרש: <b>{belowReq}</b> מתוך {ecoRows.length}</>}
                                             {ecoRows.some(r => r.approved_source === 'gs') && <><br /><span style={{color: '#ffb74d'}}>* מכפיל מאושר מהגיליון (מבא"ת לא החזיר כמויות) — עשוי לכלול יח"ד קרן תחזוקה או רכיבים שאינם בדוח.</span></>}
                                         </p>
@@ -37209,7 +37209,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#ddd'}}>{(r.approved_existing && r.approved_total) ? r.approved_existing + '→' + r.approved_total : '-'}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#fff'}}>{r.unit_ratio == null ? '-' : '×' + r.unit_ratio}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#fff'}}>{r.approved_ratio == null ? '-' : '×' + r.approved_ratio}{r.approved_source === 'gs' ? '*' : ''}</td>
-                                                    <td style={{padding: '4px', textAlign: 'center', color: gapColor(r.gap_pct), fontWeight: 700}}>{r.gap_pct == null ? '-' : (r.gap_pct > 0 ? '+' : '') + r.gap_pct + '%'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: gapColor(r.gap_pct), fontWeight: 700}} title={r.gap_note || (r.gap_basis === 'ratio' ? 'לפי מכפיל — הדוח לא מציין יח"ד' : '')}>{r.gap_pct == null ? (r.gap_note ? <span style={{color: '#888', fontWeight: 400, fontSize: 10}}>חלקי</span> : '-') : (r.gap_pct > 0 ? '+' : '') + r.gap_pct + '%'}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#a5d6a7'}}>{r.profit_pct_cost == null ? '-' : r.profit_pct_cost + '%'}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#888', fontSize: 10, maxWidth: 110}}>{r.profit_threshold || '-'}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#ffcc80'}}>{price(r) ? '₪' + price(r).toLocaleString('he-IL') : '-'}</td>

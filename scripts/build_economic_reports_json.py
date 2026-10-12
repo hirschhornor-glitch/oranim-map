@@ -88,8 +88,21 @@ def main():
         e["approved_existing"], e["approved_total"], e["approved_source"] = ex, tot, src
         if ex and tot:
             e["approved_ratio"] = round(tot / ex, 2)
-        if e.get("approved_ratio") and head.get("unit_ratio"):
+        # Gap = approved total units vs the total the report found necessary. Units,
+        # not multipliers: the report and Mavat often count EXISTING units differently
+        # (double units, sub-parcels — 0855585: 163 vs 125), which inflates a ratio
+        # comparison. A report covering only part of the plan (a phase, 1024645:
+        # 157 of 512) isn't comparable at all.
+        rep_new = head.get("new_units")
+        if tot and rep_new:
+            if rep_new / tot < 0.7:
+                e["gap_note"] = "הדוח מכסה רק חלק מהתכנית"
+            else:
+                e["gap_pct"] = round((tot / rep_new - 1) * 100, 1)
+                e["gap_basis"] = "units"
+        elif e.get("approved_ratio") and head.get("unit_ratio"):
             e["gap_pct"] = round((e["approved_ratio"] / head["unit_ratio"] - 1) * 100, 1)
+            e["gap_basis"] = "ratio"
         e["versions"] = [{k: v[k] for k in ("label", "date", "unit_ratio", "profit_pct_cost", "sale_price_sqm",
                                             "tenant_added_sqm") if k in v} for v in main_vers]
         if rec.get("comment"):
@@ -101,7 +114,7 @@ def main():
     payload = {"_meta": {"generated_at": datetime.now().isoformat(timespec="seconds"),
                          "description": "חוות דעת כלכליות (תקן 21) לתכניות ברובע: המכפיל הנדרש לפי הדוח מול המכפיל המאושר, רווח יזמי, הנחות מחיר ותמורה לדיירים.",
                          "plans": len(out),
-                         "gap_pct": "מכפיל מאושר ÷ מכפיל נדרש − 1. שלילי = אושר פחות ממה שהדוח קבע כנדרש."},
+                         "gap_pct": "יח\"ד מאושרות ÷ יח\"ד שהדוח קבע כנדרשות − 1 (gap_basis=units); כשהדוח לא מציין יח\"ד — לפי מכפיל (ratio). שלילי = אושר פחות מהנדרש."},
                "plans": out}
     dst = os.path.join(REPO, "data", "economic_reports.json")
     with open(dst + ".tmp", "w", encoding="utf-8") as f:
