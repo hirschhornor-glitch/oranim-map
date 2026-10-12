@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-12-diyuriot-counted';
+        const APP_VERSION = '2026-10-12-tile-filters';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -39586,6 +39586,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (F.src === 'raise' && !r.raiseUnits) return false;
                             if (F.src === 'tama' && !r.tamaUnits) return false;
                             if (F.src === 'diyuriot' && !r.diyurUnits) return false;
+                            if (F.src === 'open' && !r.openUnits) return false;
                             if (F.src === 'published' && !(r.pubOnly && r.unexplained)) return false;
                             if (F.src === 'unexplained' && !r.unexplained) return false;
                             if (F.src === 'nosource' && !(r.unexplained && !r.pubOnly)) return false;
@@ -39662,14 +39663,27 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const noYear = view.filter(r => !r.year).length;
                         const yearMaxPct = byYear.reduce((mx, e) =>
                             Math.max(mx, e.base > 0 ? e.beyond / e.base * 100 : 0), 0);
-                        const tile = (label, value, sub, accent, hint) => (
-                            <div title={hint || ''} style={{ flex: '1 1 130px', minWidth: 120, background: '#10193a',
-                                border: '1px solid #2a3a5e', borderRadius: 9, padding: '8px 10px', textAlign: 'center' }}>
-                                <div style={{ fontSize: 11, color: '#9fb0d0', whiteSpace: 'nowrap' }}>{label}</div>
-                                <div style={{ fontSize: 23, fontWeight: 800, color: accent, lineHeight: 1.2 }}>{value}</div>
-                                <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>{sub || ' '}</div>
-                            </div>
-                        );
+                        // A tile with a `fkey` is the filter for its own channel: click to narrow the
+                        // table to it, click again to clear. The dropdown writes the same F.src, so the
+                        // two controls are one state and cannot drift apart.
+                        const tile = (label, value, sub, accent, hint, fkey) => {
+                            const on = !!fkey && F.src === fkey;
+                            return (
+                                <div title={(hint || '') + (fkey ? ((hint ? '\n\n' : '') + (on ? 'לחץ לביטול הסינון' : 'לחץ לסינון לערוץ זה')) : '')}
+                                    onClick={fkey ? () => setF('src', on ? '' : fkey) : undefined}
+                                    style={{ flex: '1 1 130px', minWidth: 120,
+                                        background: on ? '#1b2a52' : '#10193a',
+                                        border: '1px solid ' + (on ? accent : '#2a3a5e'),
+                                        boxShadow: on ? ('0 0 0 1px ' + accent + ', 0 0 10px -2px ' + accent) : 'none',
+                                        borderRadius: 9, padding: '8px 10px', textAlign: 'center',
+                                        cursor: fkey ? 'pointer' : 'default' }}>
+                                    <div style={{ fontSize: 11, color: on ? '#dbe4f5' : '#9fb0d0', whiteSpace: 'nowrap' }}>
+                                        {label}{fkey && on ? ' ✕' : ''}</div>
+                                    <div style={{ fontSize: 23, fontWeight: 800, color: accent, lineHeight: 1.2 }}>{value}</div>
+                                    <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>{sub || ' '}</div>
+                                </div>
+                            );
+                        };
                         const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'שנה', 'יח"ד בתב"ע',
                             'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'תכנית מאוחרת מגדילה',
                             'מכוח תמ"א 38', 'דיוריות', 'יח"ד בהיתרים',
@@ -39774,6 +39788,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 <option value="raise">תכנית מאוחרת שמגדילה</option>
                                                 <option value="tama">מכוח תמ"א 38</option>
                                                 <option value="diyuriot">דיוריות (משק בית נוסף)</option>
+                                                <option value="open">יח"ד בתב"ע כרצפה</option>
                                                 <option value="realized">תוספת בפועל בהיתרים</option>
                                                 <option value="published">הקלה פורסמה — בלי מספר</option>
                                                 <option value="unexplained">תוספת ללא מקור מתועד</option>
@@ -39819,23 +39834,23 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             + 'כולל ' + nf(T.diyur) + ' דיוריות.')}
                                         {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5')}
                                         {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
-                                        {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
-                                        {tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2')}
-                                        {tile('יח"ד בתב"ע כרצפה', nf(T.open), 'התכנית לא קובעת תקרה', '#9fd8c8')}
-                                        {tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041')}
+                                        {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb', '', 'conditional')}
+                                        {tile('תוספת מותרת (טבלה 5)', nf(T.bonus), 'זכות, טרם בהכרח מומשה', '#5dade2', '', 'table5')}
+                                        {tile('יח"ד בתב"ע כרצפה', nf(T.open), 'התכנית לא קובעת תקרה', '#9fd8c8', '', 'open')}
+                                        {tile('הקלות שאושרו בהיתר', nf(T.hak), 'החלטות ועדת רישוי', '#f5b041', '', 'hakala')}
                                         {tile('תכנית מאוחרת מגדילה', nf(T.raise),
                                             (window.__planRaisers && Object.keys(window.__planRaisers).length) || overlapReady
-                                                ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4')}
-                                        {tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff')}
+                                                ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4', '', 'raise')}
+                                        {tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff', '', 'tama')}
                                         {tile('דיוריות', nf(T.diyur), view.filter(r => r.diyurUnits).length + ' תכניות · דירות שאינן נספרות כיח"ד', '#7ec8e3',
                                             'דיורית = חדר או מערכת חדרים בתוך יח״ד קיימת שיכולים לשמש משק בית נפרד. '
                                             + 'שטחה נכלל בשטח יחידת הדיור והיא אינה ניתנת לרישום בנפרד, ולכן ספירת היח״ד '
                                             + 'בתב״ע אינה משקפת אותה — אבל זו דירה נוספת לכל דבר פרוגרמטי (אוכלוסייה, חינוך, '
                                             + 'חניה), והיתר עשוי לרשום אותה כיח״ד. לכן היא נספרת ב"סה״כ מעבר לתב״ע" ככל ערוץ '
-                                            + 'זכויות אחר, וגם מסבירה ספירת יח״ד גבוהה מהתב״ע.')}
-                                        {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
-                                        {tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c')}
-                                        {tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')}
+                                            + 'זכויות אחר, וגם מסבירה ספירת יח״ד גבוהה מהתב״ע.', 'diyuriot')}
+                                        {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a', '', 'realized')}
+                                        {tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c', '', 'published')}
+                                        {tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8', '', 'nosource')}
                                     </div>
 
                                     {byYear.length > 1 && (

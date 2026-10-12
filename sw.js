@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v117-diyuriot-counted';
+const CACHE_VERSION = 'v118-tile-filters';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
