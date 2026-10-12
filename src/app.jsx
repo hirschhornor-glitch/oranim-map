@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-12-tile-filters';
+        const APP_VERSION = '2026-10-12-diyuriot-gaps';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -39509,6 +39509,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const bonus = planUnitBonus(p);
                             const diyur = planDiyuriot(p);
                             const diyurUnits = diyur ? planDiyuriotUnits(p) : 0;
+                            // Ten plans permit דיוריות without naming a share — checked one by
+                            // one, and in eight of them no percentage appears anywhere near the
+                            // clause. They are shown as "ללא מכסה" rather than as zero: more
+                            // households are coming, we just cannot put a number on them.
+                            const diyurUncapped = !diyur
+                                && (window.__diyuriotDefinedOnly || []).indexOf(String(p.plan_name || '').trim()) !== -1;
                             const cap = planUnitCap(p);
                             const capUnits = (cap && cap.max_units) ? Math.max(0, (parseFloat(cap.max_units) || 0) - base) : 0;
                             const bonusUnits = (bonus ? planBonusUnits(p) : 0) + capUnits;
@@ -39550,7 +39556,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 ? Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits) : 0;
                             const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits
                                 - raiseUnits - tamaUnits - openUnits - diyurUnits);
-                            if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits && !diyurUnits) return;
+                            if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits
+                                && !diyurUnits && !diyurUncapped) return;
                             rows.push({
                                 taba, plan_name: p.plan_name || ('101-' + taba),
                                 name: p.plan_summary || p.plan_name_he || '',
@@ -39561,7 +39568,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 status: p.status_mavat || '', base, permitUnits, realized,
                                 bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: (bonus && bonus.note) || (cap && cap.note) || '',
                                 bonusCap: (cap && cap.max_units) || 0, openUnits, condUnits,
-                                diyurUnits, diyurPct: diyur ? diyur.pct : 0, diyurNote: diyur ? diyur.note : '',
+                                diyurUnits, diyurPct: diyur ? diyur.pct : 0, diyurNote: diyur ? diyur.note : '', diyurUncapped,
                                 raiseUnits, tamaUnits, overridden, raiserName: raiser ? (raiser.plan_name || '') : '',
                                 raiserTitle: raiser ? (raiser.plan_summary || raiser.plan_name_he || '') : '',
                                 hakExtra, hakPct: hakRecs.map(r => r.pct).filter(Boolean)[0] || 0,
@@ -39585,7 +39592,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (F.src === 'conditional' && !r.condUnits) return false;
                             if (F.src === 'raise' && !r.raiseUnits) return false;
                             if (F.src === 'tama' && !r.tamaUnits) return false;
-                            if (F.src === 'diyuriot' && !r.diyurUnits) return false;
+                            if (F.src === 'diyuriot' && !r.diyurUnits && !r.diyurUncapped) return false;
                             if (F.src === 'open' && !r.openUnits) return false;
                             if (F.src === 'published' && !(r.pubOnly && r.unexplained)) return false;
                             if (F.src === 'unexplained' && !r.unexplained) return false;
@@ -39695,6 +39702,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (r.raiseUnits) parts.push('תכנית מאוחרת מגדילה · ' + r.raiserName);
                             if (r.tamaUnits) parts.push('מכוח תמ"א 38 — היתר חיזוק, לא מטבלה 5');
                             if (r.diyurUnits) parts.push('דיוריות · עד ' + r.diyurPct + '% מהיח"ד (אינן נספרות כיח"ד)');
+                            else if (r.diyurUncapped) parts.push('דיוריות מותרות — התכנית לא נוקבת בשיעור');
                             if (r.hakExtra) parts.push('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''));
                             if (r.condUnits) parts.push('יח"ד מותנות');
                             if (r.bonusUnits) parts.push(r.bonusPct ? ('הערת טבלה 5 · עד ' + r.bonusPct + '%')
@@ -39842,7 +39850,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             (window.__planRaisers && Object.keys(window.__planRaisers).length) || overlapReady
                                                 ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4', '', 'raise')}
                                         {tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff', '', 'tama')}
-                                        {tile('דיוריות', nf(T.diyur), view.filter(r => r.diyurUnits).length + ' תכניות · דירות שאינן נספרות כיח"ד', '#7ec8e3',
+                                        {tile('דיוריות', nf(T.diyur), view.filter(r => r.diyurUnits).length + ' תכניות'
+                                            + (view.filter(r => r.diyurUncapped).length ? ' · ועוד ' + view.filter(r => r.diyurUncapped).length + ' ללא מכסה' : ''), '#7ec8e3',
                                             'דיורית = חדר או מערכת חדרים בתוך יח״ד קיימת שיכולים לשמש משק בית נפרד. '
                                             + 'שטחה נכלל בשטח יחידת הדיור והיא אינה ניתנת לרישום בנפרד, ולכן ספירת היח״ד '
                                             + 'בתב״ע אינה משקפת אותה — אבל זו דירה נוספת לכל דבר פרוגרמטי (אוכלוסייה, חינוך, '
@@ -39925,9 +39934,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{ ...TD, color: r.tamaUnits ? '#c5a3ff' : '#55617a' }}
                                                         title="יח״ד שההיתר מקבל מכוח תמ״א 38 (חיזוק/הריסה ובנייה), לא מטבלה 5 של התכנית">
                                                         {r.tamaUnits ? nf(r.tamaUnits) : '—'}</td>
-                                                    <td style={{ ...TD, color: r.diyurUnits ? '#7ec8e3' : '#55617a' }}
-                                                        title={r.diyurNote || 'משק בית נוסף בתוך יח״ד קיימת — לא יח״ד נוספת'}>
-                                                        {r.diyurUnits ? nf(r.diyurUnits) + ' (' + r.diyurPct + '%)' : '—'}</td>
+                                                    <td style={{ ...TD, color: r.diyurUnits ? '#7ec8e3' : (r.diyurUncapped ? '#e6a23c' : '#55617a') }}
+                                                        title={r.diyurNote || (r.diyurUncapped
+                                                            ? 'התכנית מתירה דיוריות אך אינה נוקבת בשיעור — מספרן אינו ניתן לכימות'
+                                                            : 'משק בית נוסף בתוך יח״ד קיימת — לא יח״ד נוספת')}>
+                                                        {r.diyurUnits ? nf(r.diyurUnits) + ' (' + r.diyurPct + '%)'
+                                                            : (r.diyurUncapped ? 'ללא מכסה' : '—')}</td>
                                                     <td style={TD}>{r.permitUnits ? nf(r.permitUnits) : '—'}</td>
                                                     <td style={{ ...TD, fontWeight: 700, color: r.realized ? '#7fc98a' : '#55617a' }}>
                                                         {r.realized ? nf(r.realized) : '—'}</td>
