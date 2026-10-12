@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-12-mekor-haim-56';
+        const APP_VERSION = '2026-10-12-channel-exclude';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -17041,8 +17041,13 @@ function planPermitHafrashUse(taba) {
                         ser: () => ({ sub: shavazReportFilter.sub, minahak: shavazReportFilter.minahak, q: shavazReportFilter.q }),
                         apply: p => setShavazReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
                     { key: 'extraunits', isOpen: () => extraUnitsReport, open: () => setExtraUnitsReport(true),
-                        ser: () => ({ src: extraUnitsFilter.src, minahak: extraUnitsFilter.minahak, q: extraUnitsFilter.q }),
-                        apply: p => setExtraUnitsFilter({ src: p.src || '', minahak: p.minahak || '', q: p.q || '' }) },
+                        ser: () => ({ srcs: (extraUnitsFilter.srcs || []).join(','),
+                                      excl: (extraUnitsFilter.excl || []).join(','),
+                                      minahak: extraUnitsFilter.minahak, q: extraUnitsFilter.q }),
+                        apply: p => setExtraUnitsFilter({
+                            srcs: p.srcs ? p.srcs.split(',') : (p.src ? [p.src] : []),
+                            excl: p.excl ? p.excl.split(',') : [],
+                            minahak: p.minahak || '', q: p.q || '' }) },
                     { key: 'fund', isOpen: () => fundReport, open: () => setFundReport(true),
                         ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, status: fundReportFilter.status, q: fundReportFilter.q }),
                         apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', status: p.status || 'all', q: p.q || '' }) },
@@ -39584,19 +39589,46 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const minahaks = rows.map(r => r.minahak).filter(Boolean)
                             .filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a.localeCompare(b, 'he'));
                         const q = (F.q || '').trim();
+                        // One predicate per channel, shared by the row filter and by the
+                        // "drop from the count" switch so the two can never disagree about
+                        // what a channel means.
+                        const CHANNEL_LABEL = {
+                            table5: 'תוספת מותרת (טבלה 5)', hakala: 'הקלה שאושרה בהיתר', realized: 'תוספת בפועל',
+                            conditional: 'יח"ד מותנות', raise: 'תכנית מאוחרת מגדילה', tama: 'מכוח תמ"א 38',
+                            diyuriot: 'דיוריות', open: 'יח"ד בתב"ע כרצפה', published: 'הקלה פורסמה — בלי מספר',
+                            unexplained: 'ללא מקור מתועד', nosource: 'ללא מקור כלל',
+                        };
+                        const CHANNEL_HAS = {
+                            table5: r => !!r.bonusUnits,
+                            hakala: r => !!r.hakExtra,
+                            realized: r => !!r.realized,
+                            conditional: r => !!r.condUnits,
+                            raise: r => !!r.raiseUnits,
+                            tama: r => !!r.tamaUnits,
+                            diyuriot: r => !!(r.diyurUnits || r.diyurUncapped),
+                            open: r => !!r.openUnits,
+                            published: r => !!(r.pubOnly && r.unexplained),
+                            unexplained: r => !!r.unexplained,
+                            nosource: r => !!(r.unexplained && !r.pubOnly),
+                        };
+                        // Several channels can be selected at once; a row qualifies if it carries
+                        // ANY of them (a plan is rarely one story, so AND would mostly return nothing).
+                        const picked = Array.isArray(F.srcs) ? F.srcs : (F.src ? [F.src] : []);
+                        const excluded = Array.isArray(F.excl) ? F.excl : [];
+                        const isExcl = k => excluded.indexOf(k) !== -1;
+                        // A channel switched off contributes nothing here, so the headline, the
+                        // percentage and the by-year table all answer "without that channel".
+                        const beyondOf = r => Math.max(isExcl('realized') ? 0 : (r.realized || 0),
+                            (isExcl('conditional') ? 0 : (r.condUnits || 0))
+                            + (isExcl('table5') ? 0 : (r.bonusUnits || 0))
+                            + (isExcl('raise') ? 0 : (r.raiseUnits || 0))
+                            + (isExcl('tama') ? 0 : (r.tamaUnits || 0))
+                            + (isExcl('open') ? 0 : (r.openUnits || 0))
+                            + (isExcl('hakala') ? 0 : (r.hakExtra || 0))
+                            + (isExcl('diyuriot') ? 0 : (r.diyurUnits || 0)));
                         const view = rows.filter(r => {
                             if (F.minahak && r.minahak !== F.minahak) return false;
-                            if (F.src === 'table5' && !r.bonusUnits) return false;
-                            if (F.src === 'hakala' && !r.hakExtra) return false;
-                            if (F.src === 'realized' && !r.realized) return false;
-                            if (F.src === 'conditional' && !r.condUnits) return false;
-                            if (F.src === 'raise' && !r.raiseUnits) return false;
-                            if (F.src === 'tama' && !r.tamaUnits) return false;
-                            if (F.src === 'diyuriot' && !r.diyurUnits && !r.diyurUncapped) return false;
-                            if (F.src === 'open' && !r.openUnits) return false;
-                            if (F.src === 'published' && !(r.pubOnly && r.unexplained)) return false;
-                            if (F.src === 'unexplained' && !r.unexplained) return false;
-                            if (F.src === 'nosource' && !(r.unexplained && !r.pubOnly)) return false;
+                            if (picked.length && !picked.some(k => CHANNEL_HAS[k] && CHANNEL_HAS[k](r))) return false;
                             if (q && (r.name + ' ' + r.plan_name + ' ' + r.minahak).indexOf(q) === -1) return false;
                             return true;
                         }).sort((a, b) => (b.realized - a.realized) || (b.bonusUnits + b.hakExtra) - (a.bonusUnits + a.hakExtra));
@@ -39609,10 +39641,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
             // דיוריות allowance add nothing to the numerator, so counting their יח״ד
             // here would dilute the figure (26,484 instead of 19,698 → 8.0% instead of
             // 10.7%) without anything about the plans having changed.
-            beyondBase: view.reduce((a, r) => a + ((Math.max(r.realized || 0,
-                (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
-                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)
-                + (r.diyurUnits || 0)) > 0) ? (r.base || 0) : 0), 0),
+            beyondBase: view.reduce((a, r) => a + (beyondOf(r) > 0 ? (r.base || 0) : 0), 0),
             // The single figure: יח"ד that exist beyond what the תב"עות count. Per plan the
             // HIGHER of the two sides, never their sum — the rights a plan grants above its
             // own יח"ד total and the addition its permits already show are the same units
@@ -39623,10 +39652,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
             // may record a דיורית as a unit of its own, so תב"ע + דיוריות can be exactly what
             // explains a permit count above the plan. Adding them on top of the realized
             // figure instead would count the same dwellings twice.
-            beyond: view.reduce((a, r) => a + Math.max(r.realized || 0,
-                (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
-                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)
-                + (r.diyurUnits || 0)), 0),
+            beyond: view.reduce((a, r) => a + beyondOf(r), 0),
                             realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
                         // Manual ticks are stored per browser and beat the rules for good, so a tick
                         // made before the rules improved silently keeps an old number on screen.
@@ -39653,10 +39679,6 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         // מגמה לפי שנת אישור — the same per-plan "higher of the two sides" as the
                         // headline tile, bucketed by year, so a rising share of יח"ד that the plans
                         // themselves do not count is visible rather than buried in 123 rows.
-                        const beyondOf = r => Math.max(r.realized || 0,
-                            (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
-                            + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)
-                            + (r.diyurUnits || 0));
                         const byYear = (() => {
                             const m = new Map();
                             view.forEach(r => {
@@ -39673,21 +39695,42 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         // A tile with a `fkey` is the filter for its own channel: click to narrow the
                         // table to it, click again to clear. The dropdown writes the same F.src, so the
                         // two controls are one state and cannot drift apart.
+                        // Two controls on one tile, because they answer two different questions:
+                        // the body toggles the channel in the row selection (several at a time),
+                        // and the ⊘ in the corner takes it out of the count — "how much is it
+                        // without the דיוריות?" — while leaving the rows on screen.
+                        const toggleIn = (key, list, field) => setF(field,
+                            list.indexOf(key) === -1 ? list.concat([key]) : list.filter(x => x !== key));
                         const tile = (label, value, sub, accent, hint, fkey) => {
-                            const on = !!fkey && F.src === fkey;
+                            const on = !!fkey && picked.indexOf(fkey) !== -1;
+                            const off = !!fkey && isExcl(fkey);
                             return (
-                                <div title={(hint || '') + (fkey ? ((hint ? '\n\n' : '') + (on ? 'לחץ לביטול הסינון' : 'לחץ לסינון לערוץ זה')) : '')}
-                                    onClick={fkey ? () => setF('src', on ? '' : fkey) : undefined}
-                                    style={{ flex: '1 1 130px', minWidth: 120,
+                                <div title={(hint || '') + (fkey ? ((hint ? '\n\n' : '')
+                                        + (on ? 'לחץ להסרה מהבחירה' : 'לחץ לבחירה — אפשר כמה יחד')) : '')}
+                                    onClick={fkey ? () => toggleIn(fkey, picked, 'srcs') : undefined}
+                                    style={{ position: 'relative', flex: '1 1 130px', minWidth: 120,
                                         background: on ? '#1b2a52' : '#10193a',
                                         border: '1px solid ' + (on ? accent : '#2a3a5e'),
                                         boxShadow: on ? ('0 0 0 1px ' + accent + ', 0 0 10px -2px ' + accent) : 'none',
                                         borderRadius: 9, padding: '8px 10px', textAlign: 'center',
+                                        opacity: off ? 0.5 : 1,
                                         cursor: fkey ? 'pointer' : 'default' }}>
+                                    {fkey && (
+                                        <button onClick={e => { e.stopPropagation(); toggleIn(fkey, excluded, 'excl'); }}
+                                            title={off ? 'הערוץ מנוכה מהספירה — לחץ להחזרה' : 'הורד את הערוץ מהספירה'}
+                                            style={{ position: 'absolute', insetInlineStart: 4, top: 3, width: 17, height: 17,
+                                                lineHeight: '15px', padding: 0, borderRadius: 4, fontSize: 11,
+                                                background: off ? accent : 'transparent',
+                                                color: off ? '#10193a' : '#5d6a86',
+                                                border: '1px solid ' + (off ? accent : '#2a3a5e'),
+                                                cursor: 'pointer', fontFamily: 'inherit' }}>⊘</button>
+                                    )}
                                     <div style={{ fontSize: 11, color: on ? '#dbe4f5' : '#9fb0d0', whiteSpace: 'nowrap' }}>
-                                        {label}{fkey && on ? ' ✕' : ''}</div>
-                                    <div style={{ fontSize: 23, fontWeight: 800, color: accent, lineHeight: 1.2 }}>{value}</div>
-                                    <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>{sub || ' '}</div>
+                                        {label}{on ? ' ✓' : ''}</div>
+                                    <div style={{ fontSize: 23, fontWeight: 800, color: accent, lineHeight: 1.2,
+                                        textDecoration: off ? 'line-through' : 'none' }}>{value}</div>
+                                    <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>
+                                        {off ? 'לא נספר' : (sub || ' ')}</div>
                                 </div>
                             );
                         };
@@ -39788,8 +39831,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end',
                                         background: '#0d1428', border: '1px solid #2a3a5e', borderRadius: 8, padding: '9px 12px', marginBottom: 12 }}>
                                         <div><label style={LBL}>מקור התוספת</label>
-                                            <select style={SEL} value={F.src} onChange={e => setF('src', e.target.value)}>
-                                                <option value="">הכל</option>
+                                            <select style={SEL} value={picked.length === 1 ? picked[0] : ''}
+                                                onChange={e => setF('srcs', e.target.value ? [e.target.value] : [])}>
+                                                <option value="">{picked.length > 1 ? picked.length + ' ערוצים נבחרו' : 'הכל'}</option>
                                                 <option value="table5">הערת טבלה 5</option>
                                                 <option value="hakala">הקלה שאושרה בהיתר</option>
                                                 <option value="conditional">יח"ד מותנות</option>
@@ -39827,6 +39871,21 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 style={{ background: '#6b4f1d', color: '#fff', border: 'none', borderRadius: 5,
                                                     padding: '4px 10px', fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit' }}>
                                                 אפס את הסימונים הידניים
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {excluded.length > 0 && (
+                                        <div style={{ background: '#161f3d', border: '1px solid #2a3a5e', borderRadius: 8,
+                                            padding: '6px 12px', marginBottom: 10, color: '#9fb0d0', fontSize: 12,
+                                            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                            <span>⊘ מנוכה מהספירה: <b style={{ color: '#dbe4f5' }}>
+                                                {excluded.map(k => CHANNEL_LABEL[k] || k).join(' · ')}</b>
+                                                {' '}— הסכומים והאחוז למטה הם בלעדיהם.</span>
+                                            <button onClick={() => setF('excl', [])}
+                                                style={{ background: '#2a3a5e', color: '#fff', border: 'none', borderRadius: 5,
+                                                    padding: '3px 10px', fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit' }}>
+                                                החזר הכל
                                             </button>
                                         </div>
                                     )}
