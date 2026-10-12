@@ -18964,6 +18964,201 @@
      ]
     ]
    }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 509,
+    "qc_id": 509,
+    "tik": "2026/0450.00",
+    "address": "מבצע קדש 3",
+    "neighborho": "קטמון הישנה",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "07/10/2026",
+    "status": "הגשה מקוונת הושלמה",
+    "date": "07/10/2026",
+    "status_1": null,
+    "comment": "הריסה ובניה חדשה להקמת בניין במסגרת תמ\"א 38/2 | נוסף 2026-10-12 מבדיקת כיסוי מרחבית (layer 2110 + YK, תכנית 10038)",
+    "harisaa": null,
+    "y": 630220.7,
+    "x": 219885.69,
+    "created_us": "spatial_2110",
+    "created_da": "2026-10-12",
+    "last_edite": "spatial_2110",
+    "last_edi_1": "2026-10-12",
+    "__rec_stat": null,
+    "units_in": null,
+    "units_out": 25,
+    "floors_tama": 7,
+    "first_detected": "2026-10-12"
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.208972997848,
+      31.7646439152661
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 510,
+    "qc_id": 510,
+    "tik": "2026/0427.00",
+    "address": "יהודה 30",
+    "neighborho": "גאולים - בקעה",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "09/10/2026",
+    "status": "שולמה מקדמה",
+    "date": "09/10/2026",
+    "status_1": null,
+    "comment": "תמ\"א 38 הריסה ובניה  | נוסף 2026-10-12 מבדיקת כיסוי מרחבית (layer 2110 + YK, תכנית 10038)",
+    "harisaa": null,
+    "y": 629456.7,
+    "x": 220720.69,
+    "created_us": "spatial_2110",
+    "created_da": "2026-10-12",
+    "last_edite": "spatial_2110",
+    "last_edi_1": "2026-10-12",
+    "__rec_stat": null,
+    "units_in": null,
+    "units_out": 4,
+    "floors_tama": 3,
+    "first_detected": "2026-10-12"
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21778607713572,
+      31.75775320842813
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 511,
+    "qc_id": 511,
+    "tik": "2026/0264.00",
+    "address": "הרב חיים ברלין 12",
+    "neighborho": "קריית שמואל",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "27/09/2026",
+    "status": "פורסמה בקשה להקלה",
+    "date": "27/09/2026",
+    "status_1": null,
+    "comment": "תוספת קומות , מרפסות ויחד'' דיור , מחסנים , הריסה ובניה מחדש תוך שימור חזיתות וחיזוקים פנימים  | נוסף 2026-10-12 מבדיקת כיסוי מרחבית (layer 2110 + YK, תכנית 10038)",
+    "harisaa": null,
+    "y": 630748.7,
+    "x": 220062.69,
+    "created_us": "spatial_2110",
+    "created_da": "2026-10-12",
+    "last_edite": "spatial_2110",
+    "last_edi_1": "2026-10-12",
+    "__rec_stat": null,
+    "units_in": null,
+    "units_out": 4,
+    "floors_tama": 3,
+    "first_detected": "2026-10-12"
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21084170100866,
+      31.769405563510464
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 512,
+    "qc_id": 512,
+    "tik": "2026/0252.00",
+    "address": "דרך עזה 29",
+    "neighborho": "רחביה",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "28/07/2026",
+    "status": "שולמה מקדמה",
+    "date": "28/07/2026",
+    "status_1": null,
+    "comment": "תוספות למגורים, יחדות דיור, מחסנים, ממ\"ד, מרפסות. תואם נספח בינוי. | נוסף 2026-10-12 מבדיקת כיסוי מרחבית (layer 2110 + YK, תכנית 10038)",
+    "harisaa": null,
+    "y": 631022.7,
+    "x": 220312.69,
+    "created_us": "spatial_2110",
+    "created_da": "2026-10-12",
+    "last_edite": "spatial_2110",
+    "last_edi_1": "2026-10-12",
+    "__rec_stat": null,
+    "units_in": null,
+    "units_out": null,
+    "floors_tama": 4,
+    "first_detected": "2026-10-12"
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213481021925745,
+      31.771876449810904
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 513,
+    "qc_id": 513,
+    "tik": "2017/0568.00",
+    "address": "פרוש ש.ז. 9",
+    "neighborho": "רחביה",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "01/12/2019",
+    "status": "הופק-הוצא היתר בניה",
+    "date": "01/12/2019",
+    "status_1": null,
+    "comment": "פירוק מבנה קיים תוך שימור חזית מזרחית ובניית בנין בן 5 קומות וחלל גג רעפים | נוסף 2026-10-12 מבדיקת כיסוי מרחבית (layer 2110 + YK, תכנית 10038)",
+    "harisaa": null,
+    "y": 631372.7,
+    "x": 220200.69,
+    "created_us": "spatial_2110",
+    "created_da": "2026-10-12",
+    "last_edite": "spatial_2110",
+    "last_edi_1": "2026-10-12",
+    "__rec_stat": null,
+    "units_in": null,
+    "units_out": 4,
+    "floors_tama": 4,
+    "first_detected": null
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21229895196675,
+      31.775032974941897
+     ]
+    ]
+   }
   }
  ]
 }

@@ -914,25 +914,6 @@
     ]
    }
   ],
-  "950642": [
-   {
-    "file_number": "2026/0434.00",
-    "status": "שולמה מקדמה",
-    "status_date": "07/10/2026",
-    "request_type": "בניה חדשה / בניין חדש",
-    "request_description": "הקמת שני בניינים חדשים בני 6 קומות הכוללים 32 יחידות דיור.",
-    "units": 32,
-    "units_source": "yk_quantities",
-    "units_existing": 0,
-    "units_added": 32,
-    "floors": 6,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "950642"
-    ]
-   }
-  ],
   "601898": [
    {
     "file_number": "2026/0404.00",
@@ -1050,6 +1031,23 @@
     "all_matched_tabas": [
      "1048347"
     ]
+   },
+   {
+    "file_number": "2024/0060.01",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "09/07/2026",
+    "request_type": "עבודות בדרכים, בניית קיר תומך/מגן",
+    "request_description": "השלמות עבור שינויים לצומת אורנים שנעשו ע\"פ היתר 2024/0060.00 לצורך שילוב רק\"ל ",
+    "address": "רבן יוחנן בן זכאי 2",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1048347",
+     "209593",
+     "666289",
+     "800771"
+    ]
    }
   ],
   "1189281": [
@@ -1086,26 +1084,6 @@
     "all_matched_tabas": [
      "1335298",
      "430249"
-    ]
-   }
-  ],
-  "581850": [
-   {
-    "file_number": "2026/0224.00",
-    "status": "נפתח תיק רישוי",
-    "status_date": "31/08/2026",
-    "request_type": "בניה חדשה / בניין חדש, התחדשות עירונית - פינוי בינוי",
-    "request_description": "פנמה 6 - הקמת 2 מבנים חדשים ל-267 יחידות דיור, ומסחר בקומת הקרקע במסגרת פינוי בינוי",
-    "address": "פנמה 6",
-    "units": 219,
-    "units_source": "yk_quantities",
-    "units_existing": 0,
-    "units_added": 219,
-    "floors": 62,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "581850"
     ]
    }
   ],
@@ -1259,27 +1237,6 @@
     ]
    }
   ],
-  "1095892": [
-   {
-    "file_number": "2025/0029.00",
-    "status": "נפתח תיק רישוי",
-    "status_date": "31/03/2025",
-    "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
-    "request_description": "בניין חדש: 5 קומות מעל הקרקע (מסחר, משרדים, מגורים-12 יח\"ד) ו-5 קומות מתחת לקרקע (חניה ומסחר).",
-    "address": "אברהם כחילה",
-    "units": 12,
-    "units_source": "yk_quantities",
-    "units_existing": 0,
-    "units_added": 12,
-    "floors": 5,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "1095892",
-     "644476"
-    ]
-   }
-  ],
   "1131945": [
    {
     "file_number": "2025/0235.00",
@@ -1350,6 +1307,21 @@
     "all_matched_tabas": [
      "653840"
     ]
+   },
+   {
+    "file_number": "2023/0305.00",
+    "status": " תחילת הודעות לפני תקנה 36",
+    "status_date": "01/09/2026",
+    "request_type": "עבודות בדרכים, עבודות הריסה",
+    "request_description": "הריסת מבנה מגורים בעל קומה אחת לצורך מעבר הקו הכחול של הרכבת הקלה",
+    "address": "דוד רמז",
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "178129",
+     "307116",
+     "653840"
+    ]
    }
   ],
   "410282": [
@@ -1396,6 +1368,20 @@
     "request_type": "בניה חדשה / בניין חדש",
     "request_description": "בניית מבנה חדש לבית כנסת ",
     "address": "השופט חיים כהן 42",
+    "floors": 2,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "889428"
+    ]
+   },
+   {
+    "file_number": "2022/0497.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "03/09/2025",
+    "request_type": "בניה חדשה / בניין חדש, ממ\"ד",
+    "request_description": "מבנה חדש - בית תפילה",
+    "address": "השופט חיים כהן 25",
     "floors": 2,
     "source": "committee_yk",
     "source_date": "2026-10-12",
@@ -1510,106 +1496,6 @@
     "all_matched_tabas": [
      "1103571",
      "691667"
-    ]
-   }
-  ],
-  "560110": [
-   {
-    "file_number": "2023/0362.00",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "03/03/2024",
-    "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
-    "request_description": "הקמת חדר טנספורמציה לשלושה שנאים מגרש 304",
-    "address": "0",
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "560110"
-    ]
-   },
-   {
-    "file_number": "2023/0361.00",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "03/03/2024",
-    "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
-    "request_description": "הקמת חדר טנספורמציה לשלושה שנאים מגרש 306",
-    "address": "0",
-    "floors": 1,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "560110"
-    ]
-   },
-   {
-    "file_number": "2023/0359.00",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "03/03/2024",
-    "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
-    "request_description": "הקמת חדר טנספורמציה לשני שנאים מגרש 309",
-    "address": "0",
-    "floors": 1,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "560110"
-    ]
-   },
-   {
-    "file_number": "2022/0410.01",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "26/02/2025",
-    "request_type": "בניה חדשה / בניין חדש",
-    "request_description": "בית כנסת ואולם התכנסות לקידוש מעל למבנה מקווה מאושר בבקשה נפרדת",
-    "address": "שכ ארנונה 28",
-    "floors": 4,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "560110"
-    ]
-   },
-   {
-    "file_number": "2021/0050.02",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "20/11/2025",
-    "request_type": "בניה חדשה / בניין חדש, שינויים בקירות חזית במבנים קיימים, תוכנית שינויים",
-    "request_description": "שינויים בתכנית קיימת- הוספת שטחי מחסנים, הוספת גובה לחלק מהקומות, שינוים בפתחים בחיתות, שינוי מיקום ארון לשעוני מים",
-    "floors": 9,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "560110"
-    ]
-   },
-   {
-    "file_number": "2021/0321.02",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "25/08/2025",
-    "request_type": "בניה חדשה / בניין חדש",
-    "request_description": "שינויים פנימיים בקומת המרתף בנייני מגורים בני 3 קומות כולל מסחר וחניון למגרש ושינוי פרט קיר פיתוח",
-    "address": "0",
-    "units": 12,
-    "units_source": "yk_quantities",
-    "units_existing": 0,
-    "units_added": 12,
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "560110"
-    ]
-   },
-   {
-    "file_number": "2020/0066.01",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "11/09/2023",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים",
-    "request_description": "שינויים פנימיים, המרת שטחי שרות כלליים לשטחי מסחר. ",
-    "address": "ע. רינגלבלום",
-    "source": "committee_yk",
-    "source_date": "2026-10-12",
-    "all_matched_tabas": [
-     "560110"
     ]
    }
   ],
@@ -1779,6 +1665,134 @@
     "source_date": "2026-10-12",
     "all_matched_tabas": [
      "706804"
+    ]
+   }
+  ],
+  "1161439": [
+   {
+    "file_number": "2024/0426.01",
+    "status": "שולמה מקדמה",
+    "status_date": "18/03/2025",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בניין חדש בן 10 קומות, 50 יח\"ד סה\"כ, קומות חנייה קומת מסחר ושטח למבנה ציבור. ",
+    "address": "דוסתאי 1",
+    "units": 50,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 50,
+    "floors": 10,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1161439"
+    ]
+   }
+  ],
+  "1166586": [
+   {
+    "file_number": "2024/0269.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "09/06/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "הריסת מבנה קיים ובניית בית ספר יסודי 16 כיתות+ ת\"ת 9 כיתות, ח.טרפו, מאגר מים, ביתן שומר ומגרש כדור סל.",
+    "address": "רבי צדוק",
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1166586",
+     "565317"
+    ]
+   }
+  ],
+  "218677": [
+   {
+    "file_number": "2024/0143.00",
+    "status": "שולמה מקדמה",
+    "status_date": "15/04/2024",
+    "request_type": "שינויים בקירות חזית במבנים קיימים",
+    "request_description": "חיזוק מבנה קיים באמצעות עיבוי קירות ועמודים בשכבת בטון מזוין ( ללא תוספת שטח )",
+    "address": "חנוך אלבק 3",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "178129",
+     "218677"
+    ]
+   }
+  ],
+  "751990": [
+   {
+    "file_number": "2023/0339.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "10/07/2024",
+    "request_type": "מערכת פוטוולטאית, פיתוח שטח ציבורי פתוח",
+    "request_description": "הקמת קירוי לשם הצללת מגרש ספורט בשצ\"פ ובשב\"צ ומעליו תאים פוטו וולטאיים",
+    "address": "דרך בית לחם 0",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "178129",
+     "751990"
+    ]
+   }
+  ],
+  "365767": [
+   {
+    "file_number": "2019/0453.02",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "26/06/2024",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בנית מבנה אולם ספורט עבור ביה\"ס רחל שטראוס / מקור חיים",
+    "address": "גנרל פייר קניג 14",
+    "floors": 2,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "209593",
+     "365767"
+    ]
+   }
+  ],
+  "1163088": [
+   {
+    "file_number": "2017/0515.02",
+    "status": "נפתח תיק רישוי",
+    "status_date": "11/10/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת בניה  3 קומות מעל בניין קיים  סה\"כ 9 יח\"ד חדשות   סה\"כ 15 יח\"ד במגרש ",
+    "address": "אל ט'הרה 19",
+    "units": 6,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 6,
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1163088"
+    ]
+   }
+  ],
+  "972968": [
+   {
+    "file_number": "2015/0196.01",
+    "status": "הוכנה טיוטת היתר בניה",
+    "status_date": "10/09/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת בניה . הרחבה לבניין קיים , תוספת יח''''''''''''''''ד באמצעות תוספת בניה",
+    "address": "אל קאש 21",
+    "units": 6,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 6,
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "972968"
     ]
    }
   ]

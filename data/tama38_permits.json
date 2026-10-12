@@ -18519,5 +18519,111 @@
     "scraped_at": "2026-10-05T01:18:05.462378",
     "permit_count": 1,
     "error": ""
+  },
+  "509": {
+    "tik": "2026/0450.00",
+    "address": "מבצע קדש 3",
+    "permits": [
+      {
+        "file_number": "2026/0450.00",
+        "status": "הגשה מקוונת הושלמה",
+        "status_date": "07/10/2026",
+        "request_type": "תמ\"א 38 הריסה ובניה",
+        "request_description": "הריסה ובניה חדשה להקמת בניין במסגרת תמ\"א 38/2",
+        "units": 25,
+        "units_source": "yk_quantities",
+        "units_existing": 0,
+        "units_added": 25,
+        "floors": 7,
+        "tama_type": "תמ\"א 38 הריסה ובניה"
+      }
+    ],
+    "scraped_at": "2026-10-12T16:08:23",
+    "permit_count": 1,
+    "error": ""
+  },
+  "510": {
+    "tik": "2026/0427.00",
+    "address": "יהודה 30",
+    "permits": [
+      {
+        "file_number": "2026/0427.00",
+        "status": "שולמה מקדמה",
+        "status_date": "09/10/2026",
+        "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
+        "request_description": "תמ\"א 38 הריסה ובניה ",
+        "units": 4,
+        "units_source": "yk_quantities",
+        "units_existing": 0,
+        "units_added": 4,
+        "floors": 3,
+        "tama_type": "תמ\"א 38 (10038)"
+      }
+    ],
+    "scraped_at": "2026-10-12T16:08:33",
+    "permit_count": 1,
+    "error": ""
+  },
+  "511": {
+    "tik": "2026/0264.00",
+    "address": "הרב חיים ברלין 12",
+    "permits": [
+      {
+        "file_number": "2026/0264.00",
+        "status": "פורסמה בקשה להקלה",
+        "status_date": "27/09/2026",
+        "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , תוספת בניה / הרחבה לבניין קיים, התקנת מעלית פנימית, בנית מחסן/מחסנים, בניית מרפסת",
+        "request_description": "תוספת קומות , מרפסות ויחד'' דיור , מחסנים , הריסה ובניה מחדש תוך שימור חזיתות וחיזוקים פנימים ",
+        "units": 4,
+        "units_source": "yk_quantities",
+        "units_existing": 0,
+        "units_added": 4,
+        "floors": 3,
+        "tama_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , תוספת בניה / הרחבה לבניין קיים, התקנת מעלית פנימית, בנית מחסן/מחסנים, בניית מרפסת"
+      }
+    ],
+    "scraped_at": "2026-10-12T16:10:20",
+    "permit_count": 1,
+    "error": ""
+  },
+  "512": {
+    "tik": "2026/0252.00",
+    "address": "דרך עזה 29",
+    "permits": [
+      {
+        "file_number": "2026/0252.00",
+        "status": "שולמה מקדמה",
+        "status_date": "28/07/2026",
+        "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד ",
+        "request_description": "תוספות למגורים, יחדות דיור, מחסנים, ממ\"ד, מרפסות. תואם נספח בינוי.",
+        "floors": 4,
+        "tama_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד "
+      }
+    ],
+    "scraped_at": "2026-10-12T16:10:45",
+    "permit_count": 1,
+    "error": ""
+  },
+  "513": {
+    "tik": "2017/0568.00",
+    "address": "פרוש ש.ז. 9",
+    "permits": [
+      {
+        "file_number": "2017/0568.00",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "01/12/2019",
+        "request_type": "תמ\"א 38 - תוספות",
+        "request_description": "פירוק מבנה קיים תוך שימור חזית מזרחית ובניית בנין בן 5 קומות וחלל גג רעפים",
+        "units": 4,
+        "units_source": "yk_quantities",
+        "units_existing": 0,
+        "units_added": 4,
+        "floors": 4,
+        "tama_type": "תמ\"א 38 - תוספות"
+      }
+    ],
+    "scraped_at": "2026-10-12T16:42:55",
+    "permit_count": 1,
+    "error": ""
   }
 }
