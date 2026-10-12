@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T12:45:54",
+  "generated_at": "2026-10-12T14:10:26",
   "sources": [
     {
       "file": "all_permits.json",
@@ -25,9 +25,9 @@
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
       "refresh": "לפי צורך",
-      "records": 23,
-      "last_publish": "2026-06-29",
-      "age_days": 105,
+      "records": 49,
+      "last_publish": "2026-10-12",
+      "age_days": 0,
       "status": "info",
       "notes": []
     },
@@ -39,9 +39,7 @@
       "last_publish": "2026-10-12",
       "age_days": 0,
       "status": "green",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ]
+      "notes": []
     },
     {
       "file": "objections_permits.json",
@@ -137,8 +135,8 @@
     },
     {
       "log": "tama38_street_harvest_last_run.log",
-      "sample": "[08:54:33]    cooldown 90s (throttle recovery)...",
-      "count": 109
+      "sample": "[13:36:29]    cooldown 90s (throttle recovery)...",
+      "count": 115
     }
   ]
 }

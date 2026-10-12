@@ -1,7 +1,7 @@
 {
  "source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
  "source_date": "2026-06-21",
- "count": 23,
+ "count": 49,
  "by_taba": {
   "897066": [
    {
@@ -44,6 +44,22 @@
     "source_date": "2026-06-21",
     "all_matched_tabas": [
      "178129",
+     "511923"
+    ]
+   },
+   {
+    "file_number": "2023/0335.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "10/07/2024",
+    "request_type": "מערכת פוטוולטאית, פיתוח שטח ציבורי פתוח",
+    "request_description": "הקמת קירוי לשם הצללת מגרש ספורט בשב\"צ ומעליו תאים פוטו וולטאיים",
+    "address": "דב יוסף 0",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "178129",
+     "209593",
      "511923"
     ]
    }
@@ -265,6 +281,38 @@
     ]
    }
   ],
+  "1211002": [
+   {
+    "file_number": "2009/0407.03",
+    "status": "חידוש טיפול בבקשה",
+    "status_date": "22/07/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים",
+    "request_description": "תוספות בניה והגבהת הבנין ברחוב עמק רפאים 46,ירושלים",
+    "address": "עמק רפאים 46",
+    "floors": 5,
+    "source": "plan_sweep_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1211002"
+    ]
+   }
+  ],
+  "906826": [
+   {
+    "file_number": "2020/0218.02",
+    "status": "תום תקופת פרסום",
+    "status_date": "18/08/2026",
+    "request_type": "רישוי בניה - שימוש חורג מתכנית, שינויים ללא תוספת שטחים",
+    "request_description": "שימוש חורג ממגורים לגן ילדים",
+    "address": "אדמונד סחייק 1",
+    "floors": 7,
+    "source": "plan_sweep_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "906826"
+    ]
+   }
+  ],
   "178129": [
    {
     "file_number": "1957/0354.07",
@@ -319,35 +367,478 @@
     ]
    }
   ],
-  "1211002": [
+  "998336": [
    {
-    "file_number": "2009/0407.03",
-    "status": "חידוש טיפול בבקשה",
-    "status_date": "22/07/2026",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים",
-    "request_description": "תוספות בניה והגבהת הבנין ברחוב עמק רפאים 46,ירושלים",
-    "address": "עמק רפאים 46",
-    "floors": 5,
-    "source": "plan_sweep_yk",
+    "file_number": "1983/0195.01",
+    "status": "נדונה ברשות הרישוי",
+    "status_date": "14/09/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד",
+    "request_description": "הכשרת עבירה - תוספת קומות ויח\"ד חדשות לבין קיים בהיתר  סה\"כ 8 יח\"ד",
+    "address": "שרפת 7",
+    "units": 6,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 6,
+    "floors": 3,
+    "source": "committee_yk",
     "source_date": "2026-10-12",
     "all_matched_tabas": [
-     "1211002"
+     "998336"
     ]
    }
   ],
-  "906826": [
+  "1102136": [
    {
-    "file_number": "2020/0218.02",
-    "status": "תום תקופת פרסום",
-    "status_date": "18/08/2026",
-    "request_type": "רישוי בניה - שימוש חורג מתכנית, שינויים ללא תוספת שטחים",
-    "request_description": "שימוש חורג ממגורים לגן ילדים",
-    "address": "אדמונד סחייק 1",
-    "floors": 7,
-    "source": "plan_sweep_yk",
+    "file_number": "1985/0698.01",
+    "status": "שולמה מקדמה",
+    "status_date": "06/05/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת 2 קומות מעל בניין קיים, סה\"כ 8 יחידות דיור - קיים 4 יחידות דיור, חדש 4 יחדות דיור.",
+    "address": "אל בלוטה 27",
+    "units": 4,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 4,
+    "floors": 4,
+    "source": "committee_yk",
     "source_date": "2026-10-12",
     "all_matched_tabas": [
-     "906826"
+     "1102136"
+    ]
+   }
+  ],
+  "882571": [
+   {
+    "file_number": "1987/0080.01",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "11/08/2024",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, בניית מרפסת, ממ\"ד, תוספת בניה על גג בניין מגורים",
+    "request_description": "תוספת  שתי קומות (2יח\"ד חדשות) לבניין קיים בן 2 יח\"ד ",
+    "address": "אל קצר 38",
+    "units": 2,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 2,
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "882571"
+    ]
+   }
+  ],
+  "1211838": [
+   {
+    "file_number": "1996/0007.04",
+    "status": "נפתח תיק רישוי",
+    "status_date": "05/08/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת בניה מעל בניין קיים לשם יצירת בניין בן 5 קומות, סה\"כ 9 יח\"ד",
+    "address": "אל בלוטה 25",
+    "units": 6,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 6,
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1211838"
+    ]
+   }
+  ],
+  "1142629": [
+   {
+    "file_number": "2009/0541.01",
+    "status": "נדונה ברשות הרישוי",
+    "status_date": "26/06/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, בניית מרפסת, ממ\"ד",
+    "request_description": "תוספת שתי קומות מעל בניין בן 3 קומות קיים בהיתר 541/2009 סה\"כ 5 יח\"ד והרחבת קומת מרתף ",
+    "address": "אל בוטמה 62",
+    "units": 2,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 2,
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1142629"
+    ]
+   }
+  ],
+  "872499": [
+   {
+    "file_number": "2022/0435.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "14/11/2024",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, בניית מרפסת, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת בנייה והרחבה לבניינים קיימים הכוללת תוספת 9 יח\"ד (סה\"כ 11 יח\"ד)",
+    "address": "אל בוטמה 27",
+    "units": 11,
+    "units_source": "yk_quantities",
+    "units_existing": 2,
+    "units_added": 9,
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "872499"
+    ]
+   }
+  ],
+  "209593": [
+   {
+    "file_number": "2022/0097.00",
+    "status": "הבקשה נסגרה",
+    "status_date": "27/04/2024",
+    "request_type": "תחנת שנאים, גדר בגובה עד 1.50 מטר",
+    "request_description": "הקמת חדר חשמל",
+    "address": "דב יוסף",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "209593"
+    ]
+   }
+  ],
+  "861393": [
+   {
+    "file_number": "2023/0128.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "02/07/2023",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בית צפפה בניין חדש+פיתוח שצ\"פ(תא שטח 100 לפי תב\"ע 101-0861393) של עיריית ירושלים",
+    "address": "אל קאעה 22",
+    "units": 15,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 15,
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "861393"
+    ]
+   }
+  ],
+  "859322": [
+   {
+    "file_number": "2023/0195.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "12/11/2023",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "מגדל מגורים בן 20 קומות ו114 יח\"ד על גבי 2 קומות פנאי וספורט, מבנה ציבור, מסחר וחניון תת קרקעי",
+    "address": "הפרסה",
+    "units": 114,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 114,
+    "floors": 23,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "859322"
+    ]
+   }
+  ],
+  "305904": [
+   {
+    "file_number": "2023/0304.00",
+    "status": "נדונה ברשות הרישוי",
+    "status_date": "01/09/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית גדר גבוהה מ 1.5 מטר, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, גדר בגובה עד 1.50 מטר",
+    "request_description": "הכשרה ותוספת בניה מעל בניין קיים . מוצע 4 יח\"ד, ק\"ם 4 יח\"ד . סה\"כ 8 יח\"ד",
+    "address": "אל ג'מעיה אל תחתא 22",
+    "units": 4,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 4,
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "305904"
+    ]
+   }
+  ],
+  "768119": [
+   {
+    "file_number": "2023/0468.00",
+    "status": "הבקשה נסגרה",
+    "status_date": "12/09/2023",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בניין חדש בן 6 קומות סה\"כ 14 יח\"ד",
+    "address": "אל ראביא 300",
+    "units": 12,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 12,
+    "floors": 10,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "768119"
+    ]
+   }
+  ],
+  "1256684": [
+   {
+    "file_number": "2024/0193.00",
+    "status": "הבקשה נסגרה",
+    "status_date": "22/09/2026",
+    "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+    "request_description": "בניית בניין חדש בן 6 קומות ו 2 קומות מרתף, סה\"כ 28 יח\"ד",
+    "address": "קורא הדורות 13",
+    "units": 28,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 28,
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "104273",
+     "1256684"
+    ]
+   },
+   {
+    "file_number": "2024/0030.01",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "05/05/2025",
+    "request_type": "חפירה ומילוי",
+    "request_description": "חפירה ודיפון בתחום המגרש לבינוי המבוקש בתיק 2024/193.00",
+    "address": "קורא הדורות 13",
+    "units": 14,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 14,
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "104273",
+     "1256684"
+    ]
+   }
+  ],
+  "969162": [
+   {
+    "file_number": "2024/0388.00",
+    "status": "הוכנה טיוטת היתר בניה",
+    "status_date": "23/04/2025",
+    "request_type": "עבודות בדרכים",
+    "request_description": "ביצוע עבודות להקמת גשר גישה לדיפו של הקו הכחול, לרבות עבודות ביסוס, ניצבים, קורות ומיסעת הגשר.",
+    "address": "דוד בנבנישתי 1",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "178129",
+     "209593",
+     "520163",
+     "969162"
+    ]
+   }
+  ],
+  "1179159": [
+   {
+    "file_number": "2025/0014.00",
+    "status": "נדונה ברשות הרישוי",
+    "status_date": "04/05/2025",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, חפירה ומילוי",
+    "request_description": "הריסת בניין קיים ובנית בניין חדש בן 4 קומות מעל 2 קומות מרתף ובו 16 יח\"ד",
+    "address": "א נהדה 26",
+    "units": 16,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 16,
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1179159"
+    ]
+   }
+  ],
+  "731877": [
+   {
+    "file_number": "2025/0200.01",
+    "status": "נפתח תיק רישוי",
+    "status_date": "28/06/2026",
+    "request_type": "חפירה ומילוי",
+    "request_description": "היתר חפירה ודיפון",
+    "address": "דוד בנבנישתי 1",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "178129",
+     "209593",
+     "731877"
+    ]
+   }
+  ],
+  "433474": [
+   {
+    "file_number": "2025/0347.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "12/01/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+    "request_description": "הקמת בניין חדש בן 9 קומות, מעל 3 קומות חניה למטרת מסחר ומשרדים - תלפיות",
+    "address": "האומן 40",
+    "floors": 9,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "433474"
+    ]
+   }
+  ],
+  "112557": [
+   {
+    "file_number": "2025/0429.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "17/02/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "הריסת בניין קיים בן 2 קומות והקמת בניין מגורים חדש בן 7 קומות",
+    "address": "אלעזר בן יאיר  18",
+    "units": 19,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 19,
+    "floors": 9,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "112557"
+    ]
+   }
+  ],
+  "1043702": [
+   {
+    "file_number": "2026/0100.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "05/07/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "4 בניינים חדשים +3 קומות שירות תת קרקעיות +180מ''''''''ר בניין ציבור-בסה''''''''כ 44 יחידות דיור",
+    "address": "ביר אבו ח'שבה",
+    "units": 44,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 44,
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1043702"
+    ]
+   }
+  ],
+  "1227230": [
+   {
+    "file_number": "2026/0277.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "31/08/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בניין מגורים חדש בן 6 קומות, סה''''''''כ 27 יח''''''''ד",
+    "address": "אל טנטור",
+    "units": 27,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 27,
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1227230"
+    ]
+   },
+   {
+    "file_number": "2026/0277.01",
+    "status": "שולמה מקדמה",
+    "status_date": "11/10/2026",
+    "request_type": "חפירה ומילוי",
+    "request_description": "היתר חפירה עבור מבנה חדש למגורים, 27 יחידות דיור",
+    "address": "אל טנטור",
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1227230"
+    ]
+   },
+   {
+    "file_number": "2026/0278.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "31/08/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בניין מגורים חדש בן 6 קומות, סה''''''''כ 12 יח''''''''ד",
+    "address": "אל טנטור",
+    "units": 12,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 12,
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1227230"
+    ]
+   },
+   {
+    "file_number": "2026/0278.01",
+    "status": "שולמה מקדמה",
+    "status_date": "11/10/2026",
+    "request_type": "חפירה ומילוי",
+    "request_description": "היתר חפירה עבור מבנה חדש למגורים, 12 יחידות דיור",
+    "address": "אל טנטור",
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1227230"
+    ]
+   }
+  ],
+  "762039": [
+   {
+    "file_number": "2026/0432.00",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "17/09/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+    "request_description": "הקמת בניין חדש בן 10 קומות למגורים מסחר ותעסוקה, סה\"כ 48 יח\"ד ",
+    "address": "אל מוטלה 1",
+    "units": 48,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 48,
+    "floors": 10,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "762039"
+    ]
+   }
+  ],
+  "923755": [
+   {
+    "file_number": "2026/0441.00",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "04/10/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+    "request_description": "בניני מיגורים בסה''''כ 53 יחידות דיור+(193 מטר) מבנה ציבור ",
+    "address": "אל ביידר 13",
+    "units": 53,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 53,
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "923755"
     ]
    }
   ]

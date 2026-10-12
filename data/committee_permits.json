@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-10-12T11:15:12",
- "source": "YK API — היתרים מסדר היום של ועדת הרישוי שלא היו במאגר",
- "count": 24,
- "significant": 8,
+ "generated_at": "2026-10-12T14:09:09",
+ "source": "YK API — היתרים שלא היו במאגר: מסדר היום של ועדת הרישוי + משמעותיים מסריקת הרחובות",
+ "count": 136,
+ "significant": 117,
  "permits": {
   "1957/354.7": {
    "file_number": "1957/0354.07",
@@ -925,6 +925,4492 @@
     "+28 יח\"ד"
    ],
    "alerted_at": null
+  },
+  "1910/2027.4": {
+   "file_number": "1910/2027.04",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "29/06/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניית מאגר מים ופתיחת דלת ",
+   "address": "שד בן צבי יצחק 35",
+   "neighborhood_yk": "רחביה",
+   "maslul": "מסלול מקוצר",
+   "tochnit_all": [
+    "3433"
+   ],
+   "parcels": [
+    "30040/86"
+   ],
+   "units": 1,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 1,
+   "floors": 1,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1910/2027.4",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניית מאגר מים ופתיחת דלת",
+   "committee_address": "שד בן צבי יצחק",
+   "lat": 31.779479201628746,
+   "lng": 35.20934324188539,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:53:16",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+1 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1956/567.0": {
+   "file_number": "1956/0567.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניה חדשה",
+   "address": "הקרן הקיימת לישראל",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30039/0"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1956/567.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה",
+   "committee_address": "הקרן הקיימת לישראל",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:53:39",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1957/815.3": {
+   "file_number": "1957/0815.03",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "התקנת מתקנים מיוחדים",
+   "request_description": "בניית סככה",
+   "address": "עמק רפאים 12",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30012/5083",
+    "30012/5088"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1957/815.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניית סככה",
+   "committee_address": "עמק רפאים",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:54:03",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1958/693.0": {
+   "file_number": "1958/0693.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש",
+   "address": "דרך עזה",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30121/0"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1958/693.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש",
+   "committee_address": "דרך עזה",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:54:27",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1962/280.0": {
+   "file_number": "1962/0280.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "הקרן הקיימת לישראל",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30042/5019",
+    "30042/5030"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1962/280.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "הקרן הקיימת לישראל",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:55:37",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1968/787.0": {
+   "file_number": "1968/0787.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "בית הערבה",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30115/80"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1968/787.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "בית הערבה",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:56:06",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1969/1135.0": {
+   "file_number": "1969/1135.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "הרב הרצוג",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30122/9"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1969/1135.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "הרב הרצוג",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:56:29",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1969/1315.0": {
+   "file_number": "1969/1315.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "אלעזר המודעי",
+   "neighborhood_yk": "המושבה היוונית",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30004/61"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1969/1315.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "אלעזר המודעי",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:56:53",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1970/446.0": {
+   "file_number": "1970/0446.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בח",
+   "address": "בית הערבה 13",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30117/15"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1970/446.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בח",
+   "committee_address": "בית הערבה",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:57:16",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1970/446.2": {
+   "file_number": "1970/0446.02",
+   "status": "הבקשה נסגרה",
+   "status_date": "01/09/2024",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, בניית מרפסת",
+   "request_description": "תוספת בנייה  +ממ\"ד +מרפסות   :  עבור 2 יח\"ד",
+   "address": "בית הערבה 13",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1721",
+    "62"
+   ],
+   "parcels": [
+    "30117/15"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1970/446.2",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בנייה  +ממ\"ד +מרפסות   :  עבור 2 יח\"ד",
+   "committee_address": "בית הערבה",
+   "lat": 31.749122129215266,
+   "lng": 35.22136264420366,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:57:19",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1970/913.0": {
+   "file_number": "1970/0913.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "פת יעקב",
+   "neighborhood_yk": "פת",
+   "maslul": "",
+   "tochnit_all": [
+    "1449"
+   ],
+   "parcels": [
+    "30169/0"
+   ],
+   "units": 55,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 55,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1970/913.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "יעקב פת",
+   "lat": null,
+   "lng": null,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T13:57:21",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+55 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1970/914.0": {
+   "file_number": "1970/0914.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "פת יעקב",
+   "neighborhood_yk": "פת",
+   "maslul": "",
+   "tochnit_all": [
+    "1449"
+   ],
+   "parcels": [
+    "30169/0"
+   ],
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1970/914.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "יעקב פת",
+   "lat": null,
+   "lng": null,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T13:57:24",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1971/302.0": {
+   "file_number": "1971/0302.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "קנאי הגליל",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "",
+   "tochnit_all": [
+    "1435"
+   ],
+   "parcels": [
+    "30144/104",
+    "30144/61"
+   ],
+   "units": 8,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 8,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1971/302.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "קנאי הגליל",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:57:27",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+8 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1972/115.0": {
+   "file_number": "1972/0115.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בח",
+   "address": "לויד גורג",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30011/34"
+   ],
+   "units": 18,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 18,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1972/115.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בח",
+   "committee_address": "לויד גורג",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:57:51",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+18 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1972/615.0": {
+   "file_number": "1972/0615.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בח",
+   "address": "יד מרדכי 2",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30007/107"
+   ],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1972/615.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בח",
+   "committee_address": "יד מרדכי",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:58:15",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+6 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1972/954.0": {
+   "file_number": "1972/0954.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "23/11/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "פת יעקב",
+   "neighborhood_yk": "פת",
+   "maslul": "",
+   "tochnit_all": [
+    "1599"
+   ],
+   "parcels": [],
+   "units": 32,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 32,
+   "floors": 9,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1972/954.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "יעקב פת",
+   "lat": null,
+   "lng": null,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T13:58:40",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+32 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1973/150.1": {
+   "file_number": "1973/0150.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת בניה עבור 2 יח\"ד בבניין מגורים קיים",
+   "address": "אלעזר בן יאיר  23",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "4565א"
+   ],
+   "parcels": [
+    "30144/41"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1973/150.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בניה עבור 2 יח\"ד בבניין מגורים קיים",
+   "committee_address": "אלעזר בן יאיר",
+   "lat": 31.75306430907617,
+   "lng": 35.20248143228991,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T13:58:42",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1974/528.0": {
+   "file_number": "1974/0528.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "גן ילדים",
+   "address": "בית הערבה",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [
+    "1721"
+   ],
+   "parcels": [
+    "30116/10",
+    "30116/11",
+    "30116/64"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1974/528.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "גן ילדים",
+   "committee_address": "בית הערבה",
+   "lat": 31.749482950097047,
+   "lng": 35.2207294667596,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:58:45",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1975/28.0": {
+   "file_number": "1975/0028.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "דרך עזה",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [
+    "1210"
+   ],
+   "parcels": [
+    "30025/151",
+    "30025/205"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1975/28.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "דרך עזה",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:58:47",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1975/625.0": {
+   "file_number": "1975/0625.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "הרב הרצוג 53",
+   "neighborhood_yk": "גבעת הורדים",
+   "maslul": "",
+   "tochnit_all": [
+    "1613"
+   ],
+   "parcels": [
+    "30121/9"
+   ],
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1975/625.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "הרב הרצוג",
+   "lat": null,
+   "lng": null,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T13:58:50",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1978/110.0": {
+   "file_number": "1978/0110.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "הרב הרצוג",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [
+    "1977"
+   ],
+   "parcels": [
+    "30145/8"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1978/110.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "הרב הרצוג",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:58:53",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1978/433.3": {
+   "file_number": "1978/0433.03",
+   "status": "נפתח תיק רישוי",
+   "status_date": "21/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ממ\"ד, עבודות לשיפור נגישות, התקנת מעלית חיצונית",
+   "request_description": "תוספת בניה ל2 דירות הגג+חדר מחוזק בגג +מדרגות גישה +מרפסת גג + מעלית ומבואות.",
+   "address": "אלעזר המודעי 5",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "30004ג"
+   ],
+   "parcels": [
+    "30004/105"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1978/433.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בניה ל2 דירות הגג+חדר מחוזק בגג +מדרגות גישה +מרפסת גג + מעלית ומבואות.",
+   "committee_address": "אלעזר המודעי",
+   "lat": 31.759963019615114,
+   "lng": 35.214619822381344,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:58:56",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1979/517.0": {
+   "file_number": "1979/0517.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניה חדשה",
+   "address": "קורא הדורות 37",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [
+    "1013א"
+   ],
+   "parcels": [
+    "30117/64"
+   ],
+   "units": 16,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 16,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1979/517.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה",
+   "committee_address": "קורא הדורות",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:58:58",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+16 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1982/871.0": {
+   "file_number": "1982/0871.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בח",
+   "address": "קורא הדורות 26",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [],
+   "parcels": [
+    "30117/14"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1982/871.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בח",
+   "committee_address": "קורא הדורות",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:59:24",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1982/871.1": {
+   "file_number": "1982/0871.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש",
+   "address": "קורא הדורות",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [
+    "1721"
+   ],
+   "parcels": [
+    "30117/14"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1982/871.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש",
+   "committee_address": "קורא הדורות",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:59:27",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1983/154.3": {
+   "file_number": "1983/0154.03",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניית קיר תומך/מגן",
+   "request_description": "מחחיח",
+   "address": "עמק רפאים 64",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "",
+   "tochnit_all": [
+    "30008ג"
+   ],
+   "parcels": [
+    "30008/29"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1983/154.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "מחחיח",
+   "committee_address": "עמק רפאים",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:59:41",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1983/195.1": {
+   "file_number": "1983/0195.01",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "14/09/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד",
+   "request_description": "הכשרת עבירה - תוספת קומות ויח\"ד חדשות לבין קיים בהיתר  סה\"כ 8 יח\"ד",
+   "address": "שרפת 7",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3365",
+    "998336"
+   ],
+   "parcels": [
+    "30279/67"
+   ],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "floors": 3,
+   "matched_tabas": [
+    "998336"
+   ],
+   "taba": "998336",
+   "norm": "1983/195.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הכשרת עבירה - תוספת קומות ויח\"ד חדשות לבין קיים בהיתר  סה\"כ 8 יח\"ד",
+   "committee_address": "שרפת",
+   "lat": 31.74464088598846,
+   "lng": 35.197194297676006,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T13:59:43",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+6 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1983/948.1": {
+   "file_number": "1983/0948.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "שינויים בבנין קיים",
+   "request_description": "שינויים לבנין חדש",
+   "address": "קורא הדורות",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [
+    "2992א"
+   ],
+   "parcels": [
+    "30117/113"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1983/948.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "שינויים לבנין חדש",
+   "committee_address": "קורא הדורות",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T13:59:46",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1984/495.4": {
+   "file_number": "1984/0495.04",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "הקמת סככה",
+   "request_description": "קרוי בריכה קיימת.",
+   "address": "עמק רפאים",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "",
+   "tochnit_all": [
+    "2417"
+   ],
+   "parcels": [
+    "30003/22",
+    "30003/49"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1984/495.4",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "קרוי בריכה קיימת.",
+   "committee_address": "עמק רפאים",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T13:59:55",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1985/698.1": {
+   "file_number": "1985/0698.01",
+   "status": "שולמה מקדמה",
+   "status_date": "06/05/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת 2 קומות מעל בניין קיים, סה\"כ 8 יחידות דיור - קיים 4 יחידות דיור, חדש 4 יחדות דיור.",
+   "address": "אל בלוטה 27",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1102136"
+   ],
+   "parcels": [
+    "30277/18"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [
+    "1102136"
+   ],
+   "taba": "1102136",
+   "norm": "1985/698.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת 2 קומות מעל בניין קיים, סה\"כ 8 יחידות דיור - קיים 4 יחידות דיור, חדש 4 יחדות דיור.",
+   "committee_address": "אל בלוטה",
+   "lat": 31.747328281076868,
+   "lng": 35.19552658805007,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T13:59:58",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1986/217.0": {
+   "file_number": "1986/0217.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "בית הערבה",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "",
+   "tochnit_all": [
+    "2966"
+   ],
+   "parcels": [
+    "30139/93"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1986/217.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "בית הערבה",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:00:01",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1987/182.3": {
+   "file_number": "1987/0182.03",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "הקמת סככה",
+   "request_description": "סגירת חצר פנימית (פטיו) בשטח בית ספר מחומרים קלים.",
+   "address": "הורקניה 19",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1766"
+   ],
+   "parcels": [
+    "30123/3",
+    "30171/145",
+    "30171/172",
+    "30171/74",
+    "30171/88"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1987/182.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "סגירת חצר פנימית (פטיו) בשטח בית ספר מחומרים קלים.",
+   "committee_address": "הורקניה",
+   "lat": 31.75723982809985,
+   "lng": 35.201415298589076,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:00:04",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1987/80.1": {
+   "file_number": "1987/0080.01",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "11/08/2024",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, בניית מרפסת, ממ\"ד, תוספת בניה על גג בניין מגורים",
+   "request_description": "תוספת  שתי קומות (2יח\"ד חדשות) לבניין קיים בן 2 יח\"ד ",
+   "address": "אל קצר 38",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3488",
+    "882571"
+   ],
+   "parcels": [
+    "30282/5"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 4,
+   "matched_tabas": [
+    "882571"
+   ],
+   "taba": "882571",
+   "norm": "1987/80.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת  שתי קומות (2יח\"ד חדשות) לבניין קיים בן 2 יח\"ד",
+   "committee_address": "אל קצר",
+   "lat": 31.74033025820721,
+   "lng": 35.20316763822859,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:00:09",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1988/176.0": {
+   "file_number": "1988/0176.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש",
+   "address": "בית הערבה",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "",
+   "tochnit_all": [
+    "3449"
+   ],
+   "parcels": [
+    "30139/80"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1988/176.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש",
+   "committee_address": "בית הערבה",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:00:12",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1988/48.1": {
+   "file_number": "1988/0048.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "",
+   "address": "קורא הדורות 49",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "",
+   "tochnit_all": [
+    "3449"
+   ],
+   "parcels": [
+    "30139/63"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1988/48.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה / בניין חדש",
+   "committee_address": "קורא הדורות",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:00:14",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1988/510.4": {
+   "file_number": "1988/0510.04",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "30/09/2024",
+   "request_type": "בניית בריכה פרטית",
+   "request_description": "בניית בריכה פרטית ופרגולה",
+   "address": "עמק רפאים 33",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3779"
+   ],
+   "parcels": [
+    "30003/1"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1988/510.4",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניית בריכה פרטית ופרגולה",
+   "committee_address": "עמק רפאים",
+   "lat": 31.76368707601681,
+   "lng": 35.22008806787464,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T14:00:17",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1989/194.3": {
+   "file_number": "1989/0194.03",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "29/05/2023",
+   "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת בניה חדשה/דירה חדשה על בניין מס'1 הקיים סה\"כ 1 יח'ד חדשה",
+   "address": "ביר אל חמראה' 13",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "7932"
+   ],
+   "parcels": [
+    "30280/3"
+   ],
+   "units": 1,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 1,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1989/194.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בניה חדשה/דירה חדשה על בניין מס'1 הקיים סה\"כ 1 יח'ד חדשה",
+   "committee_address": "ביר אל חמראה'",
+   "lat": 31.746408631333544,
+   "lng": 35.200012000796114,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:00:20",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+1 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1990/115.1": {
+   "file_number": "1990/0115.01",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "07/06/2023",
+   "request_type": "בניה חדשה / בניין חדש, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת יח\"ד  על בניין קיים + והקמת בניין חדש במגרש בן 3 קומות סה\"כ 7 יח\"ד",
+   "address": "אל ג'מעיה 10",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "12603"
+   ],
+   "parcels": [
+    "30283/42"
+   ],
+   "units": 7,
+   "units_source": "yk_quantities",
+   "units_existing": 1,
+   "units_added": 6,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1990/115.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת יח\"ד  על בניין קיים + והקמת בניין חדש במגרש בן 3 קומות סה\"כ 7 יח\"ד",
+   "committee_address": "אל ג'מעיה",
+   "lat": 31.741683033263328,
+   "lng": 35.20463451132151,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:00:23",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+6 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1990/694.0": {
+   "file_number": "1990/0694.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש",
+   "address": "קורא הדורות 45",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "",
+   "tochnit_all": [
+    "3449"
+   ],
+   "parcels": [
+    "30139/66"
+   ],
+   "units": 3,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 3,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1990/694.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש",
+   "committee_address": "קורא הדורות",
+   "lat": null,
+   "lng": null,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:00:25",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+3 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1991/970.1": {
+   "file_number": "1991/0970.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "התקנת מתקנים מיוחדים",
+   "request_description": "הקמת צריף זמני",
+   "address": "פת יעקב",
+   "neighborhood_yk": "פת",
+   "maslul": "",
+   "tochnit_all": [
+    "1953א"
+   ],
+   "parcels": [
+    "30275/0",
+    "30501/0"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1991/970.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת צריף זמני",
+   "committee_address": "יעקב פת",
+   "lat": null,
+   "lng": null,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:00:34",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1993/683.2": {
+   "file_number": "1993/0683.02",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "03/09/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת קומה 2 יח\"ד מעל בניין קיים 2 קומות 4יח\"ד ושינוי המרתף ל 2 יח\"ד סה\"כ 8 יח\"ד",
+   "address": "טבאליה 11",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30996/5069"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1993/683.2",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת קומה 2 יח\"ד מעל בניין קיים 2 קומות 4יח\"ד ושינוי המרתף ל 2 יח\"ד סה\"כ 8 יח\"ד",
+   "committee_address": "טבאליה",
+   "lat": 31.733999,
+   "lng": 35.206101,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:00:37",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1995/297.6": {
+   "file_number": "1995/0297.06",
+   "status": "שולמה מקדמה",
+   "status_date": "14/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד",
+   "request_description": "תוספת קומה מעל בניין קיים (סה\"כ 6 יח\"ד )",
+   "address": "אל מוסתשפא 47",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2317",
+    "8113"
+   ],
+   "parcels": [
+    "30286/5091"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1995/297.6",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת קומה מעל בניין קיים (סה\"כ 6 יח\"ד )",
+   "committee_address": "אל מוסתשפא",
+   "lat": 31.744956632209046,
+   "lng": 35.20948914951275,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:00:39",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1995/655.3": {
+   "file_number": "1995/0655.03",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "03/12/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תופסת בניה, מרפסת וממ\"ד, תוספת 2 יח\"ד ותוספת קומות.",
+   "address": "אל בוטמה 79",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2317",
+    "3801",
+    "3801א"
+   ],
+   "parcels": [
+    "30280/135"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1995/655.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תופסת בניה, מרפסת וממ\"ד, תוספת 2 יח\"ד ותוספת קומות.",
+   "committee_address": "אל בוטמה",
+   "lat": 31.74235933892666,
+   "lng": 35.19988555189127,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:00:43",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1996/1066.1": {
+   "file_number": "1996/1066.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "הריסת ק.שלישית חלקית ותוס' קומה מעל בנין קיים בן 2 קומות )2 יח\"ד(",
+   "address": "אבן עזרא 26",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [
+    "30025ג"
+   ],
+   "parcels": [
+    "30025/6"
+   ],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 4,
+   "units_added": 2,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1996/1066.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הריסת ק.שלישית חלקית ותוס' קומה מעל בנין קיים בן 2 קומות )2 יח\"ד(",
+   "committee_address": "אבן עזרא",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T14:00:45",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1996/271.2": {
+   "file_number": "1996/0271.02",
+   "status": "שולמה מקדמה",
+   "status_date": "08/09/2026",
+   "request_type": "ממ\"ד, שינויים ללא תוספת שטחים",
+   "request_description": "תוספת 2 עמודות ממ\"ד ל-4 דירות ושינוי ייעוד חלקי ממסחר למגורים.",
+   "address": "דרך עזה 27",
+   "neighborhood_yk": "רחביה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "9988"
+   ],
+   "parcels": [
+    "30026/108"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1996/271.2",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת 2 עמודות ממ\"ד ל-4 דירות ושינוי ייעוד חלקי ממסחר למגורים.",
+   "committee_address": "דרך עזה",
+   "lat": 31.772146972318485,
+   "lng": 35.21389275687964,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T14:00:48",
+   "category": "shinuyim",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1996/619.0": {
+   "file_number": "1996/0619.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין מגורים חדש.",
+   "address": "קרן היסוד",
+   "neighborhood_yk": "רחביה",
+   "maslul": "",
+   "tochnit_all": [
+    "2814ב"
+   ],
+   "parcels": [
+    "30027/36"
+   ],
+   "units": 10,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 10,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1996/619.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין מגורים חדש.",
+   "committee_address": "קרן היסוד",
+   "lat": null,
+   "lng": null,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T14:00:51",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+10 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "1996/7.4": {
+   "file_number": "1996/0007.04",
+   "status": "נפתח תיק רישוי",
+   "status_date": "05/08/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת בניה מעל בניין קיים לשם יצירת בניין בן 5 קומות, סה\"כ 9 יח\"ד",
+   "address": "אל בלוטה 25",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1211838"
+   ],
+   "parcels": [
+    "30277/18"
+   ],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "floors": 5,
+   "matched_tabas": [
+    "1211838"
+   ],
+   "taba": "1211838",
+   "norm": "1996/7.4",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בניה מעל בניין קיים לשם יצירת בניין בן 5 קומות, סה\"כ 9 יח\"ד",
+   "committee_address": "אל בלוטה",
+   "lat": 31.747553739496414,
+   "lng": 35.19548435125264,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:00:54",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+6 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1999/37.3": {
+   "file_number": "1999/0037.03",
+   "status": "הבקשה נסגרה",
+   "status_date": "23/11/2023",
+   "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת בנייה לבניין מגורים קיים סה''כ תוספת 4 יח''ד חדשות- סה''ב 8 יח''ד",
+   "address": "אל מוטלה 0",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 4,
+   "units_added": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1999/37.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בנייה לבניין מגורים קיים סה''כ תוספת 4 יח''ד חדשות- סה''ב 8 יח''ד",
+   "committee_address": "אל מוטלה",
+   "lat": 31.73302529022548,
+   "lng": 35.20621731601431,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:01:50",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2001/291.1": {
+   "file_number": "2001/0291.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש",
+   "address": "שרפת",
+   "neighborhood_yk": "שרפת",
+   "maslul": "",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2001/291.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין חדש",
+   "committee_address": "שרפת",
+   "lat": 31.741457022984758,
+   "lng": 35.192551159749485,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:02:14",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2003/26.6": {
+   "file_number": "2003/0026.06",
+   "status": "נדונה בועדת ערר",
+   "status_date": "29/09/2024",
+   "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "השלמת קומה רבעית ותוספת קומה חמישית מעל בניין קיים סה\"כ 9 יח\"ד",
+   "address": "א נהדה",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "14002"
+   ],
+   "parcels": [
+    "30284/44"
+   ],
+   "units": 9,
+   "units_source": "yk_quantities",
+   "units_existing": 8,
+   "units_added": 1,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2003/26.6",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "השלמת קומה רבעית ותוספת קומה חמישית מעל בניין קיים סה\"כ 9 יח\"ד",
+   "committee_address": "א נהדה",
+   "lat": 31.745660173965284,
+   "lng": 35.20467673668145,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:02:17",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+1 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2004/317.2": {
+   "file_number": "2004/0317.02",
+   "status": "הבקשה נסגרה",
+   "status_date": "31/12/2024",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת קומה (דירה) מעל בניין קיים 2 קומות ( 2 יח\"ד )",
+   "address": "אל צפא 26",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "3801",
+    "3801א"
+   ],
+   "parcels": [
+    "30280/53"
+   ],
+   "units": 3,
+   "units_source": "yk_quantities",
+   "units_existing": 2,
+   "units_added": 1,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2004/317.2",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת קומה (דירה) מעל בניין קיים 2 קומות ( 2 יח\"ד )",
+   "committee_address": "אל צפא",
+   "lat": 31.74492059264538,
+   "lng": 35.200212587862126,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:02:20",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+1 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2005/308.0": {
+   "file_number": "2005/0308.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/09/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש הכולל 9 יחידות דיור",
+   "address": "משואות יצחק 4",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "",
+   "tochnit_all": [
+    "1721"
+   ],
+   "parcels": [
+    "30119/61"
+   ],
+   "units": 9,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 9,
+   "floors": 6,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2005/308.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין חדש הכולל 9 יחידות דיור",
+   "committee_address": "משואות יצחק",
+   "lat": 31.745424495856547,
+   "lng": 35.221857988317005,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:02:23",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+9 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2008/103.2": {
+   "file_number": "2008/0103.02",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "25/08/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת 2 קומות הכוללות 2 יח\"ד חדשות מעל 2 קומות קיימות ,סה\"כ 4 יח\"ד",
+   "address": "אל טפטאף 2",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5834א"
+   ],
+   "parcels": [
+    "30283/71"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2008/103.2",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת 2 קומות הכוללות 2 יח\"ד חדשות מעל 2 קומות קיימות ,סה\"כ 4 יח\"ד",
+   "committee_address": "אל טפטאף",
+   "lat": 31.741412477295924,
+   "lng": 35.205151614438414,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:02:28",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2009/159.3": {
+   "file_number": "2009/0159.03",
+   "status": "הבקשה נסגרה",
+   "status_date": "23/11/2023",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "הרחבת קומה אחת מעל בניין קיים מאושר  בן 3קומות  מעל קומת חנייה  סה\"כ 3 יח\"ד",
+   "address": "עקבת אל ג'בל 19",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "3855"
+   ],
+   "parcels": [
+    "30284/30"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2009/159.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הרחבת קומה אחת מעל בניין קיים מאושר  בן 3קומות  מעל קומת חנייה  סה\"כ 3 יח\"ד",
+   "committee_address": "עקבת אל ג'בל",
+   "lat": 31.74596680060972,
+   "lng": 35.20494057906865,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:02:31",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+3 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2009/541.1": {
+   "file_number": "2009/0541.01",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "26/06/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, בניית מרפסת, ממ\"ד",
+   "request_description": "תוספת שתי קומות מעל בניין בן 3 קומות קיים בהיתר 541/2009 סה\"כ 5 יח\"ד והרחבת קומת מרתף ",
+   "address": "אל בוטמה 62",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1142629",
+    "1918",
+    "3801",
+    "5678"
+   ],
+   "parcels": [
+    "30279/48"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 4,
+   "matched_tabas": [
+    "1142629"
+   ],
+   "taba": "1142629",
+   "norm": "2009/541.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת שתי קומות מעל בניין בן 3 קומות קיים בהיתר 541/2009 סה\"כ 5 יח\"ד והרחבת קומת מרתף",
+   "committee_address": "אל בוטמה",
+   "lat": 31.74359481276957,
+   "lng": 35.198524105254826,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:02:33",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2011/329.3": {
+   "file_number": "2011/0329.03",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "03/09/2024",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת 2 קומות מעל בניין קיים בן 3 קומות סה\"כ 12 יח\"ד.",
+   "address": "אל נבי יונס 22",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "14102",
+    "4552"
+   ],
+   "parcels": [],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2011/329.3",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת 2 קומות מעל בניין קיים בן 3 קומות סה\"כ 12 יח\"ד.",
+   "committee_address": "אל נבי יונס",
+   "lat": 31.740555287889215,
+   "lng": 35.19381763946779,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:02:36",
+   "category": "tosefet",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "+12 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2012/106.0": {
+   "file_number": "2012/0106.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "השלמת קומה קיימת ותוספת קומה, סה\"כ 4 יח\"ד.",
+   "address": "שרפת",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 1,
+   "units_added": 3,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2012/106.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "השלמת קומה קיימת ותוספת קומה, סה\"כ 4 יח\"ד.",
+   "committee_address": "שרפת",
+   "lat": 31.742854569891424,
+   "lng": 35.1895432906823,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:00",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+3 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2012/624.4": {
+   "file_number": "2012/0624.04",
+   "status": "הבקשה נסגרה",
+   "status_date": "31/08/2024",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הריסת בנין קיים ובניית שני בניינים בני 3 קומות מעל קומת מרתף, סה\"כ 12 יח\"ד",
+   "address": "אל וועד 60",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3855"
+   ],
+   "parcels": [
+    "30284/41"
+   ],
+   "units": 12,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 12,
+   "floors": 111111,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2012/624.4",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הריסת בנין קיים ובניית שני בניינים בני 3 קומות מעל קומת מרתף, סה\"כ 12 יח\"ד",
+   "committee_address": "אל וועד",
+   "lat": 31.74551587207,
+   "lng": 35.20305148101277,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:03",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+12 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2013/764.0": {
+   "file_number": "2013/0764.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הריסת מבנים קיימים והקמת בניין חדש בן 7 קומות מעל 2 קומות ת\"ק למגורים ומסחר -  סה\"כ 22 יח' דיור.",
+   "address": "שדה יצחק 4",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "13568"
+   ],
+   "parcels": [
+    "30169/53"
+   ],
+   "units": 22,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 22,
+   "floors": 7,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2013/764.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הריסת מבנים קיימים והקמת בניין חדש בן 7 קומות מעל 2 קומות ת\"ק למגורים ומסחר -  סה\"כ 22 יח' דיור.",
+   "committee_address": "שדה יצחק",
+   "lat": 31.75430873604632,
+   "lng": 35.19856564930222,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:03:06",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+22 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2014/391.0": {
+   "file_number": "2014/0391.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש בן שתי קומות מעל קומת מרתף, סה\"כ 4 יח\"ד",
+   "address": "א נהדה 147",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3855"
+   ],
+   "parcels": [
+    "30284/43"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2014/391.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש בן שתי קומות מעל קומת מרתף, סה\"כ 4 יח\"ד",
+   "committee_address": "א נהדה",
+   "lat": 31.74579545043362,
+   "lng": 35.20394853616238,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:08",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2015/66.1": {
+   "file_number": "2015/0066.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "18/04/2024",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת 2יח\"ד ותוספת קומה מעל קומה קיימת ומרתף",
+   "address": "אל צפא 183",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30995/5118"
+   ],
+   "units": 1,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 1,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2015/66.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת 2יח\"ד ותוספת קומה מעל קומה קיימת ומרתף",
+   "committee_address": "אל צפא",
+   "lat": 31.732890026090274,
+   "lng": 35.20463448727503,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:15",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+1 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2016/620.0": {
+   "file_number": "2016/0620.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "24/12/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניית בנייו חדש 3 יח\"ד",
+   "address": "שרפת 1",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 3,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2016/620.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניית בנייו חדש 3 יח\"ד",
+   "committee_address": "שרפת",
+   "lat": 31.740104198232945,
+   "lng": 35.191970917149916,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:39",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+3 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2017/151.0": {
+   "file_number": "2017/0151.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "09/02/2023",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניה חדשה / בניין חדש, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת מחסן וחניה בקומת מרתף ותוספות ל4 יחדות קיימות בקומת כניסה וקומה א'",
+   "address": "אל תוחיד 9",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "11839"
+   ],
+   "parcels": [
+    "30507/5051"
+   ],
+   "units": 10,
+   "units_source": "yk_quantities",
+   "units_existing": 7,
+   "units_added": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2017/151.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת מחסן וחניה בקומת מרתף ותוספות ל4 יחדות קיימות בקומת כניסה וקומה א'",
+   "committee_address": "אל תוחיד",
+   "lat": 31.747770413629873,
+   "lng": 35.199885290537125,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:42",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+3 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2017/67.1": {
+   "file_number": "2017/0067.01",
+   "status": "חידוש טיפול בבקשה",
+   "status_date": "01/10/2024",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "בנייה חדשה ",
+   "address": "אל וועד",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3855"
+   ],
+   "parcels": [
+    "30284/47"
+   ],
+   "units": 12,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 12,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2017/67.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנייה חדשה",
+   "committee_address": "אל וועד",
+   "lat": 31.746634164860662,
+   "lng": 35.20521498012219,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:45",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+12 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2019/575.0": {
+   "file_number": "2019/0575.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "10/09/2024",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין מגורים חדש עם 7 יח\"ד",
+   "address": "אל תוחיד 0",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "3855"
+   ],
+   "parcels": [
+    "30284/22"
+   ],
+   "units": 7,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 7,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2019/575.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין מגורים חדש עם 7 יח\"ד",
+   "committee_address": "אל תוחיד",
+   "lat": 31.74715723789098,
+   "lng": 35.204212374631105,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:48",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+7 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2020/132.0": {
+   "file_number": "2020/0132.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "24/12/2023",
+   "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת יח\"ד לבניין קיים, סה\"כ 5 יח\"ד בית צפפה",
+   "address": "אל תוחיד 23",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "10359ב"
+   ],
+   "parcels": [
+    "30507/5068"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2020/132.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת יח\"ד לבניין קיים, סה\"כ 5 יח\"ד בית צפפה",
+   "committee_address": "אל תוחיד",
+   "lat": 31.74690466621394,
+   "lng": 35.20063464951253,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:03:52",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2020/256.0": {
+   "file_number": "2020/0256.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "23/11/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש בן 3 קומות סה\"כ 6 יח\"ד, שרפאת, ירושלים",
+   "address": "שרפת",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2020/256.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין חדש בן 3 קומות סה\"כ 6 יח\"ד, שרפאת, ירושלים",
+   "committee_address": "שרפת",
+   "lat": 31.739923829964056,
+   "lng": 35.191981494167834,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:16",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+6 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2020/490.0": {
+   "file_number": "2020/0490.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "25/01/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "שתי יחידות דיור - מבנה חדש בעל 3 קומות כולל מרתף, חניה מקורה ופרגולה.",
+   "address": "אל צפא 1",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5676"
+   ],
+   "parcels": [
+    "30280/99"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2020/490.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "שתי יחידות דיור - מבנה חדש בעל 3 קומות כולל מרתף, חניה מקורה ופרגולה.",
+   "committee_address": "אל צפא",
+   "lat": 31.744623013923192,
+   "lng": 35.20127850509059,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:19",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2020/560.0": {
+   "file_number": "2020/0560.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "10/02/2024",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין מגורים בן 4 קומות  מעל קומת מרתף  סה\"כ 9 יח\"ד, בית צפפה, ירושלים",
+   "address": "אל טנטור 0",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30995/5083"
+   ],
+   "units": 9,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 9,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2020/560.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין מגורים בן 4 קומות  מעל קומת מרתף  סה\"כ 9 יח\"ד, בית צפפה, ירושלים",
+   "committee_address": "אל טנטור",
+   "lat": 31.735144635011604,
+   "lng": 35.205953547110134,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:23",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+9 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2020/563.0": {
+   "file_number": "2020/0563.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "23/05/2024",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין מגורים בן 5 קומות סה\"כ 20 יח\"ד, בית צפפה, ירושלים",
+   "address": "אל טנטור 0",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30995/5080",
+    "30995/81"
+   ],
+   "units": 20,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 20,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2020/563.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין מגורים בן 5 קומות סה\"כ 20 יח\"ד, בית צפפה, ירושלים",
+   "committee_address": "אל טנטור",
+   "lat": 31.735144635011604,
+   "lng": 35.205953547110134,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:26",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+20 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2020/656.0": {
+   "file_number": "2020/0656.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "29/07/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת בניה (הרחבת דירה ) + תוספת 4 יח\"ד . סה\"כ 6 יח\"ד",
+   "address": "אל ווחדה 21",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "2317",
+    "5834ב"
+   ],
+   "parcels": [
+    "30995/5158"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2020/656.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בניה (הרחבת דירה ) + תוספת 4 יח\"ד . סה\"כ 6 יח\"ד",
+   "committee_address": "אל ווחדה",
+   "lat": 31.735776,
+   "lng": 35.204666,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:29",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2020/768.0": {
+   "file_number": "2020/0768.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "12/04/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש בן 5 קומות עבור 10 יח\"ד",
+   "address": "אל טואל 16",
+   "neighborhood_yk": "שרפת",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 10,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 10,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2020/768.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש בן 5 קומות עבור 10 יח\"ד",
+   "committee_address": "אל טואל",
+   "lat": 31.743260804400993,
+   "lng": 35.193553498680885,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:35",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+10 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2021/406.0": {
+   "file_number": "2021/0406.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "23/11/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניית בניין חדש בן 4 קומות מעל קומת חניה.",
+   "address": "אל מוטלה 0",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30995/5015"
+   ],
+   "units": 3,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 3,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2021/406.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניית בניין חדש בן 4 קומות מעל קומת חניה.",
+   "committee_address": "אל מוטלה",
+   "lat": 31.733340922974094,
+   "lng": 35.20700873911143,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:38",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+3 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2021/41.0": {
+   "file_number": "2021/0041.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "08/05/2024",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת בניין חדש בן 5 קומות מעל קומת חניה תת קרקעית, סה\"כ 10 יח\"ד חדשות",
+   "address": "אל בטן 16",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 10,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 10,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2021/41.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת בניין חדש בן 5 קומות מעל קומת חניה תת קרקעית, סה\"כ 10 יח\"ד חדשות",
+   "committee_address": "אל בטן",
+   "lat": 31.742584397159703,
+   "lng": 35.19328974555086,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:41",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+10 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2022/112.0": {
+   "file_number": "2022/0112.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "27/09/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש בן 4 קומות מעל קומת חניה ס\"הכ 2 יח\"ד",
+   "address": "שרפת",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2022/112.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש בן 4 קומות מעל קומת חניה ס\"הכ 2 יח\"ד",
+   "committee_address": "שרפת",
+   "lat": 31.740465020039654,
+   "lng": 35.19285732376375,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:44",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2022/112.1": {
+   "file_number": "2022/0112.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "19/08/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנין חדש בן 4קומות מעל קומת חניה סה''''''''''''''''''''''''''''''''כ 2 יח''''''''''''''''''''''''''''''''ד",
+   "address": "שרפאת סמטה 3 70",
+   "neighborhood_yk": "שרפת",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [
+    "30914/None"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2022/112.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש בן 4קומות מעל קומת חניה סה''''''''''''''''''''''''''''''''כ 2 יח''''''''''''''''''''''''''''''''ד",
+   "committee_address": "שרפאת",
+   "lat": 31.741763622942354,
+   "lng": 35.19225563175255,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:04:48",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+2 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2022/390.0": {
+   "file_number": "2022/0390.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "04/06/2023",
+   "request_type": "בניית קיר תומך/מגן, חפירה ומילוי, עבודות בדרכים, עבודות הריסה, פיתוח שטח ציבורי פתוח",
+   "request_description": "עבודות מקדימות להקמת דיפו רכבות.הריסה חפירה,קירות דיפון,הסטת תשתיות ודרכים.\n ",
+   "address": "דוד בנבנישתי",
+   "neighborhood_yk": "מנחת",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [],
+   "parcels": [
+    "30429/11",
+    "30429/22"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2022/390.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "עבודות מקדימות להקמת דיפו רכבות.הריסה חפירה,קירות דיפון,הסטת תשתיות ודרכים.",
+   "committee_address": "דרך דוד בנבנישתי",
+   "lat": 31.74894238400906,
+   "lng": 35.193004029946586,
+   "minahak": "מינהל מוסדי מלחה",
+   "fetched_at": "2026-10-12T14:05:18",
+   "category": "drachim",
+   "bucket": "acher",
+   "bucket_label": "אחר",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2022/435.0": {
+   "file_number": "2022/0435.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "14/11/2024",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, בניית מרפסת, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת בנייה והרחבה לבניינים קיימים הכוללת תוספת 9 יח\"ד (סה\"כ 11 יח\"ד)",
+   "address": "אל בוטמה 27",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "872499"
+   ],
+   "parcels": [
+    "30296/5020"
+   ],
+   "units": 11,
+   "units_source": "yk_quantities",
+   "units_existing": 2,
+   "units_added": 9,
+   "floors": 4,
+   "matched_tabas": [
+    "872499"
+   ],
+   "taba": "872499",
+   "norm": "2022/435.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "תוספת בנייה והרחבה לבניינים קיימים הכוללת תוספת 9 יח\"ד (סה\"כ 11 יח\"ד)",
+   "committee_address": "אל בוטמה",
+   "lat": 31.740907348799716,
+   "lng": 35.199410733290534,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:21",
+   "category": "tosefet",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "+9 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2022/489.0": {
+   "file_number": "2022/0489.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "07/09/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניה חדשה/בנין חדש",
+   "address": "אל בלוטה 17",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "6718"
+   ],
+   "parcels": [
+    "30277/46"
+   ],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "floors": 1,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2022/489.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניה חדשה/בנין חדש",
+   "committee_address": "אל בלוטה",
+   "lat": 31.74799566686733,
+   "lng": 35.19582203336818,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:24",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+6 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2022/498.0": {
+   "file_number": "2022/0498.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "04/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, בניית גדר או קיר תמך בגובה של עד 3 מ, בניית גדר גבוהה מ 1.5 מטר",
+   "request_description": "הקמת בניין מגורים חדש בן 5 קומות מעל קומת חניה מרתף - סה\"כ 10 יח\"ד",
+   "address": "אל מוטלה 37",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30996/8"
+   ],
+   "units": 10,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 10,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2022/498.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת בניין מגורים חדש בן 5 קומות מעל קומת חניה מרתף - סה\"כ 10 יח\"ד",
+   "committee_address": "אל מוטלה",
+   "lat": 31.732772773523905,
+   "lng": 35.20617510238856,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:27",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+10 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2022/97.0": {
+   "file_number": "2022/0097.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "27/04/2024",
+   "request_type": "תחנת שנאים, גדר בגובה עד 1.50 מטר",
+   "request_description": "הקמת חדר חשמל",
+   "address": "דב יוסף",
+   "neighborhood_yk": "שרפת",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "209593",
+    "4114",
+    "4552"
+   ],
+   "parcels": [
+    "28116/5060"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "209593"
+   ],
+   "taba": "209593",
+   "norm": "2022/97.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת חדר חשמל",
+   "committee_address": "דב יוסף",
+   "lat": 31.740780870850486,
+   "lng": 35.19540057410204,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:30",
+   "category": "mivne_nilve",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2023/128.0": {
+   "file_number": "2023/0128.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "02/07/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בית צפפה בניין חדש+פיתוח שצ\"פ(תא שטח 100 לפי תב\"ע 101-0861393) של עיריית ירושלים",
+   "address": "אל קאעה 22",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2317",
+    "861393"
+   ],
+   "parcels": [
+    "30286/37",
+    "30287/2",
+    "30287/5037"
+   ],
+   "units": 15,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 15,
+   "floors": 5,
+   "matched_tabas": [
+    "861393"
+   ],
+   "taba": "861393",
+   "norm": "2023/128.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בית צפפה בניין חדש+פיתוח שצ\"פ(תא שטח 100 לפי תב\"ע 101-0861393) של עיריית ירושלים",
+   "committee_address": "אל קאעה",
+   "lat": 31.741682954923682,
+   "lng": 35.20885577956122,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:35",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+15 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2023/186.0": {
+   "file_number": "2023/0186.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "26/02/2026",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי, ממ\"ד, ריצוף חצר ועבודות פיתוח",
+   "request_description": "הקמת מבנה בית כנסת בן שלוש קומות עבור קהילת באורך- מגרש ה",
+   "address": "יעקב בן דב",
+   "neighborhood_yk": "מקור חיים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "3045"
+   ],
+   "parcels": [
+    "30141/140",
+    "30141/145",
+    "30141/199",
+    "30141/203",
+    "30141/213",
+    "30141/215",
+    "30141/266"
+   ],
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/186.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת מבנה בית כנסת בן שלוש קומות עבור קהילת באורך- מגרש ה",
+   "committee_address": "יעקב בן דב",
+   "lat": 31.755435895072086,
+   "lng": 35.212814465097274,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:05:38",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2023/195.0": {
+   "file_number": "2023/0195.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "12/11/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "מגדל מגורים בן 20 קומות ו114 יח\"ד על גבי 2 קומות פנאי וספורט, מבנה ציבור, מסחר וחניון תת קרקעי",
+   "address": "הפרסה",
+   "neighborhood_yk": "מקור חיים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "859322"
+   ],
+   "parcels": [
+    "30130/115",
+    "30130/3",
+    "30130/4"
+   ],
+   "units": 114,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 114,
+   "floors": 23,
+   "matched_tabas": [
+    "859322"
+   ],
+   "taba": "859322",
+   "norm": "2023/195.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "מגדל מגורים בן 20 קומות ו114 יח\"ד על גבי 2 קומות פנאי וספורט, מבנה ציבור, מסחר וחניון תת קרקעי",
+   "committee_address": "הפרסה",
+   "lat": 31.75182868704833,
+   "lng": 35.20964784167588,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:05:41",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+114 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2023/276.0": {
+   "file_number": "2023/0276.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "18/11/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת בניין חדש בן 4 קומות סה\"כ 4 יח\"ד",
+   "address": "א נהדה 16 א",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5676"
+   ],
+   "parcels": [
+    "30280/100",
+    "30280/95",
+    "30280/99"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/276.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת בניין חדש בן 4 קומות סה\"כ 4 יח\"ד",
+   "committee_address": "א נהדה",
+   "lat": 31.744722252575453,
+   "lng": 35.20364248919747,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:45",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2023/304.0": {
+   "file_number": "2023/0304.00",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "01/09/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית גדר גבוהה מ 1.5 מטר, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, גדר בגובה עד 1.50 מטר",
+   "request_description": "הכשרה ותוספת בניה מעל בניין קיים . מוצע 4 יח\"ד, ק\"ם 4 יח\"ד . סה\"כ 8 יח\"ד",
+   "address": "אל ג'מעיה אל תחתא 22",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "305904",
+    "3488"
+   ],
+   "parcels": [
+    "30282/11"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [
+    "305904"
+   ],
+   "taba": "305904",
+   "norm": "2023/304.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הכשרה ותוספת בניה מעל בניין קיים . מוצע 4 יח\"ד, ק\"ם 4 יח\"ד . סה\"כ 8 יח\"ד",
+   "committee_address": "אל ג'מעיה אל תחתא",
+   "lat": 31.73875202253038,
+   "lng": 35.202787756606746,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:47",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2023/306.0": {
+   "file_number": "2023/0306.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "20/10/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת מבנה בן 4 קומות מעל קומת מרתף עבור עמותת \"צעד קדימה\"",
+   "address": "יעקב בן דב",
+   "neighborhood_yk": "מקור חיים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1718",
+    "3045",
+    "3532"
+   ],
+   "parcels": [
+    "30141/140",
+    "30141/145",
+    "30141/199",
+    "30141/203",
+    "30141/213",
+    "30141/215"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/306.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת מבנה בן 4 קומות מעל קומת מרתף עבור עמותת \"צעד קדימה\"",
+   "committee_address": "יעקב בן דב",
+   "lat": 31.755300628806,
+   "lng": 35.21265613210501,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:05:50",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2023/335.0": {
+   "file_number": "2023/0335.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "10/07/2024",
+   "request_type": "מערכת פוטוולטאית, פיתוח שטח ציבורי פתוח",
+   "request_description": "הקמת קירוי לשם הצללת מגרש ספורט בשב\"צ ומעליו תאים פוטו וולטאיים",
+   "address": "דב יוסף 0",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1599",
+    "178129",
+    "209593",
+    "5/06/04",
+    "511923"
+   ],
+   "parcels": [
+    "30200/15"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "178129",
+    "209593",
+    "511923"
+   ],
+   "taba": "511923",
+   "norm": "2023/335.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת קירוי לשם הצללת מגרש ספורט בשב\"צ ומעליו תאים פוטו וולטאיים",
+   "committee_address": "דב יוסף",
+   "lat": 31.752964983271244,
+   "lng": 35.1984707432415,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:05:53",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2023/380.0": {
+   "file_number": "2023/0380.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "03/07/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת מבנה עבור מרכז קהילתי 2 קומות מעל קומת מעון יום 3 כיתות ופיתוח שטח משותף",
+   "address": "יעקב בן דב",
+   "neighborhood_yk": "מקור חיים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1718",
+    "3045",
+    "3532"
+   ],
+   "parcels": [
+    "30141/140",
+    "30141/145",
+    "30141/199",
+    "30141/203",
+    "30141/213",
+    "30141/215"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/380.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת מבנה עבור מרכז קהילתי 2 קומות מעל קומת מעון יום 3 כיתות ופיתוח שטח משותף",
+   "committee_address": "יעקב בן דב",
+   "lat": 31.755300628806,
+   "lng": 35.21265613210501,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:05:56",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2023/399.0": {
+   "file_number": "2023/0399.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "16/10/2023",
+   "request_type": "בניה חדשה / בניין חדש, ממ\"ד",
+   "request_description": "הקמת שני בנייני מגורים חדשים, סה\"כ 15 יח\"ד",
+   "address": "שרפת",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2317",
+    "4552"
+   ],
+   "parcels": [
+    "30277/43"
+   ],
+   "units": 15,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 15,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/399.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת שני בנייני מגורים חדשים, סה\"כ 15 יח\"ד",
+   "committee_address": "שרפת",
+   "lat": 31.745271895270758,
+   "lng": 35.193257764541364,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:05:59",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+15 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2023/468.0": {
+   "file_number": "2023/0468.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "12/09/2023",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש בן 6 קומות סה\"כ 14 יח\"ד",
+   "address": "אל ראביא 300",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "2317",
+    "768119"
+   ],
+   "parcels": [
+    "30285/22"
+   ],
+   "units": 12,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 12,
+   "floors": 10,
+   "matched_tabas": [
+    "768119"
+   ],
+   "taba": "768119",
+   "norm": "2023/468.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין חדש בן 6 קומות סה\"כ 14 יח\"ד",
+   "committee_address": "אל ראביא",
+   "lat": 31.743811347510658,
+   "lng": 35.20768445319415,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:06:02",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+12 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2023/488.0": {
+   "file_number": "2023/0488.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "18/09/2025",
+   "request_type": "תחנת שנאים",
+   "request_description": "הקמת חדר שנאים ",
+   "address": "לויד גורג 6",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "2097",
+    "2097א",
+    "2154"
+   ],
+   "parcels": [
+    "30011/70"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/488.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת חדר שנאים",
+   "committee_address": "לויד גורג",
+   "lat": 31.764913246482475,
+   "lng": 35.22261111263693,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T14:06:05",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2023/595.0": {
+   "file_number": "2023/0595.00",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "01/03/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש בן 3 קומות מעל קומת מרתף סה\"כ 6 יח\"ד ",
+   "address": "שרפת 8",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/595.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין חדש בן 3 קומות מעל קומת מרתף סה\"כ 6 יח\"ד",
+   "committee_address": "שרפת",
+   "lat": 31.744153754259962,
+   "lng": 35.19510475204908,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:06:29",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+6 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2024/193.0": {
+   "file_number": "2024/0193.00",
+   "status": "הבקשה נסגרה",
+   "status_date": "22/09/2026",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "בניית בניין חדש בן 6 קומות ו 2 קומות מרתף, סה\"כ 28 יח\"ד",
+   "address": "קורא הדורות 13",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "104273",
+    "1256684",
+    "1721",
+    "1721א"
+   ],
+   "parcels": [
+    "30117/38"
+   ],
+   "units": 28,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 28,
+   "floors": 6,
+   "matched_tabas": [
+    "104273",
+    "1256684"
+   ],
+   "taba": "1256684",
+   "norm": "2024/193.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניית בניין חדש בן 6 קומות ו 2 קומות מרתף, סה\"כ 28 יח\"ד",
+   "committee_address": "קורא הדורות",
+   "lat": 31.750772298644183,
+   "lng": 35.22285108778703,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:06:32",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+28 יח\"ד"
+   ],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2024/273.0": {
+   "file_number": "2024/0273.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "27/05/2026",
+   "request_type": "בניה חדשה / בניין חדש, בניית גדר גבוהה מ 1.5 מטר, ריצוף חצר ועבודות פיתוח, עבודות הריסה",
+   "request_description": "הריסת בינוי קיים ובניית בית ספר יסודי בן 24 כיתות + 6 כיתות חינוך מיוחד וביתן שומר + מאגר מים",
+   "address": "הורקניה 19",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1766",
+    "2696",
+    "450ב"
+   ],
+   "parcels": [
+    "30171/226"
+   ],
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2024/273.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הריסת בינוי קיים ובניית בית ספר יסודי בן 24 כיתות + 6 כיתות חינוך מיוחד וביתן שומר + מאגר מים",
+   "committee_address": "הורקניה",
+   "lat": 31.756969276574033,
+   "lng": 35.20148919154553,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:06:35",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2024/273.1": {
+   "file_number": "2024/0273.01",
+   "status": "הבקשה נסגרה",
+   "status_date": "01/06/2026",
+   "request_type": "חפירה ומילוי",
+   "request_description": "עבודות חפירה ומילוי, עבור בית ספר (ת.ב. 273/2024)",
+   "address": "הורקניה 19",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1766",
+    "2696",
+    "450ב"
+   ],
+   "parcels": [
+    "30171/226"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2024/273.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "עבודות חפירה ומילוי, עבור בית ספר (ת.ב. 273/2024)",
+   "committee_address": "הורקניה",
+   "lat": 31.75723984028751,
+   "lng": 35.20199582002772,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:06:38",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [],
+   "alerted_at": "suppressed:inactive"
+  },
+  "2024/30.1": {
+   "file_number": "2024/0030.01",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "05/05/2025",
+   "request_type": "חפירה ומילוי",
+   "request_description": "חפירה ודיפון בתחום המגרש לבינוי המבוקש בתיק 2024/193.00",
+   "address": "קורא הדורות 13",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "104273",
+    "1256684",
+    "1721",
+    "1721א"
+   ],
+   "parcels": [
+    "30117/38"
+   ],
+   "units": 14,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 14,
+   "floors": 5,
+   "matched_tabas": [
+    "104273",
+    "1256684"
+   ],
+   "taba": "1256684",
+   "norm": "2024/30.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "חפירה ודיפון בתחום המגרש לבינוי המבוקש בתיק 2024/193.00",
+   "committee_address": "קורא הדורות",
+   "lat": 31.752395562110745,
+   "lng": 35.22324192232843,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T14:06:41",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "+14 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2024/388.0": {
+   "file_number": "2024/0388.00",
+   "status": "הוכנה טיוטת היתר בניה",
+   "status_date": "23/04/2025",
+   "request_type": "עבודות בדרכים",
+   "request_description": "ביצוע עבודות להקמת גשר גישה לדיפו של הקו הכחול, לרבות עבודות ביסוס, ניצבים, קורות ומיסעת הגשר.",
+   "address": "דוד בנבנישתי 1",
+   "neighborhood_yk": "מנחת",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "12222",
+    "13138",
+    "178129",
+    "209593",
+    "3365",
+    "3420",
+    "520163",
+    "62",
+    "8585",
+    "9610",
+    "969162"
+   ],
+   "parcels": [
+    "30503/41",
+    "30503/43",
+    "30503/45",
+    "30503/73",
+    "30503/75",
+    "30503/77",
+    "30503/80"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "178129",
+    "209593",
+    "520163",
+    "969162"
+   ],
+   "taba": "969162",
+   "norm": "2024/388.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "ביצוע עבודות להקמת גשר גישה לדיפו של הקו הכחול, לרבות עבודות ביסוס, ניצבים, קורות ומיסעת הגשר.",
+   "committee_address": "דרך דוד בנבנישתי",
+   "lat": 31.748807112862465,
+   "lng": 35.193067370356275,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:06:44",
+   "category": "drachim",
+   "bucket": "acher",
+   "bucket_label": "אחר",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2024/573.0": {
+   "file_number": "2024/0573.00",
+   "status": " תחילת פרסום הבקשה להקלה",
+   "status_date": "08/07/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "מבנה חדש לבית ספר לחנ\"מ אפאק",
+   "address": "אל ג'מעיה",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1153048",
+    "14295"
+   ],
+   "parcels": [
+    "30283/40"
+   ],
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2024/573.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "מבנה חדש לבית ספר לחנ\"מ אפאק",
+   "committee_address": "אל ג'מעיה",
+   "lat": 31.74212493777647,
+   "lng": 35.20469783185407,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:06:47",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2025/14.0": {
+   "file_number": "2025/0014.00",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "04/05/2025",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "הריסת בניין קיים ובנית בניין חדש בן 4 קומות מעל 2 קומות מרתף ובו 16 יח\"ד",
+   "address": "א נהדה 26",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1179159"
+   ],
+   "parcels": [
+    "30283/6"
+   ],
+   "units": 16,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 16,
+   "floors": 4,
+   "matched_tabas": [
+    "1179159"
+   ],
+   "taba": "1179159",
+   "norm": "2025/14.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הריסת בניין קיים ובנית בניין חדש בן 4 קומות מעל 2 קומות מרתף ובו 16 יח\"ד",
+   "committee_address": "א נהדה",
+   "lat": 31.744541879671168,
+   "lng": 35.20315702986672,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:06:50",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+16 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2025/200.0": {
+   "file_number": "2025/0200.00",
+   "status": "תום תקופת פרסום",
+   "status_date": "26/08/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת חניון אוטובוסים, מסוף נוסעים, גג לשימוש הציבור הכולל מגרשי ספורט וגג ירוק",
+   "address": "דוד בנבנישתי",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [],
+   "parcels": [
+    "30200/40",
+    "30501/56",
+    "30502/2",
+    "30502/3",
+    "30502/39",
+    "30502/4",
+    "30502/51",
+    "30502/52",
+    "30502/53",
+    "30502/58",
+    "30502/59",
+    "30502/60"
+   ],
+   "floors": 1,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/200.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת חניון אוטובוסים, מסוף נוסעים, גג לשימוש הציבור הכולל מגרשי ספורט וגג ירוק",
+   "committee_address": "דרך דוד בנבנישתי",
+   "lat": 31.75146784569327,
+   "lng": 35.197024901936516,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:07:14",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2025/200.1": {
+   "file_number": "2025/0200.01",
+   "status": "נפתח תיק רישוי",
+   "status_date": "28/06/2026",
+   "request_type": "חפירה ומילוי",
+   "request_description": "היתר חפירה ודיפון",
+   "address": "דוד בנבנישתי 1",
+   "neighborhood_yk": "מנחת",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "14022",
+    "178129",
+    "1918",
+    "209593",
+    "731877",
+    "8585"
+   ],
+   "parcels": [
+    "30502/2",
+    "30502/3",
+    "30502/39",
+    "30502/4",
+    "30502/40",
+    "30502/51",
+    "30502/53",
+    "30502/58",
+    "30502/59",
+    "30502/60"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "178129",
+    "209593",
+    "731877"
+   ],
+   "taba": "731877",
+   "norm": "2025/200.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "היתר חפירה ודיפון",
+   "committee_address": "דרך דוד בנבנישתי",
+   "lat": 31.751107120335735,
+   "lng": 35.19724656948265,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:07:17",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2025/347.0": {
+   "file_number": "2025/0347.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "12/01/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+   "request_description": "הקמת בניין חדש בן 9 קומות, מעל 3 קומות חניה למטרת מסחר ומשרדים - תלפיות",
+   "address": "האומן 40",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "0920",
+    "0974",
+    "1718",
+    "2106",
+    "433474",
+    "4508"
+   ],
+   "parcels": [
+    "30131/35",
+    "30131/36"
+   ],
+   "floors": 9,
+   "matched_tabas": [
+    "433474"
+   ],
+   "taba": "433474",
+   "norm": "2025/347.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת בניין חדש בן 9 קומות, מעל 3 קומות חניה למטרת מסחר ומשרדים - תלפיות",
+   "committee_address": "האומן",
+   "lat": 31.74941183883186,
+   "lng": 35.206164869285814,
+   "minahak": "א.ת. תלפיות",
+   "fetched_at": "2026-10-12T14:07:20",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "alerted_at": null
+  },
+  "2025/422.0": {
+   "file_number": "2025/0422.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "27/04/2026",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "בנין חדש בן ארבע קומות לשימיש מגוריםת ס\"כ 4 יח\"ד.",
+   "address": "אל מוטלה 0",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30996/5015"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/422.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בנין חדש בן ארבע קומות לשימיש מגוריםת ס\"כ 4 יח\"ד.",
+   "committee_address": "אל מוטלה",
+   "lat": 31.733404051638274,
+   "lng": 35.20704039759016,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:23",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2025/429.0": {
+   "file_number": "2025/0429.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "17/02/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הריסת בניין קיים בן 2 קומות והקמת בניין מגורים חדש בן 7 קומות",
+   "address": "אלעזר בן יאיר  18",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "112557"
+   ],
+   "parcels": [
+    "30172/52",
+    "30172/91"
+   ],
+   "units": 19,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 19,
+   "floors": 9,
+   "matched_tabas": [
+    "112557"
+   ],
+   "taba": "112557",
+   "norm": "2025/429.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הריסת בניין קיים בן 2 קומות והקמת בניין מגורים חדש בן 7 קומות",
+   "committee_address": "אלעזר בן יאיר",
+   "lat": 31.754344898599268,
+   "lng": 35.20103542502256,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T14:07:26",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+19 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/100.0": {
+   "file_number": "2026/0100.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "05/07/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "4 בניינים חדשים +3 קומות שירות תת קרקעיות +180מ''''''''ר בניין ציבור-בסה''''''''כ 44 יחידות דיור",
+   "address": "ביר אבו ח'שבה",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1043702",
+    "14295"
+   ],
+   "parcels": [
+    "30282/38",
+    "30282/39",
+    "30282/40",
+    "30282/41",
+    "30282/42"
+   ],
+   "units": 44,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 44,
+   "floors": 6,
+   "matched_tabas": [
+    "1043702"
+   ],
+   "taba": "1043702",
+   "norm": "2026/100.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "4 בניינים חדשים +3 קומות שירות תת קרקעיות +180מ''''''''ר בניין ציבור-בסה''''''''כ 44 יחידות דיור",
+   "committee_address": "ביר אבו ח'שבה",
+   "lat": 31.73754355704153,
+   "lng": 35.203938021717406,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:29",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+44 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/277.0": {
+   "file_number": "2026/0277.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "31/08/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין מגורים חדש בן 6 קומות, סה''''''''כ 27 יח''''''''ד",
+   "address": "אל טנטור",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1227230"
+   ],
+   "parcels": [
+    "30996/5080",
+    "30996/5081"
+   ],
+   "units": 27,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 27,
+   "floors": 6,
+   "matched_tabas": [
+    "1227230"
+   ],
+   "taba": "1227230",
+   "norm": "2026/277.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין מגורים חדש בן 6 קומות, סה''''''''כ 27 יח''''''''ד",
+   "committee_address": "אל טנטור",
+   "lat": 31.735072487494598,
+   "lng": 35.205932441048226,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:32",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+27 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/277.1": {
+   "file_number": "2026/0277.01",
+   "status": "שולמה מקדמה",
+   "status_date": "11/10/2026",
+   "request_type": "חפירה ומילוי",
+   "request_description": "היתר חפירה עבור מבנה חדש למגורים, 27 יחידות דיור",
+   "address": "אל טנטור",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1227230"
+   ],
+   "parcels": [
+    "30996/5080",
+    "30996/5081"
+   ],
+   "floors": 6,
+   "matched_tabas": [
+    "1227230"
+   ],
+   "taba": "1227230",
+   "norm": "2026/277.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "היתר חפירה עבור מבנה חדש למגורים, 27 יחידות דיור",
+   "committee_address": "אל טנטור",
+   "lat": 31.735072487494598,
+   "lng": 35.205932441048226,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:35",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "+27 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/278.0": {
+   "file_number": "2026/0278.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "31/08/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין מגורים חדש בן 6 קומות, סה''''''''כ 12 יח''''''''ד",
+   "address": "אל טנטור",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1227230"
+   ],
+   "parcels": [
+    "30996/5083"
+   ],
+   "units": 12,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 12,
+   "floors": 6,
+   "matched_tabas": [
+    "1227230"
+   ],
+   "taba": "1227230",
+   "norm": "2026/278.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניין מגורים חדש בן 6 קומות, סה''''''''כ 12 יח''''''''ד",
+   "committee_address": "אל טנטור",
+   "lat": 31.735072487494598,
+   "lng": 35.205932441048226,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:38",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+12 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/278.1": {
+   "file_number": "2026/0278.01",
+   "status": "שולמה מקדמה",
+   "status_date": "11/10/2026",
+   "request_type": "חפירה ומילוי",
+   "request_description": "היתר חפירה עבור מבנה חדש למגורים, 12 יחידות דיור",
+   "address": "אל טנטור",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1227230"
+   ],
+   "parcels": [
+    "30996/5083"
+   ],
+   "floors": 6,
+   "matched_tabas": [
+    "1227230"
+   ],
+   "taba": "1227230",
+   "norm": "2026/278.1",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "היתר חפירה עבור מבנה חדש למגורים, 12 יחידות דיור",
+   "committee_address": "אל טנטור",
+   "lat": 31.735072487494598,
+   "lng": 35.205932441048226,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:41",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "+12 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/432.0": {
+   "file_number": "2026/0432.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "17/09/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+   "request_description": "הקמת בניין חדש בן 10 קומות למגורים מסחר ותעסוקה, סה\"כ 48 יח\"ד ",
+   "address": "אל מוטלה 1",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "5834ב",
+    "762039"
+   ],
+   "parcels": [
+    "30996/5122"
+   ],
+   "units": 48,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 48,
+   "floors": 10,
+   "matched_tabas": [
+    "762039"
+   ],
+   "taba": "762039",
+   "norm": "2026/432.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "הקמת בניין חדש בן 10 קומות למגורים מסחר ותעסוקה, סה\"כ 48 יח\"ד",
+   "committee_address": "אל מוטלה",
+   "lat": 31.73250222873679,
+   "lng": 35.20527816613487,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:44",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+48 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/441.0": {
+   "file_number": "2026/0441.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "04/10/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש",
+   "request_description": "בניני מיגורים בסה''''כ 53 יחידות דיור+(193 מטר) מבנה ציבור ",
+   "address": "אל ביידר 13",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "923755"
+   ],
+   "parcels": [
+    "30282/2"
+   ],
+   "units": 53,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 53,
+   "floors": 6,
+   "matched_tabas": [
+    "923755"
+   ],
+   "taba": "923755",
+   "norm": "2026/441.0",
+   "meeting_dates": [],
+   "origin": "street_harvest",
+   "committee_essence": "בניני מיגורים בסה''''כ 53 יחידות דיור+(193 מטר) מבנה ציבור",
+   "committee_address": "אל ביידר",
+   "lat": 31.740492585165214,
+   "lng": 35.20269274951103,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T14:07:47",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+53 יח\"ד"
+   ],
+   "alerted_at": null
   }
+ },
+ "out_of_area": {
+  "1997/643.2": "?",
+  "2002/615.0": "?",
+  "2006/611.2": "?",
+  "2012/623.0": "?",
+  "2018/588.0": "?",
+  "2019/120.1": "?",
+  "2019/120.2": "?",
+  "2019/174.0": "?",
+  "2019/308.0": "?",
+  "2023/131.0": "?",
+  "2026/199.0": "?",
+  "2026/199.1": "?",
+  "1961/174.0": "מרכז העיר",
+  "1961/430.0": "עמק המצלבה",
+  "1962/340.0": "עמק המצלבה",
+  "1966/983.0": "גונן ג",
+  "1987/25.1": "זכרון יוסף",
+  "1997/944.0": "גילה",
+  "1998/315.2": "תלפיות תעשיה",
+  "2006/708.0": "גבעת רם",
+  "2015/648.0": "נחלאות, שערי חסד",
+  "2020/730.0": "בית צפפה"
  }
 }
