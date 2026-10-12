@@ -1,0 +1,930 @@
+{
+ "generated_at": "2026-10-12T11:15:12",
+ "source": "YK API — היתרים מסדר היום של ועדת הרישוי שלא היו במאגר",
+ "count": 24,
+ "significant": 8,
+ "permits": {
+  "1957/354.7": {
+   "file_number": "1957/0354.07",
+   "status": "התקבל ערר",
+   "status_date": "04/10/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, התקנת מעלית חיצונית, בניית מרפסת, סגירת מרפסת",
+   "request_description": "בקשה לתוספת מעלית, תוספות מרפסות ,וסגירת מרפסת",
+   "address": "קרן היסוד 17",
+   "neighborhood_yk": "רחביה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1179",
+    "178129",
+    "2155"
+   ],
+   "parcels": [
+    "30028/5036"
+   ],
+   "floors": 5,
+   "matched_tabas": [
+    "178129"
+   ],
+   "taba": "178129",
+   "norm": "1957/354.7",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "מעלית , תוספות מרפסות, וסגירת",
+   "committee_address": "סמרשטיין דוד קרן היסוד17 , רחביה בקשה לתוספת",
+   "lat": 31.774185,
+   "lng": 35.219414,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:10:36",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1971/766.2": {
+   "file_number": "1971/0766.02",
+   "status": "הבקשה נסגרה",
+   "status_date": "03/08/2009",
+   "request_type": "תוספת בניה לדירות",
+   "request_description": "",
+   "address": "כט בנובמבר 25",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "",
+   "tochnit_all": [
+    "2878"
+   ],
+   "parcels": [
+    "30009/56"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1971/766.2",
+   "meeting_dates": [
+    "28/07/2026"
+   ],
+   "committee_essence": " :,חלקה56 . ",
+   "committee_address": ". - לא יצא היתר. מהות הבקשה : מצב קיים: בניין מגורים בן2 קומות .מעל קומת מרתף המיועדת למגורים בעל גג",
+   "lat": 31.765996370146645,
+   "lng": 35.2143777003552,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:10:46",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1971/766.3": {
+   "file_number": "1971/0766.03",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד, בניית מרפסת",
+   "request_description": "תוספת קומות, יחידות דיור ומרפסות",
+   "address": "כט בנובמבר 25",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2878"
+   ],
+   "parcels": [
+    "30009/56"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1971/766.3",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "תוספת קומות , יחידות דיור ומרפסות לאשר את הבקשה",
+   "committee_address": "יואן סולי נטף כט בנובמבר25 , קטמון הישנה",
+   "lat": 31.765996370146645,
+   "lng": 35.2143777003552,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:10:49",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "1981/501.5": {
+   "file_number": "1981/0501.05",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוכנית שינויים",
+   "request_description": "תכנית שינויים-התאמה למצב הקיים",
+   "address": "יוסי בן יועזר 0",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "30133ג",
+    "5/14/04"
+   ],
+   "parcels": [
+    "30133/110"
+   ],
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1981/501.5",
+   "meeting_dates": [
+    "28/07/2026"
+   ],
+   "committee_essence": "תכנית שינויים- התאמה למצב הקיים לזמן",
+   "committee_address": "בית כנסת אור לישרים יוסי בן יועזר0 , גוננים",
+   "lat": 31.754326892367136,
+   "lng": 35.20621773659407,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:10:52",
+   "category": "shinuyim",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1986/422.11": {
+   "file_number": "1986/0422.11",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, בנית מחסן/מחסנים",
+   "request_description": "תוספת ממ\"ד ומחסן ",
+   "address": "צבי גרץ 11",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2878",
+    "30012ג"
+   ],
+   "parcels": [
+    "30012/2"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1986/422.11",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "מערכת אוטומטית",
+   "committee_address": "מושבה גרמנית תוספת ממ\"ד ומחסן לאשר את הבקשה בכפוף לשינויים",
+   "lat": 31.767366489306678,
+   "lng": 35.2209226201187,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:10:55",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1986/648.7": {
+   "file_number": "1986/0648.07",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, סגירת מרפסת",
+   "request_description": "בקשה לתוספת בניה, מרפסת זיז + סגירת מרפסת",
+   "address": "יהודה הנשיא 11",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2696"
+   ],
+   "parcels": [
+    "30171/95"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1986/648.7",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "בקשה לתוספת בניה , מרפסת זיז + סגירת מרפסת",
+   "committee_address": "הוד גלעד יהודה הנשיא11 , גוננים",
+   "lat": 31.75635601363894,
+   "lng": 35.20111979138376,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:10:57",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1991/407.11": {
+   "file_number": "1991/0407.11",
+   "status": "נדונה ברשות הרישוי",
+   "status_date": "01/12/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת בניה להרחבת יח\"ד לפי תכנית 4382",
+   "address": "ש. טשרניחובסקי 60",
+   "neighborhood_yk": "גבעת הורדים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "30185ג",
+    "4382"
+   ],
+   "parcels": [
+    "30185/37"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1991/407.11",
+   "meeting_dates": [
+    "13/10/2026"
+   ],
+   "committee_essence": "תוספת בניה להרחבת יח\"ד לפי תכנית 4382",
+   "committee_address": "ש. טשרניחובסקי 60, גבעת הורדים",
+   "lat": 31.76366999382516,
+   "lng": 35.202512882734716,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:11:00",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1991/449.14": {
+   "file_number": "1991/0449.14",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "16/09/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, בניית מרפסת",
+   "request_description": "תוספת בניה בקומה ב' כולל ח. מחוזק",
+   "address": "אנטיגנוס 30",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2389",
+    "2734"
+   ],
+   "parcels": [
+    "30143/23"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1991/449.14",
+   "meeting_dates": [
+    "16/09/2026"
+   ],
+   "committee_essence": "תוספת בניה בקומה ב'כולל ח. מחוזק",
+   "committee_address": "אנטיגנוס 30, גוננים",
+   "lat": 31.755571447242243,
+   "lng": 35.205341717263025,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:11:03",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1991/449.15": {
+   "file_number": "1991/0449.15",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "16/09/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת",
+   "request_description": "תוספת בניה, חדר מחוזק ומרפסת ",
+   "address": "אנטיגנוס 30",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2389",
+    "2389א",
+    "2734"
+   ],
+   "parcels": [
+    "30143/23"
+   ],
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1991/449.15",
+   "meeting_dates": [
+    "16/09/2026"
+   ],
+   "committee_essence": "תוספת בניה, חדר מחוזק ומרפסת",
+   "committee_address": "אנטיגנוס 30, גוננים",
+   "lat": 31.755571447242243,
+   "lng": 35.205341717263025,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:11:06",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "1999/718.6": {
+   "file_number": "1999/0718.06",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, שינויים בקירות חזית במבנים קיימים, ממ\"ד",
+   "request_description": "תוספת קומת מרתף, הרחבת יח\"ד בקומת קרקע, ובניית ממ\"ד, מרפסת וחנייה",
+   "address": "רשב\"ג 8",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2407",
+    "3232"
+   ],
+   "parcels": [
+    "30173/60"
+   ],
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1999/718.6",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "תוספת קומת מרתף , הרחבת יח\" ד בקומת קרקע ,ובניית ממ\"ד ,",
+   "committee_address": "דורפמן יצחק שדיאור רשב\" ג8 , גוננים",
+   "lat": 31.758366997293756,
+   "lng": 35.21096759482592,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:11:09",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2001/556.2": {
+   "file_number": "2001/0556.02",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "07/10/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד",
+   "request_description": "תוספת בניה/הרחבה לבנין קיים+ממ\"ד",
+   "address": "רשב\"ג 19",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5738"
+   ],
+   "parcels": [
+    "30173/134",
+    "30173/48"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2001/556.2",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "תוספת בניה/ הרחבה לבנין קיים+ממ\"ד משלוח הודעות לפי",
+   "committee_address": "קרדשוב קרן רשב\" ג19 , גוננים",
+   "lat": 31.756446093172944,
+   "lng": 35.21049249075597,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:11:11",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2005/292.2": {
+   "file_number": "2005/0292.02",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת חדר מחוזק על הגג, ריצוף מרפסת גג",
+   "address": "יהודה 14",
+   "neighborhood_yk": "גאולים - בקעה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1718",
+    "3770",
+    "5022",
+    "5022א"
+   ],
+   "parcels": [
+    "30014/37"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2005/292.2",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "תוספת חדר מחוזק על הגג ,ריצוף מרפסת גג מובא להכרעת הועדה האם לזמן",
+   "committee_address": "אלחייני מיכאל יהודה14 , גאולים - בקעה",
+   "lat": 31.7571938139378,
+   "lng": 35.21999197686511,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T11:11:14",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2006/100.7": {
+   "file_number": "2006/0100.07",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "16/09/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת בניה מכח השלמת דירת גג 5%",
+   "address": "אשר 14",
+   "neighborhood_yk": "גאולים - בקעה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "11050א",
+    "3770"
+   ],
+   "parcels": [
+    "30014/175"
+   ],
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2006/100.7",
+   "meeting_dates": [
+    "16/09/2026"
+   ],
+   "committee_essence": "תוספת בניה מכח השלמת דירת גג 5%",
+   "committee_address": "אשר 14, גאולים - בקעה",
+   "lat": 31.758267377359406,
+   "lng": 35.216614540495804,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T11:11:17",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2007/428.3": {
+   "file_number": "2007/0428.03",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "02/09/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד, בניית מרפסת, בנית מחסן/מחסנים",
+   "request_description": "תוספות יח\"ד חדשות ע\"פ שיתוף הכוללות ממדים, מרפסות, מחסנים",
+   "address": "יהושע בן נון 31",
+   "neighborhood_yk": "המושבה היוונית",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "30004ג"
+   ],
+   "parcels": [
+    "30004/103"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2007/428.3",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "תוספות יח\" ד חדשות ע\" פ שיתוף הכוללות",
+   "committee_address": "בוכריס מאיר יהושע בן נון31 , המושבה היוונית",
+   "lat": 31.760332787297433,
+   "lng": 35.2144720890846,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:11:20",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2012/573.2": {
+   "file_number": "2012/0573.02",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "ממ\"ד, תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת חדר מחוזק",
+   "address": "הפורצים 16",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "30023ג"
+   ],
+   "parcels": [
+    "30023/134"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2012/573.2",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "מערכת אוטומטית",
+   "committee_address": "קטמון הישנה תוספת חדר מחוזק מובא להכרעת הועדה האם לזמן",
+   "lat": 31.766781210755585,
+   "lng": 35.210662066327714,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:11:23",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2015/753.5": {
+   "file_number": "2015/0753.05",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "16/09/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בנית מחסן/מחסנים, בניית מרפסת, ממ\"ד, עבודות הריסה",
+   "request_description": "תוספת בנייה/ הרחבה לבניין קיים",
+   "address": "אנטיגנוס 31",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2734"
+   ],
+   "parcels": [
+    "30143/34"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2015/753.5",
+   "meeting_dates": [
+    "16/09/2026"
+   ],
+   "committee_essence": "תוספת בנייה / הרחבה לבניין קיים",
+   "committee_address": "אנטיגנוס 31, גוננים",
+   "lat": 31.755580456813636,
+   "lng": 35.20616498762,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-12T11:11:26",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2015/858.3": {
+   "file_number": "2015/0858.03",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "10/05/2026",
+   "request_type": "שינויים ללא תוספת שטחים",
+   "request_description": "תכנית שינויים ללא תוספת שטח להיתר ציבורי מס 2015/0858",
+   "address": "החרושת 9",
+   "neighborhood_yk": "תלפיות תעשיה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "4539ב"
+   ],
+   "parcels": [
+    "30129/68"
+   ],
+   "floors": 3,
+   "matched_tabas": [
+    "4539ב"
+   ],
+   "taba": "4539ב",
+   "norm": "2015/858.3",
+   "meeting_dates": [
+    "28/07/2026"
+   ],
+   "committee_essence": "הכולל מגורים, תעסוקה ומסחר, בבקשה זו מוצע בניין בן3 קומות לשימוש ציבורי הכולל גני ילדים, משרדי רווחה וקהילה",
+   "committee_address": "הופק היתר בניה בתיק בשכונת תלפיות רחוב החרושת , במתחם בליליוס",
+   "lat": 31.747518,
+   "lng": 35.214513,
+   "minahak": "א.ת. תלפיות",
+   "fetched_at": "2026-10-12T11:11:29",
+   "category": "shinuyim",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2019/129.2": {
+   "file_number": "2019/0129.02",
+   "status": "הוכנה טיוטת היתר בניה",
+   "status_date": "06/10/2026",
+   "request_type": "חידוש היתר",
+   "request_description": "חידוש היתר 116459 לתיק 19/129.00",
+   "address": "דרך עזה 30",
+   "neighborhood_yk": "רחביה",
+   "maslul": "חידוש היתר ללא שינוי בעלי עניין",
+   "tochnit_all": [
+    "13179"
+   ],
+   "parcels": [
+    "30025/223"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2019/129.2",
+   "meeting_dates": [
+    "16/09/2026"
+   ],
+   "committee_essence": "חידוש היתר 116459 לתיק 19/129.00",
+   "committee_address": "דרך עזה 30, רחביה",
+   "lat": 31.772823322324683,
+   "lng": 35.21430453755421,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:11:31",
+   "category": "tachzukah",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2021/507.1": {
+   "file_number": "2021/0507.01",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוכנית שינויים לתמ\"א 38",
+   "request_description": "שינויים ללא תוספת שטחים.",
+   "address": "י. אלפסי 37",
+   "neighborhood_yk": "רחביה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "30025ג",
+    "9988"
+   ],
+   "parcels": [
+    "30025/100"
+   ],
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "tama_type": "תוכנית שינויים לתמ\"א 38",
+   "norm": "2021/507.1",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "שטחים. לאשר את הבקשה בכפוף לשינויים ובתנאים",
+   "committee_address": "א . שנהב הנדסה ושמאות בע\"מ י . אלפסי37 , רחביה שינויים ללא תוספת",
+   "lat": 31.772111,
+   "lng": 35.211032,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:11:34",
+   "category": "tama38",
+   "bucket": "tama38",
+   "bucket_label": "תמ\"א 38",
+   "significant": true,
+   "reasons": [
+    "תמ\"א 38"
+   ],
+   "alerted_at": null
+  },
+  "2022/299.1": {
+   "file_number": "2022/0299.01",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "תוכנית שינויים לתמ\"א 38",
+   "request_description": "תוספת מרפסת בקומת גג, מרפסות זיז, חלוקה מחדש למחסנים . שינויים פנימיים ושינוי חומר מעקות",
+   "address": "בנימין זאב באכר 10",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "2878",
+    "30010ג"
+   ],
+   "parcels": [
+    "30010/6"
+   ],
+   "floors": 6,
+   "matched_tabas": [],
+   "taba": null,
+   "tama_type": "תוכנית שינויים לתמ\"א 38",
+   "norm": "2022/299.1",
+   "meeting_dates": [
+    "02/09/2026",
+    "28/07/2026"
+   ],
+   "committee_essence": "מערכת אוטומטית",
+   "committee_address": "זאב בכר10 תמא38 בעמ בנימין זאב באכר10 , מושבה גרמנית",
+   "lat": 31.766258,
+   "lng": 35.218357,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:11:37",
+   "category": "tama38",
+   "bucket": "tama38",
+   "bucket_label": "תמ\"א 38",
+   "significant": true,
+   "reasons": [
+    "תמ\"א 38"
+   ],
+   "alerted_at": null
+  },
+  "2024/367.0": {
+   "file_number": "2024/0367.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "16/09/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הריסה ובניה מחדש בניין לשימור סה''''כ 7 יח''''ד",
+   "address": "רמבן 34",
+   "neighborhood_yk": "רחביה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "30038ג",
+    "9988"
+   ],
+   "parcels": [
+    "30038/5094"
+   ],
+   "units": 7,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 7,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2024/367.0",
+   "meeting_dates": [
+    "16/09/2026"
+   ],
+   "committee_essence": "הריסה ובניה מחדש בניין לשימור סה''''כ 7 יח''''ד",
+   "committee_address": "רמבן 34, רחביה",
+   "lat": 31.77452794037131,
+   "lng": 35.212351693433895,
+   "minahak": "גינות העיר",
+   "fetched_at": "2026-10-12T11:11:40",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+7 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2025/238.0": {
+   "file_number": "2025/0238.00",
+   "status": "נדונה בועדת ערר",
+   "status_date": "22/09/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש בן 5 קומות",
+   "address": "אל טנטור",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "5834ב"
+   ],
+   "parcels": [
+    "30996/5126"
+   ],
+   "units": 8,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 8,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/238.0",
+   "meeting_dates": [
+    "02/09/2026"
+   ],
+   "committee_essence": "בניין חדש בן 5 קומות",
+   "committee_address": "אל טנטור, בית צפפה ירושלים",
+   "lat": 31.733683646998788,
+   "lng": 35.205520879600556,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T11:11:46",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+8 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2025/385.0": {
+   "file_number": "2025/0385.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "28/07/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בניין חדש בן 3 קומות מעל קומת מרתף סה\"כ 6 יח\"ד ",
+   "address": "שרפת",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/385.0",
+   "meeting_dates": [
+    "02/09/2026"
+   ],
+   "committee_essence": "בניין חדש בן 3 קומות מעל קומת מרתף סה\"כ 6 יח\"ד",
+   "committee_address": "שרפת, בית צפפה גוש עתידי 30915",
+   "lat": 31.744343153320415,
+   "lng": 35.19526303525446,
+   "minahak": "בית צפאפא",
+   "fetched_at": "2026-10-12T11:12:09",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+6 יח\"ד"
+   ],
+   "alerted_at": null
+  },
+  "2026/88.0": {
+   "file_number": "2026/0088.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "09/03/2026",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+   "request_description": "בניית בניין חדש בן שש קומות ושתי קומות מרתף עבור 28 יח\"ד",
+   "address": "קורא הדורות 13",
+   "neighborhood_yk": "תלפיות",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "104273",
+    "1256684",
+    "1317205",
+    "1721",
+    "1721א"
+   ],
+   "parcels": [
+    "30117/38"
+   ],
+   "units": 28,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 28,
+   "floors": 6,
+   "matched_tabas": [
+    "104273",
+    "1256684",
+    "1317205"
+   ],
+   "taba": "1317205",
+   "norm": "2026/88.0",
+   "meeting_dates": [
+    "13/10/2026"
+   ],
+   "committee_essence": "בניית בניין חדש בן שש קומות ושתי קומות מרתף עבור 28 יח\"ד",
+   "committee_address": "קורא הדורות 13, תלפיות",
+   "lat": 31.752395562110745,
+   "lng": 35.22324192232843,
+   "minahak": "בקעה רבתי",
+   "fetched_at": "2026-10-12T11:12:12",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+28 יח\"ד"
+   ],
+   "alerted_at": null
+  }
+ }
+}

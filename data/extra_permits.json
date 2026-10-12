@@ -1,7 +1,7 @@
 {
  "source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
  "source_date": "2026-06-21",
- "count": 18,
+ "count": 23,
  "by_taba": {
   "897066": [
    {
@@ -262,6 +262,92 @@
     "all_matched_tabas": [
      "800771",
      "862904"
+    ]
+   }
+  ],
+  "178129": [
+   {
+    "file_number": "1957/0354.07",
+    "status": "התקבל ערר",
+    "status_date": "04/10/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, התקנת מעלית חיצונית, בניית מרפסת, סגירת מרפסת",
+    "request_description": "בקשה לתוספת מעלית, תוספות מרפסות ,וסגירת מרפסת",
+    "address": "קרן היסוד 17",
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "178129"
+    ]
+   }
+  ],
+  "4539ב": [
+   {
+    "file_number": "2015/0858.03",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "10/05/2026",
+    "request_type": "שינויים ללא תוספת שטחים",
+    "request_description": "תכנית שינויים ללא תוספת שטח להיתר ציבורי מס 2015/0858",
+    "address": "החרושת 9",
+    "floors": 3,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "4539ב"
+    ]
+   }
+  ],
+  "1317205": [
+   {
+    "file_number": "2026/0088.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "09/03/2026",
+    "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי",
+    "request_description": "בניית בניין חדש בן שש קומות ושתי קומות מרתף עבור 28 יח\"ד",
+    "address": "קורא הדורות 13",
+    "units": 28,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 28,
+    "floors": 6,
+    "source": "committee_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "104273",
+     "1256684",
+     "1317205"
+    ]
+   }
+  ],
+  "1211002": [
+   {
+    "file_number": "2009/0407.03",
+    "status": "חידוש טיפול בבקשה",
+    "status_date": "22/07/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים",
+    "request_description": "תוספות בניה והגבהת הבנין ברחוב עמק רפאים 46,ירושלים",
+    "address": "עמק רפאים 46",
+    "floors": 5,
+    "source": "plan_sweep_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1211002"
+    ]
+   }
+  ],
+  "906826": [
+   {
+    "file_number": "2020/0218.02",
+    "status": "תום תקופת פרסום",
+    "status_date": "18/08/2026",
+    "request_type": "רישוי בניה - שימוש חורג מתכנית, שינויים ללא תוספת שטחים",
+    "request_description": "שימוש חורג ממגורים לגן ילדים",
+    "address": "אדמונד סחייק 1",
+    "floors": 7,
+    "source": "plan_sweep_yk",
+    "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "906826"
     ]
    }
   ]

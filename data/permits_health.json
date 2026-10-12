@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T09:48:37",
+  "generated_at": "2026-10-12T12:45:54",
   "sources": [
     {
       "file": "all_permits.json",
@@ -25,7 +25,7 @@
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
       "refresh": "לפי צורך",
-      "records": 18,
+      "records": 23,
       "last_publish": "2026-06-29",
       "age_days": 105,
       "status": "info",
@@ -35,7 +35,7 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 30,
+      "records": 33,
       "last_publish": "2026-10-12",
       "age_days": 0,
       "status": "green",
@@ -115,22 +115,9 @@
     "age_days": 0,
     "status": "green",
     "checked": 2,
-    "matched": 0,
-    "missing": 2,
-    "missing_list": [
-      {
-        "permit_no": "2026/0088.00",
-        "neighborhood": "תלפיות",
-        "address": "קורא הדורות 13, תלפיות",
-        "essence": "בניית בניין חדש בן שש קומות ושתי קומות מרתף עבור 28 יח\"ד"
-      },
-      {
-        "permit_no": "1991/0407.11",
-        "neighborhood": "גבעת הורדים",
-        "address": "ש. טשרניחובסקי 60, גבעת הורדים",
-        "essence": "תוספת בניה להרחבת יח\"ד לפי תכנית 4382"
-      }
-    ]
+    "matched": 2,
+    "missing": 0,
+    "missing_list": []
   },
   "known_failures": [
     {
