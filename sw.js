@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v115-renewal-out-of-area';
+const CACHE_VERSION = 'v116-diyuriot';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —

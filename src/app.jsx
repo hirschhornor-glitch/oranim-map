@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-08-renewal-out-of-area';
+        const APP_VERSION = '2026-10-12-diyuriot';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1568,6 +1568,21 @@ function planPermitHafrashUse(taba) {
             const k = String((props && props.plan_name) || '').trim();
             const r = k && o[k];
             return (r && (r.max_units || r.min_only)) ? r : null;
+        }
+        // דיוריות — a plan clause letting a share of the יח״ד host a second household
+        // inside them ("תותר הכללת דיורית כהגדרתה בתכנית זו, בעד 20% ממספר יחידות הדיור
+        // בתכנית"). NOT another יח״ד: the area sits inside the host unit and the דיורית
+        // "אינה ניתנת לרישום ברשם המקרקעין בנפרד מיחידת הדיור". It is another household,
+        // so it is counted and shown on its own, never folded into the יח״ד totals.
+        function planDiyuriot(props) {
+            const o = window.__diyuriot || {};
+            const k = String((props && props.plan_name) || '').trim();
+            return (k && o[k] && o[k].pct) ? o[k] : null;
+        }
+        function planDiyuriotUnits(props) {
+            const d = planDiyuriot(props);
+            if (!d) return 0;
+            return Math.round(planBonusBase(props) * d.pct / 100);
         }
         // The baseline יח"ד count the bonus percentage applies to — same base the
         // permits-vs-plan report compares against (units_total, falling back to units_add).
@@ -6117,6 +6132,7 @@ function planPermitHafrashUse(taba) {
                     ['__permitHakalot', 'data/permit_hakalot.json'],
                     ['__permitPlanOverrides', 'data/permit_plan_overrides.json'],
                     ['__planRaisers', 'data/plan_raisers.json'],
+                    ['__diyuriot', 'data/diyuriot.json'],
                     ['__table5Units', 'data/table5_units.json'],
                     ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
                     ['__hafrashPermitUse', 'data/hafrash_permit_use.json'],
@@ -6664,6 +6680,10 @@ function planPermitHafrashUse(taba) {
                             else if (key === '__unitBonus') { window.__unitBonus = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__permitHakalot') { window.__permitHakalot = (data && data.by_permit) ? data.by_permit : {}; }
                             else if (key === '__planRaisers') { window.__planRaisers = (data && data.by_taba) ? data.by_taba : {}; }
+                            else if (key === '__diyuriot') {
+                                window.__diyuriot = (data && data.by_plan) ? data.by_plan : {};
+                                window.__diyuriotDefinedOnly = (data && data.defined_without_quota) || [];
+                            }
                             else if (key === '__permitPlanOverrides') {
                                 // the file is written the human way ("2024/0568"); every lookup
                                 // here speaks permitBaseKey ("2024/568")
@@ -39487,6 +39507,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const overridden = inclusion.reduce((c, v, i) => c + (v !== defaultsHere[i] ? 1 : 0), 0);
                             const permitUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? (Number(x.units) || 0) : 0), 0);
                             const bonus = planUnitBonus(p);
+                            const diyur = planDiyuriot(p);
+                            const diyurUnits = diyur ? planDiyuriotUnits(p) : 0;
                             const cap = planUnitCap(p);
                             const capUnits = (cap && cap.max_units) ? Math.max(0, (parseFloat(cap.max_units) || 0) - base) : 0;
                             const bonusUnits = (bonus ? planBonusUnits(p) : 0) + capUnits;
@@ -39527,7 +39549,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const openUnits = openCeiling
                                 ? Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits) : 0;
                             const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits - openUnits);
-                            if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits) return;
+                            if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits && !diyurUnits) return;
                             rows.push({
                                 taba, plan_name: p.plan_name || ('101-' + taba),
                                 name: p.plan_summary || p.plan_name_he || '',
@@ -39538,6 +39560,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 status: p.status_mavat || '', base, permitUnits, realized,
                                 bonusUnits, bonusPct: bonus ? bonus.pct : 0, bonusNote: (bonus && bonus.note) || (cap && cap.note) || '',
                                 bonusCap: (cap && cap.max_units) || 0, openUnits, condUnits,
+                                diyurUnits, diyurPct: diyur ? diyur.pct : 0, diyurNote: diyur ? diyur.note : '',
                                 raiseUnits, tamaUnits, overridden, raiserName: raiser ? (raiser.plan_name || '') : '',
                                 raiserTitle: raiser ? (raiser.plan_summary || raiser.plan_name_he || '') : '',
                                 hakExtra, hakPct: hakRecs.map(r => r.pct).filter(Boolean)[0] || 0,
@@ -39561,6 +39584,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             if (F.src === 'conditional' && !r.condUnits) return false;
                             if (F.src === 'raise' && !r.raiseUnits) return false;
                             if (F.src === 'tama' && !r.tamaUnits) return false;
+                            if (F.src === 'diyuriot' && !r.diyurUnits) return false;
                             if (F.src === 'published' && !(r.pubOnly && r.unexplained)) return false;
                             if (F.src === 'unexplained' && !r.unexplained) return false;
                             if (F.src === 'nosource' && !(r.unexplained && !r.pubOnly)) return false;
@@ -39570,7 +39594,15 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
                         const T = { base: sum(view, 'base'), bonus: sum(view, 'bonusUnits'), hak: sum(view, 'hakExtra'),
                             cond: sum(view, 'condUnits'), raise: sum(view, 'raiseUnits'), tama: sum(view, 'tamaUnits'),
-            open: sum(view, 'openUnits'),
+            open: sum(view, 'openUnits'), diyur: sum(view, 'diyurUnits'),
+            // Denominator for the headline percentage: only plans that actually carry
+            // something beyond their own יח״ד. Rows that joined the report purely for a
+            // דיוריות allowance add nothing to the numerator, so counting their יח״ד
+            // here would dilute the figure (26,484 instead of 19,698 → 8.0% instead of
+            // 10.7%) without anything about the plans having changed.
+            beyondBase: view.reduce((a, r) => a + ((Math.max(r.realized || 0,
+                (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
+                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)) > 0) ? (r.base || 0) : 0), 0),
             // The single figure: יח"ד that exist beyond what the תב"עות count. Per plan the
             // HIGHER of the two sides, never their sum — the rights a plan grants above its
             // own יח"ד total and the addition its permits already show are the same units
@@ -39632,7 +39664,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         );
                         const COLS = ['תב"ע', 'שם התכנית', 'מינה"ק', 'סטטוס', 'שנה', 'יח"ד בתב"ע',
                             'יח"ד מותנות', 'תוספת מותרת (טבלה 5)', 'הקלה שאושרה בהיתר', 'תכנית מאוחרת מגדילה',
-                            'מכוח תמ"א 38', 'יח"ד בהיתרים',
+                            'מכוח תמ"א 38', 'דיוריות', 'יח"ד בהיתרים',
                             'תוספת בפועל', 'ללא מקור מתועד', 'המקור'];
                         // every channel that covers this row, and what is left over. A row is
                         // rarely one story: משתלת חוות הנוער is 45 from a later plan and 1 beyond it.
@@ -39640,6 +39672,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const parts = [];
                             if (r.raiseUnits) parts.push('תכנית מאוחרת מגדילה · ' + r.raiserName);
                             if (r.tamaUnits) parts.push('מכוח תמ"א 38 — היתר חיזוק, לא מטבלה 5');
+                            if (r.diyurUnits) parts.push('דיוריות · עד ' + r.diyurPct + '% מהיח"ד (משקי בית, לא יח"ד)');
                             if (r.hakExtra) parts.push('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''));
                             if (r.condUnits) parts.push('יח"ד מותנות');
                             if (r.bonusUnits) parts.push(r.bonusPct ? ('הערת טבלה 5 · עד ' + r.bonusPct + '%')
@@ -39655,6 +39688,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const lines = [COLS.map(csvEscape).join(',')].concat(view.map(r => [
                                 r.plan_name, r.name, r.minahak, r.status, r.year || '', r.base, r.condUnits || '', r.bonusUnits || '', r.hakExtra || '',
                                 r.raiseUnits ? (r.raiseUnits + ' (' + r.raiserName + ')') : '', r.tamaUnits || '',
+                                r.diyurUnits ? (r.diyurUnits + ' (' + r.diyurPct + '%)') : '',
                                 r.permitUnits || '', r.realized || '', r.unexplained || '',
                                 srcLabel(r) + (r.hakTiks ? ' (' + r.hakTiks + ')' : '')].map(csvEscape).join(',')));
                             const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -39671,6 +39705,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 r.bonusUnits ? nf(r.bonusUnits) : '—', r.hakExtra ? nf(r.hakExtra) : '—',
                                 r.raiseUnits ? (nf(r.raiseUnits) + ' ' + r.raiserName) : '—',
                                 r.tamaUnits ? nf(r.tamaUnits) : '—',
+                                r.diyurUnits ? (nf(r.diyurUnits) + ' (' + r.diyurPct + '%)') : '—',
                                 r.permitUnits ? nf(r.permitUnits) : '—', r.realized ? nf(r.realized) : '—',
                                 r.unexplained ? nf(r.unexplained) : '—', srcLabel(r)]
                                 .map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>').join('');
@@ -39682,11 +39717,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 + '.sum{margin:10px 0;font-size:13px}@media print{button{display:none}}</style></head><body>'
                                 + '<h1>תוספות יח"ד מעבר לתכנית המקורית</h1>'
                                 + '<div class="sum">' + view.length + ' תכניות · סה"כ מעבר לתב"ע: ' + nf(T.beyond)
-                                + (T.base > 0 ? ' (+' + (T.beyond / T.base * 100).toFixed(1) + '%)' : '')
+                                + (T.beyondBase > 0 ? ' (+' + (T.beyond / T.beyondBase * 100).toFixed(1) + '%)' : '')
                                 + ' · תוספת מותרת בטבלה 5: ' + nf(T.bonus)
                                 + ' · יח"ד מותנות: ' + nf(T.cond)
                                 + ' · תכנית מאוחרת מגדילה: ' + nf(T.raise)
                                 + ' · מכוח תמ"א 38: ' + nf(T.tama)
+                                + ' · דיוריות: ' + nf(T.diyur)
                                 + ' · הקלות שאושרו בהיתר: ' + nf(T.hak) + ' · תוספת בפועל בהיתרים: ' + nf(T.realized)
                                 + ' · ללא מקור מתועד: ' + nf(T.unexplained) + '</div>'
                                 + '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
@@ -39714,6 +39750,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         <b style={{ color: '#b39ddb' }}>יח"ד מותנות</b> — יחידות שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) ויושבות מחוץ ל-יח"ד שבתב"ע;{' '}
                                         <b style={{ color: '#80cbc4' }}>תכנית מאוחרת שמגדילה</b> — הגדלת זכויות שאושרה מעל התכנית ומרימה את התקרה בפועל;{' '}
                                         <b style={{ color: '#c5a3ff' }}>מכוח תמ"א 38</b> — היתר חיזוק שמקבל את היח"ד שלו מהתמ"א ולא מטבלה 5 של התכנית;{' '}
+                                        <b style={{ color: '#7ec8e3' }}>דיוריות</b> — סעיף תב"עי שמתיר לחלק מהיח"ד לארח משק בית נפרד בתוכן; אלו משקי בית נוספים ולא יח"ד נוספות, ולכן הן מחוץ ל"סה"כ מעבר לתב"ע";{' '}
                                         <b style={{ color: '#ff9aa8' }}>תוספת בפועל</b> — ההפרש בין היח"ד בהיתרים לבין התב"ע, גם כשאין לו מקור מתועד אצלנו.
                                         התוספת בפועל אינה סכום של השניים הראשונים אלא מה שההיתרים מראים.
                                     </p>
@@ -39728,6 +39765,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 <option value="conditional">יח"ד מותנות</option>
                                                 <option value="raise">תכנית מאוחרת שמגדילה</option>
                                                 <option value="tama">מכוח תמ"א 38</option>
+                                                <option value="diyuriot">דיוריות (משק בית נוסף)</option>
                                                 <option value="realized">תוספת בפועל בהיתרים</option>
                                                 <option value="published">הקלה פורסמה — בלי מספר</option>
                                                 <option value="unexplained">תוספת ללא מקור מתועד</option>
@@ -39764,12 +39802,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
 
                                     <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 12 }}>
                                         {tile('סה"כ מעבר לתב"ע', nf(T.beyond),
-                                            (T.base > 0 ? '+' + (T.beyond / T.base * 100).toFixed(1) + '% מעל היח"ד בתב"ע' : ''),
+                                            (T.beyondBase > 0 ? '+' + (T.beyond / T.beyondBase * 100).toFixed(1) + '% מעל היח"ד בתב"ע' : ''),
                                             '#ffd479',
                                             'לכל תכנית נלקח הגבוה מבין הזכויות שמעבר ל-יח״ד שבתב״ע (מותנות, טבלה 5, '
                                             + 'תכנית מאוחרת מגדילה, תמ״א 38, רצפה, הקלות) לבין התוספת שההיתרים כבר מראים — '
                                             + 'לא סכום שלהם, כי לרוב אלו אותן יח״ד משני צדדים. '
-                                            + nf(T.beyond) + ' מתוך ' + nf(T.base) + ' יח״ד בתב״ע.')}
+                                            + nf(T.beyond) + ' מתוך ' + nf(T.beyondBase) + ' יח״ד בתב״ע בתכניות שיש להן תוספת.')}
                                         {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5')}
                                         {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
                                         {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
@@ -39780,6 +39818,10 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             (window.__planRaisers && Object.keys(window.__planRaisers).length) || overlapReady
                                                 ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4')}
                                         {tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff')}
+                                        {tile('דיוריות', nf(T.diyur), view.filter(r => r.diyurUnits).length + ' תכניות · משקי בית, לא יח"ד', '#7ec8e3',
+                                            'דיורית = חדר או מערכת חדרים בתוך יח״ד קיימת שיכולים לשמש משק בית נפרד. '
+                                            + 'שטחה נכלל בשטח יחידת הדיור והיא אינה ניתנת לרישום בנפרד — ולכן היא אינה יח״ד '
+                                            + 'ואינה נספרת ב"סה״כ מעבר לתב״ע", אבל היא כן משק בית נוסף לצורכי אוכלוסייה, חינוך וחניה.')}
                                         {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
                                         {tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c')}
                                         {tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')}
@@ -39857,6 +39899,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{ ...TD, color: r.tamaUnits ? '#c5a3ff' : '#55617a' }}
                                                         title="יח״ד שההיתר מקבל מכוח תמ״א 38 (חיזוק/הריסה ובנייה), לא מטבלה 5 של התכנית">
                                                         {r.tamaUnits ? nf(r.tamaUnits) : '—'}</td>
+                                                    <td style={{ ...TD, color: r.diyurUnits ? '#7ec8e3' : '#55617a' }}
+                                                        title={r.diyurNote || 'משק בית נוסף בתוך יח״ד קיימת — לא יח״ד נוספת'}>
+                                                        {r.diyurUnits ? nf(r.diyurUnits) + ' (' + r.diyurPct + '%)' : '—'}</td>
                                                     <td style={TD}>{r.permitUnits ? nf(r.permitUnits) : '—'}</td>
                                                     <td style={{ ...TD, fontWeight: 700, color: r.realized ? '#7fc98a' : '#55617a' }}>
                                                         {r.realized ? nf(r.realized) : '—'}</td>
