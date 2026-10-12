@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-13-conservation-docs';
+        const APP_VERSION = '2026-10-13-appendices-report';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4051,6 +4051,9 @@ function planPermitHafrashUse(taba) {
             const [fundReport, setFundReport] = useState(false);
             const [fundReportFilter, setFundReportFilter] = useState({ sub: 'all', minahak: 'all', status: 'all', q: '' });
             const [socialReport, setSocialReport] = useState(false);
+            // דוח נספחי תכניות: נספחים לפי שכבת מינהל התכנון, תיקי תיעוד וחוות דעת כלכליות — בגבולות הרובע
+            const [appendicesReport, setAppendicesReport] = useState(false);
+            const [appendicesFilter, setAppendicesFilter] = useState({ minahak: 'all', tab: 'summary' });
             const [fundExpanded, setFundExpanded] = useState({}); // sub -> show non-fund tower list
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
@@ -4532,6 +4535,7 @@ function planPermitHafrashUse(taba) {
                         [fundReport, () => setFundReport(false)],
                         [extraUnitsReport, () => setExtraUnitsReport(false)],
                         [socialReport, () => setSocialReport(false)],
+                        [appendicesReport, () => setAppendicesReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
                         [eduRenewalReport, () => setEduRenewalReport(false)],
                         [developersReport, () => { setDevelopersReport(false); setDevRepExpanded(null); }],
@@ -6117,6 +6121,7 @@ function planPermitHafrashUse(taba) {
                     ['__socialAppendices', 'data/social_appendices.json'],
                     ['__planDocuments', 'data/plan_documents.json'],
                     ['__conservationDocs', 'data/conservation_docs.json'],
+                    ['__economicReports', 'data/economic_reports.json'],
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                     ['__excavationPermits', 'data/excavation_permits.json'],
                     ['__activeSites', 'data/active_sites.json'],
@@ -6641,6 +6646,7 @@ function planPermitHafrashUse(taba) {
                             else if (key === '__socialAppendices') { window.__socialAppendices = data || { plans: {} }; }
                             else if (key === '__planDocuments') { window.__planDocuments = data || { plans: {} }; }
                             else if (key === '__conservationDocs') { window.__conservationDocs = data || { plans: {} }; }
+                            else if (key === '__economicReports') { window.__economicReports = data || { plans: {} }; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__activeSites') { window.__activeSites = data || { sites: [] }; }
@@ -7009,6 +7015,7 @@ function planPermitHafrashUse(taba) {
                 conditionsReport, conditionsDomainFilter, conditionsActorFilter,
                 shavazKayamReport, shavazReportFilter,
                 overlapReport, objectionsReport, permitObjectionsReport, treePermitsReport,
+                appendicesReport, appendicesFilter,
                 activeSitesReport, activeSitesFilter,
                 meetingsReport, specialHousingReport, masterPlanReport,
                 developersReport, devRepMinahak, devRepQ, devRepSort, devRepTama38, devRepType, devRepMuniCo,
@@ -17058,6 +17065,9 @@ function planPermitHafrashUse(taba) {
                         apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', status: p.status || 'all', q: p.q || '' }) },
                     { key: 'social', isOpen: () => socialReport, open: () => setSocialReport(true),
  },
+                    { key: 'appendices', isOpen: () => appendicesReport, open: () => setAppendicesReport(true),
+                        ser: () => ({ minahak: appendicesFilter.minahak, tab: appendicesFilter.tab }),
+                        apply: p => setAppendicesFilter({ minahak: p.minahak || 'all', tab: p.tab || 'summary' }) },
                     { key: 'overlap', isOpen: () => overlapReport, open: () => setOverlapReport(true) },
                     { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true),
                         ser: () => ({ rec: objRecencyDays || '' }),
@@ -31283,6 +31293,7 @@ function planPermitHafrashUse(taba) {
                                 { icon:'🆕', title:'תכניות חדשות', desc:'תכניות שזוהו ב-30 הימים האחרונים (יח"ד, שב"צ/שצ"פ יוצא)', onClick:() => go(() => setNewPlansReport(true)) },
                                 { icon:'📅', title:'ישיבות קרובות', desc:'תכניות בדיון בוועדות הקרובות', onClick:() => go(() => setMeetingsReport(true)) },
                                 { icon:'🔁', title:'תב"עות כפולות', desc:'תכניות חופפות באותו מרחב', onClick:() => go(() => setOverlapReport(true)) },
+                                { icon:'📎', title:'נספחי תכניות ודוחות כלכליים', desc:'אילו נספחים יש לכל תכנית (עצים, חברתי, תיעוד, כלכלי, ניקוז…), עיקרי תיקי התיעוד, ומכפיל נדרש מול מאושר מחוות הדעת הכלכליות — לפי מינה"ק', onClick:() => go(() => setAppendicesReport(true)) },
                             ]},
                             { key:'population', title:'👥 אוכלוסייה ובנייה', color:'#00897b', bg:'rgba(0,137,123,0.06)', items:[
                                 { icon:'👥', title:'אוכלוסייה קיימת', desc:'פרופיל דמוגרפי לפי מינהל/תת-שכונה: גיל, אורח חיים, דיור (מפקד 2022)', onClick:() => go(() => openPopulationDashboard()) },
@@ -37028,6 +37039,189 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             w.document.close();
                                         }} style={{background:'#4a248c',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',cursor:'pointer',fontSize:13,fontWeight:600}}>🖨 הדפסה / ייצוא</button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        );
+                    })()}
+
+                    {appendicesReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const PD = window.__planDocuments || { plans: {}, categories: {} };
+                        const CD = (window.__conservationDocs || {}).plans || {};
+                        const ED = (window.__economicReports || {}).plans || {};
+                        const CAT_LABEL = PD.categories || {};
+                        const CATS = ['conservation', 'trees', 'social', 'program', 'economic', 'shading', 'environment', 'water', 'infrastructure', 'binui', 'general'];
+                        const NO_MH = 'ללא מינה"ק';
+                        // One row per plan in the quarter (plans.geojson), first feature wins.
+                        const planProps = {};
+                        for (const f of gd.plans.features) {
+                            const p = f.properties || {};
+                            const pn = (p.plan_name || '').trim();
+                            if (pn && !planProps[pn]) planProps[pn] = p;
+                        }
+                        const base = (pn) => {
+                            const p = planProps[pn] || {};
+                            return { plan_name: pn, title: p.plan_summary || p.plan_name_he || '', minahak: (p.minahak || '').trim() || NO_MH,
+                                     status: normalizeStatus((p.status_mavat || '').trim()) || (p.status_mavat || '') };
+                        };
+                        const docRows = Object.keys(PD.plans || {}).filter(pn => planProps[pn])
+                            .map(pn => Object.assign(base(pn), { cats: (PD.plans[pn].cats || []), docs: PD.plans[pn].docs || [] }));
+                        const allMinahaks = [...new Set(docRows.map(r => r.minahak))].sort((a, b) => a === NO_MH ? 1 : b === NO_MH ? -1 : a.localeCompare(b, 'he'));
+                        const F = appendicesFilter;
+                        const inMh = r => F.minahak === 'all' || r.minahak === F.minahak;
+                        const setF = (patch) => setAppendicesFilter(Object.assign({}, F, patch));
+                        const docsF = docRows.filter(inMh);
+
+                        // ── summary: per minahak × category ──
+                        const sumRows = (F.minahak === 'all' ? allMinahaks : [F.minahak]).map(mh => {
+                            const rs = docRows.filter(r => r.minahak === mh);
+                            const o = { minahak: mh, plans: rs.length };
+                            CATS.forEach(c => { o[c] = rs.filter(r => r.cats.includes(c)).length; });
+                            return o;
+                        });
+                        const sumTotal = { minahak: 'סה"כ', plans: docsF.length };
+                        CATS.forEach(c => { sumTotal[c] = docsF.filter(r => r.cats.includes(c)).length; });
+
+                        // ── conservation ──
+                        const consRows = Object.keys(CD).filter(pn => planProps[pn]).map(pn => Object.assign(base(pn), CD[pn])).filter(inMh)
+                            .sort((a, b) => a.minahak.localeCompare(b.minahak, 'he'));
+
+                        // ── economic ──
+                        const ecoRows = Object.keys(ED).filter(pn => planProps[pn]).map(pn => Object.assign(base(pn), ED[pn])).filter(inMh)
+                            .sort((a, b) => (a.gap_pct == null ? 99 : a.gap_pct) - (b.gap_pct == null ? 99 : b.gap_pct));
+                        const ecoListed = docsF.filter(r => r.cats.includes('economic')).length;
+                        const med = (arr) => { const a = arr.filter(v => v != null && isFinite(v)).sort((x, y) => x - y); if (!a.length) return null; const m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+                        const medProfit = med(ecoRows.map(r => r.profit_pct_cost));
+                        const belowReq = ecoRows.filter(r => r.gap_pct != null && r.gap_pct < -1).length;
+                        const price = r => r.sale_price_sqm && r.sale_price_sqm.value ? r.sale_price_sqm.value : null;
+
+                        // ── tab definitions: header + row arrays (shared by screen, print and CSV) ──
+                        const TABS = {
+                            summary: { title: 'סיכום נספחים לפי מינה"ק',
+                                head: ['מינה"ק', 'תכניות עם נספחים'].concat(CATS.map(c => CAT_LABEL[c] || c)),
+                                rows: sumRows.concat(sumRows.length > 1 ? [sumTotal] : []).map(r => [r.minahak, r.plans].concat(CATS.map(c => r[c] || 0))) },
+                            plans: { title: 'נספחים לפי תכנית',
+                                head: ['תב"ע', 'שם', 'מינה"ק', 'סטטוס', 'נספחים'],
+                                rows: docsF.slice().sort((a, b) => b.cats.length - a.cats.length).map(r => [r.plan_name, r.title, r.minahak, r.status,
+                                    r.cats.slice().sort((a, b) => CATS.indexOf(a) - CATS.indexOf(b)).map(c => CAT_LABEL[c] || c).join(' · ')]) },
+                            conservation: { title: 'תיקי תיעוד ושימור',
+                                head: ['תב"ע', 'מינה"ק', 'מבנה', 'תקופה', 'כרטסת שימור', 'המלצה', 'עורך', 'תאריך'],
+                                rows: consRows.map(r => [r.plan_name, r.minahak, r.building || '', r.built || '', r.listed || '',
+                                    r.quality === 'no_file' ? (r.summary || 'אין תיק תיעוד') : (r.recommendation || ''), r.documenter || '', r.doc_date || '']) },
+                            economic: { title: 'חוות דעת כלכליות — מכפיל נדרש מול מאושר',
+                                head: ['תב"ע', 'שם', 'מינה"ק', 'יח"ד קיימות→מאושרות', 'מכפיל נדרש (דוח)', 'מכפיל מאושר', 'פער %', 'רווח מהעלויות %', 'סף בדוח', 'מחיר למ"ר', 'תוספת לדייר מ"ר', 'שמאי', 'תאריך דוח'],
+                                rows: ecoRows.map(r => [r.plan_name, r.title, r.minahak,
+                                    (r.approved_existing && r.approved_total) ? r.approved_existing + '→' + r.approved_total : '',
+                                    r.unit_ratio == null ? '' : r.unit_ratio, r.approved_ratio == null ? '' : r.approved_ratio,
+                                    r.gap_pct == null ? '' : r.gap_pct, r.profit_pct_cost == null ? '' : r.profit_pct_cost,
+                                    r.profit_threshold || '', price(r) || '', r.tenant_added_sqm == null ? '' : r.tenant_added_sqm,
+                                    r.appraiser || '', r.date || '']) },
+                        };
+                        const tab = TABS[F.tab] ? F.tab : 'summary';
+                        const T = TABS[tab];
+                        const mhLabel = F.minahak === 'all' ? 'כל הרובע' : F.minahak;
+                        const exportTab = () => {
+                            const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const csv = [T.head].concat(T.rows).map(r => r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
+                            const w = window.open('', '_blank');
+                            w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(T.title) + '</title>');
+                            w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:11px}th,td{padding:4px 5px;text-align:right;border:1px solid #ccc;vertical-align:top}th{background:#f0f0f0}@media print{.no-print{display:none}}</style></head><body>');
+                            w.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">🖨 הדפסה / PDF</button>'
+                                + '<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">📊 שמירה כאקסל (CSV)</button></div>');
+                            w.document.write('<h2>' + esc(T.title) + '</h2><p>' + esc(mhLabel) + ' · ' + T.rows.length + ' שורות</p>');
+                            w.document.write('<table><thead><tr>' + T.head.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>');
+                            T.rows.forEach(r => w.document.write('<tr>' + r.map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>'));
+                            w.document.write('</tbody></table><p style="color:#999;font-size:10px">מקור: שכבת מסמכי התכניות של מינהל התכנון (MipuiMN); תיקי תיעוד וחוות דעת כלכליות שהורדו ממבא"ת ונקראו ידנית/ויזואלית.</p>');
+                            w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csv) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=' + JSON.stringify((T.title + ' - ' + mhLabel).replace(/[\\/:*?"<>|]/g, '') + '.csv') + ';a.click();});<\/script>');
+                            w.document.write('</body></html>');
+                            w.document.close();
+                        };
+                        const goPlan = (pn) => { setAppendicesReport(false); setTimeout(() => zoomToPlanByName(pn), 100); };
+                        const th = (h, i, n) => <th key={i} style={{textAlign: i < n ? 'right' : 'center', padding: '6px 4px', color: '#fff', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#1a1a2e'}}>{h}</th>;
+                        const gapColor = (g) => g == null ? '#888' : g < -10 ? '#ff6b6b' : g < -1 ? '#ffb74d' : g > 10 ? '#64b5f6' : '#a5d6a7';
+                        const tabBtn = (k, label) => (
+                            <button key={k} onClick={() => setF({ tab: k })}
+                                style={{background: tab === k ? '#3949ab' : 'transparent', color: tab === k ? '#fff' : '#9fa8da', border: '1px solid #3949ab', borderRadius: 6, padding: '5px 12px', cursor: 'pointer', fontSize: 12.5, fontWeight: 600}}>{label}</button>
+                        );
+                        return (
+                        <div className="units-overlay" onClick={() => setAppendicesReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(1240px, 97vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column'}}>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setAppendicesReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color: '#fff', fontSize: 18, marginBottom: 4}}>📎 נספחי תכניות ודוחות כלכליים</h2>
+                                    <p style={{color: '#aaa', fontSize: 12, marginBottom: 10}}>{docsF.length} תכניות עם נספחים ב{mhLabel} · {consRows.length} תיקי תיעוד · {ecoRows.length} חוות דעת כלכליות שחולצו (מתוך {ecoListed} שרשומות בשכבה)</p>
+                                    <div style={{display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12}}>
+                                        <select value={F.minahak} onChange={e => setF({ minahak: e.target.value })}
+                                            style={{background: '#1a1a2e', color: '#fff', border: '1px solid #3949ab', borderRadius: 6, padding: '5px 8px', fontSize: 12.5}}>
+                                            <option value="all">כל הרובע</option>
+                                            {allMinahaks.map(m => <option key={m} value={m}>{m}</option>)}
+                                        </select>
+                                        {tabBtn('summary', 'סיכום')}{tabBtn('plans', 'לפי תכנית')}{tabBtn('conservation', 'תיקי תיעוד')}{tabBtn('economic', 'חוות דעת כלכליות')}
+                                        <button onClick={exportTab} style={{marginInlineStart: 'auto', background: '#4a248c', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 12.5, fontWeight: 600}}>🖨 הדפסה / ייצוא</button>
+                                    </div>
+                                    {tab === 'economic' && (
+                                        <p style={{color: '#bbb', fontSize: 11.5, marginBottom: 8, lineHeight: 1.6}}>
+                                            פער = מכפיל מאושר ÷ מכפיל שהדוח קבע כנדרש − 1. <span style={{color: '#ff6b6b'}}>שלילי</span> = התכנית אושרה במכפיל נמוך מהנדרש לפי הדוח שלה (מועמדת לתקיעה כלכלית).
+                                            {ecoRows.length > 0 && <> · חציון רווח: <b>{medProfit == null ? '-' : medProfit.toFixed(1) + '%'}</b> · מתחת לנדרש: <b>{belowReq}</b> מתוך {ecoRows.length}</>}
+                                            {ecoRows.some(r => r.approved_source === 'gs') && <><br /><span style={{color: '#ffb74d'}}>* מכפיל מאושר מהגיליון (מבא"ת לא החזיר כמויות) — עשוי לכלול יח"ד קרן תחזוקה או רכיבים שאינם בדוח.</span></>}
+                                        </p>
+                                    )}
+                                    <table style={{width: '100%', fontSize: 11.5, borderCollapse: 'collapse', marginBottom: 16}}>
+                                        <thead><tr style={{borderBottom: '2px solid #2a2a4a'}}>
+                                            {T.head.map((h, i) => th(h, i, tab === 'summary' ? 1 : tab === 'economic' ? 3 : tab === 'plans' ? 5 : 3))}
+                                        </tr></thead>
+                                        <tbody>
+                                            {tab === 'summary' && T.rows.map((r, i) => (
+                                                <tr key={i} style={{borderBottom: '1px solid #1a1a2e', fontWeight: r[0] === 'סה"כ' ? 700 : 400, cursor: r[0] !== 'סה"כ' && F.minahak === 'all' ? 'pointer' : 'default'}}
+                                                    onClick={() => { if (r[0] !== 'סה"כ' && F.minahak === 'all') setF({ minahak: r[0], tab: 'plans' }); }}>
+                                                    {r.map((v, j) => <td key={j} style={{padding: '4px', textAlign: j === 0 ? 'right' : 'center', color: j === 0 ? '#ce93d8' : (v ? '#fff' : '#555')}}>{v}</td>)}
+                                                </tr>
+                                            ))}
+                                            {tab === 'plans' && T.rows.map((r, i) => (
+                                                <tr key={i} style={{borderBottom: '1px solid #1a1a2e', cursor: 'pointer'}} onClick={() => goPlan(r[0])}>
+                                                    <td style={{padding: '4px', color: '#64b5f6', textDecoration: 'underline', whiteSpace: 'nowrap'}}>{r[0]}</td>
+                                                    <td style={{padding: '4px', color: '#e0e0e0', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={r[1]}>{r[1] || '-'}</td>
+                                                    <td style={{padding: '4px', color: '#ce93d8', fontSize: 10.5}}>{r[2]}</td>
+                                                    <td style={{padding: '4px', color: '#ffd54f', fontSize: 10.5}}>{r[3] || '-'}</td>
+                                                    <td style={{padding: '4px', color: '#ddd', fontSize: 10.5}}>{r[4]}</td>
+                                                </tr>
+                                            ))}
+                                            {tab === 'conservation' && consRows.map((r, i) => (
+                                                <tr key={i} style={{borderBottom: '1px solid #1a1a2e', verticalAlign: 'top'}}>
+                                                    <td style={{padding: '4px', color: '#64b5f6', textDecoration: 'underline', whiteSpace: 'nowrap', cursor: 'pointer'}} onClick={() => goPlan(r.plan_name)}>{r.plan_name}</td>
+                                                    <td style={{padding: '4px', color: '#ce93d8', fontSize: 10.5}}>{r.minahak}</td>
+                                                    <td style={{padding: '4px', color: '#fff', fontWeight: 600, maxWidth: 200}}>{r.building || '-'}</td>
+                                                    <td style={{padding: '4px', color: '#ddd', fontSize: 10.5, maxWidth: 120}}>{r.built || '-'}</td>
+                                                    <td style={{padding: '4px', color: '#bbb', fontSize: 10.5, maxWidth: 170}}>{r.listed || '-'}</td>
+                                                    <td style={{padding: '4px', color: r.quality === 'no_file' ? '#888' : '#ffcc80', fontSize: 10.5, maxWidth: 340}}>{r.quality === 'no_file' ? (r.summary || 'אין תיק תיעוד') : (r.recommendation || '-')}
+                                                        {r.url && <> <a href={r.url} target="_blank" rel="noopener" style={{color: '#64b5f6'}} onClick={e => e.stopPropagation()}>↗</a></>}</td>
+                                                    <td style={{padding: '4px', color: '#999', fontSize: 10}}>{r.documenter || '-'}</td>
+                                                    <td style={{padding: '4px', color: '#888', fontSize: 10, whiteSpace: 'nowrap'}}>{r.doc_date || '-'}</td>
+                                                </tr>
+                                            ))}
+                                            {tab === 'economic' && ecoRows.map((r, i) => (
+                                                <tr key={i} style={{borderBottom: '1px solid #1a1a2e'}} title={r.notes || ''}>
+                                                    <td style={{padding: '4px', color: '#64b5f6', textDecoration: 'underline', whiteSpace: 'nowrap', cursor: 'pointer'}} onClick={() => goPlan(r.plan_name)}>{r.plan_name}</td>
+                                                    <td style={{padding: '4px', color: '#e0e0e0', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={r.title}>{r.title || '-'}</td>
+                                                    <td style={{padding: '4px', color: '#ce93d8', fontSize: 10.5}}>{r.minahak}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#ddd'}}>{(r.approved_existing && r.approved_total) ? r.approved_existing + '→' + r.approved_total : '-'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#fff'}}>{r.unit_ratio == null ? '-' : '×' + r.unit_ratio}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#fff'}}>{r.approved_ratio == null ? '-' : '×' + r.approved_ratio}{r.approved_source === 'gs' ? '*' : ''}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: gapColor(r.gap_pct), fontWeight: 700}}>{r.gap_pct == null ? '-' : (r.gap_pct > 0 ? '+' : '') + r.gap_pct + '%'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#a5d6a7'}}>{r.profit_pct_cost == null ? '-' : r.profit_pct_cost + '%'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#888', fontSize: 10, maxWidth: 110}}>{r.profit_threshold || '-'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#ffcc80'}}>{price(r) ? '₪' + price(r).toLocaleString('he-IL') : '-'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#90caf9'}}>{r.tenant_added_sqm == null ? '-' : r.tenant_added_sqm}</td>
+                                                    <td style={{padding: '4px', color: '#999', fontSize: 10}}>{r.appraiser || '-'}</td>
+                                                    <td style={{padding: '4px', color: '#888', fontSize: 10, whiteSpace: 'nowrap'}}>{r.url ? <a href={r.url} target="_blank" rel="noopener" style={{color: '#888'}}>{r.date || '↗'}</a> : (r.date || '-')}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {T.rows.length === 0 && <p style={{color: '#888', fontSize: 12}}>אין נתונים ב{mhLabel} בלשונית זו.</p>}
+                                    <p style={{color: '#777', fontSize: 10.5}}>מקור: שכבת מסמכי התכניות של מינהל התכנון (מתעדכנת כל יום א׳); תיקי תיעוד וחוות דעת כלכליות הורדו ממבא"ת ונקראו ואומתו מול תמונות העמודים.</p>
                                 </div>
                             </div>
                         </div>

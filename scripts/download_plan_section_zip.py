@@ -69,6 +69,10 @@ def process(pg, pl, mp, kind):
     wanted = [d for d in docs if any(k in f"{d['name']} {d['info']} {d['section']}" for k in kws)]
     with open(os.path.join(dest, "doclist.json"), "w", encoding="utf-8") as f:
         json.dump({"mp_id": mp, "matched": wanted, "all": docs}, f, ensure_ascii=False, indent=1)
+    # The full plan JSON also carries quantities/status, useful to check a
+    # report's numbers against the plan (e.g. approved units vs the report's).
+    with open(os.path.join(dest, "api.json"), "w", encoding="utf-8") as f:
+        json.dump(api, f, ensure_ascii=False)
     for _ in range(5):
         pg.evaluate(EXPAND); pg.wait_for_timeout(800)
     marks = pg.evaluate(MARK, kws)
@@ -97,10 +101,13 @@ def main():
     ap.add_argument("--kind", required=True, choices=sorted(KEYWORDS))
     ap.add_argument("--plans", help="comma-separated plan numbers (must be in the queue or plans.geojson)")
     ap.add_argument("--queue", action="store_true", help="all pending queue items of this kind")
+    ap.add_argument("--mp", help="plan:mp_id pairs, comma-separated (plans outside the queue)")
     ap.add_argument("--headed", action="store_true")
     a = ap.parse_args()
     q = json.load(open(QUEUE, encoding="utf-8")).get(a.kind, {})
-    if a.plans:
+    if a.mp:
+        targets = dict(x.split(":", 1) for x in a.mp.split(","))
+    elif a.plans:
         targets = {p: q[p]["mp_id"] for p in a.plans.split(",") if p in q}
     else:
         targets = {p: v["mp_id"] for p, v in q.items() if v.get("status") == "pending"}
