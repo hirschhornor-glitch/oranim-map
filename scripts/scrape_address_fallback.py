@@ -192,15 +192,23 @@ def _best_suggestion_match(original: str, suggestions: list[str]) -> int | None:
     """
     if not suggestions:
         return None
+    # An exact name always wins. Ties on overlap go to the suggestion with the fewest
+    # extra words — YK lists 'אל טנטור סמטה 1' before 'אל טנטור', and the street
+    # harvest searched the alley (0 rows) instead of the street (2026-10-12).
+    def _n(x):
+        return _strip_quotes(x).replace("  ", " ").strip()
+    for i, s in enumerate(suggestions):
+        if s.strip() == original.strip() or _n(s) == _n(original):
+            return i
     required = _required_words(original)
     need = len(required)
     scored = []
     for i, s in enumerate(suggestions):
         s_words = set(s.split())
         overlap = _fuzzy_word_overlap(required, s_words)
-        scored.append((overlap, i, s))
-    scored.sort(key=lambda x: (-x[0], x[1]))
-    best_overlap, best_idx, _ = scored[0]
+        scored.append((overlap, len(s_words) - overlap, i, s))
+    scored.sort(key=lambda x: (-x[0], x[1], x[2]))
+    best_overlap, _, best_idx, _ = scored[0]
     if best_overlap < need:
         return None
     return best_idx

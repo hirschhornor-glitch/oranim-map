@@ -46,6 +46,19 @@ def main():
         by_taba.setdefault(taba, []).append(permit)
         assigned += 1
 
+    # extra_permits.json is shared: fetch_committee_missing_permits.py adds rows tagged
+    # source=committee_yk. Rebuilding from the June list must not wipe them.
+    try:
+        prev = json.load(open(OUT, encoding="utf-8")).get("by_taba") or {}
+    except (OSError, ValueError):
+        prev = {}
+    have = {p["file_number"] for pl in by_taba.values() for p in pl}
+    for t, pl in prev.items():
+        for p in pl:
+            if p.get("source") != "missing_permits_api" and p["file_number"] not in have:
+                by_taba.setdefault(t, []).append(p)
+                assigned += 1
+
     out = {"source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
            "source_date": SRC_DATE, "count": assigned, "by_taba": by_taba}
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
