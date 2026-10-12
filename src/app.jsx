@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-12-channel-exclude';
+        const APP_VERSION = '2026-10-12-diyuriot-mavat';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -6683,6 +6683,7 @@ function planPermitHafrashUse(taba) {
                             else if (key === '__diyuriot') {
                                 window.__diyuriot = (data && data.by_plan) ? data.by_plan : {};
                                 window.__diyuriotDefinedOnly = (data && data.defined_without_quota) || [];
+                                window.__diyuriotVerified = (data && data.verified_no_quota) || [];
                             }
                             else if (key === '__permitPlanOverrides') {
                                 // the file is written the human way ("2024/0568"); every lookup
@@ -39995,7 +39996,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                         {r.tamaUnits ? nf(r.tamaUnits) : '—'}</td>
                                                     <td style={{ ...TD, color: r.diyurUnits ? '#7ec8e3' : (r.diyurUncapped ? '#e6a23c' : '#55617a') }}
                                                         title={r.diyurNote || (r.diyurUncapped
-                                                            ? 'התכנית מתירה דיוריות אך אינה נוקבת בשיעור — מספרן אינו ניתן לכימות'
+                                                            ? ('התכנית מתירה דיוריות אך אינה נוקבת בשיעור — מספרן אינו ניתן לכימות.'
+                                                               + ((window.__diyuriotVerified || []).indexOf(r.plan_name) !== -1
+                                                                  ? ' נבדק מול ההוראות העדכניות במבא״ת.' : ''))
                                                             : 'משק בית נוסף בתוך יח״ד קיימת — לא יח״ד נוספת')}>
                                                         {r.diyurUnits ? nf(r.diyurUnits) + ' (' + r.diyurPct + '%)'
                                                             : (r.diyurUncapped ? 'ללא מכסה' : '—')}</td>

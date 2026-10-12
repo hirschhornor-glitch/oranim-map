@@ -70,6 +70,20 @@ CAP_NO_NOUN = re.compile(r"לא יעלה על\s*(\d{1,2})\s*%")
 PCT_DISPLACED = re.compile(r"%[^\dא-ת]{0,12}(?:[א-ת\s\(\)\-]{0,22})(\d{1,2})\s*" + OF_UNITS)
 FORWARD = 190          # chars after the דיורית word to look for its share
 
+# Checked against the CURRENT הוראות on Mavat (download_doc_by_category --category הוראות,
+# 2026-10-12) — every local copy predated its plan's status date, so a quota could have been
+# added since. None had been: all ten carry the same template of conditions on the דיורית
+# itself (25-50 מ"ר, based on the host unit's infrastructure, not separately registrable)
+# with NO share of the units. 101-1115450 is the clearest — "לכל יחידת דיור תתאפשר דיורית
+# אחת", host over 130 מ"ר (110 when deposited); 101-1523851 is a 4-unit plan whose stated
+# purpose is "תוספת שטחים ודיורית", a single one. Recorded so the negative read is not
+# repeated — see [[project_hafrash_permit_negative_reads]].
+VERIFIED_NO_QUOTA = {
+    "101-1115450", "101-1133180", "101-1394444", "101-1417039", "101-1431808",
+    "101-1449511", "101-1492735", "101-1523851", "101-1551530", "101-1563642",
+}
+VERIFIED_ON = "2026-10-12"
+
 
 def _norm(text: str) -> str:
     """fitz glues digits to words and drifts punctuation; see reference_fitz_hebrew_regex_mines."""
@@ -168,6 +182,8 @@ def build(write: bool = True) -> dict:
         "generated_from": "horaot via build_diyuriot.detect_diyuriot",
         "count": len(by_plan),
         "defined_without_quota": sorted(defined_only),
+        "verified_no_quota": sorted(VERIFIED_NO_QUOTA & set(defined_only)),
+        "verified_on": VERIFIED_ON,
         "by_plan": by_plan,
     }
     print("plans granting a דיוריות quota: %d   (definition but no quota found: %d)"

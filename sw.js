@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v121-channel-exclude';
+const CACHE_VERSION = 'v122-diyuriot-mavat';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
