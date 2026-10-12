@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-12-diyuriot-mavat';
+        const APP_VERSION = '2026-10-13-plan-docs';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -6115,6 +6115,8 @@ function planPermitHafrashUse(taba) {
                     ['__floorAllocations', 'data/floor_allocations.json'],
                     ['__maintenanceFund', 'data/maintenance_fund.json'],
                     ['__socialAppendices', 'data/social_appendices.json'],
+                    ['__planDocuments', 'data/plan_documents.json'],
+                    ['__conservationDocs', 'data/conservation_docs.json'],
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                     ['__excavationPermits', 'data/excavation_permits.json'],
                     ['__activeSites', 'data/active_sites.json'],
@@ -6637,6 +6639,8 @@ function planPermitHafrashUse(taba) {
                             else if (key === '__maintenanceFund') { window.__maintenanceFund = data || {}; }
                             else if (key === '__parking') { window.__parking = data || { plans: {}, no_traffic_appendix: [] }; }
                             else if (key === '__socialAppendices') { window.__socialAppendices = data || { plans: {} }; }
+                            else if (key === '__planDocuments') { window.__planDocuments = data || { plans: {} }; }
+                            else if (key === '__conservationDocs') { window.__conservationDocs = data || { plans: {} }; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__activeSites') { window.__activeSites = data || { sites: [] }; }
@@ -26107,6 +26111,49 @@ function planPermitHafrashUse(taba) {
                 } else if (((window.__parking || {}).no_traffic_appendix || []).indexOf(taba) >= 0) {
                     html += '<div class="popup-section-title">🅿️ חניה</div>';
                     html += '<div class="popup-sub-row" style="color:#8a93a6;font-size:10px">אין נספח תנועה לתכנית זו במבא"ת — לא ניתן לקבוע מאזן חניה</div>';
+                }
+
+                // ── Appendices listed for the plan (plan_documents.json, from the planning
+                // administration's documents layer) + documentation-file highlights
+                // (conservation_docs.json). Keyed by plan number (101-XXXXXXX).
+                {
+                    const escD = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                    const PD = window.__planDocuments || { plans: {} };
+                    const docRec = (PD.plans || {})[props.plan_name];
+                    const consRec = ((window.__conservationDocs || {}).plans || {})[props.plan_name];
+                    if (docRec && docRec.cats && docRec.cats.length) {
+                        const labels = PD.categories || {};
+                        const order = ['conservation', 'trees', 'social', 'program', 'economic', 'shading', 'environment', 'water', 'infrastructure', 'binui', 'general'];
+                        const cats = docRec.cats.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b));
+                        html += '<div class="popup-section-title">📎 נספחים בתכנית</div>';
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px">';
+                        cats.forEach(c => {
+                            const names = (docRec.docs || []).filter(d => d.c === c).map(d => d.n).join(' · ');
+                            html += `<span title="${escD(names)}" style="background:rgba(127,140,170,.18);border:1px solid rgba(127,140,170,.35);border-radius:10px;padding:1px 8px;font-size:10px;white-space:nowrap">${escD(labels[c] || c)}</span>`;
+                        });
+                        html += '</div>';
+                    }
+                    if (consRec) {
+                        html += '<div class="popup-section-title">🏛️ תיק תיעוד ושימור</div>';
+                        if (consRec.quality === 'no_file') {
+                            html += `<div class="popup-sub-row" style="color:#8a93a6;font-size:10px;white-space:normal">${escD(consRec.summary)}</div>`;
+                        } else {
+                            const head = [consRec.building, consRec.built].filter(Boolean).map(escD).join(' · ');
+                            if (head) html += `<div class="popup-sub-row" style="font-weight:700;white-space:normal">${head}</div>`;
+                            if (consRec.listed) html += `<div class="popup-sub-row" style="font-size:10px;white-space:normal">כרטסת: ${escD(consRec.listed)}</div>`;
+                            if (consRec.recommendation) html += `<div class="popup-sub-row" style="font-size:10px;white-space:normal;color:#e6a23c">המלצה: ${escD(consRec.recommendation)}</div>`;
+                            const vals = consRec.values || {};
+                            const valHtml = Object.keys(vals).map(k => `<div><b>${escD(k)}:</b> ${escD(vals[k])}</div>`).join('');
+                            if (consRec.summary || valHtml) {
+                                html += '<details style="font-size:10px;line-height:1.5;margin:2px 0 4px"><summary style="cursor:pointer;color:#5dade2">עיקרי התיק</summary>'
+                                    + (consRec.summary ? `<div style="white-space:normal;margin-top:3px">${escD(consRec.summary)}</div>` : '')
+                                    + (valHtml ? `<div style="margin-top:3px;white-space:normal">${valHtml}</div>` : '')
+                                    + `<div style="color:#8a93a6;margin-top:3px">${escD([consRec.documenter, consRec.doc_date].filter(Boolean).join(' · '))}</div>`
+                                    + '</details>';
+                            }
+                        }
+                        if (consRec.url) html += `<div class="popup-sub-row" style="font-size:10px"><a href="${escD(consRec.url)}" target="_blank" rel="noopener" style="color:#5dade2">↗ ${escD(consRec.doc_label || 'תיק התיעוד במבא"ת')}</a></div>`;
+                    }
                 }
 
                 html += '</div>'; // end popup-body
