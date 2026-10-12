@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-12-diyuriot';
+        const APP_VERSION = '2026-10-12-diyuriot-counted';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -39548,7 +39548,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const openCeiling = !!(cap && cap.min_only);
                             const openUnits = openCeiling
                                 ? Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits) : 0;
-                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits - raiseUnits - tamaUnits - openUnits);
+                            const unexplained = Math.max(0, realized - hakExtra - bonusUnits - condUnits
+                                - raiseUnits - tamaUnits - openUnits - diyurUnits);
                             if (!bonusUnits && !hakExtra && !realized && !condUnits && !raiseUnits && !diyurUnits) return;
                             rows.push({
                                 taba, plan_name: p.plan_name || ('101-' + taba),
@@ -39602,16 +39603,22 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
             // 10.7%) without anything about the plans having changed.
             beyondBase: view.reduce((a, r) => a + ((Math.max(r.realized || 0,
                 (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
-                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)) > 0) ? (r.base || 0) : 0), 0),
+                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)
+                + (r.diyurUnits || 0)) > 0) ? (r.base || 0) : 0), 0),
             // The single figure: יח"ד that exist beyond what the תב"עות count. Per plan the
             // HIGHER of the two sides, never their sum — the rights a plan grants above its
             // own יח"ד total and the addition its permits already show are the same units
             // seen twice (פת/בר יוחאי: 36 מהערת טבלה 5, ו-36 בהיתר). Taking the higher keeps
             // a right that has not been used yet (טבלה 5 של תכנית בלי היתרים) and an addition
             // that outran its documented channel, without counting either one twice.
+            // דיוריות sit on the RIGHTS side of the max like every other channel: a permit
+            // may record a דיורית as a unit of its own, so תב"ע + דיוריות can be exactly what
+            // explains a permit count above the plan. Adding them on top of the realized
+            // figure instead would count the same dwellings twice.
             beyond: view.reduce((a, r) => a + Math.max(r.realized || 0,
                 (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
-                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)), 0),
+                + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)
+                + (r.diyurUnits || 0)), 0),
                             realized: sum(view, 'realized'), unexplained: sum(view, 'unexplained') };
                         // Manual ticks are stored per browser and beat the rules for good, so a tick
                         // made before the rules improved silently keeps an old number on screen.
@@ -39640,7 +39647,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         // themselves do not count is visible rather than buried in 123 rows.
                         const beyondOf = r => Math.max(r.realized || 0,
                             (r.condUnits || 0) + (r.bonusUnits || 0) + (r.raiseUnits || 0)
-                            + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0));
+                            + (r.tamaUnits || 0) + (r.openUnits || 0) + (r.hakExtra || 0)
+                            + (r.diyurUnits || 0));
                         const byYear = (() => {
                             const m = new Map();
                             view.forEach(r => {
@@ -39672,7 +39680,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const parts = [];
                             if (r.raiseUnits) parts.push('תכנית מאוחרת מגדילה · ' + r.raiserName);
                             if (r.tamaUnits) parts.push('מכוח תמ"א 38 — היתר חיזוק, לא מטבלה 5');
-                            if (r.diyurUnits) parts.push('דיוריות · עד ' + r.diyurPct + '% מהיח"ד (משקי בית, לא יח"ד)');
+                            if (r.diyurUnits) parts.push('דיוריות · עד ' + r.diyurPct + '% מהיח"ד (אינן נספרות כיח"ד)');
                             if (r.hakExtra) parts.push('הקלה בהיתר' + (r.hakPct ? ' ' + r.hakPct + '%' : '') + (r.hakWhen ? ' · ' + r.hakWhen : ''));
                             if (r.condUnits) parts.push('יח"ד מותנות');
                             if (r.bonusUnits) parts.push(r.bonusPct ? ('הערת טבלה 5 · עד ' + r.bonusPct + '%')
@@ -39750,7 +39758,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         <b style={{ color: '#b39ddb' }}>יח"ד מותנות</b> — יחידות שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) ויושבות מחוץ ל-יח"ד שבתב"ע;{' '}
                                         <b style={{ color: '#80cbc4' }}>תכנית מאוחרת שמגדילה</b> — הגדלת זכויות שאושרה מעל התכנית ומרימה את התקרה בפועל;{' '}
                                         <b style={{ color: '#c5a3ff' }}>מכוח תמ"א 38</b> — היתר חיזוק שמקבל את היח"ד שלו מהתמ"א ולא מטבלה 5 של התכנית;{' '}
-                                        <b style={{ color: '#7ec8e3' }}>דיוריות</b> — סעיף תב"עי שמתיר לחלק מהיח"ד לארח משק בית נפרד בתוכן; אלו משקי בית נוספים ולא יח"ד נוספות, ולכן הן מחוץ ל"סה"כ מעבר לתב"ע";{' '}
+                                        <b style={{ color: '#7ec8e3' }}>דיוריות</b> — סעיף תב"עי שמתיר לחלק מהיח"ד לארח משק בית נפרד בתוכן; אינן נספרות ביח"ד שבתב"ע ולכן אינן מחושבות פרוגרמטית, והן יכולות להסביר ספירת יח"ד גבוהה יותר בהיתר;{' '}
                                         <b style={{ color: '#ff9aa8' }}>תוספת בפועל</b> — ההפרש בין היח"ד בהיתרים לבין התב"ע, גם כשאין לו מקור מתועד אצלנו.
                                         התוספת בפועל אינה סכום של השניים הראשונים אלא מה שההיתרים מראים.
                                     </p>
@@ -39807,7 +39815,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             'לכל תכנית נלקח הגבוה מבין הזכויות שמעבר ל-יח״ד שבתב״ע (מותנות, טבלה 5, '
                                             + 'תכנית מאוחרת מגדילה, תמ״א 38, רצפה, הקלות) לבין התוספת שההיתרים כבר מראים — '
                                             + 'לא סכום שלהם, כי לרוב אלו אותן יח״ד משני צדדים. '
-                                            + nf(T.beyond) + ' מתוך ' + nf(T.beyondBase) + ' יח״ד בתב״ע בתכניות שיש להן תוספת.')}
+                                            + nf(T.beyond) + ' מתוך ' + nf(T.beyondBase) + ' יח״ד בתב״ע בתכניות שיש להן תוספת, '
+                                            + 'כולל ' + nf(T.diyur) + ' דיוריות.')}
                                         {tile('תכניות', nf(view.length), nBonus + ' טבלה 5 · ' + nHak + ' הקלה · ' + nRaise + ' מוגדלות · ' + nReal + ' בפועל', '#dbe4f5')}
                                         {tile('יח"ד בתב"ע', nf(T.base), 'בתכניות שברשימה', '#9fb0d0')}
                                         {tile('יח"ד מותנות', nf(T.cond), 'מחוץ ליח"ד שבתב"ע', '#b39ddb')}
@@ -39818,10 +39827,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             (window.__planRaisers && Object.keys(window.__planRaisers).length) || overlapReady
                                                 ? 'הגדלת זכויות מעל התכנית' : 'מחשב חפיפות…', '#80cbc4')}
                                         {tile('מכוח תמ"א 38', nf(T.tama), 'זכויות חיזוק, לא מטבלה 5', '#c5a3ff')}
-                                        {tile('דיוריות', nf(T.diyur), view.filter(r => r.diyurUnits).length + ' תכניות · משקי בית, לא יח"ד', '#7ec8e3',
+                                        {tile('דיוריות', nf(T.diyur), view.filter(r => r.diyurUnits).length + ' תכניות · דירות שאינן נספרות כיח"ד', '#7ec8e3',
                                             'דיורית = חדר או מערכת חדרים בתוך יח״ד קיימת שיכולים לשמש משק בית נפרד. '
-                                            + 'שטחה נכלל בשטח יחידת הדיור והיא אינה ניתנת לרישום בנפרד — ולכן היא אינה יח״ד '
-                                            + 'ואינה נספרת ב"סה״כ מעבר לתב״ע", אבל היא כן משק בית נוסף לצורכי אוכלוסייה, חינוך וחניה.')}
+                                            + 'שטחה נכלל בשטח יחידת הדיור והיא אינה ניתנת לרישום בנפרד, ולכן ספירת היח״ד '
+                                            + 'בתב״ע אינה משקפת אותה — אבל זו דירה נוספת לכל דבר פרוגרמטי (אוכלוסייה, חינוך, '
+                                            + 'חניה), והיתר עשוי לרשום אותה כיח״ד. לכן היא נספרת ב"סה״כ מעבר לתב״ע" ככל ערוץ '
+                                            + 'זכויות אחר, וגם מסבירה ספירת יח״ד גבוהה מהתב״ע.')}
                                         {tile('תוספת בפועל בהיתרים', nf(T.realized), 'מעל היח"ד בתב"ע', '#7fc98a')}
                                         {tile('הקלה פורסמה — בלי מספר', nf(pubUnits), '§149 בוצע, ההחלטה לא כימתה', '#e6a23c')}
                                         {tile('ללא מקור כלל', nf(noSrcUnits), 'גם בלי פרסום §149 — לבדיקה', '#ff9aa8')}
