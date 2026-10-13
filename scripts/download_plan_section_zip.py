@@ -80,7 +80,7 @@ def process(pg, pl, mp, kind):
     saved = []
     for m in marks:
         try:
-            with pg.expect_download(timeout=120000) as dl:
+            with pg.expect_download(timeout=300000) as dl:
                 pg.click(f"[data-zipmark='{m['idx']}']")
             raw = open(dl.value.path(), "rb").read()
             z = zipfile.ZipFile(io.BytesIO(raw))

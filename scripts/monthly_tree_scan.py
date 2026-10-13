@@ -215,9 +215,11 @@ def diff_valency(old, new):
     return added, removed, changed
 
 
-def run_valency_stage():
+def run_valency_stage(download_args=None, download_timeout=10800, recheck=True):
     """Download new PDFs -> extract valency -> rebuild app JSON. Returns
-    (added, removed, changed, new_data) or None on hard failure."""
+    (added, removed, changed, new_data) or None on hard failure.
+    download_args replaces the default download flags (targeted weekly run);
+    recheck=False downloads only never-checked plans (non-quarter months)."""
     old = load_valency(TREE_VALENCIES)
     print(f"[valency] baseline: {len(old)} plans with valency data")
 
@@ -239,7 +241,15 @@ def run_valency_stage():
     #    window (tree_surveys/scan_cursor.json), resuming where the last run was
     #    cut off. ~2 runs cover all 620. Before that, the list restarted from the
     #    top every month and the last ~319 plans were never reached at all.
-    rc = _run([sys.executable, DOWNLOAD_SCRIPT, "--recheck-empty"], timeout=10800)
+    #
+    #    Since 2026-10 the full re-check runs QUARTERLY (Jan/Apr/Jul/Oct, recheck=True).
+    #    Weekly, fetch_plan_documents.py flags plans whose tree appendix showed up in
+    #    the planning administration's documents layer, and --targeted downloads
+    #    just those. The layer catches ~73% of surveys; the quarterly pass is the
+    #    safety net for the rest.
+    if download_args is None:
+        download_args = ["--recheck-empty"] if recheck else []
+    rc = _run([sys.executable, DOWNLOAD_SCRIPT] + download_args, timeout=download_timeout)
     if rc != 0:
         print(f"[valency] download exited {rc} (non-fatal) — extracting existing PDFs.")
         if rc != 124:   # the 3h cap is hit by design (rolling window, see above)
@@ -273,7 +283,8 @@ def run_valency_stage():
     print(f"[valency] +{len(added)} new, ~{len(changed)} changed, -{len(removed)} dropped")
 
     if added or removed or changed:
-        msg = (f"data: monthly valency refresh (+{len(added)} new, ~{len(changed)} changed, "
+        kind = "targeted" if download_args and "--only-tabas" in download_args else "monthly"
+        msg = (f"data: {kind} valency refresh (+{len(added)} new, ~{len(changed)} changed, "
                f"-{len(removed)} dropped) (monthly_tree_scan)")
         commit_and_push_after_write(VALENCY_PUSH, msg, REPO_DIR)
     else:
@@ -489,6 +500,79 @@ def report_problems():
     return 1
 
 
+# ─── Weekly targeted run (fed by fetch_plan_documents.py) ───────────────────
+
+PLAN_DOCS_QUEUE = r"C:\ORANIM\plan_documents_queue.json"
+PLAN_DOCS_EMAIL = r"C:\ORANIM\_pending_plan_docs_email.json"
+TREE_METADATA = r"C:\ORANIM\tree_surveys\metadata.json"
+MAX_TARGETED_ATTEMPTS = 8   # weeks; the layer often lists a survey before Mavat publishes it (pre-deposit)
+
+
+def run_targeted():
+    """Download + extract only the plans the documents layer flagged with a tree
+    appendix. No count stage, no tama38, no email of its own: the result rides in
+    update_mavat_ui's Sunday email via _pending_plan_docs_email.json."""
+    try:
+        with open(PLAN_DOCS_QUEUE, encoding="utf-8") as f:
+            queue = json.load(f)
+    except FileNotFoundError:
+        print("[targeted] no queue file — nothing to do")
+        return 0
+    trees = queue.get("trees", {})
+    todo = {pl: v for pl, v in trees.items() if v.get("status") == "pending" and v.get("taba")}
+    if not todo:
+        print("[targeted] tree queue empty")
+        return 0
+    tabas = sorted({v["taba"] for v in todo.values()})
+    print(f"[targeted] {len(tabas)} plans: {', '.join(tabas)}")
+
+    res = run_valency_stage(download_args=["--only-tabas", ",".join(tabas)],
+                            download_timeout=max(1800, 120 * len(tabas)))
+    added = sorted(res[0]) if res else []
+
+    meta = {}
+    try:
+        with open(TREE_METADATA, encoding="utf-8") as f:
+            meta = {str(e.get("taba")): e for e in json.load(f)}
+    except Exception as e:
+        _problem(f"targeted: metadata unreadable ({e})")
+    today = datetime.now().strftime("%Y-%m-%d")
+    found = 0
+    for pl, v in todo.items():
+        st = meta.get(v["taba"], {}).get("status")
+        v["attempts"] = v.get("attempts", 0) + 1
+        v["last_try"] = today
+        if st == "success":
+            v["status"] = "done"; found += 1
+        elif v["attempts"] >= MAX_TARGETED_ATTEMPTS:
+            # The layer lists it but Mavat's page shows no downloadable survey
+            # (offline entity documents, a renamed appendix). The quarterly
+            # re-check will still see it.
+            v["status"] = "not_found"
+    # The run takes a while and other steps write other categories meanwhile:
+    # re-read and merge only our tree entries.
+    with open(PLAN_DOCS_QUEUE, encoding="utf-8") as f:
+        fresh = json.load(f)
+    fresh.setdefault("trees", {}).update(todo)
+    queue = fresh
+    with open(PLAN_DOCS_QUEUE + ".tmp", "w", encoding="utf-8") as f:
+        json.dump(queue, f, ensure_ascii=False, indent=1)
+    os.replace(PLAN_DOCS_QUEUE + ".tmp", PLAN_DOCS_QUEUE)
+
+    try:
+        with open(PLAN_DOCS_EMAIL, encoding="utf-8") as f:
+            em = json.load(f)
+    except Exception:
+        em = {}
+    em["tree_valency"] = {"checked": len(tabas), "found": found, "added": added}
+    em["pending"] = {c: sum(1 for x in queue.get(c, {}).values() if x.get("status") == "pending")
+                     for c in queue}
+    with open(PLAN_DOCS_EMAIL, "w", encoding="utf-8") as f:
+        json.dump(em, f, ensure_ascii=False, indent=1)
+    print(f"[targeted] {found}/{len(tabas)} with a survey, +{len(added)} valency")
+    return report_problems()
+
+
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 def main():
@@ -501,6 +585,10 @@ def main():
     ap.add_argument("--tama38-recheck", action="store_true",
                     help="With --tama38-only: also re-check no_tree_docs permits "
                          "(default catch-up = only the never-processed backlog)")
+    ap.add_argument("--targeted", action="store_true",
+                    help="Weekly: only plans queued by fetch_plan_documents (no counts/tama38/email)")
+    ap.add_argument("--full-recheck", action="store_true",
+                    help="Re-check all no_tree_docs plans even outside a quarter month")
     ap.add_argument("--dry-run", action="store_true",
                     help="Counts via --dry-run; skips valency (it writes files)")
     args = ap.parse_args()
@@ -512,6 +600,9 @@ def main():
         _problem("git pull failed — diffed/committed against local state")
 
     name_map = load_name_map()
+
+    if args.targeted:
+        return run_targeted()
 
     # TAMA 38 catch-up mode — run only that stage (dedicated backlog run).
     if args.tama38_only:
@@ -531,7 +622,9 @@ def main():
     valency = None
     tama38 = None
     if not args.no_valency and not args.dry_run:
-        valency = run_valency_stage()
+        quarterly = datetime.now().month in (1, 4, 7, 10) or args.full_recheck
+        print(f"[valency] full no_tree_docs re-check: {'yes' if quarterly else 'no (quarterly only)'}")
+        valency = run_valency_stage(recheck=quarterly)
         # Stage B2 — TAMA 38: re-check permit files for new surveys, rebuild
         # counts + valency. HEADED browser (ykpubdata), like the תב"ע stage.
         tama38 = run_tama38_stage()

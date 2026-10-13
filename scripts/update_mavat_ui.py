@@ -1575,6 +1575,54 @@ def _load_pending_enrich_email():
         return [], path
 
 
+def _load_pending_plan_docs_email():
+    """New appendices from the planning administration's documents layer, dropped
+    by fetch_plan_documents.py (and the targeted tree step). Consumed after a
+    good send. Returns (payload, path)."""
+    path = r"C:\ORANIM\_pending_plan_docs_email.json"
+    try:
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        return (d if isinstance(d, dict) else {}), path
+    except Exception:
+        return {}, path
+
+
+def _plan_docs_html(d):
+    he = {"trees": "עצים", "social": "נספח חברתי", "program": "פרוגרמה לשטחי ציבור",
+          "conservation": "תיעוד ושימור", "economic": "חוות דעת כלכלית",
+          "shading": "הצללה", "environment": "סביבה/תסקיר", "water": "מים/ביוב/ניקוז",
+          "infrastructure": "תשתיות", "binui": "בינוי ופיתוח", "general": "כללי/אחר"}
+    html = "<h2>📎 נספחים חדשים בתכניות (שכבת מינהל התכנון)</h2>"
+    if d.get("baseline"):
+        html += ("<p>ריצה ראשונה: נבנה בסיס של כל הנספחים. נכנסו לתור כל התכניות "
+                 "שעדיין אין לנו את הנספח שלהן:</p>")
+    q = {k: v for k, v in (d.get("queued") or {}).items() if v}
+    if q:
+        html += "<p>נכנסו לתור: " + " · ".join(f"{he.get(k, k)} {v}" for k, v in q.items()) + "</p>"
+    tv = d.get("tree_valency") or {}
+    if tv:
+        html += (f"<p>🌳 הורדה ממוקדת של סקרי עצים: {tv.get('checked', 0)} תכניות נבדקו, "
+                 f"{tv.get('found', 0)} עם סקר, ערכיות חדשה ל-{len(tv.get('added', []))}"
+                 + (f" ({', '.join(tv['added'])})" if tv.get('added') else "") + "</p>")
+    rows = d.get("new") or []
+    if rows:
+        html += "<table border='1' cellpadding='6' style='border-collapse: collapse;'>"
+        html += ("<tr style='background-color: #fff3e0;'><th>מספר תכנית</th>"
+                 "<th>שם התכנית</th><th>נספח חדש</th><th>מסמכים</th></tr>")
+        for r in rows:
+            cats = ", ".join(he.get(c, c) for c in r.get("cats", []))
+            html += (f"<tr><td><a href='{r.get('url', '')}'>{r.get('pl', '')}</a></td>"
+                     f"<td dir='rtl'>{r.get('name', '')}</td><td dir='rtl'>{cats}</td>"
+                     f"<td dir='rtl'>{'<br>'.join(r.get('docs', [])[:6])}</td></tr>")
+        html += "</table><br>"
+    pend = {k: v for k, v in (d.get("pending") or {}).items() if v}
+    if pend:
+        html += ("<p style='color:#666'>ממתינים בתור לעיבוד: "
+                 + " · ".join(f"{he.get(k, k)} {v}" for k, v in pend.items()) + "</p>")
+    return html
+
+
 def send_email_notification(updates, objection_results=None, xplan_report=None):
     if not SENDER_EMAIL or not SENDER_PASSWORD or not RECEIVER_EMAIL:
         log_msg("Email settings not configured. Skipping email notification.")
@@ -1609,8 +1657,13 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     enrich_rows, enrich_payload_path = _load_pending_enrich_email()
     has_enrich = bool(enrich_rows)
 
+    # New appendices from the documents layer (fetch_plan_documents.py).
+    docs_payload, docs_payload_path = _load_pending_plan_docs_email()
+    has_docs = bool(docs_payload.get("new") or any((docs_payload.get("queued") or {}).values())
+                    or docs_payload.get("tree_valency"))
+
     if not has_updates and not has_objections and not has_xplan and not has_new_plans \
-            and not has_digest and not has_enrich:
+            and not has_digest and not has_enrich and not has_docs:
         return
 
     log_msg("Sending email notification...")
@@ -1632,6 +1685,9 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         parts.append(f"{digest_n} שינויי שדה")
     if has_enrich:
         parts.append(f"{len(enrich_rows)} העשרות")
+    if has_docs:
+        _nd = len(docs_payload.get("new") or [])
+        parts.append(f"{_nd} נספחים חדשים" if _nd else "נספחים: תור עודכן")
     subject = "עידכון ממבאת: " + " | ".join(parts)
 
     html = "<html dir='rtl'><body style='font-family: Arial, sans-serif;'>"
@@ -1812,6 +1868,9 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
                 html += "</tr>"
             html += "</table><br>"
 
+    if has_docs:
+        html += _plan_docs_html(docs_payload)
+
     html += "<p>הודעה זו נשלחה אוטומטית על ידי סקריפט הסנכרון של מבאת.</p></body></html>"
 
     msg = MIMEMultipart("alternative")
@@ -1835,6 +1894,11 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
                     f.write(digest_newest_ts)
             except OSError as e:
                 log_msg(f"Failed to write changelog-digest marker: {e}")
+        if has_docs and os.path.exists(docs_payload_path):
+            try:
+                os.remove(docs_payload_path)
+            except OSError as e:
+                log_msg(f"Failed to remove plan-docs payload: {e}")
         # Consume the enrichment payload so it isn't re-emailed on the next run.
         if has_enrich and enrich_payload_path and os.path.exists(enrich_payload_path):
             try:
