@@ -860,3 +860,4 @@
 {"ts": "2026-10-06 19:47:10", "taba": 1571991, "plan_name": "101-1571991", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-07 16:51:52", "taba": 1354356, "plan_name": "101-1354356", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-07 16:51:52", "taba": 1371368, "plan_name": "101-1371368", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-13 21:11:52", "taba": 1320233, "plan_name": "101-1320233", "status": "אישור", "field": "SUB_N", "old": "", "new": "בית צפאפא,שרפת"}
