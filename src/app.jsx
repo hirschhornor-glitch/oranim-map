@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-13-no-econ-popup';
+        const APP_VERSION = '2026-10-13-valency-reco';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -25052,6 +25052,8 @@ function planPermitHafrashUse(taba) {
                 plans.forEach(p => {
                     const v = tv[p.taba || ''];
                     if (!v || !v.by_bucket) return;
+                    // No recommendation in the survey → would dilute the removed share.
+                    if (v.status === 'valency_only') return;
                     plans_with_data += 1;
                     total_trees += v.total_trees || 0;
                     Object.entries(v.by_bucket).forEach(([bucket, recoMap]) => {
@@ -26052,7 +26054,14 @@ function planPermitHafrashUse(taba) {
                     // Full bucket × recommendation cross-tab lives in the neighborhood
                     // report instead, to keep the popup compact.
                     const valency = (window.__treeValencies || {})[taba];
-                    if (valency && valency.bucket_totals) {
+                    if (valency && valency.bucket_totals && valency.status === 'valency_only') {
+                        // The survey gives valency but no per-tree recommendation, so a
+                        // "removed" share can't be computed — show the distribution only.
+                        const bt = valency.bucket_totals;
+                        const parts = [['17-20', 'גבוהה מאד'], ['14-16', 'גבוהה'], ['7-13', 'בינונית'], ['0-6', 'נמוכה']]
+                            .filter(([k]) => bt[k]).map(([k, l]) => l + ' ' + bt[k]);
+                        if (parts.length) html += `<div class="popup-sub-row" style="margin-top:4px">ערכיות: ${parts.join(' · ')} <span style="color:#999;font-size:10px">(בסקר אין עמודת המלצה)</span></div>`;
+                    } else if (valency && valency.bucket_totals) {
                         const highTotal = (valency.bucket_totals['17-20'] || 0) + (valency.bucket_totals['14-16'] || 0);
                         if (highTotal > 0) {
                             const highBucket1 = valency.by_bucket['17-20'] || {};
