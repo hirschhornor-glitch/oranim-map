@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-13-econ-market';
+        const APP_VERSION = '2026-10-13-no-econ-popup';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -26163,49 +26163,6 @@ function planPermitHafrashUse(taba) {
                             }
                         }
                         if (consRec.url) html += `<div class="popup-sub-row" style="font-size:10px"><a href="${escD(consRec.url)}" target="_blank" rel="noopener" style="color:#5dade2">↗ ${escD(consRec.doc_label || 'תיק התיעוד במבא"ת')}</a></div>`;
-                    }
-                    // ── 💰 Economic report (economic_reports.json): what the developer's Standard-21
-                    // opinion says is required vs what the plan gives, and whether its sale-price
-                    // assumption matches actual new-build deals in the plan's sub-neighbourhood.
-                    // A price below the market makes the required multiplier look higher.
-                    const ecoRec = ((window.__economicReports || {}).plans || {})[props.plan_name];
-                    if (ecoRec) {
-                        const fmtN = v => (v == null || v === '') ? '-' : Number(v).toLocaleString('he-IL');
-                        html += '<div class="popup-section-title">💰 דוח כלכלי</div>';
-                        if (ecoRec.unit_ratio != null || ecoRec.approved_ratio != null) {
-                            const g = ecoRec.gap_pct;
-                            const gCol = g == null ? '#8a93a6' : g < -1 ? '#ff6b6b' : g > 1 ? '#64b5f6' : '#a5d6a7';
-                            html += '<div class="popup-pair">'
-                                + `<div class="popup-pair-item"><span class="popup-pair-label">מכפיל נדרש (דוח)</span><span class="popup-pair-value">${ecoRec.unit_ratio != null ? '×' + ecoRec.unit_ratio : '-'}</span></div>`
-                                + `<div class="popup-pair-item"><span class="popup-pair-label">מכפיל בתכנית</span><span class="popup-pair-value">${ecoRec.approved_ratio != null ? '×' + ecoRec.approved_ratio : '-'}</span></div>`
-                                + '</div>';
-                            if (g != null) html += `<div class="popup-sub-row" style="font-size:10px">יח"ד בתכנית מול הנדרש בדוח: <b style="color:${gCol}">${g > 0 ? '+' : ''}${g}%</b>${g < -1 ? ' — פחות מהנדרש' : ''}</div>`;
-                            else if (ecoRec.gap_note) html += `<div class="popup-sub-row" style="font-size:10px;color:#8a93a6">${escD(ecoRec.gap_note)}</div>`;
-                        }
-                        if (ecoRec.profit_pct_cost != null)
-                            html += `<div class="popup-sub-row" style="font-size:10px">רווח יזמי: <b>${ecoRec.profit_pct_cost}%</b> מהעלויות${ecoRec.profit_threshold ? ' <span style="color:#8a93a6">(סף בדוח: ' + escD(ecoRec.profit_threshold) + ')</span>' : ''}</div>`;
-                        const sp = ecoRec.sale_price_sqm || {};
-                        const mk = ecoRec.market;
-                        if (sp.value) {
-                            html += `<div class="popup-sub-row" style="font-size:10px;white-space:normal">מחיר בדוח: <b>₪${fmtN(sp.value)}</b> למ"ר <span style="color:#8a93a6">${escD(sp.unit || '')}</span></div>`;
-                            if (mk && mk.median) {
-                                const warn = mk.pct <= -5 && mk.confidence === 'ok';
-                                const pCol = mk.pct <= -5 ? '#ff6b6b' : mk.pct >= 5 ? '#64b5f6' : '#a5d6a7';
-                                const where = mk.scope === 'sub' ? (mk.sub || 'תת-השכונה') : mk.scope === 'minahak' ? 'המינה"ק' : 'רדיוס 500 מ\'';
-                                html += `<div class="popup-sub-row" style="font-size:10px;white-space:normal">חציון עסקאות בדירות חדשות (${escD(where)}, ${mk.months || 24} ח' לפני הדוח): <b>₪${fmtN(mk.median)}</b>`
-                                    + ` <span style="color:#8a93a6">(${fmtN(mk.q1)}–${fmtN(mk.q3)}, ${mk.n} עסקאות)</span></div>`;
-                                html += `<div class="popup-sub-row" style="font-size:10.5px">${warn ? '⚠️ ' : ''}מחיר הדוח מול השוק: <b style="color:${pCol}">${mk.pct > 0 ? '+' : ''}${mk.pct}%</b>`
-                                    + (mk.pct <= -5 ? ' <span style="color:#ffb74d">— מחיר נמוך מהשוק מגדיל את המכפיל הנדרש</span>' : '')
-                                    + (mk.confidence === 'low' ? ' <span style="color:#8a93a6">(ביטחון נמוך — מעט עסקאות)</span>' : '') + '</div>';
-                                if (mk.basis_note) html += `<div class="popup-sub-row" style="font-size:9.5px;color:#e6a23c">${escD(mk.basis_note)} — חלק מהפער הוא הבדל הגדרה</div>`;
-                            }
-                        }
-                        const extras = [];
-                        if (ecoRec.tenant_added_sqm != null) extras.push('תוספת לדייר ' + ecoRec.tenant_added_sqm + ' מ"ר');
-                        if (ecoRec.appraiser) extras.push(escD(ecoRec.appraiser));
-                        if (ecoRec.date) extras.push(escD(ecoRec.date));
-                        if (extras.length) html += `<div class="popup-sub-row" style="font-size:9.5px;color:#8a93a6;white-space:normal">${extras.join(' · ')}</div>`;
-                        if (ecoRec.url) html += `<div class="popup-sub-row" style="font-size:10px"><a href="${escD(ecoRec.url)}" target="_blank" rel="noopener" style="color:#5dade2">↗ חוות הדעת במבא"ת</a></div>`;
                     }
                 }
 
