@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-13-economic-55';
+        const APP_VERSION = '2026-10-13-econ-market';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -26164,6 +26164,49 @@ function planPermitHafrashUse(taba) {
                         }
                         if (consRec.url) html += `<div class="popup-sub-row" style="font-size:10px"><a href="${escD(consRec.url)}" target="_blank" rel="noopener" style="color:#5dade2">↗ ${escD(consRec.doc_label || 'תיק התיעוד במבא"ת')}</a></div>`;
                     }
+                    // ── 💰 Economic report (economic_reports.json): what the developer's Standard-21
+                    // opinion says is required vs what the plan gives, and whether its sale-price
+                    // assumption matches actual new-build deals in the plan's sub-neighbourhood.
+                    // A price below the market makes the required multiplier look higher.
+                    const ecoRec = ((window.__economicReports || {}).plans || {})[props.plan_name];
+                    if (ecoRec) {
+                        const fmtN = v => (v == null || v === '') ? '-' : Number(v).toLocaleString('he-IL');
+                        html += '<div class="popup-section-title">💰 דוח כלכלי</div>';
+                        if (ecoRec.unit_ratio != null || ecoRec.approved_ratio != null) {
+                            const g = ecoRec.gap_pct;
+                            const gCol = g == null ? '#8a93a6' : g < -1 ? '#ff6b6b' : g > 1 ? '#64b5f6' : '#a5d6a7';
+                            html += '<div class="popup-pair">'
+                                + `<div class="popup-pair-item"><span class="popup-pair-label">מכפיל נדרש (דוח)</span><span class="popup-pair-value">${ecoRec.unit_ratio != null ? '×' + ecoRec.unit_ratio : '-'}</span></div>`
+                                + `<div class="popup-pair-item"><span class="popup-pair-label">מכפיל בתכנית</span><span class="popup-pair-value">${ecoRec.approved_ratio != null ? '×' + ecoRec.approved_ratio : '-'}</span></div>`
+                                + '</div>';
+                            if (g != null) html += `<div class="popup-sub-row" style="font-size:10px">יח"ד בתכנית מול הנדרש בדוח: <b style="color:${gCol}">${g > 0 ? '+' : ''}${g}%</b>${g < -1 ? ' — פחות מהנדרש' : ''}</div>`;
+                            else if (ecoRec.gap_note) html += `<div class="popup-sub-row" style="font-size:10px;color:#8a93a6">${escD(ecoRec.gap_note)}</div>`;
+                        }
+                        if (ecoRec.profit_pct_cost != null)
+                            html += `<div class="popup-sub-row" style="font-size:10px">רווח יזמי: <b>${ecoRec.profit_pct_cost}%</b> מהעלויות${ecoRec.profit_threshold ? ' <span style="color:#8a93a6">(סף בדוח: ' + escD(ecoRec.profit_threshold) + ')</span>' : ''}</div>`;
+                        const sp = ecoRec.sale_price_sqm || {};
+                        const mk = ecoRec.market;
+                        if (sp.value) {
+                            html += `<div class="popup-sub-row" style="font-size:10px;white-space:normal">מחיר בדוח: <b>₪${fmtN(sp.value)}</b> למ"ר <span style="color:#8a93a6">${escD(sp.unit || '')}</span></div>`;
+                            if (mk && mk.median) {
+                                const warn = mk.pct <= -5 && mk.confidence === 'ok';
+                                const pCol = mk.pct <= -5 ? '#ff6b6b' : mk.pct >= 5 ? '#64b5f6' : '#a5d6a7';
+                                const where = mk.scope === 'sub' ? (mk.sub || 'תת-השכונה') : mk.scope === 'minahak' ? 'המינה"ק' : 'רדיוס 500 מ\'';
+                                html += `<div class="popup-sub-row" style="font-size:10px;white-space:normal">חציון עסקאות בדירות חדשות (${escD(where)}, ${mk.months || 24} ח' לפני הדוח): <b>₪${fmtN(mk.median)}</b>`
+                                    + ` <span style="color:#8a93a6">(${fmtN(mk.q1)}–${fmtN(mk.q3)}, ${mk.n} עסקאות)</span></div>`;
+                                html += `<div class="popup-sub-row" style="font-size:10.5px">${warn ? '⚠️ ' : ''}מחיר הדוח מול השוק: <b style="color:${pCol}">${mk.pct > 0 ? '+' : ''}${mk.pct}%</b>`
+                                    + (mk.pct <= -5 ? ' <span style="color:#ffb74d">— מחיר נמוך מהשוק מגדיל את המכפיל הנדרש</span>' : '')
+                                    + (mk.confidence === 'low' ? ' <span style="color:#8a93a6">(ביטחון נמוך — מעט עסקאות)</span>' : '') + '</div>';
+                                if (mk.basis_note) html += `<div class="popup-sub-row" style="font-size:9.5px;color:#e6a23c">${escD(mk.basis_note)} — חלק מהפער הוא הבדל הגדרה</div>`;
+                            }
+                        }
+                        const extras = [];
+                        if (ecoRec.tenant_added_sqm != null) extras.push('תוספת לדייר ' + ecoRec.tenant_added_sqm + ' מ"ר');
+                        if (ecoRec.appraiser) extras.push(escD(ecoRec.appraiser));
+                        if (ecoRec.date) extras.push(escD(ecoRec.date));
+                        if (extras.length) html += `<div class="popup-sub-row" style="font-size:9.5px;color:#8a93a6;white-space:normal">${extras.join(' · ')}</div>`;
+                        if (ecoRec.url) html += `<div class="popup-sub-row" style="font-size:10px"><a href="${escD(ecoRec.url)}" target="_blank" rel="noopener" style="color:#5dade2">↗ חוות הדעת במבא"ת</a></div>`;
+                    }
                 }
 
                 html += '</div>'; // end popup-body
@@ -37111,12 +37154,13 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 rows: consRows.map(r => [r.plan_name, r.minahak, r.building || '', r.built || '', r.listed || '',
                                     r.quality === 'no_file' ? (r.summary || 'אין תיק תיעוד') : (r.recommendation || ''), r.documenter || '', r.doc_date || '']) },
                             economic: { title: 'חוות דעת כלכליות — מכפיל נדרש מול מאושר',
-                                head: ['תב"ע', 'שם', 'מינה"ק', 'יח"ד קיימות→מאושרות', 'מכפיל נדרש (דוח)', 'מכפיל מאושר', 'פער %', 'רווח מהעלויות %', 'סף בדוח', 'מחיר למ"ר', 'תוספת לדייר מ"ר', 'שמאי', 'תאריך דוח'],
+                                head: ['תב"ע', 'שם', 'מינה"ק', 'יח"ד קיימות→מאושרות', 'מכפיל נדרש (דוח)', 'מכפיל מאושר', 'פער %', 'רווח מהעלויות %', 'סף בדוח', 'מחיר למ"ר', 'חציון עסקאות', 'מחיר מול שוק %', 'תוספת לדייר מ"ר', 'שמאי', 'תאריך דוח'],
                                 rows: ecoRows.map(r => [r.plan_name, r.title, r.minahak,
                                     (r.approved_existing && r.approved_total) ? r.approved_existing + '→' + r.approved_total : '',
                                     r.unit_ratio == null ? '' : r.unit_ratio, r.approved_ratio == null ? '' : r.approved_ratio,
                                     r.gap_pct == null ? '' : r.gap_pct, r.profit_pct_cost == null ? '' : r.profit_pct_cost,
-                                    r.profit_threshold || '', price(r) || '', r.tenant_added_sqm == null ? '' : r.tenant_added_sqm,
+                                    r.profit_threshold || '', price(r) || '', r.market && r.market.median ? r.market.median : '',
+                                    r.market && r.market.pct != null ? r.market.pct : '', r.tenant_added_sqm == null ? '' : r.tenant_added_sqm,
                                     r.appraiser || '', r.date || '']) },
                         };
                         const tab = TABS[F.tab] ? F.tab : 'summary';
@@ -37165,6 +37209,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         <p style={{color: '#bbb', fontSize: 11.5, marginBottom: 8, lineHeight: 1.6}}>
                                             פער = יח"ד מאושרות ÷ יח"ד שהדוח קבע כנדרשות − 1 (כשהדוח לא מציין יח"ד — לפי המכפיל). <span style={{color: '#ff6b6b'}}>שלילי</span> = התכנית אושרה עם פחות יח"ד מהנדרש לפי הדוח שלה (מועמדת לתקיעה כלכלית).
                                             {ecoRows.length > 0 && <> · חציון רווח: <b>{medProfit == null ? '-' : medProfit.toFixed(1) + '%'}</b> · מתחת לנדרש: <b>{belowReq}</b> מתוך {ecoRows.length}</>}
+                                            <br />מחיר מול שוק = מחיר הדוח מול חציון עסקאות בדירות חדשות (בנייה 2018+) בתת-השכונה, 24 חודשים לפני הדוח (over.org.il). <span style={{color: '#ff6b6b'}}>⚠ שלילי</span> = הדוח מניח מחיר נמוך מהשוק, ולכן "מצדיק" מכפיל גבוה יותר. * = ביטחון נמוך או בסיס מחיר שונה.
                                             {ecoRows.some(r => r.approved_source === 'gs') && <><br /><span style={{color: '#ffb74d'}}>* מכפיל מאושר מהגיליון (מבא"ת לא החזיר כמויות) — עשוי לכלול יח"ד קרן תחזוקה או רכיבים שאינם בדוח.</span></>}
                                         </p>
                                     )}
@@ -37213,6 +37258,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#a5d6a7'}}>{r.profit_pct_cost == null ? '-' : r.profit_pct_cost + '%'}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#888', fontSize: 10, maxWidth: 110}}>{r.profit_threshold || '-'}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#ffcc80'}}>{price(r) ? '₪' + price(r).toLocaleString('he-IL') : '-'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', color: '#bbb'}} title={r.market ? ((r.market.scope === 'sub' ? r.market.sub : r.market.scope) + ' · ' + r.market.n + ' עסקאות') : ''}>{r.market && r.market.median ? '₪' + r.market.median.toLocaleString('he-IL') : '-'}</td>
+                                                    <td style={{padding: '4px', textAlign: 'center', fontWeight: 700, color: !r.market ? '#888' : r.market.pct <= -5 ? '#ff6b6b' : r.market.pct >= 5 ? '#64b5f6' : '#a5d6a7'}}
+                                                        title={r.market ? ((r.market.confidence === 'low' ? 'ביטחון נמוך. ' : '') + (r.market.basis_note || '')) : ''}>{r.market && r.market.pct != null ? (r.market.pct <= -5 && r.market.confidence === 'ok' ? '⚠ ' : '') + (r.market.pct > 0 ? '+' : '') + r.market.pct + '%' + (r.market.confidence === 'low' || r.market.basis_note ? '*' : '') : '-'}</td>
                                                     <td style={{padding: '4px', textAlign: 'center', color: '#90caf9'}}>{r.tenant_added_sqm == null ? '-' : r.tenant_added_sqm}</td>
                                                     <td style={{padding: '4px', color: '#999', fontSize: 10}}>{r.appraiser || '-'}</td>
                                                     <td style={{padding: '4px', color: '#888', fontSize: 10, whiteSpace: 'nowrap'}}>{r.url ? <a href={r.url} target="_blank" rel="noopener" style={{color: '#888'}}>{r.date || '↗'}</a> : (r.date || '-')}</td>

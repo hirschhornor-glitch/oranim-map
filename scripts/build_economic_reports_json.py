@@ -73,6 +73,7 @@ def main():
     for path in sorted(glob.glob(os.path.join(DOCS, "economic_extractions", "*.json"))):
         ext.update(load(path, {}) or {})
     queue = load(os.path.join(ROOT, "plan_documents_queue.json"), {}).get("economic", {})
+    bench = load(os.path.join(DOCS, "econ_price_benchmark.json"), {}) or {}
 
     out = {}
     for pl, rec in sorted(ext.items()):
@@ -107,6 +108,18 @@ def main():
                                             "tenant_added_sqm") if k in v} for v in main_vers]
         if rec.get("comment"):
             e["comment"] = rec["comment"]
+        # Report price vs actual new-build deals nearby (econ_price_benchmark.py).
+        b = bench.get(pl)
+        if b and b.get("market_median") and b.get("report_price") == (head.get("sale_price_sqm") or {}).get("value"):
+            e["market"] = {k2: b.get(k1) for k1, k2 in (
+                ("market_median", "median"), ("market_q1", "q1"), ("market_q3", "q3"), ("n_deals", "n"),
+                ("scope", "scope"), ("sub_neighborhood", "sub"), ("confidence", "confidence"),
+                ("report_vs_market_pct", "pct"), ("window_months", "months"))}
+            # A per-type or "equivalent"/envelope area price isn't a project average
+            # per net m² — the gap is then partly a definition difference.
+            unit = ((head.get("sale_price_sqm") or {}).get("unit") or "").split(";")[0]
+            if any(w in unit for w in ("אקוויוולנט", "מעטפת", "טיפוס", "דירות B", "חדרים", "נטו")):
+                e["market"]["basis_note"] = "בסיס המחיר בדוח אינו ממוצע פלדלת לכל הפרויקט"
         q = queue.get(pl) or {}
         e["url"] = q.get("url") or plans[pl].get("mavat_url") or ""
         out[pl] = {k: v for k, v in e.items() if v is not None}
