@@ -1,5 +1,5 @@
 {
- "count": 176,
+ "count": 196,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -2645,6 +2645,351 @@
    "units": null,
    "is_residents": false,
    "minahak": "גינות העיר"
+  },
+  "2022/0448.00": {
+   "developer": "יסודות שיתוףחברהלבניןבע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "יסודות",
+     "group": "יסודות שיתוףחברהלבניןבע\"מ",
+     "name": "יסודות שיתוףחברהלבניןבע\"מ"
+    }
+   ],
+   "architect": "משה זיידמן",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2022/0454.00": {
+   "developer": "ב.ק. יזמות ובניה",
+   "developer_parts": [
+    {
+     "applicant": "ב.ק",
+     "group": "ב.ק. יזמות ובניה",
+     "name": "ב.ק. יזמות ובניה"
+    }
+   ],
+   "architect": "משה זיידמן",
+   "units": 8,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2022/0056.00": {
+   "developer": "דרך בית לחם 106 תמ\"א 38 בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "תמ\"א 38 בע\"מ",
+     "group": "דרך בית לחם 106",
+     "name": "דרך בית לחם 106 תמ\"א 38 בע\"מ"
+    }
+   ],
+   "architect": "דניאל סלם",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2022/0057.00": {
+   "developer": "פנינת מטודלה בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "פנינת מטודלה בע\"מ",
+     "group": "",
+     "name": "פנינת מטודלה בע\"מ"
+    }
+   ],
+   "architect": "אוריה שוחט (קליגר)",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2022/0583.00": {
+   "developer": "א.ג. גולד נכסים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "נכסים בע\"מ",
+     "group": "א.ג. גולד",
+     "name": "א.ג. גולד נכסים בע\"מ"
+    }
+   ],
+   "architect": "עודד קאסוטו",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2022/0063.00": {
+   "developer": "יתד התחדשות עירונית בע\"מ / שמואל זוסמן",
+   "developer_parts": [
+    {
+     "applicant": "עירונית בע\"מ",
+     "group": "יתד התחדשות",
+     "name": "יתד התחדשות עירונית בע\"מ"
+    },
+    {
+     "applicant": "שמואל",
+     "group": "זוסמן",
+     "name": "שמואל זוסמן"
+    }
+   ],
+   "architect": "פרי חמם",
+   "units": 3,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2023/0179.00": {
+   "developer": "קשת נדל\"ן סוקולוב בע\"מ / ארנסטר אברהם / שמחה קאופמן",
+   "developer_parts": [
+    {
+     "applicant": "מוטי",
+     "group": "קשת נדל\"ן סוקולוב בע\"מ",
+     "name": "קשת נדל\"ן סוקולוב בע\"מ"
+    },
+    {
+     "applicant": "ארנסטר אברהם",
+     "group": "",
+     "name": "ארנסטר אברהם"
+    },
+    {
+     "applicant": "שמחה",
+     "group": "קאופמן",
+     "name": "שמחה קאופמן"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2023/0196.00": {
+   "developer": "הילדסהיימר 10 תמ\"א 38 בע\"מ / שרמן ג'קלין / יעקב הייסר / חנוך חיים אסף",
+   "developer_parts": [
+    {
+     "applicant": "תמ\"א 38 בע\"מ",
+     "group": "הילדסהיימר 10",
+     "name": "הילדסהיימר 10 תמ\"א 38 בע\"מ"
+    },
+    {
+     "applicant": "שרמן ג'קלין",
+     "group": "",
+     "name": "שרמן ג'קלין"
+    },
+    {
+     "applicant": "יעקב",
+     "group": "הייסר",
+     "name": "יעקב הייסר"
+    },
+    {
+     "applicant": "חנוך חיים",
+     "group": "אסף",
+     "name": "חנוך חיים אסף"
+    }
+   ],
+   "architect": "דינה יוסף",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2023/0320.00": {
+   "developer": "שותפות מוגבלת",
+   "developer_parts": [
+    {
+     "applicant": "טרא מרים החשמונאית 8",
+     "group": "שותפות מוגבלת",
+     "name": "שותפות מוגבלת"
+    },
+    {
+     "applicant": "טרא גדליה 2",
+     "group": "שותפות מוגבלת",
+     "name": "שותפות מוגבלת"
+    }
+   ],
+   "architect": "נסים אללו",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2023/0348.00": {
+   "developer": "ע\"י עו\"ד נחמיה פוזנר סטדמאור מריסה וריצרד",
+   "developer_parts": [
+    {
+     "applicant": "ע\"י עו\"ד נחמיה פוזנר",
+     "group": "סטדמאור מריסה וריצרד",
+     "name": "ע\"י עו\"ד נחמיה פוזנר סטדמאור מריסה וריצרד"
+    }
+   ],
+   "architect": "אמציה אהרונסון",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2023/0369.00": {
+   "developer": "לביא בטשרניחובסקי 32 בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "חגי",
+     "group": "לביא בטשרניחובסקי 32 בע\"מ",
+     "name": "לביא בטשרניחובסקי 32 בע\"מ"
+    }
+   ],
+   "architect": "בעז ביטמן",
+   "units": 34,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2023/0475.00": {
+   "developer": "נוף ביתר נוף ביתר",
+   "developer_parts": [
+    {
+     "applicant": "נוף ביתר",
+     "group": "נוף ביתר",
+     "name": "נוף ביתר נוף ביתר"
+    }
+   ],
+   "architect": "דקל בר",
+   "units": 10,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2023/0585.00": {
+   "developer": "אסדן ישראל בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "יהודה גבריאל",
+     "group": "אסדן ישראל בע\"מ",
+     "name": "אסדן ישראל בע\"מ"
+    }
+   ],
+   "architect": "עמוס דר",
+   "units": 12,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2024/0129.00": {
+   "developer": "בשם המבקשים עו\"ד אורי ליקר / שרמן ג'קלין",
+   "developer_parts": [
+    {
+     "applicant": "בשם המבקשים",
+     "group": "עו\"ד אורי ליקר",
+     "name": "בשם המבקשים עו\"ד אורי ליקר"
+    },
+    {
+     "applicant": "בשם המבקשים",
+     "group": "עו\"ד אורי ליקר",
+     "name": "בשם המבקשים עו\"ד אורי ליקר"
+    },
+    {
+     "applicant": "שרמן ג'קלין",
+     "group": "",
+     "name": "שרמן ג'קלין"
+    }
+   ],
+   "architect": "יצחק שפירא",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2024/0152.00": {
+   "developer": "ג''''רלד מרק רפפורט / עינבר אלה",
+   "developer_parts": [
+    {
+     "applicant": "ג''''רלד מרק",
+     "group": "רפפורט",
+     "name": "ג''''רלד מרק רפפורט"
+    },
+    {
+     "applicant": "עינבר",
+     "group": "אלה",
+     "name": "עינבר אלה"
+    }
+   ],
+   "architect": "צבי רוזנבלום",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2024/0194.00": {
+   "developer": "101 בע\"מ יזמות והשקעות בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "טליה",
+     "group": "101 בע\"מ יזמות והשקעות בע\"מ",
+     "name": "101 בע\"מ יזמות והשקעות בע\"מ"
+    }
+   ],
+   "architect": "אמיר יצחק שהם",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2024/0221.00": {
+   "developer": "אוליביה איינס א.ה קפיטל אינווסט ישראל",
+   "developer_parts": [
+    {
+     "applicant": "אוליביה איינס",
+     "group": "א.ה קפיטל אינווסט ישראל",
+     "name": "אוליביה איינס א.ה קפיטל אינווסט ישראל"
+    }
+   ],
+   "architect": "מיכל מאיר יומא אדריכלים",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2024/0225.00": {
+   "developer": "חיזוק ושימור מבנים בע\"מ / שרמן ג'קלין",
+   "developer_parts": [
+    {
+     "applicant": "אביב 38",
+     "group": "חיזוק ושימור מבנים בע\"מ",
+     "name": "חיזוק ושימור מבנים בע\"מ"
+    },
+    {
+     "applicant": "שרמן ג'קלין",
+     "group": "",
+     "name": "שרמן ג'קלין"
+    }
+   ],
+   "architect": "דינה גלר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2024/0236.00": {
+   "developer": "גולד קפיטל / נתנאל שרביט",
+   "developer_parts": [
+    {
+     "applicant": "גולד",
+     "group": "קפיטל",
+     "name": "גולד קפיטל"
+    },
+    {
+     "applicant": "נתנאל",
+     "group": "שרביט",
+     "name": "נתנאל שרביט"
+    }
+   ],
+   "architect": "מיכל דלה פרגולה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2024/0250.00": {
+   "developer": "י.ק.ה תמא 38 חברת / שרמן ג'קלין",
+   "developer_parts": [
+    {
+     "applicant": "י.ק.ה תמא 38",
+     "group": "חברת",
+     "name": "י.ק.ה תמא 38 חברת"
+    },
+    {
+     "applicant": "שרמן ג'קלין",
+     "group": "",
+     "name": "שרמן ג'קלין"
+    }
+   ],
+   "architect": "דן ברלב",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
   }
  }
 }
