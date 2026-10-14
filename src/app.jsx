@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-14-active-site-addr';
+        const APP_VERSION = '2026-10-14-online-submissions';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1893,7 +1893,10 @@ function planPermitHafrashUse(taba) {
             return tama38RawPermits(fid).some(p => p && permitReachedGmar(p.file_number));
         }
         function _tama38PermitClosed(p) { const s = ((p && p.status) || '').trim(); return s.indexOf('נסגר') !== -1 || s.indexOf('בוטל') !== -1; }
-        function _tama38PermitTest(p) { return (((p && p.status) || '').trim()) === 'הגשה מקוונת הושלמה'; }
+        // "הגשה מקוונת הושלמה" = submitted online, no רישוי file opened yet. A real request (2026/0245
+        // יהודה הנשיא 1, 59 יח"ד) — shown everywhere as טרום-רישוי, but its יח"ד never count until YK opens a file.
+        function permitIsOnlineSubmission(p) { return (((p && p.status) || '').trim()) === 'הגשה מקוונת הושלמה'; }
+        function _tama38PermitTest(p) { return permitIsOnlineSubmission(p); }
         // A תמ"א 38 building's file is "closed" when EVERY real permit request is closed/cancelled
         // (נסגרה/בוטל), UNLESS it reached תעודת גמר. Closed files render grey and hidden by default
         // on the map, and must NOT count as adding יח"ד in any summary.
@@ -12335,7 +12338,7 @@ function planPermitHafrashUse(taba) {
                         const cur = byTik[key];
                         const rank = EXEC_RANK[b] || 0;
                         if (!cur) {
-                            byTik[key] = { key, stage: b, rank, units: Number(mp.units_added) || 0,
+                            byTik[key] = { key, stage: b, rank, units: permitIsOnlineSubmission(mp) ? 0 : (Number(mp.units_added) || 0),
                                 revs: [pm.file_number], status: pm.status, date: pm.status_date,
                                 desc: pm.request_description || '', mig: migByTik[String(pm.file_number)] || [] };
                         } else {
@@ -22402,7 +22405,7 @@ function planPermitHafrashUse(taba) {
                             const _t5u = (window.__table5Units || {})[String(taba)] || {};
                             const _planUnits = _nums.reduce((s, n) => s + (Number(_t5u[n]) || 0), 0);
                             const _seenBase = {}; let _permitUnits = 0;
-                            permits.forEach(p => { const m = masterPermit(p.file_number); if (!m || _seenBase[m.tik]) return; _seenBase[m.tik] = 1; _permitUnits += Number(m.units_added) || 0; });
+                            permits.forEach(p => { const m = masterPermit(p.file_number); if (!m || _seenBase[m.tik]) return; _seenBase[m.tik] = 1; if (!permitIsOnlineSubmission(m)) _permitUnits += Number(m.units_added) || 0; });
                             _footprintGroups.push({ taba, nums: _nums, geom: feats[0].geometry, tiks, permits, stage, planProps: (window.__planByTaba || {})[taba] || feats[0].properties, planUnits: _planUnits, permitUnits: _permitUnits, unitsGap: _permitUnits - _planUnits });
                         });
                         // Expose for the "מיצוי יח\"ד לפי מגרש" report (computed once here).
@@ -23527,12 +23530,8 @@ function planPermitHafrashUse(taba) {
                 const s = (p.status || '').trim();
                 return s.includes('נסגרה') || s.includes('בוטל') || s === 'הבקשה נסגרה';
             }
-            function isPermitTest(p) {
-                // "הגשה מקוונת הושלמה" = form submitted online but no real permit activity — treat as test/placeholder
-                return (p.status || '').trim() === 'הגשה מקוונת הושלמה';
-            }
             function _includePermit(p) {
-                return !p.filtered && !isPermitClosed(p) && !isPermitTest(p);
+                return !p.filtered && !isPermitClosed(p);
             }
             function getPermitsForTaba(taba) {
                 const data = window.__allPermits || {};
@@ -24417,6 +24416,12 @@ function planPermitHafrashUse(taba) {
                     if (p && p.plan_irrelevant) { included[i] = false; offPlan++; }
                 });
                 if (offPlan > 0) rules.push('לא מבצעים את התכנית (' + offPlan + ')');
+                // Rule 0b: an online submission YK has not opened a file for yet is shown, not counted
+                let online = 0;
+                permits.forEach((p, i) => {
+                    if (included[i] && permitIsOnlineSubmission(p)) { included[i] = false; online++; }
+                });
+                if (online > 0) rules.push('הגשה מקוונת — טרם נפתח תיק (' + online + ')');
                 // Rule 1: one תיק, one application — except when it isn't.
                 // The .NN sub-files of a תיק are USUALLY stages of a single application
                 // (.00 = הריסה/חפירה/דיפון, .01 = the main permit) and counting them all

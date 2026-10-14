@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v123-active-site-addr';
+const CACHE_VERSION = 'v124-online-submissions';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
