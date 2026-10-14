@@ -1228,6 +1228,98 @@
     "household_size": 2.6,
     "delta_household": -0.3
    }
+  },
+  "101-1475052": {
+   "plan_name": "התחדשות עירונית ברחוב טשרניחובסקי 59 57 בירושלים",
+   "doc": "נספח חברתי (דוח חברתי, רובד גיאולוגיה וייעוץ חברתי)",
+   "doc_source": "mavat",
+   "doc_date": "2025-11-23",
+   "survey_date": "2025-06",
+   "units_existing": 26,
+   "public_housing": 0,
+   "owner_occupied": 4,
+   "rented": 14,
+   "survey_interviews": 18,
+   "survey_coverage_pct": 69,
+   "survey_no_response": 5,
+   "avg_household_size": 2.1,
+   "families_with_children": 5,
+   "households_couples": 5,
+   "households_single": 8,
+   "elderly_total": 1,
+   "special_needs_units": 6,
+   "owners_with_multiple_units": 0,
+   "age_dist_pct": {
+    "0-4": 12,
+    "5-9": 7,
+    "10-14": 5,
+    "15-19": 0,
+    "20-24": 12,
+    "25-29": 15,
+    "30-34": 10,
+    "35-39": 12,
+    "40-44": 10,
+    "45-49": 5,
+    "50-54": 7,
+    "55-59": 2,
+    "60-64": 0,
+    "65-69": 0,
+    "70-74": 2,
+    "75+": 0
+   },
+   "religiosity_pct": {
+    "לא דתיים": 65,
+    "מסורתיים או דתיים": 35,
+    "חרדים": 0
+   },
+   "origin_pct": {
+    "ישראל": 83,
+    "אירופה-אמריקה": 9,
+    "אסיה": 9
+   },
+   "buildings": [
+    {
+     "name": "טשרניחובסקי 57 (חלקה 47)",
+     "units": 13,
+     "signatures": 8,
+     "signature_pct": 61.53
+    },
+    {
+     "name": "טשרניחובסקי 59 (חלקה 46)",
+     "units": 13,
+     "signatures": 11,
+     "signature_pct": 84.61
+    }
+   ],
+   "signatures": 19,
+   "signature_pct": 73.07,
+   "signature_date": "2025-01-28",
+   "confidence": "high",
+   "pages": [
+    4,
+    16,
+    17,
+    18,
+    19,
+    20,
+    22,
+    24,
+    32
+   ],
+   "note": "owner_occupied/rented מתוך 18 הדירות שרואיינו (4 גרים, 14 מושכרות), לא מכל 26. אין דיור ציבורי. משפחות/זוגות/בודדים לפי הראיונות: בעלים גרים — משפחה 1, 2 זוגות, בודד 1; שוכרים — 4 משפחות, 3 זוגות, 7 דירות לבודדים (4 בודדים, 3 שותפויות סטודנטים). age_dist_pct נקרא מגרף עמודות (עמ' 19) — ערכים בקירוב; אזרחים ותיקים: 2%, דיירת אחת. צרכים מיוחדים: 23%, 6 יח\"ד. דתיות ומוצא באחוזים מהמרואיינים. אחוזי החתימה מועתקים ממכתב עו\"ד מ-29.06.2025 שוכרים/בעלים מתוך 18 דירות שרואיינו (69% מ-26); אחוז השכירות מחושב על בסיס המרואיינים.",
+   "taba": "1475052",
+   "rented_pct_calc": 77.8,
+   "public_housing_pct": 0.0,
+   "elderly_pct_calc": 2.0,
+   "cbs": {
+    "stat_area_id": 1222,
+    "rent_pcnt": 48.6,
+    "age65_pcnt": 23.0,
+    "household_size": 2.5,
+    "delta_rent": 29.2,
+    "delta_elderly": -21.0,
+    "delta_household": -0.4
+   }
   }
  }
 }
