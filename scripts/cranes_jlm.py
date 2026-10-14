@@ -84,6 +84,18 @@ def norm(s):
     return re.sub(r"\s+", " ", s).strip()
 
 
+def addr_matches(addr, street, num):
+    """True when a permit address names the site's street and house number (ranges like '2-4' count)."""
+    if not addr or not street or num is None:
+        return False
+    a = norm(addr)
+    m = re.search(r"(?<![א-ת])" + re.escape(street) + r"\s*(\d{1,3})(?:\s*(\d{1,3}))?", a)
+    if not m:
+        return False
+    lo = int(m.group(1)); hi = int(m.group(2)) if m.group(2) else lo
+    return lo <= num <= max(lo, hi)
+
+
 OUT_NEIGH = ["גבעת מרדכי", "נחלאות", "פסגת זאב", "רמות", "גילה", "הר חומה", "בית חנינא",
              "שועפט", "רמת שלמה", "סנהדריה", "רמת אשכול", "קרית יובל", "עיר גנים",
              "גבעת המטוס", "הר הצופים", "עין כרם", "גבעת משואה", "רוממה", "מרכז העיר",
@@ -157,7 +169,9 @@ def main():
 
     permits = json.load(open(DATA + "permits_master.json", encoding="utf-8"))["permits"]
     pikuah = json.load(open(DATA + "pikuah_status.json", encoding="utf-8"))["by_permit"]
-    pts = [(p, p["lat"], p["lng"]) for p in permits.values() if p.get("lat") and p.get("lng")]
+    # a closed/cancelled request can't be what an active site is building under
+    pts = [(p, p["lat"], p["lng"]) for p in permits.values() if p.get("lat") and p.get("lng")
+           and not re.search(r"נסגרה|בוטל", p.get("status") or "")]
 
     feats, unlocated, rejected = [], [], []
     for s in sites:
@@ -190,8 +204,12 @@ def main():
                 continue
 
         near = sorted(((math.dist((pt.y, pt.x), (la, lo)) * 111000, p) for p, la, lo in pts),
-                      key=lambda t: t[0])[:1]
-        dist, perm = (near[0][0], near[0][1]) if near else (None, None)
+                      key=lambda t: t[0])
+        # a permit filed at the site's own street+number beats a neighbour that is a few
+        # metres closer (יהודה הנשיא 2 got 2026/245 of no. 1 at 23 m over its own 2023/211 at 24 m)
+        same = [t for t in near[:40] if t[0] <= 300 and addr_matches(t[1].get("address"), st, num)]
+        best = same[0] if same else (near[0] if near else None)
+        dist, perm = best if best else (None, None)
         pk = pikuah.get(perm["tik"]) if perm else None
         feats.append({
             "type": "Feature",
@@ -220,7 +238,7 @@ def main():
 
     json.dump({"type": "FeatureCollection",
                "meta": {"source": "gov.il active-building-sites",
-                        "fetched": time.strftime("%Y-%m-%d"), "city_total": len(sites)},
+                        "fetched": time.strftime("%Y-%m-%d", time.localtime(os.path.getmtime(RAW))), "city_total": len(sites)},
                "features": feats},
               open(GEO, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
@@ -241,7 +259,7 @@ def main():
         })
     app_sites.sort(key=lambda r: (-r["cranes"], -(r["warrants"] + r["sanctions"]), r["name"]))
     json.dump({"meta": {"source": "מנהל הבטיחות בעבודה — אתרי בנייה פעילים (gov.il)",
-                        "url": PAGE, "fetched": time.strftime("%Y-%m-%d"),
+                        "url": PAGE, "fetched": time.strftime("%Y-%m-%d", time.localtime(os.path.getmtime(RAW))),
                         "city_total": len(sites), "in_district": len(app_sites)},
                "sites": app_sites},
               open(APP, "w", encoding="utf-8"), ensure_ascii=False)
