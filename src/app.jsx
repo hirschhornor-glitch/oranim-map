@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-14-soil-barriers';
+        const APP_VERSION = '2026-10-14-no-appendix-chips';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -26139,21 +26139,7 @@ function planPermitHafrashUse(taba) {
                 // (conservation_docs.json). Keyed by plan number (101-XXXXXXX).
                 {
                     const escD = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-                    const PD = window.__planDocuments || { plans: {} };
-                    const docRec = (PD.plans || {})[props.plan_name];
                     const consRec = ((window.__conservationDocs || {}).plans || {})[props.plan_name];
-                    if (docRec && docRec.cats && docRec.cats.length) {
-                        const labels = PD.categories || {};
-                        const order = ['conservation', 'trees', 'social', 'program', 'economic', 'shading', 'environment', 'water', 'infrastructure', 'binui', 'general'];
-                        const cats = docRec.cats.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b));
-                        html += '<div class="popup-section-title">📎 נספחים בתכנית</div>';
-                        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px">';
-                        cats.forEach(c => {
-                            const names = (docRec.docs || []).filter(d => d.c === c).map(d => d.n).join(' · ');
-                            html += `<span title="${escD(names)}" style="background:rgba(127,140,170,.18);border:1px solid rgba(127,140,170,.35);border-radius:10px;padding:1px 8px;font-size:10px;white-space:nowrap">${escD(labels[c] || c)}</span>`;
-                        });
-                        html += '</div>';
-                    }
                     if (consRec) {
                         html += '<div class="popup-section-title">🏛️ תיק תיעוד ושימור</div>';
                         if (consRec.quality === 'no_file') {
