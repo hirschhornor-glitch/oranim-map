@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-13-valency-reco';
+        const APP_VERSION = '2026-10-14-soil-barriers';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -6129,6 +6129,7 @@ function planPermitHafrashUse(taba) {
                     ['__assetAllocations', 'data/asset_allocations.json'],
                     ['__rentalFlags', 'data/rental_flags.json'],
                     ['__fuelBarriers', 'data/fuel_barriers.json'],
+                    ['__soilBarriers', 'data/soil_barriers.json'],
                     ['__binuiPlans', 'data/binui_plans.json'],
                     ['__parking', 'data/parking.json'],
                     ['__tama38Developers', 'data/tama38_developers.json'],
@@ -6654,6 +6655,7 @@ function planPermitHafrashUse(taba) {
                             else if (key === '__assetAllocations') { window.__assetAllocations = data || {}; }
                             else if (key === '__rentalFlags') { window.__rentalFlags = data || {}; }
                             else if (key === '__fuelBarriers') { window.__fuelBarriers = data || {}; }
+                            else if (key === '__soilBarriers') { window.__soilBarriers = data || {}; }
                             else if (key === '__binuiPlans') {
                                 // תכניות בינוי — design plans for public מגרשים inside an approved תב"ע.
                                 // Not statutory plans; indexed by (parent_taba, מגרש) so buildShavazPopup
@@ -26621,6 +26623,21 @@ function planPermitHafrashUse(taba) {
                     }
                     html += `<div style="margin:6px 0;padding:6px 8px;border-radius:6px;border:1px solid ${fbCol};background:${fbCrit ? 'rgba(229,115,115,0.12)' : 'rgba(224,192,138,0.10)'};font-size:11px;line-height:1.5">${fbHtml}</div>`;
                 }
+                // 🧪 Soil contamination — the plan's own soil survey / environmental opinion
+                // (data/soil_barriers.json, keyed by taba). Plan-level: the surveys rarely say which
+                // lot, so the note applies to every public lot of the plan and says so.
+                const sbRec = ((window.__soilBarriers || {}).by_taba || {})[String(taba || '')];
+                if (sbRec && (sbRec.status === 'confirmed' || sbRec.status === 'suspected')) {
+                    const sbConf = sbRec.status === 'confirmed';
+                    const sbCol = sbConf ? '#ef9a9a' : '#e0c08a';
+                    const sbEsc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                    let sbHtml = `<b style="color:${sbCol}">🧪 ${sbConf ? 'זיהום קרקע מאומת בתחום התכנית' : 'חשד לזיהום קרקע בתחום התכנית'}</b><br>`;
+                    if (sbRec.summary) sbHtml += sbEsc(sbRec.summary);
+                    if (sbRec.required_actions) sbHtml += `<br><span style="color:#cfd8e3">נדרש: ${sbEsc(sbRec.required_actions)}</span>`;
+                    if (sbRec.permit_condition) sbHtml += ` <b style="color:${sbCol}">(תנאי להיתר)</b>`;
+                    sbHtml += `<br><span style="color:#8a9bc0;font-size:10px">לפי ${sbEsc(sbRec.doc_type || 'סקר הקרקע')} של התכנית${sbRec.date ? ' (' + sbEsc(sbRec.date) + ')' : ''}; ברמת התכנית, לא בהכרח המגרש הזה</span>`;
+                    html += `<div style="margin:6px 0;padding:6px 8px;border-radius:6px;border:1px solid ${sbCol};background:${sbConf ? 'rgba(229,115,115,0.12)' : 'rgba(224,192,138,0.10)'};font-size:11px;line-height:1.5">${sbHtml}</div>`;
+                }
                 if (tabaLot) {
                     html += `<div class="popup-row"${!isFuture ? ' style="font-weight:700"' : ''}><span class="popup-row-label">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
                 }
@@ -30706,6 +30723,9 @@ function planPermitHafrashUse(taba) {
                         const csv = () => {
                             const lines = [['חסם', 'דרגה', 'תב"ע', 'מגרש', 'שם התכנית', 'שימושים מתוכננים', 'מרחק (מ\')', 'התחנה', 'סוג התחנה', 'תב"ע שמפנה את התחנה'].map(csvQ).join(',')];
                             rows.forEach(r => lines.push(['קרבה לתחנת דלק', r.band === 'critical' ? 'בטווח תמ"א 18' : 'גבולי (80-150 מ\')', r.taba, r.lot, r.name, r.uses, r.dist_m, r.station, kindLabel(r.station_kind), evacDisp(r)].map(csvQ).join(',')));
+                            const SBc = (window.__soilBarriers || {}).by_taba || {};
+                            const stL = { confirmed: 'זיהום מאומת', suspected: 'חשד לזיהום', not_found: 'לא נמצא זיהום', not_assessed: 'לא נבדקה קרקע' };
+                            Object.entries(SBc).forEach(([taba, r]) => lines.push(['זיהום קרקע', stL[r.status] || r.status, taba, '', r.name, r.summary, '', r.required_actions, r.permit_condition ? 'תנאי להיתר' : '', r.public_plots_mentioned].map(csvQ).join(',')));
                             const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'fuel_barriers.csv'; document.body.appendChild(a); a.click(); a.remove();
                         };
                         const prnt = () => {
@@ -30714,14 +30734,22 @@ function planPermitHafrashUse(taba) {
                             h += '<p style="font-size:12px;color:#555">תמ"א 18/4: מרחק מינימלי מאי המשאבות — 80 מ\' ממוסדות חינוך, בריאות וקשישים; 40 מ\' ממגורים. המדידה כאן מגבול מגרש התחנה — סינון שמרני.</p>';
                             h += '<table><thead><tr><th>מרחק</th><th>תב"ע / מגרש</th><th>שם התכנית</th><th>שימושים</th><th>התחנה</th><th>תב"ע שמפנה את התחנה</th></tr></thead><tbody>';
                             rows.forEach(r => { h += '<tr' + (r.band === 'critical' ? ' class="crit"' : '') + '><td>' + e2(distDisp(r.dist_m)) + '</td><td>' + e2(r.taba + (r.lot ? ' / ' + r.lot : '')) + '</td><td>' + e2(r.name) + '</td><td>' + e2(r.uses) + '</td><td>' + e2(r.station + ' (' + kindLabel(r.station_kind) + ')') + '</td><td>' + e2(evacDisp(r)) + '</td></tr>'; });
-                            h += '</tbody></table></body></html>';
+                            h += '</tbody></table>';
+                            const SBp = (window.__soilBarriers || {}).by_taba || {};
+                            const stP = { confirmed: 'זיהום מאומת', suspected: 'חשד — טרם נדגם', not_found: 'נבדק — לא נמצא', not_assessed: 'לא נבדקה קרקע' };
+                            if (Object.keys(SBp).length) {
+                                h += '<h3>זיהום קרקע — לפי סקרי הקרקע של התכניות</h3><table><thead><tr><th>ממצא</th><th>תב"ע</th><th>שם התכנית</th><th>עיקרי הממצא</th><th>נדרש</th><th>תנאי להיתר</th></tr></thead><tbody>';
+                                Object.entries(SBp).forEach(([taba, r]) => { h += '<tr' + (r.status === 'confirmed' ? ' class="crit"' : '') + '><td>' + e2(stP[r.status] || r.status) + '</td><td>' + e2(taba) + '</td><td>' + e2(r.name) + '</td><td>' + e2(r.summary) + '</td><td>' + e2(r.required_actions) + '</td><td>' + (r.permit_condition ? 'כן' : 'לא') + '</td></tr>'; });
+                                h += '</tbody></table>';
+                            }
+                            h += '</body></html>';
                             const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
                         };
                         return (
                             <div className="units-overlay" onClick={() => setShowFuelBarriers(false)}>
                                 <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1150, width: '96%' }}>
                                     <div className="units-header" style={{ background: '#7a4a1e' }}>
-                                        <h2>⛽ חסמים למבני ציבור — קרבה לתחנת דלק</h2>
+                                        <h2>⛽ חסמים למבני ציבור — תחנות דלק וזיהום קרקע</h2>
                                         <ReportLinkBtn /><button className="units-close" onClick={() => setShowFuelBarriers(false)}>&times;</button>
                                     </div>
                                     <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
@@ -30758,6 +30786,39 @@ function planPermitHafrashUse(taba) {
                                                 {!rows.length && <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#86b89a' }}>אין מגרשי ציבור בקרבת תחנת דלק 🎉</td></tr>}
                                             </tbody>
                                         </table>
+                                        {(() => {
+                                            const SB = (window.__soilBarriers || {}).by_taba || {};
+                                            const soilRank = { confirmed: 0, suspected: 1, not_found: 2, not_assessed: 3 };
+                                            const soil = Object.entries(SB).map(([taba, r]) => ({ taba, ...r })).sort((x, y) => (soilRank[x.status] ?? 9) - (soilRank[y.status] ?? 9));
+                                            if (!soil.length) return null;
+                                            const stLabel = { confirmed: 'זיהום מאומת', suspected: 'חשד — טרם נדגם', not_found: 'נבדק — לא נמצא', not_assessed: 'לא נבדקה קרקע' };
+                                            const stCol = { confirmed: '#ef9a9a', suspected: '#e0c08a', not_found: '#a5d6a7', not_assessed: '#8a9bc0' };
+                                            return (<>
+                                                <h3 style={{ color: '#e0a973', fontSize: 15, margin: '18px 0 6px' }}>🧪 זיהום קרקע — לפי סקרי הקרקע של התכניות</h3>
+                                                <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 8 }}>
+                                                    מסקרי קרקע היסטוריים, סקרי איכות קרקע ופרק הקרקע בחוות הדעת הסביבתיות במבא"ת. הממצא ברמת התכנית — הסקרים כמעט אף פעם לא מצביעים על המגרש הציבורי עצמו.
+                                                    {' '}מאומת: <b style={{ color: '#ef9a9a' }}>{soil.filter(r => r.status === 'confirmed').length}</b> · חשד: <b style={{ color: '#e0c08a' }}>{soil.filter(r => r.status === 'suspected').length}</b> · לא נמצא: {soil.filter(r => r.status === 'not_found').length}
+                                                </div>
+                                                <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
+                                                    <thead><tr style={{ background: '#241c16', color: '#e0a973' }}>
+                                                        <th style={td}>ממצא</th><th style={td}>תב"ע</th><th style={td}>שם התכנית</th><th style={td}>עיקרי הממצא</th><th style={td}>נדרש</th><th style={td}>תנאי להיתר</th><th style={td}>מגרשי ציבור בסקר</th>
+                                                    </tr></thead>
+                                                    <tbody>
+                                                        {soil.map((r, i) => (
+                                                            <tr key={i} style={{ background: r.status === 'confirmed' ? '#2a1d1d' : 'transparent' }}>
+                                                                <td style={{ ...td, whiteSpace: 'nowrap', fontWeight: 700, color: stCol[r.status] }}>{stLabel[r.status] || r.status}</td>
+                                                                <td style={{ ...td, whiteSpace: 'nowrap' }}><a href="#" onClick={e => { e.preventDefault(); goToPlan(r.taba); }} style={{ color: '#64b5f6', textDecoration: 'underline' }}>{r.taba}</a></td>
+                                                                <td style={td}>{(r.name || '').slice(0, 50)}</td>
+                                                                <td style={{ ...td, fontSize: 11 }}>{r.summary || '—'}{r.url && <> <a href={r.url} target="_blank" rel="noopener" style={{ color: '#64b5f6' }}>↗</a></>}</td>
+                                                                <td style={{ ...td, fontSize: 11 }}>{r.required_actions || '—'}</td>
+                                                                <td style={{ ...td, textAlign: 'center', color: r.permit_condition ? '#e0c08a' : '#667' }}>{r.permit_condition ? 'כן' : 'לא'}</td>
+                                                                <td style={{ ...td, fontSize: 11, color: '#bfc8dc' }}>{r.public_plots_mentioned || '—'}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </>);
+                                        })()}
                                         <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 10 }}>
                                             מקורות תחנות: OSM (קיימות), ייעודי קרקע עירוניים 7410 ומבא"ת 910 (מאושרות/מתוכננות). עדכון: {FB.generated || ''}.
                                             "תב"ע שמפנה את התחנה" = תכנית עתידית שהתחנה בתחומה — סימן שהפינוי מתוכנן אך גם שהמבנה הציבורי עשוי לחכות לו.
@@ -31275,7 +31336,7 @@ function planPermitHafrashUse(taba) {
                                 { icon:'⚖️', title:'פערי שימוש — ספר הנכסים', desc:'שימוש בפועל מול טבלה 5, עם טיפול בתכניות חופפות', onClick:() => go(() => setShowUseGaps(true)) },
                                 { icon:'🔑', title:'נכסי ציבור בשכירות', desc:'מבני ומוסדות ציבור שהעירייה מחזיקה בשכירות/חכירה (לא בבעלותה) — לפי תחום ובעלים, כולל שימוש חורג בקרקע מגורים (גן בדירה)', onClick:() => go(() => setShowRentalAssets(true)) },
                                 { icon:'🏘️', title:'פרוגרמה שכונתית', desc:'חישוב כיתות ושירותים קהילתיים לפי מינהל', onClick:() => go(() => openPublicNeedsModal()) },
-                                { icon:'⛽', title:'חסמים למבני ציבור', desc:'מגרשי ציבור בקרבת תחנת דלק — תמ"א 18 (80 מ\' ממוסדות חינוך)', onClick:() => go(() => setShowFuelBarriers(true)) },
+                                { icon:'⛽', title:'חסמים למבני ציבור', desc:'מגרשי ציבור בקרבת תחנת דלק (תמ"א 18) ותכניות עם זיהום קרקע מאומת/חשוד לפי סקרי הקרקע שלהן', onClick:() => go(() => setShowFuelBarriers(true)) },
                             ]},
                             { key:'edu', title:'🏫 חינוך', color:'#ab47bc', bg:'rgba(171,71,188,0.06)', items:[
                                 { icon:'🏫', title:'תב"ע מאושרת ליד מוסד חינוך', desc:'שם, שכבת גיל, תלמידים/כיתות + תכניות סמוכות (סטטוס, היתר, יזם)', onClick:() => go(() => setEduRenewalReport(true)) },

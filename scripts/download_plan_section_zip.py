@@ -24,6 +24,7 @@ KEYWORDS = {
     "economic": ["כלכלית", "שמאי"],
     "social": ["נספח חברתי", "חברתי"],
     "program": ["פרוגרמה"],
+    "soil": ["קרקע היסטורי", "סקר קרקע", "איכות קרקע", "זיהום", "דו\"ח סביבה", "סביבה ונוף", "חוות דעת סביבתית"],
 }
 EXPAND = """()=>{try{document.querySelectorAll('.uk-accordion').forEach(el=>{const a=UIkit.accordion(el);
  el.querySelectorAll(':scope>li').forEach((li,i)=>{if(!li.classList.contains('uk-open'))a.toggle(i,false);});});}catch(e){}
@@ -84,11 +85,16 @@ def process(pg, pl, mp, kind):
                 pg.click(f"[data-zipmark='{m['idx']}']")
             raw = open(dl.value.path(), "rb").read()
             z = zipfile.ZipFile(io.BytesIO(raw))
-            for i, nm in enumerate(z.namelist()):
+            # Iterate entries, not names: Mavat ZIP names are cp862 mojibake and
+            # often collide, and z.read(name) then returns the LAST entry with that
+            # name for every one of them — 32 documents in 21 plans were lost that
+            # way (2026-10-14) before this read each entry by its ZipInfo.
+            for i, info in enumerate(z.infolist()):
+                nm = info.filename
                 if nm.lower().endswith((".pdf", ".dwfx")):
                     out = os.path.join(dest, f"s{m['idx']}_{i}{os.path.splitext(nm)[1].lower()}")
                     with open(out, "wb") as f:
-                        f.write(z.read(nm))
+                        f.write(z.read(info))
                     saved.append(out)
         except Exception as e:
             print(f"    ZIP {m['idx']} failed: {str(e)[:80]}")
