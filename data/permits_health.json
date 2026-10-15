@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T16:58:26",
+  "generated_at": "2026-10-15T05:07:32",
   "sources": [
     {
       "file": "all_permits.json",
@@ -7,7 +7,7 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 776,
       "last_publish": "2026-10-05",
-      "age_days": 7,
+      "age_days": 10,
       "status": "green",
       "notes": []
     },
@@ -16,8 +16,8 @@
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1355,
-      "last_publish": "2026-10-05",
-      "age_days": 7,
+      "last_publish": "2026-10-12",
+      "age_days": 3,
       "status": "green",
       "notes": []
     },
@@ -25,9 +25,9 @@
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
       "refresh": "לפי צורך",
-      "records": 101,
+      "records": 103,
       "last_publish": "2026-10-12",
-      "age_days": 0,
+      "age_days": 3,
       "status": "info",
       "notes": []
     },
@@ -35,11 +35,13 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 33,
-      "last_publish": "2026-10-12",
+      "records": 9,
+      "last_publish": "2026-10-15",
       "age_days": 0,
       "status": "green",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "objections_permits.json",
@@ -47,7 +49,7 @@
       "refresh": "שבועי",
       "records": 0,
       "last_publish": "2026-08-30",
-      "age_days": 43,
+      "age_days": 46,
       "status": "red",
       "notes": []
     },
@@ -57,7 +59,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 101,
+      "age_days": 104,
       "status": "info",
       "notes": []
     },
@@ -65,9 +67,9 @@
       "file": "tree_permits.json",
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
-      "records": 2,
-      "last_publish": "2026-10-09",
-      "age_days": 3,
+      "records": 6,
+      "last_publish": "2026-10-14",
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -77,7 +79,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 113,
+      "age_days": 116,
       "status": "info",
       "notes": []
     },
@@ -87,7 +89,7 @@
       "refresh": "לפי צורך",
       "records": 49,
       "last_publish": "2026-10-04",
-      "age_days": 8,
+      "age_days": 11,
       "status": "info",
       "notes": []
     }
@@ -106,23 +108,18 @@
       "status": 17,
       "removed": 0
     },
-    "age_days": 8
+    "age_days": 11
   },
   "committee_audit": {
-    "date": "2026-10-12",
+    "date": "2026-10-15",
     "age_days": 0,
     "status": "green",
-    "checked": 2,
-    "matched": 2,
+    "checked": 0,
+    "matched": 0,
     "missing": 0,
     "missing_list": []
   },
   "known_failures": [
-    {
-      "log": "mavat_revival_last_run.log",
-      "sample": "Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...",
-      "count": 2
-    },
     {
       "log": "mavat_sync_last_run.log",
       "sample": "Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...",
@@ -130,7 +127,7 @@
     },
     {
       "log": "tama38_dev_backfill_last.log",
-      "sample": "DONE-DEVELOPERS: 156/279 enriched; 152 with developer; 2 residents-led; 123 still throttled.",
+      "sample": "DONE-DEVELOPERS: 216/284 enriched; 212 with developer; 2 residents-led; 68 still throttled.",
       "count": 1
     },
     {

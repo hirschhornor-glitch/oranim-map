@@ -1,7 +1,7 @@
 {
  "source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
  "source_date": "2026-06-21",
- "count": 101,
+ "count": 103,
  "by_taba": {
   "897066": [
    {
@@ -1793,6 +1793,42 @@
     "source_date": "2026-10-12",
     "all_matched_tabas": [
      "972968"
+    ]
+   }
+  ],
+  "352542": [
+   {
+    "file_number": "2026/0464.00",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "14/10/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בניה חדשה ",
+    "address": "אל וועד 57",
+    "units": 9,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 9,
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-10-15",
+    "all_matched_tabas": [
+     "352542"
+    ]
+   }
+  ],
+  "1360544": [
+   {
+    "file_number": "2026/0460.00",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "13/10/2026",
+    "request_type": "שינויים בבנין קיים, תוספת בניה / הרחבה לבניין קיים",
+    "request_description": "תוספת פרגולה ובריכה על הגג",
+    "address": "גד 6",
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-10-15",
+    "all_matched_tabas": [
+     "1360544"
     ]
    }
   ]
