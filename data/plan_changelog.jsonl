@@ -870,3 +870,81 @@
 {"ts": "2026-10-14 23:52:26", "taba": 1205715, "plan_name": "101-1205715", "status": "בבדיקה תכנונית", "field": "units_total", "old": 2, "new": 5}
 {"ts": "2026-10-14 23:52:26", "taba": 1205715, "plan_name": "101-1205715", "status": "בבדיקה תכנונית", "field": "units_add", "old": -3, "new": 0}
 {"ts": "2026-10-14 23:52:26", "taba": 1205715, "plan_name": "101-1205715", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 613679, "plan_name": "101-0613679", "status": "אישור", "field": "units_total", "old": "", "new": 24}
+{"ts": "2026-10-15 04:50:39", "taba": 613679, "plan_name": "101-0613679", "status": "אישור", "field": "Machpil", "old": 1.714285714, "new": 1.71}
+{"ts": "2026-10-15 04:50:39", "taba": 721902, "plan_name": "101-0721902", "status": "אישור", "field": "units_total", "old": 35, "new": 38}
+{"ts": "2026-10-15 04:50:39", "taba": 721902, "plan_name": "101-0721902", "status": "אישור", "field": "units_add", "old": 14, "new": 17}
+{"ts": "2026-10-15 04:50:39", "taba": 721902, "plan_name": "101-0721902", "status": "אישור", "field": "Machpil", "old": 1.666666667, "new": 1.81}
+{"ts": "2026-10-15 04:50:39", "taba": 520247, "plan_name": "101-0520247", "status": "אישור", "field": "units_total", "old": 10, "new": 9}
+{"ts": "2026-10-15 04:50:39", "taba": 520247, "plan_name": "101-0520247", "status": "אישור", "field": "units_add", "old": 6, "new": 5}
+{"ts": "2026-10-15 04:50:39", "taba": 635599, "plan_name": "101-0635599", "status": "תבע מאושרת", "field": "units_total", "old": "", "new": 21}
+{"ts": "2026-10-15 04:50:39", "taba": 969519, "plan_name": "101-0969519", "status": "אישור", "field": "units_total", "old": 7, "new": 8}
+{"ts": "2026-10-15 04:50:39", "taba": 969519, "plan_name": "101-0969519", "status": "אישור", "field": "units_add", "old": 0, "new": 1}
+{"ts": "2026-10-15 04:50:39", "taba": 969519, "plan_name": "101-0969519", "status": "אישור", "field": "Machpil", "old": 1.142857143, "new": 1.14}
+{"ts": "2026-10-15 04:50:39", "taba": 1049972, "plan_name": "101-1049972", "status": "אישור", "field": "units_total", "old": 9, "new": 8}
+{"ts": "2026-10-15 04:50:39", "taba": 1049972, "plan_name": "101-1049972", "status": "אישור", "field": "units_add", "old": 5, "new": 4}
+{"ts": "2026-10-15 04:50:39", "taba": 1038231, "plan_name": "101-1038231", "status": "אישור", "field": "units_total", "old": "", "new": 28}
+{"ts": "2026-10-15 04:50:39", "taba": 1008390, "plan_name": "101-1008390", "status": "אישור", "field": "units_total", "old": "", "new": 23}
+{"ts": "2026-10-15 04:50:39", "taba": 1008390, "plan_name": "101-1008390", "status": "אישור", "field": "Machpil", "old": 3.285714286, "new": 3.29}
+{"ts": "2026-10-15 04:50:39", "taba": 1117159, "plan_name": "101-1117159", "status": "אישור", "field": "units_total", "old": 34, "new": 32}
+{"ts": "2026-10-15 04:50:39", "taba": 1117159, "plan_name": "101-1117159", "status": "אישור", "field": "units_add", "old": 24, "new": 22}
+{"ts": "2026-10-15 04:50:39", "taba": 1142629, "plan_name": "101-1142629", "status": "אישור", "field": "units_total", "old": 5, "new": 6}
+{"ts": "2026-10-15 04:50:39", "taba": 1142629, "plan_name": "101-1142629", "status": "אישור", "field": "units_add", "old": 1, "new": 2}
+{"ts": "2026-10-15 04:50:39", "taba": 1117910, "plan_name": "101-1117910", "status": "מאושרת", "field": "units_total", "old": "", "new": 11}
+{"ts": "2026-10-15 04:50:39", "taba": 1114040, "plan_name": "101-1114040", "status": "תחילת תוקף", "field": "units_total", "old": 31, "new": 29}
+{"ts": "2026-10-15 04:50:39", "taba": 1114040, "plan_name": "101-1114040", "status": "תחילת תוקף", "field": "units_add", "old": 5, "new": 3}
+{"ts": "2026-10-15 04:50:39", "taba": 1114040, "plan_name": "101-1114040", "status": "תחילת תוקף", "field": "Machpil", "old": 1.115384615, "new": 1.12}
+{"ts": "2026-10-15 04:50:39", "taba": 1231349, "plan_name": "101-1231349", "status": "אישור", "field": "units_total", "old": "", "new": 15}
+{"ts": "2026-10-15 04:50:39", "taba": 1231349, "plan_name": "101-1231349", "status": "אישור", "field": "Machpil", "old": 1.071428571, "new": 1.07}
+{"ts": "2026-10-15 04:50:39", "taba": 1211838, "plan_name": "101-1211838", "status": "אישור", "field": "units_total", "old": 14, "new": 9}
+{"ts": "2026-10-15 04:50:39", "taba": 1211838, "plan_name": "101-1211838", "status": "אישור", "field": "units_add", "old": 10, "new": 5}
+{"ts": "2026-10-15 04:50:39", "taba": 1222645, "plan_name": "101-1222645", "status": "אישור", "field": "units_total", "old": "", "new": 13}
+{"ts": "2026-10-15 04:50:39", "taba": 1222645, "plan_name": "101-1222645", "status": "אישור", "field": "Machpil", "old": 1.083333333, "new": 1.08}
+{"ts": "2026-10-15 04:50:39", "taba": 1350719, "plan_name": "101-1350719", "status": "הכרעה בהתנגדויות / אישור", "field": "units_total", "old": "", "new": 4}
+{"ts": "2026-10-15 04:50:39", "taba": 1350719, "plan_name": "101-1350719", "status": "הכרעה בהתנגדויות / אישור", "field": "Machpil", "old": 1.5, "new": 2}
+{"ts": "2026-10-15 04:50:39", "taba": 1350719, "plan_name": "101-1350719", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1359686, "plan_name": "101-1359686", "status": "אישור", "field": "units_total", "old": "", "new": 12}
+{"ts": "2026-10-15 04:50:39", "taba": 1344985, "plan_name": "101-1344985", "status": "אישור", "field": "units_total", "old": "", "new": 7}
+{"ts": "2026-10-15 04:50:39", "taba": 1386762, "plan_name": "101-1386762", "status": "אישור", "field": "units_total", "old": "", "new": 4}
+{"ts": "2026-10-15 04:50:39", "taba": 1348069, "plan_name": "101-1348069", "status": "הפקדה להתנגדויות/השגות", "field": "units_total", "old": "", "new": 5}
+{"ts": "2026-10-15 04:50:39", "taba": 1353069, "plan_name": "101-1353069", "status": "במילוי תנאים להפקדה", "field": "units_total", "old": "", "new": 10}
+{"ts": "2026-10-15 04:50:39", "taba": 1353069, "plan_name": "101-1353069", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1435577, "plan_name": "101-1435577", "status": "במילוי תנאים להפקדה", "field": "units_total", "old": "", "new": 10}
+{"ts": "2026-10-15 04:50:39", "taba": 1435577, "plan_name": "101-1435577", "status": "במילוי תנאים להפקדה", "field": "Machpil", "old": 1.666666667, "new": 1.67}
+{"ts": "2026-10-15 04:50:39", "taba": 1435577, "plan_name": "101-1435577", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1442656, "plan_name": "101-1442656", "status": "במילוי תנאים להפקדה", "field": "units_total", "old": "", "new": 21}
+{"ts": "2026-10-15 04:50:39", "taba": 1442656, "plan_name": "101-1442656", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1408418, "plan_name": "101-1408418", "status": "בבדיקה תכנונית", "field": "units_total", "old": 16, "new": 15}
+{"ts": "2026-10-15 04:50:39", "taba": 1408418, "plan_name": "101-1408418", "status": "בבדיקה תכנונית", "field": "units_add", "old": 4, "new": 3}
+{"ts": "2026-10-15 04:50:39", "taba": 1408418, "plan_name": "101-1408418", "status": "בבדיקה תכנונית", "field": "Machpil", "old": 1.3, "new": 1.25}
+{"ts": "2026-10-15 04:50:39", "taba": 1408418, "plan_name": "101-1408418", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1496140, "plan_name": "101-1496140", "status": "הפקדה להתנגדויות/השגות", "field": "units_total", "old": "", "new": 10}
+{"ts": "2026-10-15 04:50:39", "taba": 1496140, "plan_name": "101-1496140", "status": "הפקדה להתנגדויות/השגות", "field": "Machpil", "old": 1.666666667, "new": 1.67}
+{"ts": "2026-10-15 04:50:39", "taba": 1439520, "plan_name": "101-1439520", "status": "בבדיקה תכנונית", "field": "units_total", "old": 4, "new": 6}
+{"ts": "2026-10-15 04:50:39", "taba": 1439520, "plan_name": "101-1439520", "status": "בבדיקה תכנונית", "field": "units_add", "old": 0, "new": 2}
+{"ts": "2026-10-15 04:50:39", "taba": 1439520, "plan_name": "101-1439520", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1293554, "plan_name": "101-1293554", "status": "הפקדה להתנגדויות/השגות", "field": "units_total", "old": 31, "new": 26}
+{"ts": "2026-10-15 04:50:39", "taba": 1293554, "plan_name": "101-1293554", "status": "הפקדה להתנגדויות/השגות", "field": "units_add", "old": 11, "new": 6}
+{"ts": "2026-10-15 04:50:39", "taba": 1293554, "plan_name": "101-1293554", "status": "הפקדה להתנגדויות/השגות", "field": "Machpil", "old": 1.55, "new": 1.3}
+{"ts": "2026-10-15 04:50:39", "taba": 1293554, "plan_name": "101-1293554", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1552348, "plan_name": "101-1552348", "status": "בבדיקה תכנונית", "field": "units_total", "old": 13, "new": 24}
+{"ts": "2026-10-15 04:50:39", "taba": 1552348, "plan_name": "101-1552348", "status": "בבדיקה תכנונית", "field": "units_add", "old": 4.0, "new": 15}
+{"ts": "2026-10-15 04:50:39", "taba": 1552348, "plan_name": "101-1552348", "status": "בבדיקה תכנונית", "field": "Machpil", "old": "", "new": 2.67}
+{"ts": "2026-10-15 04:50:39", "taba": 1552348, "plan_name": "101-1552348", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1575943, "plan_name": "101-1575943", "status": "הכרעה בהתנגדויות / אישור", "field": "units_total", "old": "", "new": 2}
+{"ts": "2026-10-15 04:50:39", "taba": 1575943, "plan_name": "101-1575943", "status": "הכרעה בהתנגדויות / אישור", "field": "units_add", "old": "", "new": 0}
+{"ts": "2026-10-15 04:50:39", "taba": 1575943, "plan_name": "101-1575943", "status": "הכרעה בהתנגדויות / אישור", "field": "Machpil", "old": "", "new": 1}
+{"ts": "2026-10-15 04:50:39", "taba": 1575943, "plan_name": "101-1575943", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1551530, "plan_name": "101-1551530", "status": "בבדיקה תכנונית", "field": "units_total", "old": "", "new": 33}
+{"ts": "2026-10-15 04:50:39", "taba": 1551530, "plan_name": "101-1551530", "status": "בבדיקה תכנונית", "field": "units_add", "old": "", "new": 0}
+{"ts": "2026-10-15 04:50:39", "taba": 1551530, "plan_name": "101-1551530", "status": "בבדיקה תכנונית", "field": "Machpil", "old": "", "new": 1}
+{"ts": "2026-10-15 04:50:39", "taba": 1551530, "plan_name": "101-1551530", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1571991, "plan_name": "101-1571991", "status": "בבדיקה תכנונית", "field": "units_total", "old": 27, "new": 29}
+{"ts": "2026-10-15 04:50:39", "taba": 1571991, "plan_name": "101-1571991", "status": "בבדיקה תכנונית", "field": "units_add", "old": 7, "new": 9}
+{"ts": "2026-10-15 04:50:39", "taba": 1571991, "plan_name": "101-1571991", "status": "בבדיקה תכנונית", "field": "Machpil", "old": "", "new": 1.45}
+{"ts": "2026-10-15 04:50:39", "taba": 1571991, "plan_name": "101-1571991", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-15 04:50:39", "taba": 1589860, "plan_name": "101-1589860", "status": "בבדיקה תכנונית", "field": "units_total", "old": "", "new": 1}
+{"ts": "2026-10-15 04:50:39", "taba": 1589860, "plan_name": "101-1589860", "status": "בבדיקה תכנונית", "field": "units_in", "old": "", "new": 1}
+{"ts": "2026-10-15 04:50:39", "taba": 1589860, "plan_name": "101-1589860", "status": "בבדיקה תכנונית", "field": "units_add", "old": "", "new": 0}
+{"ts": "2026-10-15 04:50:39", "taba": 1589860, "plan_name": "101-1589860", "status": "בבדיקה תכנונית", "field": "Machpil", "old": "", "new": 1}
+{"ts": "2026-10-15 04:50:39", "taba": 1589860, "plan_name": "101-1589860", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
