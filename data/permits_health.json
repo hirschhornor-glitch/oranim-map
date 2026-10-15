@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-15T05:07:32",
+  "generated_at": "2026-10-15T06:29:04",
   "sources": [
     {
       "file": "all_permits.json",
@@ -24,12 +24,33 @@
     {
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
-      "refresh": "לפי צורך",
+      "refresh": "דו-שבועי (סטטוס)",
       "records": 103,
-      "last_publish": "2026-10-12",
-      "age_days": 3,
+      "last_publish": "2026-10-15",
+      "age_days": 0,
       "status": "info",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ],
+      "status_staleness": {
+        "entries": 103,
+        "open": 99,
+        "not_checked_90d": 0,
+        "not_checked_examples": [],
+        "status_date_older_90d": 72
+      }
+    },
+    {
+      "file": "active_sites.json",
+      "label": "אתרי בנייה פעילים (gov.il)",
+      "refresh": "דו-שבועי (סריקה)",
+      "records": 2,
+      "last_publish": "2026-10-15",
+      "age_days": 0,
+      "status": "green",
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "meetings.json",
@@ -39,9 +60,7 @@
       "last_publish": "2026-10-15",
       "age_days": 0,
       "status": "green",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ]
+      "notes": []
     },
     {
       "file": "objections_permits.json",
@@ -135,5 +154,43 @@
       "sample": "[13:36:29]    cooldown 90s (throttle recovery)...",
       "count": 115
     }
-  ]
+  ],
+  "hidden_permits": {
+    "filtered": {
+      "all_permits": 7,
+      "tama38": 89
+    },
+    "filtered_examples": [
+      "1999/0678.06",
+      "2005/0866.11",
+      "2016/0258.02",
+      "2008/0076.06",
+      "2017/0237.01",
+      "2016/0948.01",
+      "1981/0916.03",
+      "2008/0152.00",
+      "1972/0871.01",
+      "1991/0946.02",
+      "2007/0331.04",
+      "1983/0586.00",
+      "1986/0827.00",
+      "1984/0782.00",
+      "2021/0138.00"
+    ],
+    "cross_attributed": 8,
+    "cross_attributed_examples": [
+      "2021/0479.00",
+      "2022/0311.00",
+      "2025/0258.00",
+      "2025/0102.00",
+      "2025/0225.00",
+      "2024/0568.01",
+      "2017/1080.00",
+      "2021/0112.00"
+    ],
+    "closed_hidden_by_default": 332,
+    "online_submission_units_not_counted": 45,
+    "online_submission_units": 552,
+    "total_hidden": 104
+  }
 }

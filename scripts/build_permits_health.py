@@ -6,7 +6,10 @@ One verdict for "is the whole permits topic up-to-date and correct?".
 The permits topic is refreshed by 5+ independent mechanisms (biweekly scan,
 §149 weekly, dev-backfill daily, committees weekly, tree-permits CI daily) whose
 logs are scattered in permits_scan_reports\\. This script aggregates a single
-freshness + correctness signal per source into data/permits_health.json.
+freshness + correctness signal per source into data/permits_health.json, plus
+`hidden_permits` (how many permits the app's filters hide — so silent hiding is
+counted somewhere) and, on the extra_permits.json row, `status_staleness` (open
+entries whose status wasn't re-checked against YK in 90 days → yellow/red).
 
 NOTE (audit 2026-10-06): nothing renders permits_health.json yet — no app
 report and no email reads it (an earlier version of this docstring claimed the
@@ -44,7 +47,8 @@ OUT = os.path.join(DATA_DIR, "permits_health.json")
 SOURCES = [
     {"file": "all_permits.json",         "label": "היתרים לפי תב\"ע",            "refresh": "דו-שבועי (סריקה)",        "max_days": 18},
     {"file": "tama38_permits.json",      "label": "היתרי תמ\"א 38",             "refresh": "דו-שבועי + §149 שבועי",  "max_days": 18},
-    {"file": "extra_permits.json",       "label": "היתרים משלימים (YK API)",    "refresh": "לפי צורך",               "max_days": None},
+    {"file": "extra_permits.json",       "label": "היתרים משלימים (YK API)",    "refresh": "דו-שבועי (סטטוס)",       "max_days": None},
+    {"file": "active_sites.json",        "label": "אתרי בנייה פעילים (gov.il)", "refresh": "דו-שבועי (סריקה)",       "max_days": 18},
     {"file": "meetings.json",            "label": "ישיבות ועדה קרובות",         "refresh": "שבועי (ועדות)",          "max_days": 9},
     {"file": "objections_permits.json",  "label": "היתרים פתוחים להתנגדות §149", "refresh": "שבועי",                  "max_days": 9},
     {"file": "unassigned_permits.geojson","label": "היתרים לא-משויכים (מגוקודד)", "refresh": "לפי צורך",              "max_days": None},
@@ -223,6 +227,73 @@ def known_failures(max_days=FAILURE_LOG_MAX_DAYS):
     return notes
 
 
+# Permits the app keeps out of view or out of the counts by rule. They used to be
+# invisible here — 2026/0245 (יהודה הנשיא 1, 59 יח"ד) sat hidden as a "test record"
+# until the user went looking for it (10/2026). Mirrors the app's rules: `filtered`
+# (enrich_permits balcony-only flag) and `cross_attributed` (רק"ל rail permits
+# detached from their plan) hide a permit everywhere; closed/cancelled requests are
+# hidden by default; online submissions are shown but their יח"ד never count.
+CLOSED_RE = re.compile(r"נסגרה|בוטל")
+ONLINE_SUBMISSION = "הגשה מקוונת הושלמה"
+EXAMPLES = 15
+
+
+def hidden_permits():
+    out = {"filtered": {}, "filtered_examples": []}
+    for fname, key in (("all_permits.json", "all_permits"), ("tama38_permits.json", "tama38")):
+        d = load_json(os.path.join(DATA_DIR, fname)) or {}
+        n = 0
+        for v in d.values():
+            for p in ((v or {}).get("permits") or []):
+                if p.get("filtered"):
+                    n += 1
+                    if len(out["filtered_examples"]) < EXAMPLES:
+                        out["filtered_examples"].append(p.get("file_number"))
+        out["filtered"][key] = n
+    master = ((load_json(os.path.join(DATA_DIR, "permits_master.json")) or {}).get("permits") or {})
+    xattr = [r for r in master.values() if r.get("cross_attributed")]
+    online = [r for r in master.values() if (r.get("status") or "").strip() == ONLINE_SUBMISSION]
+    out["cross_attributed"] = len(xattr)
+    out["cross_attributed_examples"] = [r.get("file_number") for r in xattr[:EXAMPLES]]
+    out["closed_hidden_by_default"] = sum(1 for r in master.values()
+                                          if CLOSED_RE.search(r.get("status") or ""))
+    out["online_submission_units_not_counted"] = len(online)
+    out["online_submission_units"] = sum(int(r.get("units_added") or 0) for r in online)
+    out["total_hidden"] = sum(out["filtered"].values()) + len(xattr)
+    return out
+
+
+# extra_permits.json entries are refreshed by refresh_extra_permits_status.py (biweekly
+# permits scan), which stamps status_checked. An open entry not checked for this long
+# means that pass stopped reaching it. Old status_date alone is normal (an issued
+# permit keeps its date), so it is reported but does not colour the source.
+EXTRA_STALE_DAYS = 90
+
+
+def extra_status_staleness():
+    d = load_json(os.path.join(DATA_DIR, "extra_permits.json")) or {}
+    entries = [p for pl in (d.get("by_taba") or {}).values() for p in (pl or [])]
+    open_ = [p for p in entries if not CLOSED_RE.search(p.get("status") or "")]
+    unchecked, old_status = [], 0
+    for p in open_:
+        age = days_since(p.get("status_checked") or p.get("source_date") or "")
+        if age is None or age > EXTRA_STALE_DAYS:
+            unchecked.append(p)
+        try:
+            sd = datetime.strptime(p.get("status_date") or "", "%d/%m/%Y").date()
+            if (date.today() - sd).days > EXTRA_STALE_DAYS:
+                old_status += 1
+        except ValueError:
+            old_status += 1
+    return {
+        "entries": len(entries), "open": len(open_),
+        "not_checked_90d": len(unchecked),
+        "not_checked_examples": [f"{p.get('file_number')} ({p.get('status_checked') or p.get('source_date')})"
+                                 for p in unchecked[:EXAMPLES]],
+        "status_date_older_90d": old_status,
+    }
+
+
 def red_keys(snapshot):
     """Keys of the red items in a health snapshot (sources by file + audit)."""
     if not isinstance(snapshot, dict):
@@ -297,6 +368,13 @@ def main():
             if scan["date"] > published:
                 row["status"] = "red"
                 row["notes"].append(f"נסרק {scan['date']} אך פורסם לאחרונה {published} — פער סריקה↔פרסום")
+        if s["file"] == "extra_permits.json":
+            st = extra_status_staleness()
+            row["status_staleness"] = st
+            if st["not_checked_90d"]:
+                row["status"] = "red" if st["not_checked_90d"] * 2 > st["open"] else "yellow"
+                row["notes"].append(f"{st['not_checked_90d']}/{st['open']} היתרים פתוחים לא נבדקו "
+                                    f"מול YK יותר מ-{EXTRA_STALE_DAYS} יום")
         sources.append(row)
 
     out = {
@@ -305,6 +383,7 @@ def main():
         "scan": scan,
         "committee_audit": latest_committee_audit(),
         "known_failures": known_failures(),
+        "hidden_permits": hidden_permits(),
     }
     with io.open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -317,6 +396,15 @@ def main():
         print(f"  committee audit {ca['date']} ({ca['age_days']}d, {ca['status']}): "
               f"{ca['matched']} matched, {ca['missing']} MISSING")
     print(f"  known failures: {len(out['known_failures'])}")
+    hp, php = out["hidden_permits"], (prev or {}).get("hidden_permits") or {}
+    print(f"  hidden by app filters: {hp['total_hidden']} (was {php.get('total_hidden', '-')}) — "
+          f"balcony-only {hp['filtered']}, rail cross-attributed {hp['cross_attributed']}; "
+          f"closed (hidden by default) {hp['closed_hidden_by_default']}; "
+          f"online submissions shown, units not counted {hp['online_submission_units_not_counted']} "
+          f"({hp['online_submission_units']} יח\"ד)")
+    ex = next(s for s in sources if s["file"] == "extra_permits.json").get("status_staleness") or {}
+    print(f"  extra_permits: {ex.get('not_checked_90d')}/{ex.get('open')} open not checked >"
+          f"{EXTRA_STALE_DAYS}d; {ex.get('status_date_older_90d')} with status_date >{EXTRA_STALE_DAYS}d")
     new_reds = alert_new_reds(prev, out)
     if new_reds:
         print(f"  newly red since last snapshot: {new_reds} (alert sent)")

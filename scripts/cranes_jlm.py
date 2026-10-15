@@ -10,6 +10,9 @@ cranes_jlm.py - אתרי בנייה פעילים (מנהל הבטיחות, gov.i
   active_building_sites_jlm_raw.json   - כל האתרים הפעילים בירושלים (גולמי)
   active_sites_oranim.geojson          - האתרים שמוקמו בתוך הרובע (שכבה מוצעת)
   active_sites_oranim_report.json      - הצלבה מול היתרים/פיקוח + פערים
+
+--refresh: מושך מחדש את הרשימה (במקום ה-RAW השמור) - רץ בסריקת ההיתרים הדו-שבועית
+אחרי build_permits_master, כך שגם הקישור להיתרים מתעדכן. כשל => exit != 0.
 """
 import json, os, re, time, http.cookiejar, urllib.request, collections, math
 from shapely.geometry import shape
@@ -19,6 +22,7 @@ DATA = r"C:/dev/oranim-app/data/"
 RAW = r"C:/ORANIM/active_building_sites_jlm_raw.json"
 GEO = r"C:/ORANIM/active_sites_oranim.geojson"
 REP = r"C:/ORANIM/active_sites_oranim_report.json"
+HIST = r"C:/ORANIM/active_sites_history"
 APP = r"C:/dev/oranim-app/data/active_sites.json"
 
 URL = "https://www.gov.il/he/api/DataGovProxy/GetDGResults"
@@ -33,7 +37,13 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 def fetch(city="ירושלים", out=RAW):
     cj = http.cookiejar.CookieJar()
     op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-    op.open(urllib.request.Request(PAGE, headers={"User-Agent": UA}), timeout=60).read()
+    # cookie warm-up only. Since 10/2026 the HTML page answers 403 with a Cloudflare
+    # "Just a moment" challenge while the API itself still answers plain requests,
+    # so a failed warm-up is not fatal (the page() retries handle real blocks).
+    try:
+        op.open(urllib.request.Request(PAGE, headers={"User-Agent": UA}), timeout=60).read()
+    except Exception as e:
+        print("  page warm-up failed (%s) - calling the API without its cookies" % e, flush=True)
     hdrs = {"Content-Type": "application/json", "Accept": "application/json, text/plain, */*",
             "x-client-id": XCLIENT, "X-Requested-With": "XMLHttpRequest",
             "Origin": "https://www.gov.il", "Referer": PAGE, "User-Agent": UA}
@@ -293,5 +303,34 @@ def main():
         print(k, len(v) if isinstance(v, list) else v)
 
 
+def refresh(min_share=0.6):
+    """Fresh re-fetch of the city list (not fetch()'s resume) for the biweekly
+    permits scan. The new list goes to a temp file and replaces RAW only if it
+    holds >= min_share of the previous count - a throttled run that stops early
+    must not shrink the layer. The previous RAW is kept in HIST: work_id is
+    monotonic, so the delta between runs = sites opened/closed in between.
+    Any failure raises SystemExit (exit != 0) - the scan reports it."""
+    tmp = RAW + ".tmp"
+    if os.path.exists(tmp):
+        os.remove(tmp)            # fetch() resumes from an existing file
+    rows = fetch(out=tmp)
+    prev = json.load(open(RAW, encoding="utf-8")) if os.path.exists(RAW) else []
+    if prev and len(rows) < min_share * len(prev):
+        raise SystemExit("refresh: got %d sites vs %d last time - keeping the old list"
+                         % (len(rows), len(prev)))
+    if prev:
+        os.makedirs(HIST, exist_ok=True)
+        stamp = time.strftime("%Y-%m-%d", time.localtime(os.path.getmtime(RAW)))
+        os.replace(RAW, os.path.join(HIST, "raw_%s.json" % stamp))
+    os.replace(tmp, RAW)
+    old_ids = {r["work_id"] for r in prev}
+    new_ids = {r["work_id"] for r in rows}
+    print("refresh: %d sites (was %d) - %d opened, %d closed since last fetch"
+          % (len(rows), len(prev), len(new_ids - old_ids), len(old_ids - new_ids)), flush=True)
+
+
 if __name__ == "__main__":
+    import sys
+    if "--refresh" in sys.argv:
+        refresh()
     main()
