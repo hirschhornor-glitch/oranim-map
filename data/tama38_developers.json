@@ -1,5 +1,5 @@
 {
- "count": 216,
+ "count": 236,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -3310,6 +3310,426 @@
    "units": null,
    "is_residents": false,
    "minahak": "גוננים"
+  },
+  "2025/0254.00": {
+   "developer": "32 הבית בהקליר",
+   "developer_parts": [
+    {
+     "applicant": "32",
+     "group": "הבית בהקליר",
+     "name": "32 הבית בהקליר"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2025/0320.00": {
+   "developer": "שירה רויאל בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "שירה רויאל",
+     "name": "שירה רויאל בע\"מ"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2025/0400.00": {
+   "developer": "צבי גרינבוים ע\"י עו\"ד בלאו",
+   "developer_parts": [
+    {
+     "applicant": "צבי",
+     "group": "גרינבוים ע\"י עו\"ד בלאו",
+     "name": "צבי גרינבוים ע\"י עו\"ד בלאו"
+    }
+   ],
+   "architect": "מלכה לאה קסלר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2025/0418.00": {
+   "developer": "משה בניה מתקדמת בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "משה בניה מתקדמת",
+     "name": "משה בניה מתקדמת בע\"מ"
+    }
+   ],
+   "architect": "דן בר לב",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2025/0428.00": {
+   "developer": "סולידיטי הפלמ\"ח 25 בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "סולידיטי",
+     "group": "סולידיטי הפלמ\"ח 25 בע\"מ",
+     "name": "סולידיטי הפלמ\"ח 25 בע\"מ"
+    }
+   ],
+   "architect": "משה זיידמן",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2025/0473.00": {
+   "developer": "חרל\"פ 33 בע\"מ חרל\"פ 33 בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "חרל\"פ 33 בע\"מ",
+     "group": "חרל\"פ 33 בע\"מ",
+     "name": "חרל\"פ 33 בע\"מ חרל\"פ 33 בע\"מ"
+    }
+   ],
+   "architect": "משה זיידמן",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2025/0511.00": {
+   "developer": "נ.ט חיים ברודי 20 ירושלים בע\"מ חברה",
+   "developer_parts": [
+    {
+     "applicant": "חברה",
+     "group": "נ.ט חיים ברודי 20 ירושלים בע\"מ",
+     "name": "נ.ט חיים ברודי 20 ירושלים בע\"מ חברה"
+    }
+   ],
+   "architect": "דן ברלב",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2025/0055.00": {
+   "developer": "נאות קרית משה תמ\"א 38 בע\"מ / רמי בביאן",
+   "developer_parts": [
+    {
+     "applicant": "אלי אסרף",
+     "group": "נאות קרית משה תמ\"א 38 בע\"מ",
+     "name": "נאות קרית משה תמ\"א 38 בע\"מ"
+    },
+    {
+     "applicant": "רמי",
+     "group": "בביאן",
+     "name": "רמי בביאן"
+    }
+   ],
+   "architect": "יצחק עדס",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2025/0569.00": {
+   "developer": "ב מיכאל יתד",
+   "developer_parts": [
+    {
+     "applicant": "ב מיכאל",
+     "group": "יתד",
+     "name": "ב מיכאל יתד"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0157.00": {
+   "developer": "ברק דנן / קרן זילברשטיין",
+   "developer_parts": [
+    {
+     "applicant": "ברק",
+     "group": "דנן",
+     "name": "ברק דנן"
+    },
+    {
+     "applicant": "קרן",
+     "group": "זילברשטיין",
+     "name": "קרן זילברשטיין"
+    }
+   ],
+   "architect": "בריק יבגני",
+   "units": 21,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0857.00": {
+   "developer": "נעמי מזרחי / אמיר אלישר / ניסים פנירי / שאול ברונר / אורי בן עמי / דוד בוטסזן / דוד כהן / נורית גולדבלט / שלום בקשי / שרה שמיר / נ.נ לנג נדלן בעמ / צבי קשיר / לאה אדמוני / שמואל הילר / ורדה טראוגר / איתמר צבי שרבאני / משה חנניה אדרי / חיים לייב בלסקי / יוסף דב קונסטלר / גאלה דלרוזה / שרית רויה שטרן / גולי אליס בנדסון / דוד בן עזרא / חנה דורפמן / מתרחבים בירושלים",
+   "developer_parts": [
+    {
+     "applicant": "נעמי",
+     "group": "מזרחי",
+     "name": "נעמי מזרחי"
+    },
+    {
+     "applicant": "אמיר",
+     "group": "אלישר",
+     "name": "אמיר אלישר"
+    },
+    {
+     "applicant": "ניסים",
+     "group": "פנירי",
+     "name": "ניסים פנירי"
+    },
+    {
+     "applicant": "שאול",
+     "group": "ברונר",
+     "name": "שאול ברונר"
+    },
+    {
+     "applicant": "אורי",
+     "group": "בן עמי",
+     "name": "אורי בן עמי"
+    },
+    {
+     "applicant": "דוד",
+     "group": "בוטסזן",
+     "name": "דוד בוטסזן"
+    },
+    {
+     "applicant": "דוד",
+     "group": "כהן",
+     "name": "דוד כהן"
+    },
+    {
+     "applicant": "נורית",
+     "group": "גולדבלט",
+     "name": "נורית גולדבלט"
+    },
+    {
+     "applicant": "שלום",
+     "group": "בקשי",
+     "name": "שלום בקשי"
+    },
+    {
+     "applicant": "שרה",
+     "group": "שמיר",
+     "name": "שרה שמיר"
+    },
+    {
+     "applicant": "בעמ",
+     "group": "נ.נ לנג נדלן",
+     "name": "נ.נ לנג נדלן בעמ"
+    },
+    {
+     "applicant": "צבי",
+     "group": "קשיר",
+     "name": "צבי קשיר"
+    },
+    {
+     "applicant": "לאה",
+     "group": "אדמוני",
+     "name": "לאה אדמוני"
+    },
+    {
+     "applicant": "שמואל",
+     "group": "הילר",
+     "name": "שמואל הילר"
+    },
+    {
+     "applicant": "ורדה",
+     "group": "טראוגר",
+     "name": "ורדה טראוגר"
+    },
+    {
+     "applicant": "איתמר צבי",
+     "group": "שרבאני",
+     "name": "איתמר צבי שרבאני"
+    },
+    {
+     "applicant": "משה חנניה",
+     "group": "אדרי",
+     "name": "משה חנניה אדרי"
+    },
+    {
+     "applicant": "חיים לייב",
+     "group": "בלסקי",
+     "name": "חיים לייב בלסקי"
+    },
+    {
+     "applicant": "יוסף דב",
+     "group": "קונסטלר",
+     "name": "יוסף דב קונסטלר"
+    },
+    {
+     "applicant": "גאלה",
+     "group": "דלרוזה",
+     "name": "גאלה דלרוזה"
+    },
+    {
+     "applicant": "שרית רויה",
+     "group": "שטרן",
+     "name": "שרית רויה שטרן"
+    },
+    {
+     "applicant": "גולי אליס",
+     "group": "בנדסון",
+     "name": "גולי אליס בנדסון"
+    },
+    {
+     "applicant": "דוד",
+     "group": "בן עזרא",
+     "name": "דוד בן עזרא"
+    },
+    {
+     "applicant": "חנה",
+     "group": "דורפמן",
+     "name": "חנה דורפמן"
+    },
+    {
+     "applicant": "מתרחבים בירושלים",
+     "group": "",
+     "name": "מתרחבים בירושלים"
+    }
+   ],
+   "architect": "אלי רכס",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2019/0595.00": {
+   "developer": "רן פליישר מיופה כוח",
+   "developer_parts": [
+    {
+     "applicant": "רן פליישר",
+     "group": "מיופה כוח",
+     "name": "רן פליישר מיופה כוח"
+    }
+   ],
+   "architect": "חיים שחר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2013/0081.01": {
+   "developer": "משה חן",
+   "developer_parts": [
+    {
+     "applicant": "משה",
+     "group": "חן",
+     "name": "משה חן"
+    }
+   ],
+   "architect": "אנטולי ברושינסקי",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2013/0179.01": {
+   "developer": "חברת האלונים ירושלים בע\"מ / עדיה פלו דיסטלמן",
+   "developer_parts": [
+    {
+     "applicant": "חברת האלונים ירושלים בע\"מ",
+     "group": "",
+     "name": "חברת האלונים ירושלים בע\"מ"
+    },
+    {
+     "applicant": "עדיה פלו",
+     "group": "דיסטלמן",
+     "name": "עדיה פלו דיסטלמן"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2014/0132.00": {
+   "developer": "רונן בצלאל",
+   "developer_parts": [
+    {
+     "applicant": "רונן",
+     "group": "בצלאל",
+     "name": "רונן בצלאל"
+    }
+   ],
+   "architect": "אדריכלים בר שיפמן",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2023/0572.00": {
+   "developer": "וורה גוטמן",
+   "developer_parts": [
+    {
+     "applicant": "וורה",
+     "group": "גוטמן",
+     "name": "וורה גוטמן"
+    }
+   ],
+   "architect": "אסתי אלפנט",
+   "units": 2,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2026/0181.00": {
+   "developer": "מ.מ.מ מבנן בניה וייזום בע\"מ / אוהד שרמן",
+   "developer_parts": [
+    {
+     "applicant": "בניה וייזום בע\"מ",
+     "group": "מ.מ.מ מבנן",
+     "name": "מ.מ.מ מבנן בניה וייזום בע\"מ"
+    },
+    {
+     "applicant": "אוהד",
+     "group": "שרמן",
+     "name": "אוהד שרמן"
+    }
+   ],
+   "architect": "נילי-רננה חר\"ג",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0223.00": {
+   "developer": "משי עלית נדלן בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "משי עלית נדלן",
+     "name": "משי עלית נדלן בע\"מ"
+    }
+   ],
+   "architect": "נפתלי פלינק",
+   "units": 20,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2021/0189.00": {
+   "developer": "מלני המרכז להשבחת נכסים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "מלני המרכז להשבחת נכסים",
+     "name": "מלני המרכז להשבחת נכסים בע\"מ"
+    }
+   ],
+   "architect": "אוריה שוחט (קליגלר)",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2011/0496.00": {
+   "developer": "ר.ג. ידיד אחזקות בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "אחזקות בע\"מ",
+     "group": "ר.ג. ידיד",
+     "name": "ר.ג. ידיד אחזקות בע\"מ"
+    }
+   ],
+   "architect": "גדעון יגר",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
   }
  }
 }

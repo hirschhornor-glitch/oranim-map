@@ -1,1 +1,25 @@
-{}
+{
+  "2026/0264.00": {
+    "tik": "2026/0264.00",
+    "status": "פרסום פעיל לפי סעיף 149",
+    "status_date": null,
+    "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , תוספת בניה / הרחבה לבניין קיים, התקנת מעלית פנימית, בנית מחסן/מחסנים, בניית מרפסת",
+    "request_description": "תוספת קומות , מרפסות ויחד'' דיור , מחסנים , הריסה ובניה מחדש תוך שימור חזיתות וחיזוקים פנימים ",
+    "address": "הרב חיים ברלין 12",
+    "street": "הרב חיים ברלין",
+    "house": "12",
+    "schn": "קריית שמואל",
+    "deadline_publish": "18/10/2026",
+    "deadline_verified": "2026-10-18",
+    "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
+    "lnglat": [
+      35.210899,
+      31.769443
+    ],
+    "subs": [],
+    "tabas": [],
+    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=384e1fcf-1eac-4eb8-a183-1c3f9a544097",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0264.00&SystemCode=26400046&Page=BakashalInfo",
+    "source": "official_activepublications"
+  }
+}
