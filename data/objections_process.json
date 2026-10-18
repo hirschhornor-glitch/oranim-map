@@ -1,9 +1,29 @@
 {
- "scanned": 7,
- "candidates": 7,
+ "scanned": 8,
+ "candidates": 8,
  "unverified": [],
- "generated": "2026-10-11",
- "confirmed_open": [],
+ "generated": "2026-10-18",
+ "confirmed_open": [
+  {
+   "tik": "2026/0264.00",
+   "address": "הרב חיים ברלין 12",
+   "stored_status": "פורסמה בקשה להקלה",
+   "status_date": "27/09/2026",
+   "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , תוספת בניה / הרחבה לבניין קיים, התקנת מעלית פנימית, בנית מחסן/מחסנים, בניית מרפסת",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "18/10/2026",
+   "basis": "תום מועד להגשת התנגדויות",
+   "shown_tik": "2026/0264.00",
+   "lnglat": [
+    35.210899,
+    31.769443
+   ],
+   "in_district": true,
+   "category": "confirmed"
+  }
+ ],
  "verify": [
   {
    "tik": "2021/0465.01",
@@ -44,6 +64,25 @@
    ],
    "in_district": true,
    "category": "verify"
+  },
+  {
+   "tik": "2026/0264.00",
+   "address": "הרב חיים ברלין 12",
+   "stored_status": "פורסמה בקשה להקלה",
+   "status_date": "27/09/2026",
+   "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , תוספת בניה / הרחבה לבניין קיים, התקנת מעלית פנימית, בנית מחסן/מחסנים, בניית מרפסת",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "18/10/2026",
+   "basis": "תום מועד להגשת התנגדויות",
+   "shown_tik": "2026/0264.00",
+   "lnglat": [
+    35.210899,
+    31.769443
+   ],
+   "in_district": true,
+   "category": "confirmed"
   }
  ]
 }
