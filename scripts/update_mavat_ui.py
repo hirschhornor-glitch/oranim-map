@@ -16,7 +16,46 @@ try:
 except Exception:
     pass
 sys.path.insert(0, r"C:\ORANIM")
-from git_sync import pull_before_read, commit_and_push_after_write, update_json_and_push
+import git_sync as _git_sync
+
+# Every git write this run that did not land. git_sync returns False on an auth failure,
+# 4 rejected pushes or a failed rebase — and those returns used to be ignored: on
+# 2026-10-18 all 8 pushes failed on a GitHub credential error ("could not read Username"),
+# update_json_and_push reset each edit away, and the run still ended "Done", exit 0.
+# Checked at the end of the run → alert email + exit 1 (see __main__).
+GIT_FAILURES = []
+
+
+def _tracked(fn, what):
+    def wrapper(*a, **kw):
+        ok = fn(*a, **kw)
+        if ok is False:
+            target = a[0] if a and isinstance(a[0], str) and a[0].startswith('data') else ''
+            msg = kw.get('message') or next((x for x in a[1:] if isinstance(x, str)), '')
+            GIT_FAILURES.append(f"{what}: {target} {msg}".strip())
+            log_msg(f"GIT FAILURE ({what}): {target} {msg}")
+        return ok
+    return wrapper
+
+
+pull_before_read = _tracked(_git_sync.pull_before_read, 'pull')
+commit_and_push_after_write = _tracked(_git_sync.commit_and_push_after_write, 'push')
+update_json_and_push = _tracked(_git_sync.update_json_and_push, 'push')
+
+
+def _unpushed_commits():
+    """Commits left on local master that never reached origin (the legacy
+    commit_and_push_after_write path can leave one behind). None if unknown."""
+    import subprocess
+    try:
+        subprocess.run(['git', 'fetch', '-q', 'origin'], cwd=_git_sync.REPO_DIR,
+                       capture_output=True, timeout=120)
+        r = subprocess.run(['git', 'log', '--format=%h %s', 'origin/master..HEAD'],
+                           cwd=_git_sync.REPO_DIR, capture_output=True, text=True,
+                           encoding='utf-8', timeout=60)
+        return [l for l in r.stdout.splitlines() if l.strip()] if r.returncode == 0 else None
+    except Exception:
+        return None
 # Shared out-of-scope filter — same source detect_new_plans.py uses, so the whole
 # "בדיקת סטטוס מבאת" pipeline ignores the same out-of-scope plans (Gilo + blocklist).
 from scope_filter import is_blocklisted
@@ -2474,6 +2513,24 @@ if __name__ == '__main__':
         asyncio.run(main())
         if BROWSER_DEAD:
             raise RuntimeError(BROWSER_DEAD)
+        unpushed = _unpushed_commits()
+        if GIT_FAILURES or unpushed:
+            body = ("הסנכרון רץ, אבל חלק מהעדכונים לא הגיעו ל-GitHub — הם לא באתר.\n"
+                    "לבדוק אימות git (git push ידני ב-" + _git_sync.REPO_DIR + ") ולהריץ מחדש.\n\n")
+            if GIT_FAILURES:
+                body += "פעולות git שנכשלו:\n" + "\n".join("• " + f for f in GIT_FAILURES) + "\n\n"
+            if unpushed:
+                body += "קומיטים מקומיים שלא נדחפו:\n" + "\n".join("• " + c for c in unpushed) + "\n\n"
+            body += r"לוג מלא: C:\ORANIM\permits_scan_reports\mavat_sync_last_run.log"
+            log_msg(f"GIT: {len(GIT_FAILURES)} failed git operation(s), "
+                    f"{len(unpushed or [])} unpushed commit(s) — alerting, exit 1")
+            try:
+                from ops_alert import send_alert
+                mode = "revival sweep" if "--include-terminal" in sys.argv else "sync"
+                send_alert(f"סנכרון מבאת ({mode}): עדכונים לא נדחפו — {datetime.now():%Y-%m-%d}", body)
+            except Exception as e:
+                log_msg(f"(alert failed: {e})")
+            sys.exit(1)
     except Exception:
         # A crash used to print its traceback to stderr only, which the scheduled
         # .bat discards: the 2026-10-03 revival sweep died at browser launch and
