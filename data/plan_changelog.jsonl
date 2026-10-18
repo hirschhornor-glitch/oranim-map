@@ -995,3 +995,5 @@
 {"ts": "2026-10-18 11:58:38", "taba": 1547348, "plan_name": "101-1547348", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-18 11:58:38", "taba": 1608678, "plan_name": "101-1608678", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-18 11:58:38", "taba": 1475011, "plan_name": "101-1475011", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-18 16:08:06", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "plan_summary", "old": "בני בתירא 79 התחדשות עירונית", "new": "בני בתירא 7-9"}
+{"ts": "2026-10-18 16:08:06", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
