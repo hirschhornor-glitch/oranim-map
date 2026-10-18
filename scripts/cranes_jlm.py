@@ -24,6 +24,11 @@ GEO = r"C:/ORANIM/active_sites_oranim.geojson"
 REP = r"C:/ORANIM/active_sites_oranim_report.json"
 HIST = r"C:/ORANIM/active_sites_history"
 APP = r"C:/dev/oranim-app/data/active_sites.json"
+# layer-2110 point of every licensing file (spatial_permit_coverage.py, refreshed weekly)
+PTS2110 = r"C:/ORANIM/permit_points_district.json"
+YKCACHE = r"C:/ORANIM/active_sites_yk_cache.json"   # YK detail of off-plan files at sites
+SITE_R = 50          # m: a file whose 2110 point is this close to the site is the site's
+YK_TTL_DAYS = 14
 
 URL = "https://www.gov.il/he/api/DataGovProxy/GetDGResults"
 TPL = "dd270778-2117-4b1c-9385-e06146bfc08c"
@@ -103,7 +108,53 @@ def addr_matches(addr, street, num):
     if not m:
         return False
     lo = int(m.group(1)); hi = int(m.group(2)) if m.group(2) else lo
-    return lo <= num <= max(lo, hi)
+    lo, hi = min(lo, hi), max(lo, hi)          # "בר יוחאי 13-11"
+    return lo <= num <= hi
+
+
+CLOSED_RX = re.compile(r"נסגרה|בוטל")
+ISSUED_RX = re.compile(r"הופק|הוצא היתר|שולמה מקדמה|טיוטת היתר")
+ONLINE = "הגשה מקוונת הושלמה"
+
+
+def canon_tik(t):
+    """'2026/0245.00' / '2026/245' -> '2026/245' (permits_master key)."""
+    try:
+        y, n = str(t).split("/")
+        return "%d/%d" % (int(y), int(float(n)))
+    except Exception:
+        return None
+
+
+def load_2110():
+    """{canon tik: (revision tik, lng, lat)} for licensing files since 2015 (tik no. <= 999 —
+    2110 also holds other series). Highest revision wins."""
+    if not os.path.exists(PTS2110):
+        return {}
+    out = {}
+    for t, (x, y) in json.load(open(PTS2110, encoding="utf-8"))["points"].items():
+        c = canon_tik(t)
+        if not c or int(c.split("/")[0]) < 2015 or int(c.split("/")[1]) > 999:
+            continue
+        if c not in out or t > out[c][0]:
+            out[c] = (t, x, y)
+    return out
+
+
+def yk_detail(tik, cache):
+    """YK detail (proc 447/457) for a file we don't hold, cached YK_TTL_DAYS."""
+    hit = cache.get(tik)
+    if hit and time.time() - hit.get("_ts", 0) < YK_TTL_DAYS * 86400:
+        return hit
+    import sys as _s
+    if "C:/ORANIM" not in _s.path:
+        _s.path.insert(0, "C:/ORANIM")
+    from scrape_missing_permits_api import fetch_one
+    rec = fetch_one(tik)
+    rec["_ts"] = time.time()
+    cache[tik] = rec
+    time.sleep(0.8)
+    return rec
 
 
 OUT_NEIGH = ["גבעת מרדכי", "נחלאות", "פסגת זאב", "רמות", "גילה", "הר חומה", "בית חנינא",
@@ -181,7 +232,9 @@ def main():
     pikuah = json.load(open(DATA + "pikuah_status.json", encoding="utf-8"))["by_permit"]
     # a closed/cancelled request can't be what an active site is building under
     pts = [(p, p["lat"], p["lng"]) for p in permits.values() if p.get("lat") and p.get("lng")
-           and not re.search(r"נסגרה|בוטל", p.get("status") or "")]
+           and not CLOSED_RX.search(p.get("status") or "")]
+    p2110 = load_2110()
+    ykc = json.load(open(YKCACHE, encoding="utf-8")) if os.path.exists(YKCACHE) else {}
 
     feats, unlocated, rejected = [], [], []
     for s in sites:
@@ -219,6 +272,47 @@ def main():
         # metres closer (יהודה הנשיא 2 got 2026/245 of no. 1 at 23 m over its own 2023/211 at 24 m)
         same = [t for t in near[:40] if t[0] <= 300 and addr_matches(t[1].get("address"), st, num)]
         best = same[0] if same else (near[0] if near else None)
+        link = "address" if same else "nearest"
+        off_plan = False
+        if how == "house-number" and p2110:
+            # The municipal point of each file (layer 2110) beats our own permit coordinates:
+            # only 208/1492 master permits carry an address, and master lat/lng is often the
+            # plan's, so "nearest" picked 1988/30 for טוביה 4 over 2018/184 at the site.
+            m_per_deg_x = 111000 * math.cos(math.radians(pt.y))
+            at = sorted((math.hypot((x - pt.x) * m_per_deg_x, (y - pt.y) * 111000), c, t)
+                        for c, (t, x, y) in p2110.items()
+                        if abs(x - pt.x) < 0.0008 and abs(y - pt.y) < 0.0008)
+            at = [z for z in at if z[0] <= SITE_R]
+            ours = [z for z in at if z[1] in permits and not CLOSED_RX.search(permits[z[1]].get("status") or "")]
+            if ours:
+                def rank(z):
+                    pm = permits[z[1]]
+                    pk_ = (pikuah.get(z[1]) or {}).get("classification")
+                    st_ = pm.get("status") or ""
+                    return (not addr_matches(pm.get("address"), st, num),   # its own address first
+                            pk_ != "construction",                          # then work on the ground
+                            not ISSUED_RX.search(st_),                      # then an issued permit
+                            st_.strip() == ONLINE,                          # an online-only submission last
+                            z[0], -int(z[1].split("/")[0]))                 # then nearest, newest
+                z = min(ours, key=rank)
+                best, link = (z[0], permits[z[1]]), "site_2110"
+            elif at:
+                # YK has files here that no plan of ours covers (old local plans — 2092, 9988 …):
+                # show the site's permit anyway, flagged; it never counts toward any plan.
+                offs = []
+                for d_, c, t in at:
+                    r = yk_detail(t, ykc)
+                    if r.get("error") or CLOSED_RX.search(r.get("status") or ""):
+                        continue
+                    st_ = r.get("status") or ""
+                    offs.append(((not ISSUED_RX.search(st_), st_.strip() == ONLINE, d_), d_, c, t, r))
+                for _, d_, c, t, r in sorted(offs, key=lambda o: o[0])[:1]:
+                    best = (d_, {"tik": c, "file_number": t, "status": r.get("status"),
+                                 "request_description": r.get("request_description"),
+                                 "units_added": None, "address": r.get("address"),
+                                 "plans": r.get("tochnit_all")})
+                    link, off_plan = "site_2110", True
+                    break
         dist, perm = best if best else (None, None)
         pk = pikuah.get(perm["tik"]) if perm else None
         feats.append({
@@ -238,10 +332,14 @@ def main():
                 "nearest_permit_status": (perm or {}).get("status"),
                 "nearest_permit_desc": ((perm or {}).get("request_description") or "")[:120],
                 "nearest_permit_units": (perm or {}).get("units_added"),
+                "permit_link": link if perm else None,
+                "permit_off_plan": off_plan,
+                "permit_plans": (perm or {}).get("plans") if off_plan else None,
                 "pikuah_class": (pk or {}).get("classification"),
                 "pikuah_status": (pk or {}).get("pikuah_status"),
                 "sub": next((n for n, g in subn.items() if g.contains(pt)), ""),
-                "confidence": ("high" if how == "house-number" and (dist or 9999) <= 75
+                "confidence": ("high" if how == "house-number" and ((dist or 9999) <= 75
+                                                     or link in ("site_2110", "address"))
                                else "medium" if how != "neighborhood-centroid" and (dist or 9999) <= 150
                                else "low"),
             }})
@@ -266,6 +364,8 @@ def main():
             "permit": q["nearest_permit"], "permit_m": q["nearest_permit_m"],
             "permit_status": q["nearest_permit_status"], "permit_desc": q["nearest_permit_desc"],
             "pikuah": q["pikuah_class"], "pikuah_status": q["pikuah_status"],
+            "permit_link": q["permit_link"], "permit_off_plan": q["permit_off_plan"] or None,
+            "permit_plans": q["permit_plans"],
         })
     app_sites.sort(key=lambda r: (-r["cranes"], -(r["warrants"] + r["sanctions"]), r["name"]))
     json.dump({"meta": {"source": "מנהל הבטיחות בעבודה — אתרי בנייה פעילים (gov.il)",
@@ -298,7 +398,10 @@ def main():
         "sites_no_permit": [p for p in P if (p["nearest_permit_m"] or 9999) > 150],
         "unlocated_examples": [s["site_name"] for s in unlocated[:40]],
     }
+    rep["permit_link_mix"] = dict(collections.Counter(p["permit_link"] for p in P))
+    rep["off_plan_permits"] = sum(1 for p in P if p["permit_off_plan"])
     json.dump(rep, open(REP, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(ykc, open(YKCACHE, "w", encoding="utf-8"), ensure_ascii=False)
     for k, v in rep.items():
         print(k, len(v) if isinstance(v, list) else v)
 

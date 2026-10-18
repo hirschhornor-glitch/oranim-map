@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-15-permits-refresh';
+        const APP_VERSION = '2026-10-18-site-permits';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -23823,8 +23823,15 @@ function planPermitHafrashUse(taba) {
                 return '#546e7a';
             }
             // סתירה: יש אתר פעיל בשטח, אבל תיק הפיקוח של ההיתר הקרוב סגור/הסתיים
+            // the site's permit: its own (municipal file point on the site / same address) at any
+            // distance, otherwise the nearest one within 150 m
+            function activeSiteHasPermit(rec) {
+                if (!rec.permit) return false;
+                if (rec.permit_link === 'site_2110' || rec.permit_link === 'address') return true;
+                return rec.permit_m != null && rec.permit_m <= 150;
+            }
             function activeSiteConflict(rec) {
-                return rec.permit && rec.permit_m != null && rec.permit_m <= 150
+                return activeSiteHasPermit(rec)
                     && (rec.pikuah === 'closed' || rec.pikuah === 'gmar' || rec.pikuah === 'built');
             }
             function buildActiveSitePopup(rec) {
@@ -23843,14 +23850,24 @@ function planPermitHafrashUse(taba) {
                 h += row('צווי בטיחות', rec.warrants || '');
                 h += row('עיצומים כספיים', rec.sanctions || '');
                 h += row('תת-שכונה', rec.sub);
-                if (rec.permit && rec.permit_m != null && rec.permit_m <= 150) {
-                    h += row('היתר קרוב', rec.permit + ' (' + rec.permit_m + ' מ׳)');
+                // site_2110 = the file's municipal point sits on the site; address = same street+number.
+                // Either one is the site's own permit, whatever the distance to our stored coordinates.
+                const atSite = rec.permit_link === 'site_2110' || rec.permit_link === 'address';
+                if (activeSiteHasPermit(rec)) {
+                    h += row(atSite ? 'היתר באתר' : 'היתר קרוב', rec.permit + (atSite ? '' : ' (' + rec.permit_m + ' מ׳)'));
                     h += row('סטטוס היתר', rec.permit_status);
+                    h += row('תיאור', rec.permit_desc);
                     h += row('פיקוח בנייה', ACTIVE_SITE_PIKUAH_HE[rec.pikuah] || rec.pikuah_status || '');
                 } else {
                     h += row('היתר קרוב', 'לא נמצא ברדיוס 150 מ׳');
                 }
                 h += '</table>';
+                if (rec.permit_off_plan) {
+                    h += '<div style="margin-top:5px;padding:4px 6px;border-radius:4px;background:rgba(120,144,156,.16);'
+                       + 'border:1px solid #78909c;color:#b0bec5;font-size:10.5px">ℹ️ היתר מחוץ לתכניות שבמעקב'
+                       + (rec.permit_plans && rec.permit_plans.length ? ' (מכוח ' + esc(rec.permit_plans.slice(0, 4).join(', ')) + ')' : '')
+                       + ' — מוצג לזיהוי האתר בלבד, לא נספר בשום תכנית</div>';
+                }
                 if (activeSiteConflict(rec)) {
                     h += '<div style="margin-top:5px;padding:4px 6px;border-radius:4px;background:rgba(198,40,40,.16);'
                        + 'border:1px solid #c62828;color:#ff8a80;font-size:10.5px">⚠️ סתירה: האתר מדווח פעיל, אך תיק הפיקוח של ההיתר הקרוב סגור/הסתיים</div>';
@@ -36792,7 +36809,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const src = window.__activeSites || { sites: [] };
                         const all = src.sites || [];
                         const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                        const noPermit = (r) => !(r.permit && r.permit_m != null && r.permit_m <= 150);
+                        const noPermit = (r) => !activeSiteHasPermit(r);
                         const f = activeSitesFilter;
                         const q = (f.q || '').trim();
                         const rows = all.filter(r => {
@@ -36895,7 +36912,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{textAlign:'center',padding:'4px',color:'#fff',background:r.warrants ? 'rgba(239,108,0,.35)' : 'transparent'}}>{r.warrants || ''}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#fff',background:r.sanctions ? 'rgba(198,40,40,.4)' : 'transparent'}}>{r.sanctions || ''}</td>
                                                     <td style={{padding:'4px',color:'#ce93d8',fontSize:11}}>{r.sub || '-'}</td>
-                                                    <td style={{padding:'4px',color:'#a5d6a7',fontSize:11}}>{noPermit(r) ? '—' : (r.permit + ' (' + r.permit_m + 'מ׳)')}</td>
+                                                    <td style={{padding:'4px',color:'#a5d6a7',fontSize:11}}>{noPermit(r) ? '—' : (r.permit + ((r.permit_link === 'site_2110' || r.permit_link === 'address') ? ' (באתר)' : ' (' + r.permit_m + 'מ׳)') + (r.permit_off_plan ? ' · מחוץ לתכניות' : ''))}</td>
                                                     <td style={{padding:'4px',fontSize:11,color:activeSiteConflict(r) ? '#ff8a80' : '#bbb'}}>
                                                         {activeSiteConflict(r) ? '❗ ' : ''}{ACTIVE_SITE_PIKUAH_HE[r.pikuah] || (noPermit(r) ? '-' : (r.pikuah_status || '-'))}
                                                     </td>
