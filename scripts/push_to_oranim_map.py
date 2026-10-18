@@ -24,6 +24,7 @@ from git_sync import (
     _stash_wip,
     _pop_wip,
     _assert_committed_matches_disk,
+    record_failure,
 )
 
 BRANCH = "master"
@@ -84,15 +85,23 @@ def _push():
         # 5. Pull --rebase to get latest remote
         pull_res = run_git(["pull", "--rebase", "origin", BRANCH])
         if pull_res.returncode != 0:
+            # A conflicting rebase (one-line JSON vs a remote edit) used to fall through
+            # to "try push anyway": the repo was left mid-rebase with conflict markers in
+            # plans.geojson (2026-10-18). Abort, keep our commits local, fail loudly.
             print(f"[git pull --rebase] error: {pull_res.stderr.strip()[:300]}")
-            # try push anyway in case --rebase failed but rebase already happened
-        # 6. Push
-        push_res = run_git(["push", "origin", BRANCH])
-        if push_res.returncode == 0:
-            print("[git] pushed successfully")
-        else:
-            print(f"[git push] failed: {push_res.stderr.strip()[:400]}")
+            run_git(["rebase", "--abort"])
+            print("[git] rebase aborted — local commits kept, NOT pushed")
+            record_failure("pull --rebase", (pull_res.stderr.strip() or pull_res.stdout.strip())[:200])
             exit_code = 1
+        else:
+            # 6. Push
+            push_res = run_git(["push", "origin", BRANCH])
+            if push_res.returncode == 0:
+                print("[git] pushed successfully")
+            else:
+                print(f"[git push] failed: {push_res.stderr.strip()[:400]}")
+                record_failure("push", push_res.stderr.strip()[:200])
+                exit_code = 1
     finally:
         # 7. Restore stashed WIP (loud + lossless on conflict)
         if wip and not _pop_wip(REPO, wip):

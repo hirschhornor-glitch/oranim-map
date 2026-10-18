@@ -2530,6 +2530,7 @@ if __name__ == '__main__':
                 send_alert(f"סנכרון מבאת ({mode}): עדכונים לא נדחפו — {datetime.now():%Y-%m-%d}", body)
             except Exception as e:
                 log_msg(f"(alert failed: {e})")
+            _git_sync.HANDLED = True   # alerted here — git_sync's exit hook must not repeat it
             sys.exit(1)
     except Exception:
         # A crash used to print its traceback to stderr only, which the scheduled

@@ -29,6 +29,7 @@ Usage (legacy, for files already written to disk):
     # ... read plans.geojson, modify it, write it back ...
     commit_and_push_after_write('data/plans.geojson', 'fix: update X')
 """
+import atexit
 import glob
 import json
 import os
@@ -577,6 +578,8 @@ def _mirror_cli(push: bool) -> int:
     try:
         from ops_alert import send_alert, log_tail
         from pathlib import Path
+        global HANDLED
+        HANDLED = True
         send_alert("סנכרון סקריפטים לרפו נכשל",
                    "ה-mirror הלילי של הסקריפטים ל-oranim-app/scripts נכשל (pull/commit/push).\n"
                    "הקבצים יישארו ממתינים וינוסו שוב בריצה הבאה.\n"
@@ -586,6 +589,93 @@ def _mirror_cli(push: bool) -> int:
     except Exception as e:
         print(f"[git_sync] alert failed: {e}", file=sys.stderr)
     return 1
+
+
+# ── Failure registry + exit hook ────────────────────────────────────────────────
+# Every public writer returns False when its git write did not land (auth failure,
+# 4 rejected pushes, failed rebase). Callers mostly ignored that: on 2026-10-18 all 8
+# pushes of the morning Mavat sync failed on a GitHub credential error, the edits were
+# reset away, and the run still ended "Done", exit 0. So the module itself keeps score:
+# at the end of any process that wrote through git_sync, a failure or a commit left
+# unpushed sends one ops alert and turns the exit code into 1 — no per-script wiring.
+# A caller that already alerted and exits non-zero sets HANDLED = True.
+FAILURES = []
+HANDLED = False
+_ACTIVE = False
+
+
+def record_failure(what: str, detail: str = ''):
+    """Register a git write that did not land (also for scripts that run git directly)."""
+    global _ACTIVE
+    _ACTIVE = True
+    FAILURES.append(f"{what}: {detail}".strip())
+    print(f"[git_sync] FAILURE recorded — {what}: {detail}", file=sys.stderr)
+
+
+def _recorded(fn, what):
+    def wrapper(*a, **kw):
+        global _ACTIVE
+        _ACTIVE = True
+        ok = fn(*a, **kw)
+        if ok is False:
+            target = a[0] if a and isinstance(a[0], str) else kw.get('relative_path', '')
+            msg = kw.get('message') or next((x for x in a[1:] if isinstance(x, str)), '')
+            record_failure(what, f"{target} {msg}".strip() if not isinstance(target, list)
+                           else f"{', '.join(target)} {msg}")
+        return ok
+    wrapper.__name__ = fn.__name__
+    wrapper.__doc__ = fn.__doc__
+    return wrapper
+
+
+pull_before_read = _recorded(pull_before_read, 'pull')
+update_json_and_push = _recorded(update_json_and_push, 'push')
+commit_and_push_after_write = _recorded(commit_and_push_after_write, 'push')
+_commit_and_push_paths = _recorded(_commit_and_push_paths, 'push')
+
+
+def unpushed_commits(repo_dir: str = REPO_DIR):
+    """Local commits not on origin/master (None if git could not tell)."""
+    try:
+        subprocess.run(['git', 'fetch', '-q', 'origin'], cwd=repo_dir,
+                       capture_output=True, timeout=120)
+        r = subprocess.run(['git', 'log', '--format=%h %s', 'origin/master..HEAD'], cwd=repo_dir,
+                           capture_output=True, text=True, encoding='utf-8', timeout=60)
+        return [l for l in r.stdout.splitlines() if l.strip()] if r.returncode == 0 else None
+    except Exception:
+        return None
+
+
+def _exit_hook():
+    if HANDLED or not _ACTIVE:
+        return
+    unpushed = unpushed_commits()
+    if not FAILURES and not unpushed:
+        return
+    script = os.path.basename(sys.argv[0] or 'python')
+    body = (f"{script} {' '.join(sys.argv[1:])}\n"
+            "חלק מהעדכונים לא הגיעו ל-GitHub — הם לא באתר. לבדוק אימות git "
+            f"(git push ידני ב-{REPO_DIR}) ולהריץ מחדש.\n\n")
+    if FAILURES:
+        body += "פעולות git שנכשלו:\n" + "\n".join("• " + f for f in FAILURES) + "\n\n"
+    if unpushed:
+        body += "קומיטים מקומיים שלא נדחפו:\n" + "\n".join("• " + c for c in unpushed) + "\n"
+    print(f"[git_sync] {len(FAILURES)} failed git write(s), {len(unpushed or [])} unpushed "
+          f"commit(s) — alerting, exit 1", file=sys.stderr)
+    try:
+        if SCRIPTS_ROOT_DIR not in sys.path:
+            sys.path.insert(0, SCRIPTS_ROOT_DIR)
+        from ops_alert import send_alert
+        send_alert(f"{script}: עדכונים לא נדחפו ל-GitHub — {time.strftime('%Y-%m-%d')}", body)
+    except Exception as e:
+        print(f"[git_sync] alert failed: {e}", file=sys.stderr)
+    try:
+        sys.stdout.flush(); sys.stderr.flush()
+    finally:
+        os._exit(1)
+
+
+atexit.register(_exit_hook)
 
 
 if __name__ == '__main__':
