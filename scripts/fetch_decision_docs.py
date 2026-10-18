@@ -235,8 +235,18 @@ async def run(limit=None, only=None, debug=False):
     # marked 'no_decision_doc' are re-checked every run — the מסמך החלטות is
     # published ~a week after the hearing, so a plan that had none last week may
     # have one now (this is what makes the weekly scan find "new" docs).
+    # A 'downloaded' doc is also re-checked when its meeting is OLDER than the plan's
+    # status date: the deposit decision wasn't published yet, so we fell back to an
+    # earlier meeting (1158146: got 23/06/2025 "לשוב ולדון", status from 08/09/2026).
+    def _d(s):
+        p = (s or '').split('/')
+        return (p[2], p[1], p[0]) if len(p) == 3 else None
+    def _stale(e, w):
+        a, b = _d(e.get('decision_date')), _d(w.get('mavat_date'))
+        return bool(a and b and a < b)
     todo = [w for w in work
-            if index.get(w['taba'], {}).get('status') != 'downloaded']
+            if index.get(w['taba'], {}).get('status') != 'downloaded'
+            or _stale(index[w['taba']], w)]
     print(f"Target-status plans: {len(work)} | to process now: {len(todo)}")
     if not todo:
         print("Nothing to do — all resolved. (delete entries from the index to retry)")

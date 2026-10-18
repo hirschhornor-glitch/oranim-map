@@ -24,6 +24,9 @@ KEYWORDS = {
     "economic": ["כלכלית", "שמאי"],
     "social": ["נספח חברתי", "חברתי"],
     "program": ["פרוגרמה"],
+    "balance": ["טבלאות איזון", "טבלת הקצאה", "איזון והקצאה"],
+    "horaot": ["הוראות התכנית"],
+    "engineer": ["מהנדס העיר", "96א"],
     "soil": ["קרקע היסטורי", "סקר קרקע", "איכות קרקע", "זיהום", "דו\"ח סביבה", "סביבה ונוף", "חוות דעת סביבתית"],
 }
 EXPAND = """()=>{try{document.querySelectorAll('.uk-accordion').forEach(el=>{const a=UIkit.accordion(el);
