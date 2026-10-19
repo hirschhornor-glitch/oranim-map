@@ -4,9 +4,10 @@ fetch_commercial_frontage.py
 Commercial frontage lines (חזית מסחרית) for every Jerusalem plan, from the iplan
 XPLAN REST API (PlanningPublic/Xplan/MapServer/2 — linear entities).
 
-Two mavat codes are kept:
+Three mavat codes are kept:
     21100  חזית מסחרית
     21110  חזית עם הוראות מיוחדות
+    56054  חזית פעילה  (the newer mavat symbol; ~25 lines in Jerusalem)
 
 Scope: the Jerusalem ITM envelope used by the citywide commerce mapping, plans
 prefixed 101- (the local committee) only.
@@ -47,7 +48,7 @@ XPLAN_URL = ('https://ags.iplan.gov.il/arcgisiplan/rest/services/'
 DATA = Path(__file__).resolve().parent.parent / 'data'
 OUTPUT = DATA / 'commercial_frontage.geojson'
 
-FRONTAGE_CODES = {21100: 'חזית מסחרית', 21110: 'חזית עם הוראות מיוחדות'}
+FRONTAGE_CODES = {21100: 'חזית מסחרית', 21110: 'חזית עם הוראות מיוחדות', 56054: 'חזית פעילה'}
 JLM_ENVELOPE_ITM = '208000,620000,228000,644000'
 PAGE = 1000          # XPLAN caps resultRecordCount at 1000
 STREET_MAX_M = 35    # beyond this the nearest road is not "the" street

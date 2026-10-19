@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-19-fit-table';
+        const APP_VERSION = '2026-10-19-active-frontage';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1189,7 +1189,7 @@
                 title: 'מסחר ותעסוקה',
                 layers: [
                     { id: 'commerce_employment_migrash', name: 'מסחר ותעסוקה — מגרשי', desc: 'שטחי מסחר ותעסוקה מתוכננים (מ"ר עיקרי מטבלה 5) לפי מגרש (תא שטח). צבע לפי שימוש דומיננטי; בתלפיות — השוואה למכסת תכנית האב', on: false },
-                    { id: 'commercial_frontage', name: 'חזית מסחרית', desc: 'קווי חזית מסחרית שהתב"עות משרטטות (XPLAN, ישויות קוויות 21100/21110). קו מלא = מאושרת, מקווקו = בהליך; בצבע: מאושר / בהליך / חזית עם הוראות מיוחדות', on: false },
+                    { id: 'commercial_frontage', name: 'חזית מסחרית', desc: 'קווי חזית מסחרית שהתב"עות משרטטות וחזית פעילה (XPLAN, ישויות קוויות 21100/21110/56054). קו מלא = מאושרת, מקווקו = בהליך; בצבע: מאושר / בהליך / חזית פעילה / חזית עם הוראות מיוחדות', on: false },
                 ]
             },
             projector: {
@@ -3539,17 +3539,23 @@ function planPermitHafrashUse(taba) {
         // חזית מסחרית (XPLAN 21100) + חזית עם הוראות מיוחדות (21110). Approved vs
         // in-process split on the shared status grouping, so a line and its plan's
         // polygon never disagree; rejected plans keep their line but in grey.
-        const FRONTAGE_COLORS = { approved: '#c026d3', process: '#f59e0b', special: '#0ea5e9', rejected: '#9e9e9e' };
+        const FRONTAGE_COLORS = { approved: '#c026d3', process: '#f59e0b', special: '#0ea5e9', active: '#10b981', rejected: '#9e9e9e' };
         const frontageBucket = (p) => {
             const g = statusGroupKey(p && p.status);
             if (g === 'rejected') return 'rejected';
             return (g === 'approved') ? 'approved' : 'process';
         };
-        const frontageColor = (p) => (p && p.code === 21110 && frontageBucket(p) !== 'rejected')
-            ? FRONTAGE_COLORS.special : FRONTAGE_COLORS[frontageBucket(p)];
+        // Kind wins over status for colour; the dash still tells approved from in-process.
+        const frontageColor = (p) => {
+            const b = frontageBucket(p);
+            if (p && b !== 'rejected' && p.code === 56054) return FRONTAGE_COLORS.active;
+            if (p && b !== 'rejected' && p.code === 21110) return FRONTAGE_COLORS.special;
+            return FRONTAGE_COLORS[b];
+        };
         const FRONTAGE_LEGEND = [
             { label: 'חזית מסחרית — תכנית מאושרת', color: FRONTAGE_COLORS.approved },
             { label: 'חזית מסחרית — תכנית בהליך (מקווקו)', color: FRONTAGE_COLORS.process },
+            { label: 'חזית פעילה', color: FRONTAGE_COLORS.active },
             { label: 'חזית עם הוראות מיוחדות', color: FRONTAGE_COLORS.special },
             { label: 'תכנית שנגנזה / נדחתה', color: FRONTAGE_COLORS.rejected },
         ];
@@ -35440,7 +35446,7 @@ function planPermitHafrashUse(taba) {
                                                                 </div>
                                                             </>
                                                         )}
-                                                        <div style={{fontSize:10,color:'#6f7b8a',marginTop:6}}>מקור: XPLAN, קווי חזית מסחרית (21100/21110). תכניות שנגנזו/נדחו לא נספרות.</div>
+                                                        <div style={{fontSize:10,color:'#6f7b8a',marginTop:6}}>מקור: XPLAN, קווי חזית מסחרית וחזית פעילה (21100/21110/56054). תכניות שנגנזו/נדחו לא נספרות.</div>
                                                     </div>
                                                 </>
                                             )}
