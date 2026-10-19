@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-19-commercial-frontage';
+        const APP_VERSION = '2026-10-19-fit-table';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -40155,10 +40155,18 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const SEL = { background: '#0d1428', color: '#dbe4f5', border: '1px solid #2a3a5e',
                             borderRadius: 5, padding: '4px 7px', fontSize: 12, fontFamily: 'inherit', minWidth: 130 };
                         const LBL = { fontSize: 11, color: '#9fb0d0', display: 'block', marginBottom: 3 };
-                        const TH = { textAlign: 'center', padding: '5px 4px', color: '#fff', fontWeight: 600, whiteSpace: 'nowrap' };
+                        const TH = { textAlign: 'center', padding: '5px 3px', color: '#fff', fontWeight: 600, whiteSpace: 'nowrap' };
                         const THR = { ...TH, textAlign: 'right' };
-                        const TD = { textAlign: 'center', padding: '4px', color: '#cfd8ea', whiteSpace: 'nowrap' };
+                        const TD = { textAlign: 'center', padding: '3px', color: '#cfd8ea', whiteSpace: 'nowrap' };
                         const TDR = { ...TD, textAlign: 'right', whiteSpace: 'normal' };
+                        // the widest free-text cell — capped so one long explanation does not
+                        // set the height of every row in the table
+                        const CLAMP2 = { display: '-webkit-box', WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical', overflow: 'hidden' };
+                        const clamp2 = txt => <div style={CLAMP2}>{txt}</div>;
+                        const TDSRC = { ...TDR, fontSize: 10.5, color: '#9fb0d0',
+                            lineHeight: 1.35, maxWidth: 230, minWidth: 110 };
+                        const TDW = { ...TD, whiteSpace: 'normal', lineHeight: 1.3 };
                         // מגמה לפי שנת אישור — the same per-plan "higher of the two sides" as the
                         // headline tile, bucketed by year, so a rising share of יח"ד that the plans
                         // themselves do not count is visible rather than buried in 123 rows.
@@ -40173,6 +40181,30 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             return Array.from(m.values()).sort((a, b) => a.year - b.year);
                         })();
                         const noYear = view.filter(r => !r.year).length;
+                        // A channel column that is empty for every row on screen is noise that
+                        // costs width. Hidden here only — COLS still drives CSV and print.
+                        const SHOW = {
+                            cond: view.some(r => r.condUnits), bonus: view.some(r => r.bonusUnits),
+                            hak: view.some(r => r.hakExtra), raise: view.some(r => r.raiseUnits),
+                            tama: view.some(r => r.tamaUnits),
+                            diyur: view.some(r => r.diyurUnits || r.diyurUncapped),
+                        };
+                        // [short label, shown?, full wording for the tooltip]
+                        const HEAD = [
+                            ['תב"ע', true], ['שם התכנית', true], ['מינה"ק', true], ['סטטוס', true],
+                            ['שנה', true, 'שנת התאריך האחרון במבא״ת — לתכנית מאושרת זהו תאריך האישור'],
+                            ['בתב"ע', true, 'יח"ד בתב"ע'],
+                            ['מותנות', SHOW.cond, 'יח"ד מותנות — מחוץ ליח"ד שבתב"ע'],
+                            ['טבלה 5', SHOW.bonus, 'תוספת מותרת לפי הערת טבלה 5'],
+                            ['הקלה', SHOW.hak, 'הקלה שאושרה בהיתר'],
+                            ['מגדילה', SHOW.raise, 'תכנית מאוחרת שמגדילה'],
+                            ['תמ"א 38', SHOW.tama, 'יח"ד מכוח תמ"א 38'],
+                            ['דיוריות', SHOW.diyur, 'דיוריות — משקי בית בתוך יח"ד קיימות'],
+                            ['בהיתרים', true, 'יח"ד בהיתרים'],
+                            ['תוספת', true, 'תוספת בפועל מעל היח"ד בתב"ע'],
+                            ['ללא מקור', true, 'ללא מקור מתועד'],
+                            ['המקור', true],
+                        ];
                         const yearMaxPct = byYear.reduce((mx, e) =>
                             Math.max(mx, e.base > 0 ? e.beyond / e.base * 100 : 0), 0);
                         // A tile with a `fkey` is the filter for its own channel: click to narrow the
@@ -40446,9 +40478,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         </details>
                                     )}
 
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
                                         <thead><tr style={{ background: '#16224a' }}>
-                                            {COLS.map((c, i) => <th key={c} style={i === 1 ? THR : TH}>{c}</th>)}
+                                            {HEAD.filter(h => h[1]).map((h, i) => (
+                                                <th key={h[0]} title={h[2] || ''} style={i === 1 ? THR : TH}>{h[0]}</th>
+                                            ))}
                                         </tr></thead>
                                         <tbody>
                                             {view.map(r => (
@@ -40456,26 +40490,38 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     background: r.unexplained ? 'rgba(198,40,40,0.10)' : r.hakExtra ? 'rgba(245,176,65,0.08)' : 'transparent' }}>
                                                     <td style={{ ...TD, color: '#5dade2', cursor: 'pointer' }}
                                                         onClick={() => { setExtraUnitsReport(false); zoomToFeature(r.feature); }}>{r.plan_name}</td>
-                                                    <td style={TDR}>{r.name || '—'}</td>
-                                                    <td style={TD}>{r.minahak || '—'}</td>
-                                                    <td style={TD}>{r.status || '—'}</td>
+                                                    <td style={{ ...TDR, maxWidth: 170 }}
+                                                        title={r.name || ''}>{clamp2(r.name || '—')}</td>
+                                                    <td style={TDW} title={r.minahak || ''}>{clamp2(r.minahak || '—')}</td>
+                                                    <td style={TDW} title={r.status || ''}>{clamp2(r.status || '—')}</td>
                                                     <td style={TD} title="שנת התאריך האחרון במבא״ת — לתכנית מאושרת זהו תאריך האישור">
                                                         {r.year || '—'}</td>
                                                     <td style={TD}>{nf(r.base)}</td>
+                                                    {SHOW.cond && (
                                                     <td style={{ ...TD, color: r.condUnits ? '#b39ddb' : '#55617a' }}
                                                         title="יח״ד שהתכנית מתנה בתנאי (קרן תחזוקה, השכרה) — מחוץ ל-units_total">
                                                         {r.condUnits ? nf(r.condUnits) : '—'}</td>
+                                                    )}
+                                                    {SHOW.bonus && (
                                                     <td style={{ ...TD, color: r.bonusUnits ? '#5dade2' : '#55617a' }}
                                                         title={r.bonusNote || ''}>
                                                         {r.bonusUnits ? nf(r.bonusUnits) + (r.bonusPct ? ' (' + r.bonusPct + '%)' : ' (עד ' + nf(r.bonusCap) + ')') : '—'}</td>
+                                                    )}
+                                                    {SHOW.hak && (
                                                     <td style={{ ...TD, color: r.hakExtra ? '#f5b041' : '#55617a' }} title={r.hakText}>
                                                         {r.hakExtra ? nf(r.hakExtra) + (r.hakPct ? ' (' + r.hakPct + '%)' : '') : '—'}</td>
-                                                    <td style={{ ...TD, color: r.raiseUnits ? '#80cbc4' : '#55617a' }}
+                                                    )}
+                                                    {SHOW.raise && (
+                                                    <td style={{ ...TDW, color: r.raiseUnits ? '#80cbc4' : '#55617a' }}
                                                         title={r.raiserTitle ? r.raiserName + ' — ' + r.raiserTitle : ''}>
-                                                        {r.raiseUnits ? nf(r.raiseUnits) + ' · ' + r.raiserName : '—'}</td>
+                                                        {clamp2(r.raiseUnits ? nf(r.raiseUnits) + ' · ' + r.raiserName : '—')}</td>
+                                                    )}
+                                                    {SHOW.tama && (
                                                     <td style={{ ...TD, color: r.tamaUnits ? '#c5a3ff' : '#55617a' }}
                                                         title="יח״ד שההיתר מקבל מכוח תמ״א 38 (חיזוק/הריסה ובנייה), לא מטבלה 5 של התכנית">
                                                         {r.tamaUnits ? nf(r.tamaUnits) : '—'}</td>
+                                                    )}
+                                                    {SHOW.diyur && (
                                                     <td style={{ ...TD, color: r.diyurUnits ? '#7ec8e3' : (r.diyurUncapped ? '#e6a23c' : '#55617a') }}
                                                         title={r.diyurNote || (r.diyurUncapped
                                                             ? ('התכנית מתירה דיוריות אך אינה נוקבת בשיעור — מספרן אינו ניתן לכימות.'
@@ -40484,17 +40530,18 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                             : 'משק בית נוסף בתוך יח״ד קיימת — לא יח״ד נוספת')}>
                                                         {r.diyurUnits ? nf(r.diyurUnits) + ' (' + r.diyurPct + '%)'
                                                             : (r.diyurUncapped ? 'ללא מכסה' : '—')}</td>
+                                                    )}
                                                     <td style={TD}>{r.permitUnits ? nf(r.permitUnits) : '—'}</td>
                                                     <td style={{ ...TD, fontWeight: 700, color: r.realized ? '#7fc98a' : '#55617a' }}>
                                                         {r.realized ? nf(r.realized) : '—'}</td>
                                                     <td style={{ ...TD, color: !r.unexplained ? '#55617a' : (r.pubOnly ? '#e6a23c' : '#ff9aa8') }}
                                                         title={r.pubOnly ? 'פורסמה הקלה לפי סעיף 149 בתיק ' + r.pubTiks + ' — ההחלטה לא נקבה במספר' : ''}>
                                                         {r.unexplained ? nf(r.unexplained) + (r.pubOnly ? ' §149' : '') : '—'}</td>
-                                                    <td style={{ ...TDR, fontSize: 11, color: '#9fb0d0' }}>{srcLabel(r)}</td>
+                                                    <td style={TDSRC} title={srcLabel(r)}>{clamp2(srcLabel(r))}</td>
                                                 </tr>
                                             ))}
                                             {!view.length && (
-                                                <tr><td colSpan={COLS.length} style={{ ...TD, padding: 18, color: '#8a9bc0' }}>
+                                                <tr><td colSpan={HEAD.filter(h => h[1]).length} style={{ ...TD, padding: 18, color: '#8a9bc0' }}>
                                                     אין תכניות שעונות לסינון.</td></tr>
                                             )}
                                         </tbody>
