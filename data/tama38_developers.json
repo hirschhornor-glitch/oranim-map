@@ -1,5 +1,5 @@
 {
- "count": 236,
+ "count": 256,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -3728,6 +3728,371 @@
    ],
    "architect": "גדעון יגר",
    "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2024/0322.00": {
+   "developer": "התחדשות עירונית בע\"מ / הנדסה ויזמות בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בליליוס",
+     "group": "התחדשות עירונית בע\"מ",
+     "name": "התחדשות עירונית בע\"מ"
+    },
+    {
+     "applicant": "גבי פירו",
+     "group": "הנדסה ויזמות בע\"מ",
+     "name": "הנדסה ויזמות בע\"מ"
+    }
+   ],
+   "architect": "יוסף אוזנה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0355.00": {
+   "developer": "קוזי קאזה דרך חברון בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "רועי",
+     "group": "קוזי קאזה דרך חברון בע\"מ",
+     "name": "קוזי קאזה דרך חברון בע\"מ"
+    }
+   ],
+   "architect": "דניאל סלם",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "1997/0061.08": {
+   "developer": "לנדובר הולינגס / בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "לנדובר",
+     "group": "הולינגס",
+     "name": "לנדובר הולינגס"
+    },
+    {
+     "applicant": "אריתל אחזקות",
+     "group": "בע\"מ",
+     "name": "בע\"מ"
+    }
+   ],
+   "architect": "אלון שיקאר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2024/0435.00": {
+   "developer": "מא'''''''' ועד ת'''''''' ניהול פרויקטים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "פרויקטים בע\"מ",
+     "group": "מא'''''''' ועד ת'''''''' ניהול",
+     "name": "מא'''''''' ועד ת'''''''' ניהול פרויקטים בע\"מ"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2025/0212.00": {
+   "developer": "ייזום פרויקטים בע\"מ / הכשרת הישוב בישראל בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "אבי רחמים",
+     "group": "ייזום פרויקטים בע\"מ",
+     "name": "ייזום פרויקטים בע\"מ"
+    },
+    {
+     "applicant": "הכשרת הישוב בישראל בע\"מ",
+     "group": "",
+     "name": "הכשרת הישוב בישראל בע\"מ"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0190.00": {
+   "developer": "בת-דור בניה ופיתוח בע\"מ / אוהד שרמן",
+   "developer_parts": [
+    {
+     "applicant": "גולן כהנא",
+     "group": "בת-דור בניה ופיתוח בע\"מ",
+     "name": "בת-דור בניה ופיתוח בע\"מ"
+    },
+    {
+     "applicant": "אוהד",
+     "group": "שרמן",
+     "name": "אוהד שרמן"
+    }
+   ],
+   "architect": "יצחק עדס",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2026/0106.00": {
+   "developer": "חובבי ציון 13 ירושלים התחדשות עירונית בע\"מ / פנחס דרנגר",
+   "developer_parts": [
+    {
+     "applicant": "עירונית בע\"מ",
+     "group": "חובבי ציון 13 ירושלים התחדשות",
+     "name": "חובבי ציון 13 ירושלים התחדשות עירונית בע\"מ"
+    },
+    {
+     "applicant": "פנחס",
+     "group": "דרנגר",
+     "name": "פנחס דרנגר"
+    }
+   ],
+   "architect": "יובל תאודור",
+   "units": 4,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0047.00": {
+   "developer": "טדי לכטשיין / ג\"ולי לכטשיין / שמואל אברהמי",
+   "developer_parts": [
+    {
+     "applicant": "טדי",
+     "group": "לכטשיין",
+     "name": "טדי לכטשיין"
+    },
+    {
+     "applicant": "ג\"ולי",
+     "group": "לכטשיין",
+     "name": "ג\"ולי לכטשיין"
+    },
+    {
+     "applicant": "שמואל",
+     "group": "אברהמי",
+     "name": "שמואל אברהמי"
+    }
+   ],
+   "architect": "נירה אורן",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2015/0823.00": {
+   "developer": "ע\"י ייפוי כוח זייבלד פנחס מרדכי",
+   "developer_parts": [
+    {
+     "applicant": "ע\"י ייפוי כוח",
+     "group": "זייבלד פנחס מרדכי",
+     "name": "ע\"י ייפוי כוח זייבלד פנחס מרדכי"
+    }
+   ],
+   "architect": "נירה אורן",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2025/0378.00": {
+   "developer": "תאגיד סמארט - מ. הנדסה ניהול ובניה ב",
+   "developer_parts": [
+    {
+     "applicant": "סמארט - מ. הנדסה ניהול ובניה ב",
+     "group": "תאגיד",
+     "name": "תאגיד סמארט - מ. הנדסה ניהול ובניה ב"
+    }
+   ],
+   "architect": "נעם סרי לוי",
+   "units": 18,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2017/0800.00": {
+   "developer": "אורי קעניג",
+   "developer_parts": [
+    {
+     "applicant": "אורי",
+     "group": "קעניג",
+     "name": "אורי קעניג"
+    }
+   ],
+   "architect": "משה חיים בצלאל שפירא",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2023/0166.00": {
+   "developer": "רוברט שניידרמן / יוסי בנג'י / יעקב קובי אמסלם / אנט אלבו / בצלאל נאור בוטח",
+   "developer_parts": [
+    {
+     "applicant": "רוברט",
+     "group": "שניידרמן",
+     "name": "רוברט שניידרמן"
+    },
+    {
+     "applicant": "יוסי",
+     "group": "בנג'י",
+     "name": "יוסי בנג'י"
+    },
+    {
+     "applicant": "יעקב קובי",
+     "group": "אמסלם",
+     "name": "יעקב קובי אמסלם"
+    },
+    {
+     "applicant": "אנט",
+     "group": "אלבו",
+     "name": "אנט אלבו"
+    },
+    {
+     "applicant": "בצלאל נאור",
+     "group": "בוטח",
+     "name": "בצלאל נאור בוטח"
+    }
+   ],
+   "architect": "חגית ברכ וקסלר",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2020/0765.00": {
+   "developer": "יהודה קרל אחזקות בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "יהודה",
+     "group": "יהודה קרל אחזקות בע\"מ",
+     "name": "יהודה קרל אחזקות בע\"מ"
+    }
+   ],
+   "architect": "שמואל בלזם",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2026/0066.00": {
+   "developer": "רמי זדה / מלכות במלכי ישראל בע\"מ / זקלין שרמן",
+   "developer_parts": [
+    {
+     "applicant": "רמי",
+     "group": "זדה",
+     "name": "רמי זדה"
+    },
+    {
+     "applicant": "ישראל בע\"מ",
+     "group": "מלכות במלכי",
+     "name": "מלכות במלכי ישראל בע\"מ"
+    },
+    {
+     "applicant": "זקלין",
+     "group": "שרמן",
+     "name": "זקלין שרמן"
+    }
+   ],
+   "architect": "אנדרס רוזנבלט",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2026/0267.00": {
+   "developer": "חיזוק ושימור מבנים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "אביב 38",
+     "group": "חיזוק ושימור מבנים בע\"מ",
+     "name": "חיזוק ושימור מבנים בע\"מ"
+    }
+   ],
+   "architect": "דינה גלר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0235.00": {
+   "developer": "מרים זפט",
+   "developer_parts": [
+    {
+     "applicant": "מרים",
+     "group": "זפט",
+     "name": "מרים זפט"
+    }
+   ],
+   "architect": "ירון קופרשטוק",
+   "units": 17,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2025/0022.00": {
+   "developer": "ד.נ.י. - קרן היסוד בע\"מ / שרמן ג'קלין",
+   "developer_parts": [
+    {
+     "applicant": "יוחאי",
+     "group": "ד.נ.י. - קרן היסוד בע\"מ",
+     "name": "ד.נ.י. - קרן היסוד בע\"מ"
+    },
+    {
+     "applicant": "שרמן ג'קלין",
+     "group": "",
+     "name": "שרמן ג'קלין"
+    }
+   ],
+   "architect": "מיכל מאיר",
+   "units": 21,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0266.00": {
+   "developer": "קרסו נדלן",
+   "developer_parts": [
+    {
+     "applicant": "נדלן",
+     "group": "קרסו",
+     "name": "קרסו נדלן"
+    }
+   ],
+   "architect": "עמוס דר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2013/0512.01": {
+   "developer": "בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בן זכאי 6",
+     "group": "בע\"מ",
+     "name": "בע\"מ"
+    }
+   ],
+   "architect": "גלית יובל שיפמן נתן בר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2023/0618.00": {
+   "developer": "מאיר סימן טוב / שמעון ו3 נוספים סימן טוב / משה אריה סימן טוב / אהובה נבון",
+   "developer_parts": [
+    {
+     "applicant": "מאיר",
+     "group": "סימן טוב",
+     "name": "מאיר סימן טוב"
+    },
+    {
+     "applicant": "שמעון ו3 נוספים",
+     "group": "סימן טוב",
+     "name": "שמעון ו3 נוספים סימן טוב"
+    },
+    {
+     "applicant": "משה אריה",
+     "group": "סימן טוב",
+     "name": "משה אריה סימן טוב"
+    },
+    {
+     "applicant": "אהובה",
+     "group": "נבון",
+     "name": "אהובה נבון"
+    }
+   ],
+   "architect": "אריאל נאור",
+   "units": 8,
    "is_residents": false,
    "minahak": null
   }
