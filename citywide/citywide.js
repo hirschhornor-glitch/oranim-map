@@ -46,7 +46,7 @@
   // describe everything in the file — but it is switchable, because a number nobody
   // can widen is a number nobody can check.
   var state = { tab: "ce", q: "", status: "", sub: "", src: "", sort: "", desc: true,
-                sel: null, scope: true, hood: "" };
+                sel: null, scope: true, hood: "", year: "" };
   var D = { ce: null, housing: null, parcels: null, bounds: null, permits: null, meta: null };
   var map = null, layer = null, geoByPlan = {}, mapNote = "";
 
@@ -111,6 +111,139 @@
     get: function (r) { return metaOf(r.plan).developer || ""; },
     fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } };
   var REAL_COLS = [CUR_COL];
+
+  /* ---------------- realization model ----------------
+   * Parameters taken verbatim from the municipal presentation
+   * "התחדשות עירונית: הפרויקטור — אחוזי מימוש ושלביות ביצוע", ניסן תשפ"ו / אפריל 2026.
+   *
+   * Stage durations and realization rates are slides 3 and 5; the delay ("זנב") rules
+   * are slide 4. Everything the model does is a restatement of that document, so if
+   * the document is revised this block is the only thing that changes.
+   *
+   * Two things in the source are ambiguous and are resolved here in the open:
+   *   · slide 3's table gives 86% for מתן תוקף → פתיחת תיק רישוי, while slide 5's
+   *     adopted recommendation rounds it to 90%. The recommendation is what the
+   *     presentation asks to adopt, so 90% is used; the difference moves only the
+   *     plans sitting between approval and a licensing file.
+   *   · slide 4's fourth rule says "בתהליכי רישוי" but then names the PLANNING stage.
+   *     Read as the escalation of the third rule (licensing beyond 3.5 years), which
+   *     is the only reading under which the four rules form a ladder.
+   */
+  var MODEL = {
+    source: 'הפרויקטור — אחוזי מימוש ושלביות ביצוע, אפריל 2026',
+    stages: [
+      { k: "toApproval",  m: 42, rate: 0.80, label: "פתיחת תיק עד מתן תוקף" },
+      { k: "toLicensing", m: 6,  rate: 0.90, label: "מתן תוקף עד פתיחת תיק רישוי" },
+      { k: "toDigPermit", m: 7,  rate: 1.00, label: "תיק רישוי עד היתר הריסה/חפירה" },
+      { k: "organise",    m: 6,  rate: 1.00, label: "התארגנות לקראת ביצוע" },
+      { k: "toPermit",    m: 15, rate: 1.00, label: "היתר בנייה" },
+      { k: "build",       m: 54, rate: 1.00, label: "ביצוע עד אכלוס" }
+    ],
+    sizeBump: [{ units: 500, m: 12 }, { units: 300, m: 6 }],
+    tail: [
+      { phase: "plan", years: 5,   rate: 0.30, add: 24 },
+      { phase: "plan", years: 4,   rate: 0.50, add: 12 },
+      { phase: "lic",  years: 3.5, rate: 0.30, add: 24 },
+      { phase: "lic",  years: 2.5, rate: 0.70, add: 12 }
+    ]
+  };
+  var MONTHS_FROM = {};          // remaining months, by the stage a plan is at
+  (function () {
+    var st = MODEL.stages, acc = 0;
+    for (var i = st.length - 1; i >= 0; i--) { acc += st[i].m; MONTHS_FROM[st[i].k] = acc; }
+  })();
+  var RATE_FROM = {};
+  (function () {
+    var st = MODEL.stages, acc = 1;
+    for (var i = st.length - 1; i >= 0; i--) { acc *= st[i].rate; RATE_FROM[st[i].k] = acc; }
+  })();
+
+  var NOW = new Date();
+  var monthsSince = function (iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (isNaN(d)) return null;
+    return (NOW.getFullYear() - d.getFullYear()) * 12 + (NOW.getMonth() - d.getMonth());
+  };
+  // Earliest permit record = when the licensing file opened; the issued permit's date
+  // is when building could start. Both come from the realization file's own rows.
+  var licDates = function (plan) {
+    var v = realOf(plan), out = { open: null, issued: null };
+    if (!v || !v.permits) return out;
+    v.permits.forEach(function (p) {
+      if (!p.status_date) return;
+      if (!out.open || p.status_date < out.open) out.open = p.status_date;
+      if (/היתר/.test(p.status || "") && (!out.issued || p.status_date > out.issued))
+        out.issued = p.status_date;
+    });
+    return out;
+  };
+
+  /* Where a plan stands, how likely it is to reach occupancy, and when.
+   * Returns null when the realization pass never examined the plan AND the plan is not
+   * approved — there is then nothing to place it on the ladder with. */
+  function forecast(r) {
+    var v = realOf(r.plan) || {}, meta = metaOf(r.plan);
+    var units = meta.units || (r.rental && r.rental.units_t5) || 0;
+    var ld = licDates(r.plan);
+    var stage, months, rate, basis, elapsed = null;
+
+    if (v.occupied || v.form4_date) {
+      return { done: true, rate: 1, months: 0, year: (v.form4_date || "").slice(0, 4) || null,
+               stage: "אכלוס", basis: "מאוכלס" };
+    }
+    if (v.completed) { stage = "build"; months = 0; rate = 1; basis = "גמר בנייה"; }
+    else if (v.in_construction) {
+      elapsed = monthsSince(ld.issued);
+      months = Math.max(6, MODEL.stages[5].m - (elapsed || 0));
+      rate = 1; stage = "build"; basis = "בביצוע";
+    } else if (v.any_issued) { stage = "build"; months = MONTHS_FROM.build; rate = 1; basis = "היתר בנייה"; }
+    else if (v.has_licensing_file) {
+      stage = "toDigPermit"; months = MONTHS_FROM.toDigPermit; rate = RATE_FROM.toDigPermit;
+      basis = "תיק רישוי פתוח";
+      var le = monthsSince(ld.open);
+      if (le != null) MODEL.tail.forEach(function (t) {
+        if (t.phase === "lic" && le / 12 > t.years && rate > t.rate) { rate = t.rate; months += t.add; }
+      });
+    } else if (isApproved(r.status)) {
+      stage = "toLicensing"; months = MONTHS_FROM.toLicensing; rate = RATE_FROM.toLicensing;
+      basis = "מאושרת, טרם נפתח תיק רישוי";
+    } else {
+      var re = monthsSince(meta.received);
+      stage = "toApproval"; rate = RATE_FROM.toApproval;
+      months = Math.max(12, MONTHS_FROM.toApproval - (re || 0));
+      basis = "בתכנון";
+      if (re != null) MODEL.tail.forEach(function (t) {
+        if (t.phase === "plan" && re / 12 > t.years && rate > t.rate) { rate = t.rate; months += t.add; }
+      });
+    }
+    MODEL.sizeBump.some(function (b) {
+      if (units >= b.units) { months += b.m; return true; }
+      return false;
+    });
+    var d = new Date(NOW.getTime());
+    d.setMonth(d.getMonth() + months);
+    return { done: false, rate: rate, months: months, year: String(d.getFullYear()),
+             stage: stage, basis: basis, units: units };
+  }
+  var FORECAST_COLS = [
+    { k: "fyear", t: "צפי אכלוס", n: true,
+      get: function (r) { var f = forecast(r); return f.year ? +f.year : null; },
+      fmt: function (v, r) {
+        var f = forecast(r);
+        if (f.done) return '<span class="hi" title="' + esc(f.basis) + '">מאוכלס</span>';
+        return '<span class="hi" title="' + esc(f.basis + " · " + f.months + " חודשים לפי המתווה") +
+               '">' + (v || "") + "</span>";
+      } },
+    { k: "frate", t: "% מימוש", n: true,
+      get: function (r) { return Math.round(forecast(r).rate * 100); },
+      fmt: function (v, r) {
+        var f = forecast(r);
+        var cls = v >= 100 ? "hi" : (v <= 50 ? "empty dup" : "");
+        return '<span class="' + cls + '" title="' + esc(f.basis) + '">' + v + "%</span>";
+      } }
+  ];
+
 
   // The scope each tab is SUPPOSED to answer for, per the spec. Applied by default:
   // the headline figures are meant to answer that question, and computing them over
@@ -323,7 +456,7 @@
         // reported so the gap is visible, never attributed to either side.
         { k: "mix", t: "מעורב", n: true, get: function (r) { return r.ce.mixed_other_sqm || 0; },
           fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } }
-      ].concat(REAL_COLS),
+      ].concat(REAL_COLS).concat(FORECAST_COLS),
       detail: function (r) {
         var h = "";
         if (r.ce.split_source) h += "<div><b>מקור הפיצול:</b> " + esc(r.ce.split_source) + "</div>";
@@ -377,7 +510,7 @@
         { k: "amount", t: "גובה הקרן", n: true, get: function (r) { return r.fund.amount_ils; },
           fmt: function (v) { return v ? '<span class="hi">' + ils(v) + "</span>" : '<span class="empty">לא צוין</span>'; } },
         { k: "section", t: "סעיף", get: function (r) { return r.fund.section || ""; } }
-      ].concat(REAL_COLS),
+      ].concat(REAL_COLS).concat(FORECAST_COLS),
       detail: function (r) {
         var h = "";
         if (r.fund.conditional_units_quote)
@@ -443,7 +576,7 @@
         { k: "dsrc", t: "מקור המשך", get: function (r) { return r.rental.duration_source || ""; } },
         { k: "flag", t: "לבדיקה", get: function (r) { return r.rental.review ? 1 : 0; },
           fmt: function (v) { return v ? '<span class="pill ocr">שימוש מותר?</span>' : ""; } }
-      ].concat(REAL_COLS),
+      ].concat(REAL_COLS).concat(FORECAST_COLS),
       detail: function (r) {
         var h = "";
         if (r.rental.units_quote)
@@ -520,6 +653,12 @@
     var R = REPORTS[state.tab], rows = R.rows();
     var sc = SCOPES[state.tab];
     if (state.scope && sc) rows = rows.filter(sc.test);
+    // "by year Y": everything the model expects to be occupied by the end of Y,
+    // including what already is.
+    if (state.year) rows = rows.filter(function (r) {
+      var f = forecast(r);
+      return f.done || (f.year && +f.year <= +state.year);
+    });
     if (state.hood) rows = rows.filter(function (r) {
       return (r.sub_neighborhood || metaOf(r.plan).neighborhood || "") === state.hood;
     });
@@ -705,6 +844,7 @@
     if (state.q) p.push("q=" + encodeURIComponent(state.q));
     if (state.status) p.push("st=" + encodeURIComponent(state.status));
     if (state.hood) p.push("hood=" + encodeURIComponent(state.hood));
+    if (state.year) p.push("year=" + state.year);
     if (!state.scope) p.push("all=1");
     if (state.src) p.push("src=" + state.src);
     if (state.sort) p.push("sort=" + state.sort + (state.desc ? ":d" : ":a"));
@@ -721,6 +861,7 @@
       var k = kv.slice(0, i), v = decodeURIComponent(kv.slice(i + 1));
       if (k === "q") state.q = v; else if (k === "st") state.status = v;
       else if (k === "hood") state.hood = v;
+      else if (k === "year") state.year = v;
       else if (k === "all") state.scope = false;
       else if (k === "src") state.src = v; else if (k === "sel") state.sel = v;
       else if (k === "sort") { var s = v.split(":"); state.sort = s[0]; state.desc = s[1] !== "a"; }
@@ -743,8 +884,25 @@
       if (h) hoodSet[h] = 1;
     });
     var hoodNames = Object.keys(hoodSet).sort(function (a, b) { return a.localeCompare(b, "he"); });
+    var thisYear = NOW.getFullYear(), yearOpts = [];
+    for (var yy = thisYear; yy <= thisYear + 15; yy++) yearOpts.push(yy);
 
-    var kpis = R.kpis(rows).map(function (k) {
+    // The quantity the model EXPECTS, not the quantity on paper: each plan's measure
+    // weighted by its realization rate. Shown whenever a target year is chosen, because
+    // that is the question a year cut asks — "how much is actually likely by then".
+    var extraKpis = [];
+    if (state.year && HOOD_METRIC[state.tab]) {
+      var m = HOOD_METRIC[state.tab];
+      var paper = rows.reduce(function (a, r) { return a + (m.of(r) || 0); }, 0);
+      var exp = rows.reduce(function (a, r) { return a + (m.of(r) || 0) * forecast(r).rate; }, 0);
+      // The KPI renderer escapes the label itself; escaping here too printed the
+      // entity (יח&quot;ד) on screen.
+      extraKpis.push({ n: m.fmt(Math.round(exp)),
+                       l: m.label + " — צפי מימוש עד " + state.year });
+      if (paper) extraKpis.push({ n: Math.round(100 * exp / paper) + "%",
+                                  l: "מהמתוכנן בשורות המוצגות" });
+    }
+    var kpis = extraKpis.concat(R.kpis(rows)).map(function (k) {
       return '<div class="kpi"><div class="n">' + esc(k.n) + '</div><div class="l">' +
              esc(k.l) + "</div></div>";
     }).join("");
@@ -815,6 +973,12 @@
             '<input type="checkbox" id="fscope"' + (state.scope ? " checked" : "") + "> " +
             esc(SCOPES[state.tab].label) + "</label>"
           : "") +
+        '<select id="fyear" title="חיתוך לפי המתווה: כל מה שצפוי להיות מאוכלס עד סוף השנה שנבחרה">' +
+          '<option value="">ללא חיתוך לשנה</option>' +
+          yearOpts.map(function (y) {
+            return '<option value="' + y + '"' + (String(y) === String(state.year) ? " selected" : "") +
+                   ">עד " + y + "</option>";
+          }).join("") + "</select>" +
         '<select id="fhood"><option value="">כל השכונות</option>' +
           hoodNames.map(function (v) {
             return '<option' + (v === state.hood ? " selected" : "") + ">" + esc(v) + "</option>";
@@ -837,6 +1001,12 @@
           (d.n ? " <b>מחוץ לסינון: " + n0(d.n) + "</b> — " + esc(parts.join(" · ")) + "." : "") +
           " להצגת כולן — הסירו את הסימון בשורת הסינון.</div>";
       })() +
+      (state.year
+        ? '<div class="note scope">חיתוך לשנה מחושב לפי <b>' + esc(MODEL.source) +
+          '</b>: משך כל שלב ואחוז המימוש שלו, כולל הפחתת אחוז המימוש לתכניות ' +
+          'שמתעכבות ותוספת זמן לתכניות גדולות. "צפי אכלוס" הוא תוצאת המתווה ולא ' +
+          'התחייבות של התכנית.</div>'
+        : "") +
       hoodSummary(rows) +
       (R.note ? '<div class="note">' + R.note + "</div>" : "") +
       (mapNote ? '<div class="note">' + mapNote + "</div>" : "");
@@ -861,7 +1031,7 @@
       b.addEventListener("click", function () {
         state.tab = b.getAttribute("data-tab");
         state.sort = ""; state.sel = null; state.status = ""; state.src = "";
-        state.hood = ""; state.scope = true;
+        state.hood = ""; state.scope = true; state.year = "";
         render();
       });
     });
@@ -873,6 +1043,7 @@
     on("fst", "change", function (e) { state.status = e.target.value; render(); });
     on("fscope", "change", function (e) { state.scope = e.target.checked; state.sel = null; render(); });
     on("fhood", "change", function (e) { state.hood = e.target.value; state.sel = null; render(); });
+    on("fyear", "change", function (e) { state.year = e.target.value; state.sel = null; render(); });
     var sum = document.querySelector(".hoodsum");
     if (sum) sum.addEventListener("click", function (e) {
       var tr = e.target.closest("tr[data-hood]");
