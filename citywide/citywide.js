@@ -33,11 +33,21 @@
   // and 73 of the 152 rental ones. "Is the fund money actually coming?" and "are
   // the rental units being built?" are the same question as "did it get a permit".
   var PERMITS = "../data/ce_permit_status_citywide.json";
+  // Fields the spec asks for that no single source holds: approval date (to filter
+  // "from 2022"), neighbourhood (asked for in all three tabs, absent from the commerce
+  // file), developer, the unit count the commerce tab needs for its 100+ filter, and
+  // the old תב"ע number. Assembled by horaot_job/build_citywide_meta.py so none of the
+  // three upstream pipelines has to change.
+  var META = "../data/citywide_plan_meta.json";
   var CENTER = [31.7683, 35.2137], ZOOM = 12;
 
+  // scope=true applies the filter the spec defines for each tab. It is the DEFAULT
+  // because the headline figures are meant to answer the spec's question, not to
+  // describe everything in the file — but it is switchable, because a number nobody
+  // can widen is a number nobody can check.
   var state = { tab: "ce", q: "", status: "", sub: "", src: "", sort: "", desc: true,
-                sel: null };
-  var D = { ce: null, housing: null, parcels: null, bounds: null, permits: null };
+                sel: null, scope: true, hood: "" };
+  var D = { ce: null, housing: null, parcels: null, bounds: null, permits: null, meta: null };
   var map = null, layer = null, geoByPlan = {}, mapNote = "";
 
   var esc = function (s) {
@@ -56,22 +66,134 @@
   };
   // Realization, shared by all three reports. Keyed by the same padded plan number.
   var realOf = function (plan) { return (D.permits || {})[plan] || null; };
+  var metaOf = function (plan) { return ((D.meta || {}).by_plan || {})[plan] || {}; };
   var yn = function (v) {
     return v ? '<span class="hi">✓</span>' : '<span class="empty">—</span>';
   };
   // Stage columns, appended to every report's table. A plan that is not in the
   // realization file is left blank rather than shown as "no" -- absence there
   // means "not checked", and the two must not read the same.
-  var REAL_COLS = [
-    { k: "rfile", t: "תיק רישוי", get: function (r) { var v = realOf(r.plan); return v ? (v.has_licensing_file ? 1 : 0) : null; },
-      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } },
-    { k: "rissued", t: "היתר", get: function (r) { var v = realOf(r.plan); return v ? (v.any_issued ? 1 : 0) : null; },
-      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } },
-    { k: "rbuild", t: "בביצוע", get: function (r) { var v = realOf(r.plan); return v ? (v.in_construction ? 1 : 0) : null; },
-      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } },
-    { k: "rdone", t: "גמר", get: function (r) { var v = realOf(r.plan); return v ? (v.completed ? 1 : 0) : null; },
-      fmt: function (v) { return v == null ? '<span class="empty">?</span>' : yn(v); } }
-  ];
+  // ONE current-status value, as the spec asks, instead of four tick columns. The
+  // ladder is read off the realization file in order, strongest signal first:
+  //   אכלוס  occupied, or a טופס 4 date
+  //   שלד    construction complete but not yet occupied
+  //   ביצוע  under construction
+  //   תכנון  checked, and no licensing file or permit has been reached
+  // A plan the realization pass never examined is "לא נבדק" and NOT "תכנון": absence
+  // of a check and a checked absence are different facts, and 226 plans are in the
+  // first group.
+  var CURRENT = function (plan) {
+    var v = realOf(plan);
+    if (!v) return null;
+    if (v.occupied || v.form4_date) return "אכלוס";
+    if (v.completed) return "שלד";
+    if (v.in_construction) return "ביצוע";
+    return "תכנון";
+  };
+  var CUR_COL = {
+    k: "cur", t: "סטטוס נוכחי", get: function (r) { return CURRENT(r.plan); },
+    fmt: function (v, r) {
+      if (!v) return '<span class="empty" title="מצב המימוש לא נבדק לתכנית זו">לא נבדק</span>';
+      var st = realOf(r.plan) || {};
+      var tip = [];
+      if (st.stage) tip.push(st.stage);
+      if (st.permit_count) tip.push("תיקי רישוי: " + st.permit_count);
+      if (st.form4_date) tip.push("טופס 4: " + st.form4_date);
+      return '<span class="hi" title="' + esc(tip.join(" · ")) + '">' + v + "</span>";
+    }
+  };
+  // Asked for in all three tabs. Both come from the side-car, so a tab that never had
+  // them gets them without its own pipeline changing.
+  var HOOD_COL = { k: "hood", t: "שכונה",
+    get: function (r) { return r.sub_neighborhood || metaOf(r.plan).neighborhood || ""; },
+    fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } };
+  var DEV_COL = { k: "dev", t: "יזם",
+    get: function (r) { return metaOf(r.plan).developer || ""; },
+    fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } };
+  var REAL_COLS = [CUR_COL];
+
+  // The scope each tab is SUPPOSED to answer for, per the spec. Applied by default:
+  // the headline figures are meant to answer that question, and computing them over
+  // everything in the file is what made them wrong.
+  // statusGroup is defined further down; this only runs at render time, by which
+  // point it exists. "approved" is the group that means the plan is in force —
+  // "בהליך אישור" is deliberately NOT in it.
+  var isApproved = function (st) { return statusGroup(st).key === "approved"; };
+  // What a neighbourhood row should total in each tab — the same measure its headline
+  // uses, so the summary and the KPI cannot tell different stories.
+  var HOOD_METRIC = {
+    ce:     { label: 'מסחר + תעסוקה (מ"ר)',
+              of: function (r) { return (r.ce.commerce_sqm || 0) + (r.ce.employment_sqm || 0); },
+              fmt: function (v) { return short(v); } },
+    fund:   { label: "סך הקרנות",
+              of: function (r) { return r.fund.amount_ils || 0; },
+              fmt: function (v) { return "₪" + short(v); } },
+    rental: { label: 'יח"ד להשכרה',
+              of: function (r) { return r.rental.restates_plan ? 0 : (r.rental.units_t5 || 0); },
+              fmt: function (v) { return n0(v); } }
+  };
+  function hoodSummary(rows) {
+    var m = HOOD_METRIC[state.tab];
+    if (!m) return "";
+    var by = {};
+    rows.forEach(function (r) {
+      var h = r.sub_neighborhood || metaOf(r.plan).neighborhood || "ללא שכונה";
+      by[h] = by[h] || { n: 0, v: 0 };
+      by[h].n += 1; by[h].v += m.of(r) || 0;
+    });
+    var keys = Object.keys(by).sort(function (a, b) { return by[b].v - by[a].v || by[b].n - by[a].n; });
+    if (!keys.length) return "";
+    var rowsHtml = keys.slice(0, 12).map(function (h) {
+      return "<tr" + (h === state.hood ? ' class="sel"' : "") + ' data-hood="' + esc(h) + '">' +
+             "<td>" + esc(h) + "</td><td class=num>" + n0(by[h].n) + "</td>" +
+             "<td class=num>" + m.fmt(by[h].v) + "</td></tr>";
+    }).join("");
+    var rest = keys.length > 12
+      ? '<div class="empty" style="padding:4px 6px">ועוד ' + (keys.length - 12) + " שכונות — ראו הסינון</div>"
+      : "";
+    return '<details class="hoodsum" open><summary>פילוח לפי שכונה · ' + keys.length +
+           " שכונות</summary><table class=\"mini\"><thead><tr><th>שכונה</th><th>תכניות</th><th>" +
+           esc(m.label) + "</th></tr></thead><tbody>" + rowsHtml + "</tbody></table>" + rest +
+           "</details>";
+  }
+
+  var SCOPES = {
+    ce: { label: 'מאושרות · 100+ יח"ד',
+          why: 'האפיון: תכניות מאושרות בלבד, מעל 100 יח"ד.',
+          test: function (r) { return isApproved(r.status) && (metaOf(r.plan).units || 0) >= 100; },
+          drop: function (r) {
+            if (!isApproved(r.status)) return "אינן מאושרות";
+            if (!metaOf(r.plan).units) return 'ללא ספירת יח"ד — לא ידוע אם מעל 100';
+            return 'מתחת ל-100 יח"ד';
+          } },
+    rental: { label: "מאושרות בלבד",
+              why: "האפיון: מספר יח\"ד להשכרה בתכניות מאושרות.",
+              test: function (r) { return isApproved(r.status); },
+              drop: function () { return "אינן מאושרות"; } },
+    fund: { label: "מאושרות · מ-2022",
+            why: "האפיון: תכניות מ-2022 ואילך. התאריך הוא מועד מתן התוקף מ-XPLAN.",
+            test: function (r) {
+              return isApproved(r.status) && (metaOf(r.plan).effective || "") >= "2022";
+            },
+            drop: function (r) {
+              if (!isApproved(r.status)) return "אינן מאושרות";
+              if (!metaOf(r.plan).effective) return "מאושרות אך ללא תאריך מתן תוקף ב-XPLAN";
+              return "אושרו לפני 2022";
+            } }
+  };
+  // What the scope left out, counted by reason. A plan excluded for want of a unit
+  // count is not the same as one excluded for having fewer than 100, and the second
+  // group is a finding while the first is a gap in our data.
+  function scopeDropped() {
+    var sc = SCOPES[state.tab];
+    if (!sc) return null;
+    var by = {}, n = 0;
+    REPORTS[state.tab].rows().forEach(function (r) {
+      if (sc.test(r)) return;
+      var why = sc.drop(r); by[why] = (by[why] || 0) + 1; n += 1;
+    });
+    return { n: n, by: by };
+  }
   var realDetail = function (plan) {
     var v = realOf(plan);
     if (!v) return '<div class="empty">מצב המימוש לא נבדק לתכנית זו.</div>';
@@ -165,14 +287,27 @@
           var v = D.ce.by_plan[k];
           var tot = (v.commerce_sqm || 0) + (v.employment_sqm || 0) +
                     (v.mixed_other_sqm || 0) + (v.ce_unsplit_sqm || 0);
-          return { plan: pad7(k), name: v.pl_name, status: v.station_desc,
-                   sub_neighborhood: null, source: "text", ce: v, total: tot };
+          var pk = pad7(k);
+          return { plan: pk, name: v.pl_name, status: v.station_desc,
+                   sub_neighborhood: metaOf(pk).neighborhood || null,
+                   source: "text", ce: v, total: tot };
         }).filter(function (r) { return r.total > 0; });
       },
       cols: [
         { k: "plan", t: "תכנית", get: function (r) { return r.plan; } },
         { k: "name", t: "שם התכנית", get: function (r) { return r.name || ""; } },
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
+        // The old plan number. It is in the commerce file already and was never shown.
+        { k: "taba", t: 'תב"ע', get: function (r) { return metaOf(r.plan).taba || ""; },
+          fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } },
+        HOOD_COL, DEV_COL,
+        { k: "units", t: 'יח"ד', n: true, get: function (r) { return metaOf(r.plan).units || null; },
+          fmt: function (v, r) {
+            if (!v) return '<span class="empty" title="אין ספירת יח\"ד לתכנית זו — לא בטבלה 5 ולא בגיליון">—</span>';
+            return '<span class="hi">' + n0(v) + "</span>" +
+                   (metaOf(r.plan).units_src === "gs"
+                     ? '<sup class="vis" title="מהגיליון, לא מטבלה 5">¹</sup>' : "");
+          } },
         { k: "com", t: "מסחר (מ\"ר)", n: true, get: function (r) { return r.ce.commerce_sqm || 0; },
           fmt: function (v) { return v ? '<span class="hi">' + n0(v) + "</span>" : '<span class="empty">—</span>'; } },
         { k: "emp", t: "תעסוקה (מ\"ר)", n: true, get: function (r) { return r.ce.employment_sqm || 0; },
@@ -195,7 +330,6 @@
         if (r.ce.split_note) h += '<div class="quote">' + esc(r.ce.split_note) + "</div>";
         if (r.ce.t5_status && r.ce.t5_status !== "success")
           h += '<div class="empty">טבלה 5: ' + esc(r.ce.t5_status) + "</div>";
-        h += realDetail(r.plan);
         h += realDetail(r.plan);
         return h || '<div class="empty">אין פירוט נוסף.</div>';
       },
@@ -235,7 +369,7 @@
         { k: "plan", t: "תכנית", get: function (r) { return r.plan; } },
         { k: "name", t: "שם התכנית", get: function (r) { return r.name || ""; } },
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
-        { k: "sub", t: "שכונה", get: function (r) { return r.sub_neighborhood || ""; } },
+        HOOD_COL, DEV_COL,
         { k: "floors", t: "קומות", n: true, get: function (r) { return r.fund.floors; } },
         { k: "cond", t: 'יח"ד מותנות', n: true,
           get: function (r) { return r.fund.conditional_units_t5; },
@@ -305,7 +439,7 @@
             return v ? '<span class="hi">' + (isNaN(+v) ? esc(v) : v + " שנים") + "</span>"
                      : '<span class="empty">לא צוין</span>';
           } },
-        { k: "sub", t: "שכונה", get: function (r) { return r.sub_neighborhood || ""; } },
+        HOOD_COL, DEV_COL,
         { k: "dsrc", t: "מקור המשך", get: function (r) { return r.rental.duration_source || ""; } },
         { k: "flag", t: "לבדיקה", get: function (r) { return r.rental.review ? 1 : 0; },
           fmt: function (v) { return v ? '<span class="pill ocr">שימוש מותר?</span>' : ""; } }
@@ -384,6 +518,11 @@
   /* ---------------- filtering ---------------- */
   function visible() {
     var R = REPORTS[state.tab], rows = R.rows();
+    var sc = SCOPES[state.tab];
+    if (state.scope && sc) rows = rows.filter(sc.test);
+    if (state.hood) rows = rows.filter(function (r) {
+      return (r.sub_neighborhood || metaOf(r.plan).neighborhood || "") === state.hood;
+    });
     var q = state.q.trim();
     if (q) rows = rows.filter(function (r) {
       return ((r.plan || "") + " " + (r.name || "") + " " + (r.sub_neighborhood || "")).indexOf(q) !== -1;
@@ -565,6 +704,8 @@
     var p = [state.tab];
     if (state.q) p.push("q=" + encodeURIComponent(state.q));
     if (state.status) p.push("st=" + encodeURIComponent(state.status));
+    if (state.hood) p.push("hood=" + encodeURIComponent(state.hood));
+    if (!state.scope) p.push("all=1");
     if (state.src) p.push("src=" + state.src);
     if (state.sort) p.push("sort=" + state.sort + (state.desc ? ":d" : ":a"));
     if (state.sel) p.push("sel=" + state.sel);
@@ -579,6 +720,8 @@
       var i = kv.indexOf("="); if (i < 0) return;
       var k = kv.slice(0, i), v = decodeURIComponent(kv.slice(i + 1));
       if (k === "q") state.q = v; else if (k === "st") state.status = v;
+      else if (k === "hood") state.hood = v;
+      else if (k === "all") state.scope = false;
       else if (k === "src") state.src = v; else if (k === "sel") state.sel = v;
       else if (k === "sort") { var s = v.split(":"); state.sort = s[0]; state.desc = s[1] !== "a"; }
     });
@@ -592,6 +735,14 @@
 
     var statuses = {};
     R.rows().forEach(function (r) { if (r.status) statuses[r.status] = 1; });
+    // Built from the tab's full set, not from `rows`: a menu that narrows itself to
+    // the selection it just made cannot be undone from the menu.
+    var hoodSet = {};
+    R.rows().forEach(function (r) {
+      var h = r.sub_neighborhood || metaOf(r.plan).neighborhood;
+      if (h) hoodSet[h] = 1;
+    });
+    var hoodNames = Object.keys(hoodSet).sort(function (a, b) { return a.localeCompare(b, "he"); });
 
     var kpis = R.kpis(rows).map(function (k) {
       return '<div class="kpi"><div class="n">' + esc(k.n) + '</div><div class="l">' +
@@ -659,6 +810,15 @@
           '<select id="fsrc"><option value="">טקסט + OCR</option>' +
           '<option value="text"' + (state.src === "text" ? " selected" : "") + ">טקסט בלבד</option>" +
           '<option value="ocr"' + (state.src === "ocr" ? " selected" : "") + ">OCR בלבד</option></select>") +
+        (SCOPES[state.tab]
+          ? '<label class="scopebox" title="' + esc(SCOPES[state.tab].why) + '">' +
+            '<input type="checkbox" id="fscope"' + (state.scope ? " checked" : "") + "> " +
+            esc(SCOPES[state.tab].label) + "</label>"
+          : "") +
+        '<select id="fhood"><option value="">כל השכונות</option>' +
+          hoodNames.map(function (v) {
+            return '<option' + (v === state.hood ? " selected" : "") + ">" + esc(v) + "</option>";
+          }).join("") + "</select>" +
         '<span class="spacer"></span>' +
         (nogeo ? '<span class="warnpill">' + nogeo + " ללא מיקום — ברשימה בלבד</span>" : "") +
         '<span style="color:var(--dim);font-size:12.5px">' + n0(rows.length) + " תכניות</span>" +
@@ -667,6 +827,17 @@
         '<button class="btn" id="lnk">🔗 קישור</button>';
 
     document.getElementById("notes").innerHTML =
+      (function () {
+        if (!state.scope || !SCOPES[state.tab]) return "";
+        var d = scopeDropped();
+        var parts = Object.keys(d.by).sort(function (a, b) { return d.by[b] - d.by[a]; })
+          .map(function (k) { return n0(d.by[k]) + " " + k; });
+        return '<div class="note scope">מוצגות <b>' + esc(SCOPES[state.tab].label) +
+          "</b>, והמספרים למעלה מחושבים עליהן. " + esc(SCOPES[state.tab].why) +
+          (d.n ? " <b>מחוץ לסינון: " + n0(d.n) + "</b> — " + esc(parts.join(" · ")) + "." : "") +
+          " להצגת כולן — הסירו את הסימון בשורת הסינון.</div>";
+      })() +
+      hoodSummary(rows) +
       (R.note ? '<div class="note">' + R.note + "</div>" : "") +
       (mapNote ? '<div class="note">' + mapNote + "</div>" : "");
 
@@ -690,6 +861,7 @@
       b.addEventListener("click", function () {
         state.tab = b.getAttribute("data-tab");
         state.sort = ""; state.sel = null; state.status = ""; state.src = "";
+        state.hood = ""; state.scope = true;
         render();
       });
     });
@@ -699,6 +871,15 @@
       var nq = document.getElementById("q"); nq.focus(); nq.setSelectionRange(p, p);
     });
     on("fst", "change", function (e) { state.status = e.target.value; render(); });
+    on("fscope", "change", function (e) { state.scope = e.target.checked; state.sel = null; render(); });
+    on("fhood", "change", function (e) { state.hood = e.target.value; state.sel = null; render(); });
+    var sum = document.querySelector(".hoodsum");
+    if (sum) sum.addEventListener("click", function (e) {
+      var tr = e.target.closest("tr[data-hood]");
+      if (!tr) return;
+      var h = tr.getAttribute("data-hood");
+      state.hood = (state.hood === h ? "" : h); state.sel = null; render();
+    });
     on("fsrc", "change", function (e) { state.src = e.target.value; render(); });
     on("csv", "click", csv);
     on("prn", "click", function () { window.print(); });
@@ -727,14 +908,15 @@
                  { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
       .catch(function (e) {
-        if (url === HOUSING) {
+        if (url === HOUSING || url === META) {
           // Same file:// fallback as housing.html: fetch is blocked there, a script
           // tag is not. Only the housing payload has a JS twin.
           return new Promise(function (res, rej) {
             var s = document.createElement("script");
             s.src = url.replace(/\.json$/, ".js");
             s.onload = function () {
-              window.__HOUSING_TERMS__ ? res(window.__HOUSING_TERMS__) : rej(e);
+              var g = url === META ? window.__CITYWIDE_META__ : window.__HOUSING_TERMS__;
+              g ? res(g) : rej(e);
             };
             s.onerror = function () { rej(e); };
             document.head.appendChild(s);
@@ -746,10 +928,11 @@
   }
 
   Promise.all([getJSON(HOUSING), getJSON(CE), getJSON(PARCELS, true), getJSON(BOUNDS, true),
-               getJSON(PERMITS, true)])
+               getJSON(PERMITS, true), getJSON(META, true)])
     .then(function (res) {
       D.housing = res[0]; D.ce = res[1]; D.parcels = res[2]; D.bounds = res[3];
       D.permits = (res[4] && res[4].by_plan) || {};
+      D.meta = res[5] || { by_plan: {} };
       if (!D.parcels) {
         // Losing the map is survivable; losing it silently is not.
         mapNote = "<b>המפה אינה זמינה:</b> שכבת המגרשים לא נטענה — " +
