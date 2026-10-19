@@ -88,6 +88,8 @@ PLANS_GEOJSON     = r"C:\ORANIM\oranim-app\data\plans.geojson"
 LANDUSE_GEOJSON   = r"C:\ORANIM\oranim-app\data\landuse_xplan.geojson"
 SHAVAZ_GEOJSON    = r"C:\ORANIM\oranim-app\data\future_shavaz.geojson"
 EASEMENTS_GEOJSON = r"C:\ORANIM\oranim-app\data\easements.geojson"
+FRONTAGE_GEOJSON  = r"C:\ORANIM\oranim-app\data\commercial_frontage.geojson"
+FRONTAGE_SCRIPTS  = r"C:\ORANIM\oranim-app\scripts"   # fetch_commercial_frontage lives there
 TREE_SURVEYS_JSON = r"C:\ORANIM\oranim-app\data\tree_surveys.json"
 TREE_POINTS_JSON  = r"C:\ORANIM\oranim-app\data\tree_points_xplan.json"
 CHANGELOG_JSON    = r"C:\ORANIM\oranim-app\data\plan_changelog.jsonl"  # written by the GS->geojson cron
@@ -522,6 +524,18 @@ def check_xplan_updates(changed_plans):
     except Exception as e:
         log_msg(f"Failed to load GeoJSON files: {e}")
         return report
+    # Commercial frontage is optional: a missing file or a broken shapely/pyproj
+    # install must not take down the rest of the XPLAN refresh.
+    frontage_gj, frontage_mod, frontage_ctx = None, None, None
+    try:
+        with open(FRONTAGE_GEOJSON, encoding='utf-8') as f:
+            frontage_gj = json.load(f)
+        if FRONTAGE_SCRIPTS not in sys.path:
+            sys.path.insert(0, FRONTAGE_SCRIPTS)
+        import fetch_commercial_frontage as frontage_mod
+    except Exception as e:
+        log_msg(f"  commercial frontage refresh disabled: {e}")
+        frontage_gj = None
 
     plans_updated = 0          # user-visible: meaningful landuse delta per plan
     plans_geometry_updated = 0 # plans whose blue-line geometry was rebuilt
@@ -532,6 +546,7 @@ def check_xplan_updates(changed_plans):
     easements_changed = 0      # plans whose easements changed
     easement_delta = 0         # net +/- easement count across changed plans
     trees_changed = 0          # plans whose tree counts/points changed
+    frontage_changed = 0       # plans whose commercial-frontage lines/status changed
     tree_delta = 0             # net +/- tree count across changed plans
 
     # Per-plan keys of what actually changed, so the write block below can push
@@ -542,6 +557,7 @@ def check_xplan_updates(changed_plans):
     landuse_changed = set()         # pl_number → landuse features replaced/status-refreshed
     shavaz_new_feats = []           # freshly-added shavaz/hafrashah features
     easements_changed_plans = set() # pl_number → easements replaced
+    frontage_changed_plans = set()  # pl_number → commercial frontage replaced
 
     # Note: dedup by objectid was unreliable — XPLAN occasionally reassigns objectids,
     # causing the local file to accumulate duplicate parcels. We now do per-plan REPLACE
@@ -750,6 +766,42 @@ def check_xplan_updates(changed_plans):
                 f"  🛤️ {pl_number}: זיקות הנאה {len(existing_eas)}→{len(new_eas_raw)} ({type_str})"
             )
 
+        # 4b. Refresh commercial frontage (XPLAN MapServer/2 lines, codes 21100/21110).
+        # Lines are rebuilt when XPLAN's set changes; otherwise only the status is
+        # re-stamped, so the map's approved/in-process styling follows the plan.
+        if frontage_gj is not None:
+            existing_fr = [ff for ff in frontage_gj['features']
+                           if ff['properties'].get('plan_name') == pl_number]
+            try:
+                new_fr_raw = frontage_mod.query_plan(pl_number)
+                fr_ok = True
+            except Exception as e:
+                log_msg(f"  XPLAN frontage query failed for {pl_number}: {e}")
+                new_fr_raw, fr_ok = [], False
+            old_fr_keys = {ff['properties'].get('objectid') for ff in existing_fr}
+            new_fr_keys = {ff.get('properties', {}).get('objectid') for ff in new_fr_raw}
+            new_fr = None
+            # Same guard as easements: never delete-to-empty on an empty answer.
+            if fr_ok and new_fr_raw and old_fr_keys != new_fr_keys:
+                if frontage_ctx is None:
+                    frontage_ctx = frontage_mod.FrontageContext()
+                new_fr = [x for x in (frontage_ctx.build(ff, status=new_status or None)
+                                      for ff in new_fr_raw) if x]
+                old_m = sum(ff['properties'].get('length_m') or 0 for ff in existing_fr)
+                new_m = sum(ff['properties'].get('length_m') or 0 for ff in new_fr)
+                report.append(f"  🏬 {pl_number}: חזית מסחרית {len(existing_fr)}→{len(new_fr)} קווים "
+                              f"({old_m:,.0f}→{new_m:,.0f} מ')")
+            elif new_status and any(ff['properties'].get('status') != new_status for ff in existing_fr):
+                new_fr = [dict(ff, properties=dict(ff['properties'], status=new_status))
+                          for ff in existing_fr]
+                report.append(f"  🏬 {pl_number}: חזית מסחרית — סטטוס עודכן ל-{new_status} "
+                              f"({len(existing_fr)} קווים)")
+            if new_fr is not None:
+                frontage_gj['features'] = [ff for ff in frontage_gj['features']
+                                           if ff['properties'].get('plan_name') != pl_number] + new_fr
+                frontage_changed_plans.add(pl_number)
+                frontage_changed += 1
+
         # 5. Refresh trees for this plan (XPLAN MapServer/0 points).
         # Derive taba (numeric) for the tree_surveys.json key.
         taba_key_tree = (plan.get('taba') or '').strip()
@@ -906,6 +958,24 @@ def check_xplan_updates(changed_plans):
             f'data: easement refresh ({easements_changed} plans, net {easement_delta:+d}) (update_mavat_ui)'
         )
 
+    # commercial_frontage.geojson — same per-plan splice; mp_axes is left untouched.
+    if frontage_changed_plans:
+        ours_fr = {p: [] for p in frontage_changed_plans}
+        for ff in frontage_gj['features']:
+            p = ff['properties'].get('plan_name')
+            if p in ours_fr:
+                ours_fr[p].append(ff)
+        def _apply_frontage(data):
+            data['features'] = [ff for ff in data['features']
+                                if ff['properties'].get('plan_name') not in frontage_changed_plans]
+            for p in frontage_changed_plans:
+                data['features'].extend(ours_fr[p])
+            return len(frontage_changed_plans)
+        update_json_and_push(
+            'data/commercial_frontage.geojson', _apply_frontage,
+            f'data: commercial frontage refresh ({frontage_changed} plans) (update_mavat_ui)'
+        )
+
     # tree_surveys.json / tree_points_xplan.json stay on the legacy path: they are
     # written indent=2 (pretty) and update_json_and_push writes compact, which would
     # reformat the whole file. They are tree COUNTS, not geometry.
@@ -924,7 +994,8 @@ def check_xplan_updates(changed_plans):
         )
 
     if (plans_updated or plans_geometry_updated or landuse_added or landuse_removed
-            or landuse_status_updated or shavaz_added or easements_changed or trees_changed):
+            or landuse_status_updated or shavaz_added or easements_changed or trees_changed
+            or frontage_changed):
         landuse_parts = []
         if landuse_added: landuse_parts.append(f'+{landuse_added}')
         if landuse_removed: landuse_parts.append(f'-{landuse_removed}')
@@ -933,11 +1004,12 @@ def check_xplan_updates(changed_plans):
                    f"{plans_geometry_updated} blue-line rebuilt, "
                    f"{landuse_str} landuse parcels, {shavaz_added} shavaz, "
                    f"{easements_changed} easements ({easement_delta:+d}), "
-                   f"{trees_changed} trees ({tree_delta:+d})")
+                   f"{trees_changed} trees ({tree_delta:+d}), "
+                   f"{frontage_changed} frontage")
         report.insert(0, summary)
         log_msg(summary)
     else:
-        report.append("✅ XPLAN: אין שינויי geometry/landuse/shavaz/זיקות/עצים")
+        report.append("✅ XPLAN: אין שינויי geometry/landuse/shavaz/זיקות/עצים/חזית מסחרית")
 
     return report
 
@@ -1396,6 +1468,7 @@ def _parse_xplan_report(xplan_report, plan_meta):
         ('🗺️', 'ייעודי קרקע'),
         ('🛤️', 'זיקות הנאה'),
         ('🌳', 'עצים'),
+        ('🏬', 'חזית מסחרית'),
         ('📊', 'טבלה 5 + נכנס'),
     ]
 
@@ -1852,6 +1925,7 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
             '🗺️': 'landuse',
             '🛤️': 'easements',
             '🌳': 'trees',
+            '🏬': 'frontage',
             '📊': 'table5',
         }
         grouped = {}  # plan_name → {meta + cells}
@@ -1866,7 +1940,7 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
                     'plan_name_he': r.get('plan_name_he', ''),
                     'minhak': r.get('minhak', ''),
                     'status': r.get('status', ''),
-                    'cells': {'landuse': [], 'easements': [], 'trees': [], 'table5': []},
+                    'cells': {'landuse': [], 'easements': [], 'trees': [], 'frontage': [], 'table5': []},
                 }
                 plan_order.append(pn)
             col = col_for_emoji.get(r.get('type_emoji', ''))
@@ -1886,7 +1960,7 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
                      "<th>מספר תכנית</th><th>מינה\"ק</th><th>שם תכנית</th>"
                      "<th>סטטוס תכנית</th>"
                      "<th>🗺️ ייעודי קרקע</th><th>🛤️ זיקות הנאה</th>"
-                     "<th>🌳 עצים</th><th>📊 טבלה 5 + נכנס</th></tr>")
+                     "<th>🌳 עצים</th><th>🏬 חזית מסחרית</th><th>📊 טבלה 5 + נכנס</th></tr>")
             for pn in plan_order:
                 row = grouped[pn]
                 name_he = (row['plan_name_he'] or '').split('זיהוי וסיווג')[0].strip().rstrip(',').strip()
@@ -1903,6 +1977,7 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
                 html += f"<td dir='rtl'>{_cell('landuse')}</td>"
                 html += f"<td dir='rtl'>{_cell('easements')}</td>"
                 html += f"<td dir='rtl'>{_cell('trees')}</td>"
+                html += f"<td dir='rtl'>{_cell('frontage')}</td>"
                 html += f"<td dir='rtl'>{_cell('table5')}</td>"
                 html += "</tr>"
             html += "</table><br>"

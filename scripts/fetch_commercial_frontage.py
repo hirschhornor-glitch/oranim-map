@@ -76,26 +76,41 @@ GEOD = Geod(ellps='WGS84')
 TO_ITM = Transformer.from_crs(4326, 2039, always_xy=True).transform
 
 
-def fetch_all():
+_OUT_FIELDS = 'objectid,mavat_code,mavat_name,mp_id,pl_number,pl_name,station_desc,last_update_date'
+
+
+def _query(where, envelope=True):
     codes = ','.join(str(c) for c in FRONTAGE_CODES)
     feats, offset = [], 0
     while True:
         params = {
-            'where': f"mavat_code IN ({codes}) AND pl_number LIKE '101-%'",
-            'geometry': JLM_ENVELOPE_ITM, 'geometryType': 'esriGeometryEnvelope',
-            'inSR': 2039, 'spatialRel': 'esriSpatialRelIntersects',
-            'outFields': 'objectid,mavat_code,mavat_name,mp_id,pl_number,pl_name,station_desc,last_update_date',
+            'where': f"mavat_code IN ({codes}) AND {where}",
+            'outFields': _OUT_FIELDS,
             'returnGeometry': 'true', 'outSR': 4326, 'f': 'geojson',
             'orderByFields': 'objectid', 'resultOffset': offset, 'resultRecordCount': PAGE,
         }
+        if envelope:
+            params.update({'geometry': JLM_ENVELOPE_ITM, 'geometryType': 'esriGeometryEnvelope',
+                           'inSR': 2039, 'spatialRel': 'esriSpatialRelIntersects'})
         r = S.get(XPLAN_URL, params=params, timeout=120, verify=False)
         r.raise_for_status()
         page = r.json().get('features', [])
         feats.extend(page)
-        print(f'  offset={offset}: {len(page)} (total {len(feats)})')
+        if envelope:
+            print(f'  offset={offset}: {len(page)} (total {len(feats)})')
         if len(page) < PAGE:
             return feats
         offset += PAGE
+
+
+def fetch_all():
+    return _query("pl_number LIKE '101-%'")
+
+
+def query_plan(pl_number):
+    """Raw XPLAN frontage lines of one plan. Raises on a transport error, so a
+    caller can tell an outage from a plan that really has no frontage."""
+    return _query(f"pl_number='{pl_number}'", envelope=False)
 
 
 def geodesic_length(geom):
@@ -150,39 +165,37 @@ def load_plans():
     return idx
 
 
-def main():
-    raw = fetch_all()
-    if not raw:
-        print('XPLAN returned 0 frontage lines — keeping the existing file.')
-        sys.exit(1)
+class FrontageContext:
+    """Everything a raw XPLAN line needs to become an output feature. Shared with
+    update_mavat_ui.py, which refreshes single plans when their status changes —
+    so a per-plan refresh and a full rebuild produce identical features."""
 
-    tree, roads = load_roads()
-    bounds, mp_axes = load_master_plans()
-    plans = load_plans()
+    def __init__(self, plans=None):
+        self.tree, self.roads = load_roads()
+        self.bounds, self.mp_axes = load_master_plans()
+        self.plans = load_plans() if plans is None else plans
 
-    out = []
-    for f in raw:
+    def build(self, f, status=None):
         g = f.get('geometry')
         if not g:
-            continue
+            return None
         p = f.get('properties') or {}
         geom = shape(g)
         if not isinstance(geom, (LineString, MultiLineString)) or geom.is_empty:
-            continue
+            return None
         itm = shp_transform(TO_ITM, geom)
         mid = itm.interpolate(0.5, normalized=True)
 
         street = ''
-        if tree is not None:
-            i = tree.nearest(mid)
-            rg, nm = roads[i]
+        if self.tree is not None:
+            rg, nm = self.roads[self.tree.nearest(mid)]
             if rg.distance(mid) <= STREET_MAX_M:
                 street = nm
 
-        mp = next((n for n, b in bounds if b.contains(mid)), '')
-        pl = plans.get(p.get('pl_number') or '') or {}
+        mp = next((n for n, b in self.bounds if b.contains(mid)), '')
+        pl = self.plans.get(p.get('pl_number') or '') or {}
         code = p.get('mavat_code')
-        out.append({
+        return {
             'type': 'Feature',
             'geometry': g,
             'properties': {
@@ -191,13 +204,25 @@ def main():
                 'plan_name': p.get('pl_number') or '',
                 'plan_name_he': pl.get('plan_name_he') or p.get('pl_name') or '',
                 'agam_id': int(p['mp_id']) if p.get('mp_id') else None,
-                'status': (pl.get('status_mavat') or p.get('station_desc') or '').strip(),
+                'objectid': p.get('objectid'),
+                'status': (status or pl.get('status_mavat') or p.get('station_desc') or '').strip(),
                 'in_plans': bool(pl),
                 'length_m': round(geodesic_length(geom), 1),
                 'street': street,
                 'mp_match': mp,
             },
-        })
+        }
+
+
+def main():
+    raw = fetch_all()
+    if not raw:
+        print('XPLAN returned 0 frontage lines — keeping the existing file.')
+        sys.exit(1)
+
+    ctx = FrontageContext()
+    mp_axes = ctx.mp_axes
+    out = [x for x in (ctx.build(f) for f in raw) if x]
 
     # mp_axes travels with the lines: the master-plan files are on-demand in the
     # app, so the report cannot count on their boundary feature being loaded.
