@@ -67,6 +67,14 @@
   // Realization, shared by all three reports. Keyed by the same padded plan number.
   var realOf = function (plan) { return (D.permits || {})[plan] || null; };
   var metaOf = function (plan) { return ((D.meta || {}).by_plan || {})[plan] || {}; };
+  var _ceKeys = null;
+  var inCommerce = function (plan) {
+    if (!_ceKeys) {
+      _ceKeys = {};
+      Object.keys((D.ce || {}).by_plan || {}).forEach(function (k) { _ceKeys[pad7(k)] = 1; });
+    }
+    return !!_ceKeys[plan];
+  };
   var yn = function (v) {
     return v ? '<span class="hi">✓</span>' : '<span class="empty">—</span>';
   };
@@ -107,6 +115,15 @@
   var HOOD_COL = { k: "hood", t: "שכונה",
     get: function (r) { return r.sub_neighborhood || metaOf(r.plan).neighborhood || ""; },
     fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } };
+  // Taken from the plan's NAME, which is where Mavat puts the street. Reading one out
+  // of the document's prose was tried and dropped — it produced sentence fragments that
+  // pass every shape test, and a field that is quietly wrong is worse than an empty one.
+  var ADDR_COL = { k: "addr", t: "כתובת",
+    get: function (r) { return metaOf(r.plan).address || ""; },
+    fmt: function (v) {
+      return v ? '<span title="מתוך שם התכנית">' + esc(v) + "</span>"
+               : '<span class="empty">—</span>';
+    } };
   var DEV_COL = { k: "dev", t: "יזם",
     get: function (r) { return metaOf(r.plan).developer || ""; },
     fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } };
@@ -226,6 +243,24 @@
     return { done: false, rate: rate, months: months, year: String(d.getFullYear()),
              stage: stage, basis: basis, units: units };
   }
+  // 110 plans are in both the commerce and the rental tab, 16 in all three. Nothing
+  // is duplicated WITHIN a tab, so the risk is a reader adding two tabs together. The
+  // row says which other tabs hold the same plan.
+  var tabsOf = function (plan) {
+    var out = [];
+    if (inCommerce(plan)) out.push("מסחר");
+    (D.housing ? D.housing.rows : []).forEach(function (r) {
+      if (r.plan !== plan) return;
+      if (r.fund) out.push("קרן");
+      if (r.rental) out.push("השכרה");
+    });
+    return out;
+  };
+  var TAB_LABEL = { ce: "מסחר", fund: "קרן", rental: "השכרה" };
+  var alsoIn = function (plan) {
+    return tabsOf(plan).filter(function (t) { return t !== TAB_LABEL[state.tab]; });
+  };
+
   var FORECAST_COLS = [
     { k: "fyear", t: "צפי אכלוס", n: true,
       get: function (r) { var f = forecast(r); return f.year ? +f.year : null; },
@@ -433,13 +468,24 @@
         // The old plan number. It is in the commerce file already and was never shown.
         { k: "taba", t: 'תב"ע', get: function (r) { return metaOf(r.plan).taba || ""; },
           fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } },
-        HOOD_COL, DEV_COL,
+        ADDR_COL, HOOD_COL, DEV_COL,
         { k: "units", t: 'יח"ד', n: true, get: function (r) { return metaOf(r.plan).units || null; },
           fmt: function (v, r) {
             if (!v) return '<span class="empty" title="אין ספירת יח\"ד לתכנית זו — לא בטבלה 5 ולא בגיליון">—</span>';
             return '<span class="hi">' + n0(v) + "</span>" +
                    (metaOf(r.plan).units_src === "gs"
                      ? '<sup class="vis" title="מהגיליון, לא מטבלה 5">¹</sup>' : "");
+          } },
+        { k: "renew", t: "התחדשות", get: function (r) { return metaOf(r.plan).renewal || ""; },
+          fmt: function (v) {
+            return v ? '<span class="pill stat">' + esc(v) + "</span>"
+                     : '<span class="empty">—</span>';
+          } },
+        { k: "ofc", t: "המרה למשרדים", get: function (r) { return metaOf(r.plan).office_conv ? 1 : 0; },
+          fmt: function (v, r) {
+            var q = metaOf(r.plan).office_conv;
+            return q ? '<span class="hi" title="' + esc(q) + '">✓</span>'
+                     : '<span class="empty" title="לא נמצאה בהוראות הוראה המתירה משרדים בשטחי המסחר">—</span>';
           } },
         { k: "com", t: "מסחר (מ\"ר)", n: true, get: function (r) { return r.ce.commerce_sqm || 0; },
           fmt: function (v) { return v ? '<span class="hi">' + n0(v) + "</span>" : '<span class="empty">—</span>'; } },
@@ -461,6 +507,10 @@
         var h = "";
         if (r.ce.split_source) h += "<div><b>מקור הפיצול:</b> " + esc(r.ce.split_source) + "</div>";
         if (r.ce.split_note) h += '<div class="quote">' + esc(r.ce.split_note) + "</div>";
+        var rem = metaOf(r.plan).remarks;
+        if (rem) h += '<div class="quote"><b>הערות לטבלה 5:</b> ' + esc(rem.slice(0, 500)) + "</div>";
+        var oc = metaOf(r.plan).office_conv;
+        if (oc) h += '<div class="quote"><b>המרה למשרדים:</b> ' + esc(oc) + "</div>";
         if (r.ce.t5_status && r.ce.t5_status !== "success")
           h += '<div class="empty">טבלה 5: ' + esc(r.ce.t5_status) + "</div>";
         h += realDetail(r.plan);
@@ -502,7 +552,7 @@
         { k: "plan", t: "תכנית", get: function (r) { return r.plan; } },
         { k: "name", t: "שם התכנית", get: function (r) { return r.name || ""; } },
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
-        HOOD_COL, DEV_COL,
+        ADDR_COL, HOOD_COL, DEV_COL,
         { k: "floors", t: "קומות", n: true, get: function (r) { return r.fund.floors; } },
         { k: "cond", t: 'יח"ד מותנות', n: true,
           get: function (r) { return r.fund.conditional_units_t5; },
@@ -567,12 +617,47 @@
                    : "אין שורת דיור מיוחד בטבלה 5") + '">—</span>';
             return '<span class="hi">' + n0(v) + "</span>";
           } },
+        // "מס' יחידות בפיקוח" in the spec. Price-controlled rental in Jerusalem is
+        // דיור בהישג יד under the Sixth Addendum. A count only where the document
+        // states one — the usual formula is a percentage of the affordable SUBSET,
+        // and converting that would be inventing a number.
+        { k: "sup", t: 'יח"ד בפיקוח', n: true,
+          get: function (r) { return metaOf(r.plan).affordable_units || null; },
+          fmt: function (v, r) {
+            var m = metaOf(r.plan);
+            if (v) return '<span class="hi" title="' + esc(m.affordable_quote || "") + '">' + n0(v) + "</span>";
+            if (m.affordable) return '<span class="pill stat" title="התכנית כוללת דיור בהישג יד לפי התוספת השישית, בלי מספר נקוב">בהישג יד</span>';
+            return '<span class="empty">—</span>';
+          } },
+        // The spec asks for a countdown from the moment the plan reaches completion.
+        // It can only run once occupancy has actually started, so a plan that is not
+        // yet occupied says so instead of showing a number that has not begun.
+        { k: "left", t: "נותרו", n: true,
+          get: function (r) {
+            var v = realOf(r.plan) || {}, d = +r.rental.duration;
+            if (!d || !v.form4_date) return null;
+            var start = new Date(v.form4_date);
+            if (isNaN(start)) return null;
+            var years = (NOW - start) / (365.25 * 24 * 3600 * 1000);
+            return Math.max(0, Math.round((d - years) * 10) / 10);
+          },
+          fmt: function (v, r) {
+            var vv = realOf(r.plan) || {};
+            if (v == null) {
+              return '<span class="empty" title="' +
+                (r.rental.duration ? "הספירה מתחילה בטופס 4; התכנית טרם אוכלסה"
+                                   : "אין משך השכרה ידוע") + '">—</span>';
+            }
+            if (v <= 0) return '<span class="empty dup" title="תקופת ההשכרה הסתיימה">הסתיימה</span>';
+            return '<span class="hi" title="מטופס 4 ב-' + esc(vv.form4_date) + '">' +
+                   v + " שנים</span>";
+          } },
         { k: "dur", t: "משך ההשכרה", get: function (r) { return r.rental.duration; },
           fmt: function (v) {
             return v ? '<span class="hi">' + (isNaN(+v) ? esc(v) : v + " שנים") + "</span>"
                      : '<span class="empty">לא צוין</span>';
           } },
-        HOOD_COL, DEV_COL,
+        ADDR_COL, HOOD_COL, DEV_COL,
         { k: "dsrc", t: "מקור המשך", get: function (r) { return r.rental.duration_source || ""; } },
         { k: "flag", t: "לבדיקה", get: function (r) { return r.rental.review ? 1 : 0; },
           fmt: function (v) { return v ? '<span class="pill ocr">שימוש מותר?</span>' : ""; } }
@@ -923,8 +1008,11 @@
       tds += "<td>" + (r.source === "ocr" ? '<span class="pill ocr">OCR</span>'
                                           : '<span class="pill stat">טקסט</span>') +
              (geoByPlan[r.plan] ? "" : ' <span class="pill nogeo">ללא מיקום</span>') + "</td>";
+      var also = alsoIn(r.plan);
       var out = '<tr class="row' + (state.sel === r.plan ? " sel" : "") +
-                '" data-plan="' + esc(r.plan) + '">' + tds + "</tr>";
+                (also.length ? " multi" : "") + '" data-plan="' + esc(r.plan) + '"' +
+                (also.length ? ' title="התכנית מופיעה גם בלשונית: ' + esc(also.join(", ")) +
+                               ' — אין לחבר בין הלשוניות"' : "") + ">" + tds + "</tr>";
       if (state.sel === r.plan) {
         out += '<tr class="detail"><td colspan="' + (R.cols.length + 1) + '">' + R.detail(r) +
                '<div style="margin-top:7px" class="noprint">' +
