@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-18-site-permits';
+        const APP_VERSION = '2026-10-19-commercial-frontage';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -390,6 +390,7 @@
             yiud_karka_kayam: 'data/yiud_karka_kayam.geojson',
             landuse_xplan: 'data/landuse_xplan.geojson',
             commerce_employment_migrash: 'data/commerce_employment_migrash.geojson',
+            commercial_frontage: 'data/commercial_frontage.geojson',
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
             education_shanaton: 'data/education_shanaton.geojson',
@@ -1188,6 +1189,7 @@
                 title: 'מסחר ותעסוקה',
                 layers: [
                     { id: 'commerce_employment_migrash', name: 'מסחר ותעסוקה — מגרשי', desc: 'שטחי מסחר ותעסוקה מתוכננים (מ"ר עיקרי מטבלה 5) לפי מגרש (תא שטח). צבע לפי שימוש דומיננטי; בתלפיות — השוואה למכסת תכנית האב', on: false },
+                    { id: 'commercial_frontage', name: 'חזית מסחרית', desc: 'קווי חזית מסחרית שהתב"עות משרטטות (XPLAN, ישויות קוויות 21100/21110). קו מלא = מאושרת, מקווקו = בהליך; בצבע: מאושר / בהליך / חזית עם הוראות מיוחדות', on: false },
                 ]
             },
             projector: {
@@ -3532,6 +3534,24 @@ function planPermitHafrashUse(taba) {
             { label: 'רכב', color: '#dc2626' },
             { label: 'רגלי', color: '#22c55e' },
             { label: 'כללי', color: '#a855f7' },
+        ];
+
+        // חזית מסחרית (XPLAN 21100) + חזית עם הוראות מיוחדות (21110). Approved vs
+        // in-process split on the shared status grouping, so a line and its plan's
+        // polygon never disagree; rejected plans keep their line but in grey.
+        const FRONTAGE_COLORS = { approved: '#c026d3', process: '#f59e0b', special: '#0ea5e9', rejected: '#9e9e9e' };
+        const frontageBucket = (p) => {
+            const g = statusGroupKey(p && p.status);
+            if (g === 'rejected') return 'rejected';
+            return (g === 'approved') ? 'approved' : 'process';
+        };
+        const frontageColor = (p) => (p && p.code === 21110 && frontageBucket(p) !== 'rejected')
+            ? FRONTAGE_COLORS.special : FRONTAGE_COLORS[frontageBucket(p)];
+        const FRONTAGE_LEGEND = [
+            { label: 'חזית מסחרית — תכנית מאושרת', color: FRONTAGE_COLORS.approved },
+            { label: 'חזית מסחרית — תכנית בהליך (מקווקו)', color: FRONTAGE_COLORS.process },
+            { label: 'חזית עם הוראות מיוחדות', color: FRONTAGE_COLORS.special },
+            { label: 'תכנית שנגנזה / נדחתה', color: FRONTAGE_COLORS.rejected },
         ];
 
         // שבילי אופניים — צבעי סטטוס לפי הסימבולוגיה הרשמית של עיריית ירושלים.
@@ -5973,6 +5993,9 @@ function planPermitHafrashUse(taba) {
                 map.createPane('roadsPane').style.pointerEvents = 'none';
                 // שבילי אופניים — מעל כבישים, מתחת לתב"עות; אינטראקטיבי (פופאפ).
                 map.createPane('bikePane').style.zIndex = 330;
+                // above masterPlanTbaPane (350): the master-plan polygons otherwise
+                // swallow clicks on the frontage lines drawn along their edges
+                map.createPane('frontagePane').style.zIndex = 355;
                 map.createPane('rakalPane').style.zIndex = 490;
                 map.createPane('rakalPane').style.pointerEvents = 'none';
                 // Separate SVG renderer for rakal so pane z-index works
@@ -6043,6 +6066,9 @@ function planPermitHafrashUse(taba) {
                     // roads + buildings used by many cross-layer features (address
                     // lookups, road bearing for crossings) — load after first paint.
                     'roads', 'buildings',
+                    // commercial_frontage feeds the master-plan report even when its
+                    // layer is off, so it cannot be on-demand.
+                    'commercial_frontage',
                 ];
                 // ON_DEMAND_FILES — fetched only when their layer is toggled ON.
                 // Visualization-only, OFF by default. Heavy and rarely-used.
@@ -19015,6 +19041,48 @@ function planPermitHafrashUse(taba) {
                     geoLayersRef.current.commerce_employment_migrash = ceLayer;
                 }
 
+                // --- Commercial frontage (חזית מסחרית) — lines from XPLAN MapServer/2 ---
+                //     scripts/fetch_commercial_frontage.py. Solid = approved plan, dashed =
+                //     still in process; the popup names the street and the master plan.
+                if (layers['commercial_frontage'] && gd.commercial_frontage) {
+                    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    geoLayersRef.current.commercial_frontage = L.geoJSON(gd.commercial_frontage, {
+                        pane: 'frontagePane',
+                        style: (f) => {
+                            const p = f.properties || {};
+                            const b = frontageBucket(p);
+                            return { color: frontageColor(p), weight: b === 'approved' ? 5 : 4,
+                                     opacity: b === 'rejected' ? 0.55 : 0.95,
+                                     dashArray: b === 'approved' ? null : '8,6',
+                                     lineCap: 'round', lineJoin: 'round' };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const c = frontageColor(p);
+                            const row = (lbl, val) => val
+                                ? '<div style="font-size:12px;color:#dfe6ee;margin-top:2px"><b style="color:#9aa5b1;font-weight:600">' + lbl + ':</b> ' + val + '</div>' : '';
+                            const mavat = p.agam_id
+                                ? ' <a href="https://mavat.iplan.gov.il/SV4/1/' + p.agam_id + '/310" target="_blank" style="color:#64b5f6">[מבא"ת]</a>' : '';
+                            layer.bindPopup(
+                                '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:220px;color:#eceff4">' +
+                                '<div style="font-weight:700;font-size:14px;border-right:4px solid ' + c + ';padding-right:6px;margin-bottom:5px">' +
+                                    '🏬 ' + esc(p.kind || 'חזית מסחרית') + '</div>' +
+                                row('רחוב', esc(p.street)) +
+                                row('אורך', p.length_m ? Math.round(p.length_m).toLocaleString('he-IL') + " מ'" : '') +
+                                row('תכנית', esc(p.plan_name) + mavat) +
+                                (p.plan_name_he ? '<div style="font-size:11px;color:#b8c2cc;margin-top:1px">' + esc(p.plan_name_he) + '</div>' : '') +
+                                row('סטטוס', esc(p.status)) +
+                                row('תכנית אב', esc(p.mp_match)) +
+                                '<div style="font-size:10px;color:#7f8a99;margin-top:5px">מקור: XPLAN — ישויות קוויות</div>' +
+                                '</div>',
+                                { maxWidth: popupMaxWidth() }
+                            );
+                            layer.on('mouseover', () => layer.setStyle({ weight: 7 }));
+                            layer.on('mouseout', () => { try { geoLayersRef.current.commercial_frontage.resetStyle(layer); } catch (e) { } });
+                        }
+                    }).addTo(map);
+                }
+
                 // --- Construction activity (yearbook ט/7) — choropleth of building STARTS
                 //     (number of dwellings, 2022-2025) per sub-quarter (תת-רובע). ---
                 // Legend is a plain DOM badge in the map container; remove any stale one on every
@@ -28093,6 +28161,10 @@ function planPermitHafrashUse(taba) {
                                                 <button className="layer-legend-btn" title="מקרא זיקות הנאה"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא זיקות הנאה - סוג', items: EASEMENTS_LEGEND }); }}>⋯</button>
                                             )}
+                                            {layer.id === 'commercial_frontage' && (
+                                                <button className="layer-legend-btn" title="מקרא חזית מסחרית"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא חזית מסחרית - סטטוס התכנית', items: FRONTAGE_LEGEND }); }}>⋯</button>
+                                            )}
                                             {layer.id === 'bike_paths' && (
                                                 <button className="layer-legend-btn" title="מקרא שבילי אופניים"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא שבילי אופניים - סטטוס', items: BIKE_LEGEND }); }}>⋯</button>
@@ -35198,6 +35270,39 @@ function planPermitHafrashUse(taba) {
 
                                     const fmt = n => (n > 0 ? Math.round(n).toLocaleString() : '—');
 
+                                    // חזית מסחרית: what the plans draw (XPLAN lines, tagged with
+                                    // mp_match at fetch time) vs the commercial axes the master plan
+                                    // names in its text. Matched by street name — the master plans
+                                    // give axes as street lists, not geometry.
+                                    const normSt = s => String(s || '').replace(/\([^)]*\)/g, '').replace(/["'״׳`]/g, '')
+                                        .replace(/^(שדרות|שד'|דרך)\s+/, '').replace(/\s+/g, ' ').trim();
+                                    const frByStreet = {};
+                                    const frTot = { approved: 0, process: 0, plans: new Set() };
+                                    ((gd.commercial_frontage && gd.commercial_frontage.features) || []).forEach(ff => {
+                                        const p = ff.properties || {};
+                                        if (p.mp_match !== masterPlanReport) return;
+                                        const b = frontageBucket(p);
+                                        if (b === 'rejected') return;
+                                        const st = (p.street || '').trim() || '(רחוב לא מזוהה)';
+                                        const r = (frByStreet[st] = frByStreet[st] || { street: st, approved: 0, process: 0, plans: new Set() });
+                                        r[b] += p.length_m || 0; frTot[b] += p.length_m || 0;
+                                        r.plans.add(p.plan_name); frTot.plans.add(p.plan_name);
+                                    });
+                                    const bp = (boundaryFeat && boundaryFeat.properties) || {};
+                                    const axesRaw = [bp.main_commercial, bp.commercial_axes].filter(Boolean).join(', ')
+                                        || ((gd.commercial_frontage && gd.commercial_frontage.mp_axes) || {})[masterPlanReport] || '';
+                                    const axes = axesRaw.split(/[,/]/).map(s => s.trim()).filter(Boolean);
+                                    const axisMatch = (axis, st) => { const a = normSt(axis), s = normSt(st); return !!a && !!s && (s.includes(a) || a.includes(s)); };
+                                    const axisRows = axes.map(axis => {
+                                        const hits = Object.values(frByStreet).filter(r => axisMatch(axis, r.street));
+                                        return { axis, approved: hits.reduce((s, r) => s + r.approved, 0), process: hits.reduce((s, r) => s + r.process, 0),
+                                                 plans: new Set(hits.flatMap(r => [...r.plans])).size };
+                                    });
+                                    const offAxis = Object.values(frByStreet)
+                                        .filter(r => !axes.some(a => axisMatch(a, r.street)))
+                                        .sort((a, b) => (b.approved + b.process) - (a.approved + a.process));
+                                    const fmtM = n => (n > 0 ? Math.round(n).toLocaleString() + " מ'" : '—');
+
                                     return (
                                         <>
                                             {/* KPI: two side-by-side groups, separated */}
@@ -35286,6 +35391,59 @@ function planPermitHafrashUse(taba) {
                                                     </>
                                                 )}
                                             </div>
+
+                                            {/* חזית מסחרית — master-plan axes vs frontage drawn in the plans */}
+                                            {(axes.length > 0 || frTot.plans.size > 0) && (
+                                                <>
+                                                    <h3 style={{color:'#e94560',fontSize:14,margin:'14px 0 6px'}}>🏬 חזית מסחרית</h3>
+                                                    <div style={{background:'#15152a',padding:'8px 10px',borderRadius:4}}>
+                                                        <div style={{display:'flex',gap:14,flexWrap:'wrap',fontSize:12,color:'#cdd',marginBottom:6}}>
+                                                            <span><b style={{color:FRONTAGE_COLORS.approved}}>בתכניות מאושרות:</b> {fmtM(frTot.approved)}</span>
+                                                            <span><b style={{color:FRONTAGE_COLORS.process}}>בתכניות בהליך:</b> {fmtM(frTot.process)}</span>
+                                                            <span><b>תכניות:</b> {frTot.plans.size}</span>
+                                                        </div>
+                                                        {axes.length > 0 ? (
+                                                            <>
+                                                                <div style={{fontSize:10,color:'#7a8a9a',letterSpacing:0.5,margin:'6px 0 4px'}}>צירים מסחריים בתכנית האב מול החזית שבתב"עות</div>
+                                                                <table style={{width:'100%',fontSize:11,borderCollapse:'collapse'}}>
+                                                                    <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
+                                                                        <th style={{textAlign:'right',padding:4,color:'#fff'}}>ציר (תכנית האב)</th>
+                                                                        <th style={{textAlign:'center',padding:4,color:'#fff'}}>מאושר</th>
+                                                                        <th style={{textAlign:'center',padding:4,color:'#fff'}}>בהליך</th>
+                                                                        <th style={{textAlign:'center',padding:4,color:'#fff'}}>תכניות</th>
+                                                                    </tr></thead>
+                                                                    <tbody>
+                                                                        {axisRows.map((r, i) => (
+                                                                            <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                                                <td style={{padding:4,color: (r.approved + r.process) > 0 ? '#cdd' : '#ffb74d'}}>
+                                                                                    {r.axis}{(r.approved + r.process) === 0 && <span style={{fontSize:10}}> · אין חזית סטטוטורית</span>}
+                                                                                </td>
+                                                                                <td style={{textAlign:'center',padding:4}}>{fmtM(r.approved)}</td>
+                                                                                <td style={{textAlign:'center',padding:4}}>{fmtM(r.process)}</td>
+                                                                                <td style={{textAlign:'center',padding:4}}>{r.plans || '—'}</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </>
+                                                        ) : (
+                                                            <div style={{fontSize:11,color:'#7a8a9a'}}>תכנית האב לא מגדירה צירים מסחריים בטקסט — מוצגת רק החזית שבתב"עות.</div>
+                                                        )}
+                                                        {offAxis.length > 0 && (
+                                                            <>
+                                                                <div style={{fontSize:10,color:'#7a8a9a',letterSpacing:0.5,margin:'8px 0 4px'}}>{axes.length > 0 ? 'חזית בתב"עות מחוץ לצירי תכנית האב' : 'חזית בתב"עות לפי רחוב'}</div>
+                                                                <div style={{display:'flex',gap:'4px 12px',flexWrap:'wrap',fontSize:11,color:'#aab'}}>
+                                                                    {offAxis.slice(0, 16).map((r, i) => (
+                                                                        <span key={i}>{r.street} <span style={{color:'#7a8a9a'}}>({fmtM(r.approved + r.process)}{r.process > 0 && r.approved === 0 ? ', בהליך' : ''})</span></span>
+                                                                    ))}
+                                                                    {offAxis.length > 16 && <span style={{color:'#7a8a9a'}}>ועוד {offAxis.length - 16}</span>}
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                        <div style={{fontSize:10,color:'#6f7b8a',marginTop:6}}>מקור: XPLAN, קווי חזית מסחרית (21100/21110). תכניות שנגנזו/נדחו לא נספרות.</div>
+                                                    </div>
+                                                </>
+                                            )}
 
                                             {/* Top-N violators */}
                                             {scored.length > 0 && (
