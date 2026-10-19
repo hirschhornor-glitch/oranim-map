@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-10-15T05:07:30",
+ "generated_at": "2026-10-19T05:08:55",
  "source": "YK API — היתרים שלא היו במאגר: מסדר היום של ועדת הרישוי + משמעותיים מסריקת הרחובות",
- "count": 201,
- "significant": 168,
+ "count": 206,
+ "significant": 169,
  "permits": {
   "1957/354.7": {
    "file_number": "1957/0354.07",
@@ -8346,6 +8346,185 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": []
+  },
+  "1999/519.5": {
+   "file_number": "1999/0519.05",
+   "status": "נפתח תיק רישוי",
+   "status_date": "20/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ממ\"ד",
+   "request_description": "הרחבות לבניין קיים ותוספת על הגג ע\"פ תבע 6990 א הרחבת ממ\"ד , הפיכת שטח שרות לשטח עיקרי ומרפסות",
+   "address": "רשב\"ג 16",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "3232",
+    "6990א"
+   ],
+   "parcels": [
+    "30173/35"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "1999/519.5",
+   "meeting_dates": [
+    "21/10/2026"
+   ],
+   "origin": "committee",
+   "committee_essence": "הרחבות לבניין קיים ותוספת על הגג ע\"פ תבע 6990 א הרחבת ממ\"ד, הפיכת שטח שרות לשטח עיקרי ומרפסות",
+   "committee_address": "רשב\"ג 16, גוננים",
+   "lat": 31.7567617500394,
+   "lng": 35.21024974923488,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-19T05:07:32",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2004/135.6": {
+   "file_number": "2004/0135.06",
+   "status": "תום תקופת פרסום",
+   "status_date": "30/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, בנית מחסן/מחסנים",
+   "request_description": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ריצוף מרפסת גג , בניית מחסן.",
+   "address": "ניקנור 216",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "6521"
+   ],
+   "parcels": [
+    "30171/197"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2004/135.6",
+   "meeting_dates": [
+    "21/10/2026"
+   ],
+   "origin": "committee",
+   "committee_essence": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ריצוף מרפסת גג, בניית מחסן",
+   "committee_address": "ניקנור 216, קטמון הישנה",
+   "lat": 31.75769070530304,
+   "lng": 35.19988481118612,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-19T05:07:35",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2010/196.1": {
+   "file_number": "2010/0196.01",
+   "status": "נפתח תיק רישוי",
+   "status_date": "21/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בנית מחסן/מחסנים, ממ\"ד, בניית מרפסת",
+   "request_description": "תוספת בניה , ממ\"ד, מחסן",
+   "address": "ניקנור 217",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "6521"
+   ],
+   "parcels": [
+    "30171/196"
+   ],
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2010/196.1",
+   "meeting_dates": [
+    "21/10/2026"
+   ],
+   "origin": "committee",
+   "committee_essence": "תוספת בניה, ממ\"ד, מחסן",
+   "committee_address": "ניקנור 217, גוננים",
+   "lat": 31.757420139733362,
+   "lng": 35.19954706568096,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-19T05:07:38",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2011/28.1": {
+   "file_number": "2011/0028.01",
+   "status": "חידוש טיפול בבקשה",
+   "status_date": "28/07/2026",
+   "request_type": "בניית מרפסת, בנית מחסן/מחסנים, ממ\"ד, תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת בניה ומרפסת בקומת הקרקע, בנית ממ\"ד ומחסן בקומת המרתף.",
+   "address": "הנוטרים 14",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "4092"
+   ],
+   "parcels": [
+    "30169/16"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2011/28.1",
+   "meeting_dates": [
+    "21/10/2026"
+   ],
+   "origin": "committee",
+   "committee_essence": "תוספת בניה ומרפסת בקומת הקרקע, בנית ממ\"ד ומחסן בקומת המרתף",
+   "committee_address": "הנוטרים 14, גוננים",
+   "lat": 31.755886815926605,
+   "lng": 35.195926855236344,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-19T05:07:41",
+   "category": "tosefet",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
+  },
+  "2012/918.3": {
+   "file_number": "2012/0918.03",
+   "status": "חידוש טיפול בבקשה",
+   "status_date": "14/09/2026",
+   "request_type": "בניית מרפסת",
+   "request_description": "תוספת מרפסת זיז בהמשך לתכנית צל מאושרת",
+   "address": "יחיל חיים 8",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2216"
+   ],
+   "parcels": [
+    "30123/74"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2012/918.3",
+   "meeting_dates": [
+    "21/10/2026"
+   ],
+   "origin": "committee",
+   "committee_essence": "תוספת מרפסת זיז בהמשך לתכנית צל מאושרת",
+   "committee_address": "יחיל חיים 8, גוננים",
+   "lat": 31.758367167286423,
+   "lng": 35.204106803763814,
+   "minahak": "גוננים",
+   "fetched_at": "2026-10-19T05:07:44",
+   "category": "mivne_nilve",
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
+   "alerted_at": null
   }
  },
  "out_of_area": {
