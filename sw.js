@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v129-active-frontage';
+const CACHE_VERSION = 'v130-shatzap-quality';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
