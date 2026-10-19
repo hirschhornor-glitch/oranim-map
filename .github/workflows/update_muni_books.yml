@@ -38,7 +38,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install shapely pyproj
+        run: pip install shapely pyproj requests
 
       - name: Fetch muni books (Power BI → scripts/sources/)
         run: python scripts/fetch_muni_books.py
@@ -68,12 +68,20 @@ jobs:
         if: ${{ !cancelled() }}
         run: python scripts/build_fuel_barriers.py
 
+      # איכות השצ"פ — planned open space sitting on a private 3D basement lot.
+      # XPLAN (ags.iplan.gov.il) is reachable from GitHub runners (check_xplan_entities,
+      # update_xplan_plan_dates). The script exits 1 without writing when XPLAN
+      # returns nothing, so an outage turns this step red but never empties the file.
+      - name: Build shatzap quality (→ data/shatzap_quality.json)
+        if: ${{ !cancelled() }}
+        run: python scripts/build_shatzap_quality.py
+
       - name: Commit updated data
         if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/hafrasha_delivery.json data/asset_allocations.json data/rental_public_assets.geojson data/fuel_barriers.json
+          git add data/hafrasha_delivery.json data/asset_allocations.json data/rental_public_assets.geojson data/fuel_barriers.json data/shatzap_quality.json
           if git diff --cached --quiet; then
             echo "No data change — nothing to commit."
             exit 0
