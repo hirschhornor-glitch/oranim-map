@@ -180,7 +180,8 @@ def build():
             'status': st,
             'rejected': any(x in st for x in REJECTED),
             'minahak': p.get('minahak') or '',
-            'sub_neighborhood': geo_sub(geo[pn].get('geometry'), subs) or p.get('sub_neighborhood') or '',
+            # geometry first; outside the sub-neighbourhood polygons fall back to the minahak
+            'sub_neighborhood': geo_sub(geo[pn].get('geometry'), subs) or p.get('sub_neighborhood') or p.get('minahak') or '',
             'mavat_url': p.get('mavat_url') or '',
             'kind': kind,
             'rooms': rooms, 'rooms_src': rooms_src,

@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-19-shatzap-quality';
+        const APP_VERSION = '2026-10-20-hotels';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1188,6 +1188,7 @@
             commerce_employment: {
                 title: 'מסחר ותעסוקה',
                 layers: [
+                    { id: 'hotels', name: 'מלונאות', desc: 'תכניות עם מלונאות ייעודית (שורת מלונאות בטבלה 5). מלא = מלון חדש, בהיר = הרחבת מלון קיים, מקווקו = בהליך, מנוקד = מלונאות כשימוש מותר בלבד (לא נספר). מקור: טבלה 5 (xlsx / PDF ההוראות), פאנל כמותי מבא"ת', on: false },
                     { id: 'commerce_employment_migrash', name: 'מסחר ותעסוקה — מגרשי', desc: 'שטחי מסחר ותעסוקה מתוכננים (מ"ר עיקרי מטבלה 5) לפי מגרש (תא שטח). צבע לפי שימוש דומיננטי; בתלפיות — השוואה למכסת תכנית האב', on: false },
                     { id: 'commercial_frontage', name: 'חזית מסחרית', desc: 'קווי חזית מסחרית שהתב"עות משרטטות וחזית פעילה (XPLAN, ישויות קוויות 21100/21110/56054). קו מלא = מאושרת, מקווקו = בהליך; בצבע: מאושר / בהליך / חזית פעילה / חזית עם הוראות מיוחדות', on: false },
                 ]
@@ -3552,6 +3553,14 @@ function planPermitHafrashUse(taba) {
             if (p && b !== 'rejected' && p.code === 21110) return FRONTAGE_COLORS.special;
             return FRONTAGE_COLORS[b];
         };
+        // מלונאות — plan polygons from data/hotels.json (build_hotels.py).
+        const HOTEL_COLORS = { new: '#00897b', extension: '#4db6ac', optional: '#9e9e9e' };
+        const HOTEL_LEGEND = [
+            { label: 'מלון חדש — מאושר (קו מלא)', color: HOTEL_COLORS.new },
+            { label: 'הרחבת מלון קיים', color: HOTEL_COLORS.extension },
+            { label: 'בהליך תכנוני (מקווקו)', color: HOTEL_COLORS.new },
+            { label: 'מלונאות כשימוש מותר בלבד — לא נספר (מנוקד)', color: HOTEL_COLORS.optional },
+        ];
         const FRONTAGE_LEGEND = [
             { label: 'חזית מסחרית — תכנית מאושרת', color: FRONTAGE_COLORS.approved },
             { label: 'חזית מסחרית — תכנית בהליך (מקווקו)', color: FRONTAGE_COLORS.process },
@@ -4084,6 +4093,10 @@ function planPermitHafrashUse(taba) {
             const [appendicesReport, setAppendicesReport] = useState(false);
             const [appendicesFilter, setAppendicesFilter] = useState({ minahak: 'all', tab: 'summary' });
             const [fundExpanded, setFundExpanded] = useState({}); // sub -> show non-fund tower list
+            // דוח מלונאות: היצע חדרים ושטח מלונאות מתוכנן (data/hotels.json)
+            const [hotelReport, setHotelReport] = useState(false);
+            const [hotelReportFilter, setHotelReportFilter] = useState({ status: 'all', sub: 'all', kind: 'all', q: '' });
+            const [hotelOpen, setHotelOpen] = useState({}); // section -> expanded
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
             const [eduRenewalReport, setEduRenewalReport] = useState(false);
@@ -4564,6 +4577,7 @@ function planPermitHafrashUse(taba) {
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [fundReport, () => setFundReport(false)],
+                        [hotelReport, () => setHotelReport(false)],
                         [extraUnitsReport, () => setExtraUnitsReport(false)],
                         [socialReport, () => setSocialReport(false)],
                         [appendicesReport, () => setAppendicesReport(false)],
@@ -6121,6 +6135,7 @@ function planPermitHafrashUse(taba) {
                 window.__hafrashPermitUse = {}; // סוג ההפרשה המבונה כפי שנקרא מגרמושקת ההיתר — by bare taba
                 window.__planContainment = {}; // taba → {superseded_by} (detect_plan_containment.py)
                 window.__maintenanceFund = {}; // קרן תחזוקה — by plan_name
+                window.__hotels = { plans: {} }; // מלונאות — data/hotels.json (build_hotels.py)
                 window.__hafrashaDelivery = {};
                 window.__excavationPermits = {};
                 window.__activeSites = { sites: [] }; // אתרי בנייה פעילים (מנהל הבטיחות)
@@ -6183,6 +6198,7 @@ function planPermitHafrashUse(taba) {
                     ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
                     ['__hafrashPermitUse', 'data/hafrash_permit_use.json'],
                     ['__planContainment', 'data/plan_containment.json'],
+                    ['__hotels', 'data/hotels.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -6681,6 +6697,7 @@ function planPermitHafrashUse(taba) {
                             else if (key === '__hafrashPermitUse') { window.__hafrashPermitUse = (data && data.by_plan) || {}; }
                             else if (key === '__planContainment') { window.__planContainment = (data && data.superseded) || {}; }
                             else if (key === '__maintenanceFund') { window.__maintenanceFund = data || {}; }
+                            else if (key === '__hotels') { window.__hotels = data || { plans: {} }; }
                             else if (key === '__parking') { window.__parking = data || { plans: {}, no_traffic_appendix: [] }; }
                             else if (key === '__socialAppendices') { window.__socialAppendices = data || { plans: {} }; }
                             else if (key === '__planDocuments') { window.__planDocuments = data || { plans: {} }; }
@@ -17101,6 +17118,9 @@ function planPermitHafrashUse(taba) {
                             srcs: p.srcs ? p.srcs.split(',') : (p.src ? [p.src] : []),
                             excl: p.excl ? p.excl.split(',') : [],
                             minahak: p.minahak || '', q: p.q || '' }) },
+                    { key: 'hotels', isOpen: () => hotelReport, open: () => setHotelReport(true),
+                        ser: () => ({ status: hotelReportFilter.status, sub: hotelReportFilter.sub, kind: hotelReportFilter.kind, q: hotelReportFilter.q }),
+                        apply: p => setHotelReportFilter({ status: p.status || 'all', sub: p.sub || 'all', kind: p.kind || 'all', q: p.q || '' }) },
                     { key: 'fund', isOpen: () => fundReport, open: () => setFundReport(true),
                         ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, status: fundReportFilter.status, q: fundReportFilter.q }),
                         apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', status: p.status || 'all', q: p.q || '' }) },
@@ -23032,6 +23052,52 @@ function planPermitHafrashUse(taba) {
                     geoLayersRef.current.maintenance_fund = fundLayer;
                 }
 
+                // --- מלונאות: תכניות עם מלונאות ייעודית / שימוש מותר (data/hotels.json) ---
+                // Counted plans only (not rejected, not superseded by a later plan on the same
+                // site); optional = hotel is merely a permitted use, drawn dotted and grey.
+                if (layers['hotels'] && gd.plans) {
+                    const hp = (window.__hotels || {}).plans || {};
+                    const seenH = new Set();
+                    const hotelLayer = L.geoJSON(gd.plans, {
+                        filter: f => {
+                            const p = f.properties || {};
+                            const rec = hp[p.plan_name];
+                            if (!rec || rec.rejected || rec.superseded_by || seenH.has(p.plan_name)) return false;
+                            if (statusGroupKey(p.status_mavat) === 'rejected') return false;
+                            seenH.add(p.plan_name);
+                            return true;
+                        },
+                        style: f => {
+                            const rec = hp[f.properties.plan_name] || {};
+                            const approved = statusGroupKey(f.properties.status_mavat) === 'approved';
+                            if (rec.kind === 'optional')
+                                return { color: HOTEL_COLORS.optional, weight: 1.6, dashArray: '2 4', fill: false };
+                            const c = rec.stage === 'extension' ? HOTEL_COLORS.extension : HOTEL_COLORS.new;
+                            return { color: c, weight: 2.4, dashArray: approved ? null : '6 4',
+                                     fillColor: c, fillOpacity: rec.stage === 'extension' ? 0.18 : 0.32 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const rec = hp[p.plan_name] || {};
+                            layer.on('click', (e) => {
+                                const m = mapInstanceRef.current || map;
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(e.latlng).setContent(buildHotelPopup(p, rec));
+                                popup.openOn(m);
+                                bindPopupEvents(popup, [{ properties: p, type: 'plan' }], 0);
+                            });
+                            const nf = (x) => Number(x).toLocaleString('he-IL');
+                            const line = rec.kind === 'optional' ? 'מלונאות כשימוש מותר בלבד'
+                                : (rec.rooms ? nf(rec.rooms) + ' חדרים' : 'חדרים: ?') + (rec.sqm ? ' · ' + nf(rec.sqm) + ' מ"ר' : '');
+                            layer.bindTooltip(
+                                '<div style="color:#00695c;font-size:7.5pt;font-weight:bold;font-family:Assistant,sans-serif">🏨 ' +
+                                (p.plan_name_he || p.plan_name || '') + '<br>' + line + '</div>',
+                                { permanent: false, direction: 'top', className: 'tama38-label', sticky: true });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.hotels = hotelLayer;
+                }
+
                 // --- מצב נכנס: הנספח החברתי של תכניות ההתחדשות ---
                 // Draws the EXISTING complex profile (tenure, public housing, age,
                 // household size) that the plan's social appendix documents — never the
@@ -25461,6 +25527,38 @@ function planPermitHafrashUse(taba) {
             // Rebuilt תמ"א 38 building popup — plan-popup-like. Prominent permit number +
             // tama type (38/1 חיזוק / 38/2 הריסה-ובנייה), reconciled status, units נכנס→יוצא,
             // floors, developer, cross-source banners. `permits` = getPermitsForTama38(fid).
+            // Popup for the מלונאות layer. `rec` is the data/hotels.json record.
+            function buildHotelPopup(props, rec) {
+                const esc = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const nf = x => Number(x).toLocaleString('he-IL');
+                let h = '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:240px">';
+                h += '<div style="background:#00897b;color:#fff;font-weight:800;padding:6px 10px;border-radius:6px 6px 0 0;font-size:11.5pt">🏨 מלונאות</div>';
+                h += '<div style="padding:8px 10px;background:#f4fbfa;border:1px solid #b2dfdb;border-top:none;border-radius:0 0 6px 6px">';
+                h += '<div style="font-weight:700;font-size:10.5pt">' + esc(props.plan_name_he || props.plan_name) + '</div>';
+                h += '<div style="color:#666;font-size:9pt;margin-bottom:6px">' + esc(props.plan_name) + ' · ' + esc(props.status_mavat || '') + '</div>';
+                if (rec.kind === 'optional') {
+                    h += '<div style="font-size:9.5pt"><b>מלונאות כשימוש מותר בלבד</b> — אין שורת מלונאות ייעודית, לא נספר בהיצע.</div>';
+                    if (rec.optional_clause) h += '<div style="font-size:9pt;color:#444;margin-top:4px">' + esc(rec.optional_clause) + '</div>';
+                } else {
+                    h += '<div style="display:flex;gap:16px;font-size:10pt">';
+                    h += '<div><div style="color:#666;font-size:8.5pt">חדרי מלון</div><div style="font-size:15pt;font-weight:800;color:#00695c">' + (rec.rooms ? nf(rec.rooms) : '?') + '</div></div>';
+                    h += '<div><div style="color:#666;font-size:8.5pt">שטח עיקרי (מ"ר)</div><div style="font-size:15pt;font-weight:800;color:#00695c">' + (rec.sqm ? nf(rec.sqm) : '?') + '</div></div>';
+                    h += '</div>';
+                    const src = [];
+                    if (rec.rooms_src) src.push('חדרים: ' + esc(rec.rooms_src));
+                    if (rec.sqm_src) src.push('שטח: ' + esc(rec.sqm_src));
+                    if (src.length) h += '<div style="font-size:8.5pt;color:#555;margin-top:4px">מקור — ' + src.join(' · ') + '</div>';
+                    if (rec.stage === 'extension') h += '<div style="font-size:9pt;margin-top:4px">הרחבת מלון קיים: מאושר ' + nf(rec.sqm_in) + ' מ"ר, תוספת ' + nf(rec.sqm_change) + ' מ"ר (פאנל מבא"ת)</div>';
+                    else if (rec.stage === 'new') h += '<div style="font-size:9pt;margin-top:4px">מלון חדש (אין מלונאות במצב המאושר)</div>';
+                    else if (rec.stage === 'unchanged') h += '<div style="font-size:9pt;margin-top:4px">ללא שינוי — זכויות מלונאות שאושרו בתכנית קודמת</div>';
+                    if (rec.kind === 'mixed') h += '<div style="font-size:9pt;color:#8a5a00;margin-top:4px">שורה מעורבת בטבלה 5 (מלונאות יחד עם שימוש אחר) — השטח מהפאנל הכמותי, סטטיסטי בלבד</div>';
+                    if (rec.note) h += '<div style="font-size:8.5pt;color:#444;margin-top:4px">' + esc(rec.note) + '</div>';
+                }
+                if (props.mavat_url) h += '<div style="margin-top:6px"><a href="' + esc(props.mavat_url) + '" target="_blank" rel="noopener">מבא"ת ↗</a></div>';
+                h += '</div></div>';
+                return h;
+            }
+
             // Popup for the קרן תחזוקה (maintenance-fund) layer. `fund` is the
             // window.__maintenanceFund record for this plan.
             // A renewal plan big enough that a social appendix is expected but none was
@@ -26064,20 +26162,31 @@ function planPermitHafrashUse(taba) {
                     }
                 }
                 // Section: מלונאות — separate from יח"ד (hotel rooms are not housing units).
-                // The `hotels` field mixes two source semantics from table 5: a room/unit COUNT
-                // (small integer, when the hotel row lists יח"ד/חדר) and, when the row has no
-                // room count, the hotel FLOOR AREA in מ"ר (main_above — large and/or fractional).
-                // Label each correctly so a floor-area value like 25,912 isn't shown as "חדרי מלון".
-                const htlVal = v(props.hotels);
-                if (htlVal) {
-                    const htlNum = parseFloat(String(htlVal).replace(/[^\d.]/g, ''));
-                    const htlIsSqm = isFinite(htlNum) && (htlNum >= 1000 || htlNum % 1 !== 0);
-                    const htlLabel = htlIsSqm ? 'שטח (מ"ר)' : 'חדרי מלון';
-                    const htlDisp = isFinite(htlNum) ? fmt(htlNum) : htlVal;
+                // Since 10/2026 GS splits it: `hotels` = rooms, `hotels_sqm` = main area (Table 5).
+                // Tri-state: number / '?' (hotel, Table 5 silent) / '—' (no dedicated hotel —
+                // hotel is only a permitted use; hidden here, shown in the hotels report).
+                // data/hotels.json (window.__hotels) adds the source and new-vs-extension.
+                const htlRec = ((window.__hotels || {}).plans || {})[props.plan_name];
+                const htlRooms = v(props.hotels), htlSqm = v(props.hotels_sqm);
+                if ((htlRooms && htlRooms !== '—') || (htlSqm && htlSqm !== '—') || (htlRec && htlRec.kind !== 'optional')) {
+                    const htlShow = (x) => x == null ? '?' : (isFinite(parseFloat(x)) ? fmt(parseFloat(x)) : x);
+                    let sqmDisp = htlShow(htlSqm);
+                    if ((!htlSqm || htlSqm === '?') && htlRec && htlRec.sqm) sqmDisp = fmt(htlRec.sqm) + '*';
                     html += '<div class="popup-section-title">מלונאות</div>';
                     html += '<div class="popup-pair">';
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">${htlLabel}</span><span class="popup-pair-value">${htlDisp}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">חדרי מלון</span><span class="popup-pair-value">${htlShow(htlRooms)}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">שטח עיקרי (מ"ר)</span><span class="popup-pair-value">${sqmDisp}</span></div>`;
                     html += '</div>';
+                    if (htlRec) {
+                        const bits = [];
+                        if (htlRec.stage === 'new') bits.push('מלון חדש');
+                        else if (htlRec.stage === 'extension') bits.push('הרחבת מלון קיים (מאושר ' + fmt(htlRec.sqm_in) + ' מ"ר)');
+                        else if (htlRec.stage === 'unchanged') bits.push('ללא שינוי מהמאושר');
+                        if (htlRec.kind === 'mixed') bits.push('שורה מעורבת בטבלה 5');
+                        if (sqmDisp.endsWith('*')) bits.push('* שטח מהפאנל הכמותי במבא"ת (סטטיסטי)');
+                        if (htlRec.superseded_by) bits.push('נספר בתכנית ' + htlRec.superseded_by);
+                        if (bits.length) html += `<div class="popup-sub-row" style="color:#8899bb">${bits.join(' · ')}</div>`;
+                    }
                 }
 
                 // Section: שב"צ
@@ -28173,6 +28282,13 @@ function planPermitHafrashUse(taba) {
                                                 <button className="layer-legend-btn" title="מקרא זיקות הנאה"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא זיקות הנאה - סוג', items: EASEMENTS_LEGEND }); }}>⋯</button>
                                             )}
+                                            {layer.id === 'hotels' && (<>
+                                                <button className="layer-legend-btn" title="מקרא מלונאות"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא מלונאות', items: HOTEL_LEGEND }); }}>⋯</button>
+                                                <button className="layer-legend-btn" title="דוח מלונאות"
+                                                    onClick={(e) => { e.stopPropagation(); setHotelReportFilter({ status: 'all', sub: 'all', kind: 'all', q: '' }); setHotelReport(true); }}
+                                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                                            </>)}
                                             {layer.id === 'commercial_frontage' && (
                                                 <button className="layer-legend-btn" title="מקרא חזית מסחרית"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא חזית מסחרית - סטטוס התכנית', items: FRONTAGE_LEGEND }); }}>⋯</button>
@@ -31574,6 +31690,7 @@ function planPermitHafrashUse(taba) {
                             ]},
                             { key:'commerce', title:'🟣 מסחר ותעסוקה', color:'#8e24aa', bg:'rgba(142,36,170,0.06)', items:[
                                 { icon:'🏪', title:'סיכום מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה לפי מינהל', onClick:() => go(() => fetchCommerceData()) },
+                                { icon:'🏨', title:'מלונאות — היצע מתוכנן', desc:'חדרי מלון ושטח מלונאות מטבלה 5: מאושר מול בהליך, מלון חדש מול הרחבה, ותכניות שמלונאות בהן רק שימוש מותר', onClick:() => go(() => { setHotelReportFilter({ status: 'all', sub: 'all', kind: 'all', q: '' }); setHotelReport(true); }) },
                             ]},
                             { key:'transport', title:'🅿️ תנועה וחניה', color:'#00838f', bg:'rgba(0,131,143,0.06)', items:[
                                 { icon:'🅿️', title:'מאזן חניה', desc:'כל נושא החניה מטבלאות המאזן שבנספחי התנועה: סך המקומות, תמהיל לפי שימוש, יחס ליח"ד, תקן מלא מול מופחת וחתך אזורי', onClick:() => go(() => { setParkFilter({ minahak:'all', sub:'all', band:'all', status:'all', q:'' }); setParkingReport(true); }) },
@@ -41063,6 +41180,207 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         </div>
                                     ))}
                                     <div style={{fontSize:10,color:'#777',padding:'4px 8px'}}>גובה הקרן חולץ מנוסח ההוראות של כל תכנית (מעבר עכבר על הסכום מציג את הציטוט המדויק). כשההוראות אינן נוקבות בסכום ₪ מפורש, הסכום נקבע בהסכם נאמנות לפי הערכת עלויות התחזוקה של הרשות להתחדשות עירונית. יח"ד מותנות מסומנות ב-* חולצו מההוראות (השאר מטבלה 5). ההיקף: תכניות התחדשות עירונית/מגדלים מעל 13 קומות בלבד.</div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {hotelReport && (() => {
+                        // Planned hotel supply — data/hotels.json (scripts/build_hotels.py).
+                        // Counted = not rejected, not 'optional' (hotel only a permitted use) and not
+                        // superseded by a later plan on the same site. rooms/sqm null = Table 5 silent
+                        // ('?'), which is NOT zero — totals say how many plans lack a figure.
+                        const hp = (window.__hotels || {}).plans || {};
+                        const gen = (window.__hotels || {}).generated || '';
+                        const nf = (x) => Number(x).toLocaleString('he-IL');
+                        const NOSUB = '— מחוץ לתתי-השכונות —';
+                        const all = Object.values(hp).map(r => ({ ...r,
+                            grp: r.rejected ? 'rejected' : statusGroupKey(r.status),
+                            sub: r.sub_neighborhood || NOSUB }));
+                        all.forEach(r => { r.approved = r.grp === 'approved'; if (r.grp === 'rejected') r.rejected = true; });
+                        const f = hotelReportFilter;
+                        const q = (f.q || '').trim().toLowerCase();
+                        const pass = r => {
+                            if (f.status === 'approved' && !r.approved) return false;
+                            if (f.status === 'process' && r.approved) return false;
+                            if (f.sub !== 'all' && r.sub !== f.sub) return false;
+                            if (f.kind !== 'all' && r.kind !== f.kind) return false;
+                            if (q && ![r.plan_name, r.title, r.sub, r.note].join(' ').toLowerCase().includes(q)) return false;
+                            return true;
+                        };
+                        const counted = all.filter(r => !r.rejected && r.kind !== 'optional' && !r.superseded_by && pass(r));
+                        const optional = all.filter(r => !r.rejected && r.kind === 'optional' && (f.kind === 'all' || f.kind === 'optional') && pass({ ...r, kind: 'optional' }));
+                        const superseded = all.filter(r => !r.rejected && r.superseded_by && r.kind !== 'optional');
+                        const rejected = all.filter(r => r.rejected && r.kind !== 'optional');
+                        const allSubs = [...new Set(all.filter(r => !r.rejected).map(r => r.sub))].sort((a, b) => a.localeCompare(b, 'he'));
+
+                        const sum = (rows, k) => rows.reduce((t, r) => t + (Number(r[k]) || 0), 0);
+                        const t5 = r => r.sqm && String(r.sqm_src || '').startsWith('טבלה 5');
+                        const appr = counted.filter(r => r.approved), proc = counted.filter(r => !r.approved);
+                        const kpi = rows => ({
+                            n: rows.length, rooms: sum(rows, 'rooms'), noRooms: rows.filter(r => !r.rooms).length,
+                            sqm: sum(rows.filter(t5), 'sqm'), sqmPanel: sum(rows.filter(r => r.sqm && !t5(r)), 'sqm'),
+                        });
+                        const K = kpi(counted), KA = kpi(appr), KP = kpi(proc);
+                        const nNew = counted.filter(r => r.stage === 'new').length;
+                        const ext = counted.filter(r => r.stage === 'extension');
+                        const extAdd = sum(ext, 'sqm_change');
+                        const perRoom = r => (r.rooms && r.sqm) ? Math.round(r.sqm / r.rooms) : null;
+
+                        const groups = {};
+                        counted.forEach(r => {
+                            const g = groups[r.sub] || (groups[r.sub] = { sub: r.sub, items: [], rooms: 0, sqm: 0 });
+                            g.items.push(r); g.rooms += Number(r.rooms) || 0; g.sqm += Number(r.sqm) || 0;
+                        });
+                        const groupList = Object.values(groups).sort((a, b) => b.rooms - a.rooms || b.sqm - a.sqm);
+                        const stageTxt = r => r.stage === 'new' ? 'חדש' : r.stage === 'extension' ? 'הרחבה' : r.stage === 'unchanged' ? 'ללא שינוי' : '—';
+                        const srcTxt = r => [r.rooms_src && ('חדרים: ' + r.rooms_src), r.sqm_src && ('שטח: ' + r.sqm_src)].filter(Boolean).join(' · ');
+
+                        const jump = (r) => {
+                            const gd2 = geoDataRef.current, map = mapInstanceRef.current;
+                            if (!map || !gd2.plans) return;
+                            const feat = gd2.plans.features.find(x => x.properties && x.properties.plan_name === r.plan_name && x.geometry);
+                            if (!feat) { alert('אין גיאומטריה לתכנית זו במפה'); return; }
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+                            setHotelReport(false);
+                            setLayers(prev => ({ ...prev, hotels: true }));
+                            setTimeout(() => {
+                                map.fitBounds(bounds, { padding: [60, 60], maxZoom: 18 });
+                                setTimeout(() => L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng([(bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2])
+                                    .setContent(buildHotelPopup(feat.properties, hp[r.plan_name] || {})).openOn(map), 500);
+                            }, 100);
+                        };
+
+                        const csvCell = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                        function exportHotelCSV() {
+                            const cols = ['קבוצה', 'תת-שכונה', 'תב"ע', 'שם תכנית', 'סטטוס', 'סוג', 'חדרי מלון', 'שטח עיקרי (מ"ר)', 'מ"ר לחדר',
+                                'חדש/הרחבה', 'מלונאות מאושרת קודם (מ"ר)', 'תוספת (מ"ר, פאנל)', 'מקור', 'הערה', 'קישור מבא"ת'];
+                            const out = [cols.join(',')];
+                            const row = (grpName, r, note) => out.push([grpName, r.sub, r.plan_name, r.title, r.status,
+                                r.kind === 'mixed' ? 'שורה מעורבת' : r.kind === 'optional' ? 'שימוש מותר' : 'ייעודי',
+                                r.kind === 'optional' ? '—' : (r.rooms || '?'), r.kind === 'optional' ? '—' : (r.sqm || '?'), perRoom(r) || '',
+                                stageTxt(r), r.sqm_in ?? '', r.sqm_change ?? '', srcTxt(r), note || r.note || '', r.mavat_url].map(csvCell).join(','));
+                            counted.forEach(r => row(r.approved ? 'נספר — מאושר' : 'נספר — בהליך', r));
+                            optional.forEach(r => row('לא נספר — שימוש מותר', r, r.optional_clause));
+                            superseded.forEach(r => row('לא נספר — כפילות אתר', r, 'נספר ב-' + r.superseded_by + ': ' + r.superseded_note));
+                            rejected.forEach(r => row('לא נספר — נדחתה', r));
+                            const blob = new Blob(['\ufeff' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a'); a.href = url; a.download = 'מלונאות_היצע_מתוכנן.csv';
+                            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                        }
+                        function printHotelReport() {
+                            const win = window.open('', '_blank');
+                            const e = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                            let b = '<h2>🏨 מלונאות — היצע מתוכנן · ' + new Date().toLocaleDateString('he-IL') + '</h2>';
+                            b += '<p class="s"><b>' + nf(K.rooms) + '</b> חדרי מלון ו-<b>' + nf(K.sqm) + '</b> מ"ר עיקרי (טבלה 5) ב-' + K.n + ' תכניות · מאושר: ' + nf(KA.rooms) + ' חדרים / ' + nf(KA.sqm) + ' מ"ר · בהליך: ' + nf(KP.rooms) + ' חדרים / ' + nf(KP.sqm) + ' מ"ר · ' + K.noRooms + ' תכניות בלי מספר חדרים בטבלה 5 (?)</p>';
+                            groupList.forEach(g => {
+                                b += '<h3>' + e(g.sub) + ' <span class="m">· ' + g.items.length + ' תכניות · ' + nf(g.rooms) + ' חדרים · ' + nf(g.sqm) + ' מ"ר</span></h3>';
+                                b += '<table><thead><tr><th>תב"ע</th><th>שם</th><th>סטטוס</th><th>חדרים</th><th>מ"ר עיקרי</th><th>חדש/הרחבה</th><th>מקור</th></tr></thead><tbody>' +
+                                    g.items.map(r => '<tr><td>' + r.plan_name + '</td><td>' + e(r.title) + '</td><td>' + e(r.status) + '</td><td>' + (r.rooms ? nf(r.rooms) : '?') +
+                                        '</td><td>' + (r.sqm ? nf(r.sqm) + (t5(r) ? '' : '*') : '?') + '</td><td>' + stageTxt(r) + '</td><td style="font-size:9px">' + e(srcTxt(r)) + '</td></tr>').join('') + '</tbody></table>';
+                            });
+                            b += '<p class="s">* שטח מהפאנל הכמותי במבא"ת — שורה מעורבת בטבלה 5, סטטיסטי בלבד. ' + optional.length + ' תכניות נוספות מתירות מלונאות כשימוש חלופי ואינן נספרות.</p>';
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>מלונאות</title><style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#00695c}h3{color:#00695c;font-size:14px;border-bottom:1px solid #80cbc4;margin:16px 0 6px}.m{color:#666;font-weight:400;font-size:12px}.s{color:#555}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:4px;text-align:right}th{background:#e0f2f1}</style></head><body>' + b + '</body></html>');
+                            win.document.close(); setTimeout(() => win.print(), 250);
+                        }
+
+                        const sel = { background: '#2a2a4a', color: '#fff', border: '1px solid #444', padding: '3px 6px', borderRadius: 4, fontSize: 11, fontFamily: 'inherit' };
+                        const th = { textAlign: 'right', padding: '5px 8px', color: '#bbb', fontWeight: 600 };
+                        const Tile = ({ big, sub, color, bg }) => (
+                            <div style={{ background: bg, border: '1px solid ' + color + '66', borderRadius: 8, padding: '8px 14px', minWidth: 150 }}>
+                                <div style={{ fontSize: 20, fontWeight: 800, color }}>{big}</div>
+                                <div style={{ fontSize: 11, color: '#bfc8d0' }}>{sub}</div>
+                            </div>);
+                        const Fold = ({ id, title, rows, render }) => !rows.length ? null : (
+                            <div style={{ marginBottom: 10, border: '1px solid #2a2a4a', borderRadius: 6 }}>
+                                <div onClick={() => setHotelOpen(p => ({ ...p, [id]: !p[id] }))} style={{ padding: '6px 12px', cursor: 'pointer', color: '#9aa7c0', fontSize: 11.5, fontWeight: 600, userSelect: 'none' }}>
+                                    {hotelOpen[id] ? '▾' : '▸'} {title} ({rows.length})
+                                </div>
+                                {hotelOpen[id] && <div style={{ padding: '0 12px 8px' }}>{rows.map((r, i) => (
+                                    <div key={i} onClick={() => jump(r)} title="קליק להצגה על המפה" style={{ display: 'flex', gap: 8, padding: '3px 4px', cursor: 'pointer', fontSize: 11, borderTop: i ? '1px solid #1a1a2e' : 'none' }}>
+                                        <span style={{ color: '#64b5f6', whiteSpace: 'nowrap', minWidth: 92 }}>{r.plan_name}</span>
+                                        <span style={{ color: '#cfd3e6', flex: '0 1 38%' }}>{r.title}</span>
+                                        <span style={{ color: '#9aa', flex: 1 }}>{render(r)}</span>
+                                    </div>))}</div>}
+                            </div>);
+
+                        return (
+                        <div className="units-overlay" onClick={() => setHotelReport(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(1100px,96vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+                                <div className="units-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                                    <h2 style={{ margin: 0, color: '#80cbc4', fontSize: 17 }}>🏨 מלונאות — היצע מתוכנן</h2>
+                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                        <button onClick={printHotelReport} style={{ background: '#3a5a8c', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>📄 הדפסה / PDF</button>
+                                        <button onClick={exportHotelCSV} style={{ background: '#2d6a4f', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>📊 ייצוא אקסל</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setHotelReport(false)}>&times;</button>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 10, padding: '10px 16px', flexWrap: 'wrap', borderBottom: '1px solid #2a2a4a' }}>
+                                    <Tile big={nf(K.rooms)} sub={'חדרי מלון ב-' + K.n + ' תכניות (' + K.noRooms + ' בלי מספר חדרים — ?)'} color="#80cbc4" bg="rgba(0,137,123,0.14)" />
+                                    <Tile big={nf(K.sqm) + ' מ"ר'} sub={'שטח עיקרי מטבלה 5' + (K.sqmPanel ? ' · +' + nf(K.sqmPanel) + ' בשורות מעורבות*' : '')} color="#4db6ac" bg="rgba(77,182,172,0.12)" />
+                                    <Tile big={nf(KA.rooms) + ' / ' + nf(KP.rooms)} sub={'חדרים: מאושר (' + KA.n + ') / בהליך (' + KP.n + ')'} color="#a5d6a7" bg="rgba(80,210,90,0.10)" />
+                                    <Tile big={nNew + ' / ' + ext.length} sub={'מלון חדש / הרחבת קיים (תוספת ' + nf(extAdd) + ' מ"ר)'} color="#ffcc80" bg="rgba(255,167,38,0.10)" />
+                                </div>
+                                <div style={{ padding: '8px 16px', borderBottom: '1px solid #2a2a4a', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 11 }}>
+                                    <span style={{ color: '#aab' }}>סטטוס:</span>
+                                    <select value={f.status} onChange={e => setHotelReportFilter(p => ({ ...p, status: e.target.value }))} style={sel}>
+                                        <option value="all">הכל</option><option value="approved">מאושר</option><option value="process">בהליך</option>
+                                    </select>
+                                    <span style={{ color: '#aab', marginRight: 6 }}>תת-שכונה:</span>
+                                    <select value={f.sub} onChange={e => setHotelReportFilter(p => ({ ...p, sub: e.target.value }))} style={sel}>
+                                        <option value="all">הכל</option>{allSubs.map(x => <option key={x} value={x}>{x}</option>)}
+                                    </select>
+                                    <span style={{ color: '#aab', marginRight: 6 }}>סוג:</span>
+                                    <select value={f.kind} onChange={e => setHotelReportFilter(p => ({ ...p, kind: e.target.value }))} style={sel}>
+                                        <option value="all">הכל</option><option value="dedicated">ייעודי</option><option value="mixed">שורה מעורבת</option><option value="optional">שימוש מותר בלבד</option>
+                                    </select>
+                                    <input type="text" placeholder="חיפוש (תב״ע / שם)" value={f.q} onChange={e => setHotelReportFilter(p => ({ ...p, q: e.target.value }))}
+                                        style={{ ...sel, flex: '1 1 160px', minWidth: 120 }} />
+                                </div>
+                                <div style={{ overflowY: 'auto', flex: 1, padding: '8px 12px' }}>
+                                    {groupList.length === 0 && f.kind !== 'optional' && <div style={{ padding: 30, textAlign: 'center', color: '#aab' }}>אין תכניות התואמות את הסינון.</div>}
+                                    {groupList.map(g => (
+                                        <div key={g.sub} style={{ marginBottom: 14, border: '1px solid #2a2a4a', borderRadius: 6, background: '#16162a' }}>
+                                            <div style={{ padding: '7px 12px', background: 'rgba(0,137,123,0.16)', borderBottom: '1px solid #2a2a4a', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <span style={{ color: '#80cbc4', fontWeight: 600, fontSize: 13 }}>🏘️ {g.sub}</span>
+                                                <span style={{ color: '#9ca3af', fontSize: 11, marginRight: 'auto' }}>{g.items.length} תכניות · <b style={{ color: '#80cbc4' }}>{nf(g.rooms)}</b> חדרים · {nf(g.sqm)} מ"ר</span>
+                                            </div>
+                                            <table style={{ width: '100%', fontSize: 11.5, borderCollapse: 'collapse' }}>
+                                                <thead><tr style={{ borderBottom: '1px solid #2a2a4a', background: '#1c1c30' }}>
+                                                    <th style={{ ...th, width: 110 }}>תב״ע</th><th style={th}>שם תכנית</th>
+                                                    <th style={{ ...th, width: 70, textAlign: 'center' }}>חדרים</th><th style={{ ...th, width: 90, textAlign: 'center' }}>מ"ר עיקרי</th>
+                                                    <th style={{ ...th, width: 60, textAlign: 'center' }}>מ"ר/חדר</th><th style={{ ...th, width: 70 }}>חדש/הרחבה</th><th style={{ ...th, width: 110 }}>סטטוס</th>
+                                                </tr></thead>
+                                                <tbody>
+                                                    {g.items.slice().sort((a, b) => (b.rooms || 0) - (a.rooms || 0) || (b.sqm || 0) - (a.sqm || 0)).map((r, i) => (
+                                                        <tr key={i} onClick={() => jump(r)} title={srcTxt(r) + (r.note ? ' · ' + r.note : '')} style={{ borderBottom: '1px solid #1a1a2e', cursor: 'pointer' }}>
+                                                            <td style={{ padding: '5px 8px', color: '#64b5f6', whiteSpace: 'nowrap' }}>{r.plan_name}</td>
+                                                            <td style={{ padding: '5px 8px', color: '#e0e0e0' }}>{r.title}{r.kind === 'mixed' && <span style={{ color: '#d8a657', fontSize: 10 }}> · שורה מעורבת</span>}</td>
+                                                            <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 700, color: r.rooms ? '#80cbc4' : '#777' }}>{r.rooms ? nf(r.rooms) : '?'}</td>
+                                                            <td style={{ padding: '5px 8px', textAlign: 'center', color: r.sqm ? '#cfe' : '#777' }}>{r.sqm ? nf(r.sqm) + (t5(r) ? '' : '*') : '?'}</td>
+                                                            <td style={{ padding: '5px 8px', textAlign: 'center', color: '#9bb4d6' }}>{perRoom(r) || '—'}</td>
+                                                            <td style={{ padding: '5px 8px', color: '#ffcc80' }}>{stageTxt(r)}</td>
+                                                            <td style={{ padding: '5px 8px', color: r.approved ? '#a5d6a7' : '#e6c46a', whiteSpace: 'nowrap', fontSize: 11 }}>{r.status}</td>
+                                                        </tr>))}
+                                                </tbody>
+                                            </table>
+                                        </div>))}
+                                    <Fold id="opt" title="מלונאות כשימוש מותר בלבד — לא נספר בהיצע" rows={optional} render={r => r.optional_clause} />
+                                    <Fold id="sup" title="אותו אתר בשתי תכניות — נספר פעם אחת" rows={superseded} render={r => 'נספר ב-' + r.superseded_by + ' · ' + r.superseded_note} />
+                                    <Fold id="rej" title="תכניות שנדחו / נגנזו" rows={rejected} render={r => (r.rooms ? nf(r.rooms) + ' חדרים · ' : '') + (r.sqm ? nf(r.sqm) + ' מ"ר' : '')} />
+                                    <div style={{ fontSize: 10, color: '#888', padding: '4px 8px', lineHeight: 1.6 }}>
+                                        מקור: טבלה 5 (קובץ הזכויות ממבא"ת, ובהיעדרו — דף טבלה 5 בהוראות שנקרא מהתמונה). "?" = טבלה 5 אינה נוקבת במספר — לא אפס.
+                                        * שורה מעורבת (מלונאות יחד עם שימוש אחר, בלי פיצול) — השטח מהפאנל הכמותי של מבא"ת, שהוא סטטיסטי בלבד.
+                                        חדש/הרחבה ותוספת לפי "מצב מאושר" בפאנל הכמותי. נכון ל-{gen}.
+                                    </div>
                                 </div>
                             </div>
                         </div>);
