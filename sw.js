@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v132-rova-scope';
+const CACHE_VERSION = 'v133-drop-shatzap';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
