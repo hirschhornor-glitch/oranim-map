@@ -10,7 +10,11 @@ the roof of a garage: shallow soil, no large trees, maintenance tied to a privat
 building. The plan instructions say so outright ("בתת הקרקע ובתחום החלקות התלת
 ממדיות תותר הקמת מרתפים לחניה").
 
-Sources (iplan XPLAN, 101- plans inside the Jerusalem envelope):
+Scope: open-space parcels whose interior point falls inside the rova boundary
+(data/district_oranim.geojson, רובע 4). XPLAN is queried over the Jerusalem
+envelope and clipped here.
+
+Sources (iplan XPLAN, 101- plans):
     MapServer/4  open-space parcels — 670 שצ"פ, 650 שטחים פתוחים, 780 ככר עירונית,
                  1670 שטחים פתוחים ומבנים ומוסדות ציבור
     MapServer/3  3D lots that put a private/other use underneath —
@@ -104,6 +108,9 @@ def main():
         sys.exit(1)
     td_raw = query(3, list(BASEMENT_3D) + list(UNDERGROUND_LINE), 'objectid,mavat_code,pl_number')
 
+    rova = unary_union([shp_transform(TO_ITM, shape(f['geometry'])) for f in
+                        json.loads((DATA / 'district_oranim.geojson').read_text(encoding='utf-8'))['features']])
+
     plans = {}
     for f in json.loads((DATA / 'plans.geojson').read_text(encoding='utf-8'))['features']:
         p = f.get('properties') or {}
@@ -123,7 +130,7 @@ def main():
         pl = p['pl_number']
         g = itm(f)
         area = g.area
-        if area < 1:
+        if area < 1 or not rova.contains(g.representative_point()):
             continue
         basement = [gg.intersection(g) for c, gg in under.get(pl, []) if c in BASEMENT_3D]
         kinds = sorted({BASEMENT_3D[c] for c, gg in under.get(pl, [])
@@ -206,7 +213,8 @@ def main():
         'source': 'XPLAN MapServer/4 (open space) × MapServer/3 (3D lots, underground building line)',
         'open_space_codes': OPEN_SPACE,
         'basement_codes': BASEMENT_3D,
-        'totals': {'city': totals(out_plans), 'oranim': totals([r for r in out_plans if r['in_oranim']])},
+        'scope': 'רובע 4 — אורנים (district_oranim.geojson)',
+        'totals': {'rova': totals(out_plans)},
         'plans': out_plans,
     }
     OUTPUT.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')

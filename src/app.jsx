@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-20-hotels';
+        const APP_VERSION = '2026-10-20-rova-scope';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4141,7 +4141,6 @@ function planPermitHafrashUse(taba) {
             // Fuel-barriers report: public-building lots within TAMA-18 distance of a fuel station.
             const [showFuelBarriers, setShowFuelBarriers] = useState(false);
             const [showShatzapQuality, setShowShatzapQuality] = useState(false);
-            const [sqScope, setSqScope] = useState('oranim');
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
             const [reportsMenuSub, setReportsMenuSub] = useState('בקעה'); // sub-neighborhood for the comprehensive-report picker
@@ -7081,7 +7080,7 @@ function planPermitHafrashUse(taba) {
                 showPermitsBySub, permitsBySubDrilldown, permitsBySubMinahakFilter,
                 showPermitsGap, permitsGapDrilldown,
                 showFloorReport, flrFrom, flrTo, flrDoms,
-                showUseGaps, showShatzapQuality, sqScope,
+                showUseGaps, showShatzapQuality,
                 showPublicNeeds, publicNeedsMinahak,
                 parkingReport, parkFilter, reportScope,
             ]);
@@ -17168,8 +17167,7 @@ function planPermitHafrashUse(taba) {
                         ser: () => ({ dom: rentalDomFilter, ten: rentalTenureFilter, op: rentalOpFilter, nc: rentalNonconfOnly ? 1 : 0 }),
                         apply: p => { if (p.dom) setRentalDomFilter(p.dom); if (p.ten) setRentalTenureFilter(p.ten); if (p.op) setRentalOpFilter(p.op); if (p.nc) setRentalNonconfOnly(true); } },
                     { key: 'fuelBarriers', isOpen: () => showFuelBarriers, open: () => setShowFuelBarriers(true) },
-                    { key: 'shatzapQuality', isOpen: () => showShatzapQuality, open: () => setShowShatzapQuality(true),
-                        ser: () => ({ sc: sqScope }), apply: p => { if (p.sc) setSqScope(p.sc); } },
+                    { key: 'shatzapQuality', isOpen: () => showShatzapQuality, open: () => setShowShatzapQuality(true) },
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
                         apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
@@ -31044,9 +31042,10 @@ function planPermitHafrashUse(taba) {
                     {/* ── איכות השצ"פ — open space planned on top of a private basement (3D lot) ── */}
                     {showShatzapQuality && (() => {
                         const SQ = window.__shatzapQuality || {};
-                        const city = sqScope === 'city';
-                        const all = (SQ.plans || []).filter(r => city || r.in_oranim);
-                        const tot = ((SQ.totals || {})[city ? 'city' : 'oranim']) || {};
+                        // the data is already clipped to the rova boundary (build_shatzap_quality.py)
+                        const city = false;
+                        const all = SQ.plans || [];
+                        const tot = (SQ.totals || {}).rova || {};
                         const hit = all.filter(r => r.basement_sqm > 0 || r.ug_line_sqm > 0)
                             .sort((a, b) => (b.basement_sqm || b.ug_line_sqm) - (a.basement_sqm || a.ug_line_sqm));
                         // an amendment redraws its parent's basement — count each pair once
@@ -31080,19 +31079,18 @@ function planPermitHafrashUse(taba) {
                         const csv = () => {
                             const lines = [['תכנית', 'שם התכנית', 'מינה"ק', 'סטטוס', 'שטח פתוח בתכנית (מ"ר)', 'מעל מרתף (מ"ר)', 'אחוז', 'מה מתחת', 'מגרשים', 'חופפת לתכנית'].map(csvQ).join(',')];
                             hit.forEach(r => lines.push([r.plan, r.name, r.minahak, r.status, r.os_sqm, r.basement_sqm || r.ug_line_sqm, pct(r.basement_sqm || r.ug_line_sqm, r.os_sqm), belowTxt(r), parcelsTxt(r), (r.overlaps || []).join(' ')].map(csvQ).join(',')));
-                            const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'shatzap_quality_' + (city ? 'city' : 'oranim') + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+                            const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'shatzap_quality_rova.csv'; document.body.appendChild(a); a.click(); a.remove();
                         };
                         const prnt = () => {
                             const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
                             let h = '<html dir="rtl"><head><meta charset="utf-8"><title>איכות השצ"פ — שטח פתוח מעל מרתף</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #999;padding:4px 6px;text-align:right;vertical-align:top}th{background:#eee}</style></head><body>';
-                            h += '<h1>איכות השצ"פ — שטח פתוח מעל מרתף פרטי (' + (city ? 'כל העיר' : 'אורנים') + ')</h1>';
+                            h += '<h1>איכות השצ"פ — שטח פתוח מעל מרתף פרטי (רובע אורנים)</h1>';
                             h += '<p>שטח פתוח מתוכנן: ' + dn(tot.os_sqm || 0) + ' דונם · מעל מרתף: ' + dn(tot.basement_sqm || 0) + ' דונם (' + pct(tot.basement_sqm || 0, tot.os_sqm || 0) + '%) · ' + (tot.plans_with_basement || 0) + ' תכניות. בתכניות האלה ' + pct(hitB, hitOs) + '% מהשטח הפתוח יושב מעל מרתף.</p>';
                             h += '<table><thead><tr><th>תכנית</th><th>שם</th><th>מינה"ק</th><th>סטטוס</th><th>שטח פתוח (מ"ר)</th><th>מעל מרתף (מ"ר)</th><th>%</th><th>מה מתחת</th><th>מגרשים</th></tr></thead><tbody>';
                             hit.forEach(r => { h += '<tr><td>' + e2(r.plan) + '</td><td>' + e2(r.name) + '</td><td>' + e2(r.minahak) + '</td><td>' + e2(r.status) + '</td><td>' + r.os_sqm.toLocaleString('he-IL') + '</td><td>' + (r.basement_sqm || r.ug_line_sqm).toLocaleString('he-IL') + '</td><td>' + pct(r.basement_sqm || r.ug_line_sqm, r.os_sqm) + '%</td><td>' + e2(belowTxt(r)) + '</td><td>' + e2(parcelsTxt(r)) + ((r.overlaps || []).length ? '<br><i>חופפת ל-' + e2(r.overlaps.join(', ')) + '</i>' : '') + '</td></tr>'; });
                             h += '</tbody></table><p style="font-size:11px;color:#555">מקור: XPLAN — מגרשי שצ"פ/שטחים פתוחים/כיכר (שכבה 4) מול מגרשים תלת-ממדיים ו"קו בנין תחתי" (שכבה 3) של אותה תכנית. עדכון: ' + e2(SQ.generated || '') + '.</p></body></html>';
                             const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
                         };
-                        const pill = (on) => ({ padding: '3px 12px', borderRadius: 16, border: '1px solid ' + (on ? '#66bb6a' : '#2a3a5e'), cursor: 'pointer', fontSize: 12, fontWeight: on ? 700 : 400, background: on ? '#1b5e20' : 'transparent', color: on ? '#fff' : '#9fb0d0' });
                         return (
                             <div className="units-overlay" onClick={() => setShowShatzapQuality(false)}>
                                 <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1150, width: '96%' }}>
@@ -31104,12 +31102,7 @@ function planPermitHafrashUse(taba) {
                                         <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10, lineHeight: 1.55 }}>
                                             בתכניות התחדשות רבות, תת-הקרקע שמתחת לשצ"פ, לשביל או לכיכר נרשם כ<b>מגרש תלת-ממדי</b> של הבניין — מרתף החניה והשירות שלו.
                                             במפה זה שטח ציבורי פתוח; בפועל זה גג של חניון: שכבת אדמה רדודה, בלי עצים גדולים, ותחזוקה שתלויה בבניין פרטי.
-                                            הדוח מודד כמה מהשטח הפתוח שהתכניות מייעדות יושב מעל מגרש כזה.
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 10 }}>
-                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>היקף:</span>
-                                            <button style={pill(!city)} onClick={() => setSqScope('oranim')}>אורנים</button>
-                                            <button style={pill(city)} onClick={() => setSqScope('city')}>כל העיר</button>
+                                            הדוח מודד כמה מהשטח הפתוח שהתכניות מייעדות בתחום הרובע יושב מעל מגרש כזה.
                                         </div>
                                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                                             {[['שטח פתוח מתוכנן (דונם)', dn(tot.os_sqm || 0), '#d8def0'],

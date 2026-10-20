@@ -9,8 +9,10 @@ Three mavat codes are kept:
     21110  חזית עם הוראות מיוחדות
     56054  חזית פעילה  (the newer mavat symbol; ~25 lines in Jerusalem)
 
-Scope: the Jerusalem ITM envelope used by the citywide commerce mapping, plans
-prefixed 101- (the local committee) only.
+Scope: lines of 101- plans (the local committee) whose midpoint falls inside the
+rova boundary (data/district_oranim.geojson, רובע 4). XPLAN is queried over the
+Jerusalem envelope and clipped here, so the per-plan refresh in update_mavat_ui.py
+applies the same boundary through FrontageContext.build.
 
 Each line is enriched with:
     length_m      geodesic length
@@ -38,7 +40,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from pyproj import Geod, Transformer
 from shapely.geometry import shape, LineString, MultiLineString
-from shapely.ops import transform as shp_transform
+from shapely.ops import transform as shp_transform, unary_union
 from shapely.strtree import STRtree
 
 warnings.filterwarnings('ignore')
@@ -156,6 +158,12 @@ def load_master_plans():
     return bounds, axes
 
 
+def load_rova():
+    """רובע אורנים (רובע 4) in ITM — the only area the layer covers."""
+    fc = json.loads((DATA / 'district_oranim.geojson').read_text(encoding='utf-8'))
+    return unary_union([shp_transform(TO_ITM, shape(f['geometry'])) for f in fc['features']])
+
+
 def load_plans():
     idx = {}
     for f in json.loads((DATA / 'plans.geojson').read_text(encoding='utf-8'))['features']:
@@ -174,6 +182,7 @@ class FrontageContext:
     def __init__(self, plans=None):
         self.tree, self.roads = load_roads()
         self.bounds, self.mp_axes = load_master_plans()
+        self.rova = load_rova()
         self.plans = load_plans() if plans is None else plans
 
     def build(self, f, status=None):
@@ -186,6 +195,8 @@ class FrontageContext:
             return None
         itm = shp_transform(TO_ITM, geom)
         mid = itm.interpolate(0.5, normalized=True)
+        if not self.rova.contains(mid):
+            return None
 
         street = ''
         if self.tree is not None:
