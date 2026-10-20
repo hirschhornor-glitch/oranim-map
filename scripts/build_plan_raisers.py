@@ -43,6 +43,8 @@ OUT = os.path.join(DATA, "plan_raisers.json")
 MIN_OVERLAP = 0.50
 INFRA_TYPES = {"תשתיות", "מוסתר"}
 RAISER_KINDS = ("זכויות", "עיבוי")
+# מראה של קבוצת rejected ב-STATUS_GROUP_DEFS שב-src/app.jsx (מקור יחיד לקיבוץ סטטוסים)
+REJECTED = ("נגנזה", "נדחתה")
 
 
 def num(v):
@@ -57,6 +59,19 @@ def year(props):
     return int(m.group(1)) if m else 0
 
 
+def is_rejected(pr):
+    """תכנית שנגנזה או נדחתה אינה צד תקף ליחס "מגדילה".
+
+    בשני הכיוונים, ומשתי סיבות שונות: בסיס שנגנז מעולם לא אושר ולכן אין לו תקרת
+    יח"ד או פרוגרמה ציבורית שמישהו "מגדיל", ומגדילה שנדחתה לא העניקה את היח"ד
+    שהיא מיוחסת כמי שהוסיפה. עד התיקון הזה הקובץ זיהה חפיפה, תאריך וסך יח"ד ולא
+    בדק סטטוס כלל: 9 זוגות זוכו ב-144 יח"ד ממגדילות שנגנזו או נדחו, ו-20 מתוך 47
+    המגדילות ישבו רק על בסיסים שנגנזו.
+    """
+    s = str((pr or {}).get("status_mavat") or "")
+    return any(r in s for r in REJECTED)
+
+
 def load_plans():
     out = {}
     gj = json.load(io.open(PLANS, encoding="utf-8"))
@@ -66,6 +81,8 @@ def load_plans():
         if not taba or taba in out:
             continue
         if (pr.get("plan_type") or "").strip() in INFRA_TYPES:
+            continue
+        if is_rejected(pr):
             continue
         try:
             geom = shape(f["geometry"])
