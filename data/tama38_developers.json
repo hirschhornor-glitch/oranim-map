@@ -1,5 +1,5 @@
 {
- "count": 256,
+ "count": 276,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -4095,6 +4095,321 @@
    "units": 8,
    "is_residents": false,
    "minahak": null
+  },
+  "2020/0626.00": {
+   "developer": "ישעיהו מזרחי",
+   "developer_parts": [
+    {
+     "applicant": "ישעיהו",
+     "group": "מזרחי",
+     "name": "ישעיהו מזרחי"
+    }
+   ],
+   "architect": "שרון כהן שנצר",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2026/0259.00": {
+   "developer": "אביב שני התחדשות עירונית בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "עירונית בע\"מ",
+     "group": "אביב שני התחדשות",
+     "name": "אביב שני התחדשות עירונית בע\"מ"
+    }
+   ],
+   "architect": "אהרן כהן",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2023/0133.00": {
+   "developer": "ע\"פ יפוי כוח עו\"ד יצחק שטיינברג / ארנסטר אברהם / קשת נדל\"ן סוקולוב בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "ע\"פ יפוי כוח",
+     "group": "עו\"ד יצחק שטיינברג",
+     "name": "ע\"פ יפוי כוח עו\"ד יצחק שטיינברג"
+    },
+    {
+     "applicant": "ארנסטר אברהם",
+     "group": "",
+     "name": "ארנסטר אברהם"
+    },
+    {
+     "applicant": "",
+     "group": "",
+     "name": ""
+    },
+    {
+     "applicant": "מוטי",
+     "group": "קשת נדל\"ן סוקולוב בע\"מ",
+     "name": "קשת נדל\"ן סוקולוב בע\"מ"
+    }
+   ],
+   "architect": "צחק קטורזה",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2023/0021.00": {
+   "developer": "בית בשדרות המאירי 12 בע\"מ / אריאל משה",
+   "developer_parts": [
+    {
+     "applicant": "ע\"י יהודה סילבר",
+     "group": "בית בשדרות המאירי 12 בע\"מ",
+     "name": "בית בשדרות המאירי 12 בע\"מ"
+    },
+    {
+     "applicant": "אריאל",
+     "group": "משה",
+     "name": "אריאל משה"
+    }
+   ],
+   "architect": "יצחק שפירא",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2019/0220.00": {
+   "developer": "אורלנדו נדלן ייזום ובניה בע\"מ / שרמן זקלין",
+   "developer_parts": [
+    {
+     "applicant": "ייזום ובניה בע\"מ",
+     "group": "אורלנדו נדלן",
+     "name": "אורלנדו נדלן ייזום ובניה בע\"מ"
+    },
+    {
+     "applicant": "שרמן",
+     "group": "זקלין",
+     "name": "שרמן זקלין"
+    }
+   ],
+   "architect": "פרי חמם",
+   "units": 10,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2022/0216.00": {
+   "developer": "הדרים-המאירי 5 בע\"מ / שרמן ג'קלין",
+   "developer_parts": [
+    {
+     "applicant": "הדרים",
+     "group": "הדרים-המאירי 5 בע\"מ",
+     "name": "הדרים-המאירי 5 בע\"מ"
+    },
+    {
+     "applicant": "שרמן ג'קלין",
+     "group": "",
+     "name": "שרמן ג'קלין"
+    }
+   ],
+   "architect": "יצחק שפירא",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2019/0608.00": {
+   "developer": "הבית מול התאטרון מגורי יוקרה בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "הבית מול התאטרון מגורי יוקרה",
+     "name": "הבית מול התאטרון מגורי יוקרה בע\"מ"
+    }
+   ],
+   "architect": "אוריה שוהט",
+   "units": 30,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0813.00": {
+   "developer": "לימור זי ששון / יוסף יונה",
+   "developer_parts": [
+    {
+     "applicant": "לימור זי",
+     "group": "ששון",
+     "name": "לימור זי ששון"
+    },
+    {
+     "applicant": "יוסף",
+     "group": "יונה",
+     "name": "יוסף יונה"
+    }
+   ],
+   "architect": "אילן אפרת",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2022/0132.00": {
+   "developer": "מרכז פדגוגי שתילי אריה",
+   "developer_parts": [
+    {
+     "applicant": "מרכז פדגוגי",
+     "group": "שתילי אריה",
+     "name": "מרכז פדגוגי שתילי אריה"
+    }
+   ],
+   "architect": "יעקב מולכו",
+   "units": 6,
+   "is_residents": false,
+   "minahak": null
+  },
+  "1988/0250.03": {
+   "developer": "עבר יצחק זוסמן",
+   "developer_parts": [
+    {
+     "applicant": "עבר יצחק",
+     "group": "זוסמן",
+     "name": "עבר יצחק זוסמן"
+    }
+   ],
+   "architect": "יובל בר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2015/0859.00": {
+   "developer": "יסודות שיתוף בע\"מ חברה לבניין",
+   "developer_parts": [
+    {
+     "applicant": "חברה לבניין",
+     "group": "יסודות שיתוף בע\"מ",
+     "name": "יסודות שיתוף בע\"מ חברה לבניין"
+    }
+   ],
+   "architect": "עודד פפרמן",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2018/0698.01": {
+   "developer": "אליהו פוברסקי",
+   "developer_parts": [
+    {
+     "applicant": "אליהו",
+     "group": "פוברסקי",
+     "name": "אליהו פוברסקי"
+    }
+   ],
+   "architect": "עמית מנדלקרן",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2019/0536.00": {
+   "developer": "ג.ק. נופי י-ם יזמות נדלן בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "בע\"מ",
+     "group": "ג.ק. נופי י-ם יזמות נדלן",
+     "name": "ג.ק. נופי י-ם יזמות נדלן בע\"מ"
+    }
+   ],
+   "architect": "אילן אפרת",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2021/0442.00": {
+   "developer": "אליסיה וסרטייל",
+   "developer_parts": [
+    {
+     "applicant": "אליסיה",
+     "group": "וסרטייל",
+     "name": "אליסיה וסרטייל"
+    }
+   ],
+   "architect": "מתנאל אביטבול",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2024/0595.00": {
+   "developer": "אברהם כץ",
+   "developer_parts": [
+    {
+     "applicant": "אברהם",
+     "group": "כץ",
+     "name": "אברהם כץ"
+    }
+   ],
+   "architect": "אנה לדיזנסקי",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2024/0615.00": {
+   "developer": "מיכאל צור",
+   "developer_parts": [
+    {
+     "applicant": "מיכאל",
+     "group": "צור",
+     "name": "מיכאל צור"
+    }
+   ],
+   "architect": "נירה אורן",
+   "units": null,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2024/0622.00": {
+   "developer": "הבית ברחוב אוסישקין 41 בע\"מ חברה",
+   "developer_parts": [
+    {
+     "applicant": "חברה",
+     "group": "הבית ברחוב אוסישקין 41 בע\"מ",
+     "name": "הבית ברחוב אוסישקין 41 בע\"מ חברה"
+    }
+   ],
+   "architect": "אנה (חנה) לדזינסקי",
+   "units": 8,
+   "is_residents": false,
+   "minahak": null
+  },
+  "2026/0372.00": {
+   "developer": "שלום שטיין",
+   "developer_parts": [
+    {
+     "applicant": "שלום",
+     "group": "שטיין",
+     "name": "שלום שטיין"
+    }
+   ],
+   "architect": "מטיו אהר רוזנשיין",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0439.00": {
+   "developer": "ק.ב.ד קבוצת בן-דוד השקעות ויזמ",
+   "developer_parts": [
+    {
+     "applicant": "יוחאי",
+     "group": "ק.ב.ד קבוצת בן-דוד השקעות ויזמ",
+     "name": "ק.ב.ד קבוצת בן-דוד השקעות ויזמ"
+    }
+   ],
+   "architect": "מיכל מאיר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "1993/0664.03": {
+   "developer": "דניאל וולפסון",
+   "developer_parts": [
+    {
+     "applicant": "דניאל",
+     "group": "וולפסון",
+     "name": "דניאל וולפסון"
+    }
+   ],
+   "architect": "ארז קלפר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
   }
  }
 }
