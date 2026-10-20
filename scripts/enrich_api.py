@@ -146,7 +146,7 @@ async def main():
                                 }
                             }
                         }
-                        if(l.includes('מלונ') && l.includes('חדר')){
+                        if(l.includes('מלונ') && l.includes('חדר') && !l.includes('מ"ר')){  // 'חדרי מלון / תיירות (מ"ר)' is area
                             for(let j=i-2;j<=i+2;j++){
                                 if(j>=0&&j<lines.length){
                                     const m=lines[j].match(/^([\d,]+)$/);
