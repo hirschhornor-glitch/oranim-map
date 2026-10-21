@@ -1,5 +1,5 @@
 {
- "count": 276,
+ "count": 281,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -4407,6 +4407,81 @@
     }
    ],
    "architect": "ארז קלפר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0450.00": {
+   "developer": "בליליוס התחדשות עירונית בע\"מ / הנדסה ויזמות בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "התחדשות עירונית בע\"מ",
+     "group": "בליליוס",
+     "name": "בליליוס התחדשות עירונית בע\"מ"
+    },
+    {
+     "applicant": "גבי פירו",
+     "group": "הנדסה ויזמות בע\"מ",
+     "name": "הנדסה ויזמות בע\"מ"
+    }
+   ],
+   "architect": "עמוס גדרון",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0427.00": {
+   "developer": "גבריאלה/גיל פוקס/עזרן",
+   "developer_parts": [
+    {
+     "applicant": "גבריאלה/גיל",
+     "group": "פוקס/עזרן",
+     "name": "גבריאלה/גיל פוקס/עזרן"
+    }
+   ],
+   "architect": "מרגיט שטאובר",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2026/0264.00": {
+   "developer": "מאיר רטנמר",
+   "developer_parts": [
+    {
+     "applicant": "מאיר",
+     "group": "רטנמר",
+     "name": "מאיר רטנמר"
+    }
+   ],
+   "architect": "נפתלי פלינק",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2026/0252.00": {
+   "developer": "בורלא חברה להתחדשות עירונית בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "חברה להתחדשות עירונית בע\"מ",
+     "group": "בורלא",
+     "name": "בורלא חברה להתחדשות עירונית בע\"מ"
+    }
+   ],
+   "architect": "עמוס גדרון",
+   "units": null,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "2017/0568.00": {
+   "developer": "דוד זוסמן שטרן",
+   "developer_parts": [
+    {
+     "applicant": "דוד זוסמן",
+     "group": "שטרן",
+     "name": "דוד זוסמן שטרן"
+    }
+   ],
+   "architect": "אדריכלים ביקסון-בר דור",
    "units": null,
    "is_residents": false,
    "minahak": "גינות העיר"
