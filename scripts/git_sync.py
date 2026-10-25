@@ -650,6 +650,17 @@ def _exit_hook():
     if HANDLED or not _ACTIVE:
         return
     unpushed = unpushed_commits()
+    if unpushed:
+        # Often another job's commit seconds before its own push (2026-10-25: objections
+        # alerted on muni_gis's 1351ef37, pushed 1s later). Give it time, then push it
+        # ourselves; alert only if commits are still stuck after that.
+        time.sleep(30)
+        unpushed = unpushed_commits()
+        if unpushed:
+            print(f"[git_sync] {len(unpushed)} unpushed commit(s) at exit — pushing.")
+            with repo_lock('exit push unpushed'):
+                _run(['git', 'push', 'origin', 'master'], check=False)
+            unpushed = unpushed_commits()
     if not FAILURES and not unpushed:
         return
     script = os.path.basename(sys.argv[0] or 'python')

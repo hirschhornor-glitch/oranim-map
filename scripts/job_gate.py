@@ -46,9 +46,10 @@ Usage:
   - a new scheduled job: add its basename + time-of-day to SCHEDULE.
 
 The wrapped command's exit code is returned unchanged. If the gate can't be
-had within MAX_WAIT_SEC the job runs anyway (pre-gate behaviour) — a late,
-possibly-colliding run beats a silently skipped one; git_sync now fails loud
-on any collision. Activity -> permits_scan_reports/job_gate.log.
+had within MAX_WAIT_SEC the job moves to the overflow lane (beside the holder,
+but one overflow job at a time); after another MAX_WAIT_SEC it runs anyway —
+a late, possibly-colliding run beats a silently skipped one; git_sync fails
+loud on any collision. Activity -> permits_scan_reports/job_gate.log.
 """
 import ctypes
 import json
@@ -62,6 +63,8 @@ from datetime import datetime, timedelta
 
 LOCK_FILE = r"C:\ORANIM\.oranim_job_gate.lock"
 HOLDER_FILE = r"C:\ORANIM\.oranim_job_gate.holder"
+OVERFLOW_LOCK_FILE = r"C:\ORANIM\.oranim_job_gate_overflow.lock"
+OVERFLOW_HOLDER_FILE = r"C:\ORANIM\.oranim_job_gate_overflow.holder"
 QUEUE_DIR = r"C:\ORANIM\.oranim_job_queue"
 LOG_FILE = r"C:\ORANIM\permits_scan_reports\job_gate.log"
 ENV_FLAG = "ORANIM_JOB_GATE"
@@ -144,9 +147,9 @@ def _log(msg: str):
         pass
 
 
-def _holder() -> str:
+def _holder(path: str = None) -> str:
     try:
-        with open(HOLDER_FILE, encoding="utf-8") as f:
+        with open(path or HOLDER_FILE, encoding="utf-8") as f:
             return f.read().strip() or "?"
     except OSError:
         return "?"
@@ -205,10 +208,11 @@ def _ticket_path(pid: int) -> str:
     return os.path.join(QUEUE_DIR, f"{pid}.tkt")
 
 
-def _register(label: str, argv: list) -> dict:
+def _register(label: str, argv: list, overflow: bool = False) -> dict:
     now = datetime.now()
     t = {"key": _sched_key(argv, now), "reg": now.timestamp(), "pid": os.getpid(),
-         "ctime": _creation_time(_k32.GetCurrentProcess()), "label": label}
+         "ctime": _creation_time(_k32.GetCurrentProcess()), "label": label,
+         "overflow": overflow}
     os.makedirs(QUEUE_DIR, exist_ok=True)
     tmp = _ticket_path(t["pid"]) + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
@@ -243,9 +247,33 @@ def _queue() -> list:
     return sorted(live, key=lambda t: (t["key"], t["reg"], t["pid"]))
 
 
+def _try_lock(fd, label: str, holder_file: str, what: str, start: float) -> bool:
+    os.lseek(fd, 0, os.SEEK_SET)
+    try:
+        msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+    except OSError:
+        return False
+    waited = time.time() - start
+    _log(f"{what} {label}" + (f" (waited {waited:.0f}s)" if waited >= SETTLE_SEC + 1 else ""))
+    try:
+        with open(holder_file, "w", encoding="utf-8") as f:
+            f.write(f"{label} pid={os.getpid()} since {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    except OSError:
+        pass
+    return True
+
+
 def _acquire(label: str, argv: list):
-    """Return the open lock fd once held, or None if MAX_WAIT_SEC expired."""
+    """Return (lock fd, holder file) once a lane is held, or (None, None) if both expired.
+
+    After MAX_WAIT_SEC behind one long job (the biweekly permits scan runs ~8h) the
+    waiters used to all run UNGATED at once — on 2026-10-25 14:58 six jobs started in
+    the same 3 seconds and collided again. Now a timed-out waiter flags its ticket and
+    moves to the OVERFLOW lane: still beside the long holder, but one at a time and in
+    queue order among themselves. It keeps trying the main lock too. Only after another
+    MAX_WAIT_SEC in the overflow lane does it run truly ungated."""
     fd = os.open(LOCK_FILE, os.O_RDWR | os.O_CREAT)
+    ofd = os.open(OVERFLOW_LOCK_FILE, os.O_RDWR | os.O_CREAT)
     ticket = _register(label, argv)
     start = time.time()
     next_note = start + SETTLE_SEC + POLL_SEC
@@ -255,31 +283,33 @@ def _acquire(label: str, argv: list):
             queue = _queue()
             ahead = next((i for i, t in enumerate(queue) if t["pid"] == ticket["pid"]), None)
             if ahead is None:   # ticket vanished (deleted by hand?) — re-register
-                ticket = _register(label, argv)
+                ticket = _register(label, argv, overflow=ticket.get("overflow", False))
                 continue
-            if ahead == 0:
-                os.lseek(fd, 0, os.SEEK_SET)
-                try:
-                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
-                    waited = time.time() - start
-                    _log(f"ACQUIRE {label}" + (f" (waited {waited:.0f}s)" if waited >= SETTLE_SEC + 1 else ""))
-                    try:
-                        with open(HOLDER_FILE, "w", encoding="utf-8") as f:
-                            f.write(f"{label} pid={os.getpid()} since {time.strftime('%Y-%m-%d %H:%M:%S')}")
-                    except OSError:
-                        pass
-                    return fd
-                except OSError:
-                    pass
-            now = time.time()
-            if now - start > MAX_WAIT_SEC:
-                _log(f"TIMEOUT {label}: gate still held by [{_holder()}] after "
-                     f"{MAX_WAIT_SEC}s — running UNGATED")
+            if ahead == 0 and _try_lock(fd, label, HOLDER_FILE, "ACQUIRE", start):
+                os.close(ofd)
+                return fd, HOLDER_FILE
+            # overflow turn = first flagged ticket in queue order
+            if (ticket.get("overflow")
+                    and next(t for t in queue if t.get("overflow"))["pid"] == ticket["pid"]
+                    and _try_lock(ofd, label, OVERFLOW_HOLDER_FILE, "ACQUIRE-OVERFLOW", start)):
                 os.close(fd)
-                return None
+                return ofd, OVERFLOW_HOLDER_FILE
+            now = time.time()
+            if not ticket.get("overflow") and now - start > MAX_WAIT_SEC:
+                _log(f"TIMEOUT {label}: gate still held by [{_holder()}] after "
+                     f"{MAX_WAIT_SEC}s — moving to the overflow lane")
+                ticket = _register(label, argv, overflow=True)
+                continue
+            if now - start > 2 * MAX_WAIT_SEC:
+                _log(f"TIMEOUT {label}: gate held by [{_holder()}], overflow by "
+                     f"[{_holder(OVERFLOW_HOLDER_FILE)}] after {2 * MAX_WAIT_SEC}s — running UNGATED")
+                os.close(fd)
+                os.close(ofd)
+                return None, None
             if now >= next_note:
                 behind = ", ".join(t["label"] for t in queue[:ahead])
                 _log(f"WAIT {label}: gate held by [{_holder()}]"
+                     + (f", overflow by [{_holder(OVERFLOW_HOLDER_FILE)}]" if ticket.get("overflow") else "")
                      + (f"; queued after {behind}" if behind else ""))
                 next_note = now + 600
             time.sleep(POLL_SEC)
@@ -309,7 +339,7 @@ def main(argv: list) -> int:
     if not _kill_tree_with_me():
         _log(f"NOJOBOBJ {label}: job object failed (winerr {ctypes.get_last_error()}) "
              "— a killed gate would leave the job running")
-    fd = _acquire(label, argv)
+    fd, holder_file = _acquire(label, argv)
     env = dict(os.environ, **{ENV_FLAG: label})
     t0 = time.time()
     try:
@@ -317,7 +347,7 @@ def main(argv: list) -> int:
     finally:
         if fd is not None:
             try:
-                with open(HOLDER_FILE, "w", encoding="utf-8"):
+                with open(holder_file, "w", encoding="utf-8"):
                     pass
             except OSError:
                 pass
