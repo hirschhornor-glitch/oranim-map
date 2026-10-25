@@ -997,3 +997,24 @@
 {"ts": "2026-10-18 11:58:38", "taba": 1475011, "plan_name": "101-1475011", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-10-18 16:08:06", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "plan_summary", "old": "בני בתירא 79 התחדשות עירונית", "new": "בני בתירא 7-9"}
 {"ts": "2026-10-18 16:08:06", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1095330, "plan_name": "101-1095330", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1353739, "plan_name": "101-1353739", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1348069, "plan_name": "101-1348069", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1350594, "plan_name": "101-1350594", "status": "אישור", "field": "commerce_in", "old": 1230, "new": 1025}
+{"ts": "2026-10-25 14:22:55", "taba": 1350594, "plan_name": "101-1350594", "status": "אישור", "field": "conditional_housing", "old": "", "new": 19}
+{"ts": "2026-10-25 14:22:55", "taba": 1350594, "plan_name": "101-1350594", "status": "אישור", "field": "hafrash_sqm", "old": "", "new": 4150, "held": true}
+{"ts": "2026-10-25 14:22:55", "taba": 1350594, "plan_name": "101-1350594", "status": "אישור", "field": "level_num", "old": 42, "new": 43}
+{"ts": "2026-10-25 14:22:55", "taba": 1350594, "plan_name": "101-1350594", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1431808, "plan_name": "101-1431808", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1487560, "plan_name": "101-1487560", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1003177, "plan_name": "101-1003177", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1214279, "plan_name": "101-1214279", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1566306, "plan_name": "101-1566306", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "קטמון הישנה"}
+{"ts": "2026-10-25 14:22:55", "taba": 1566306, "plan_name": "101-1566306", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-10-25 14:22:55", "taba": 1566306, "plan_name": "101-1566306", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1629724, "plan_name": "101-1629724", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "תלפיות"}
+{"ts": "2026-10-25 14:22:55", "taba": 1629724, "plan_name": "101-1629724", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-10-25 14:22:55", "taba": 1629724, "plan_name": "101-1629724", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 14:22:55", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "בקעה"}
+{"ts": "2026-10-25 14:22:55", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-10-25 14:22:55", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
