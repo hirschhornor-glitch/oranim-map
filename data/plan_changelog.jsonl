@@ -1018,3 +1018,6 @@
 {"ts": "2026-10-25 14:22:55", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "בקעה"}
 {"ts": "2026-10-25 14:22:55", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
 {"ts": "2026-10-25 14:22:55", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 18:40:24", "taba": 1566306, "plan_name": "101-1566306", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 18:40:24", "taba": 1629724, "plan_name": "101-1629724", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-10-25 18:40:24", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
