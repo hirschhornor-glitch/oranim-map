@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-05T01:20:34",
+ "generated_at": "2026-10-25T15:19:30",
  "source": "YK proc 242700454 (טבלת שטחים/כמויות של ההיתר)",
  "by_permit": {
   "1973/0818.07": {
@@ -52143,7 +52143,815 @@
    "units_added": null,
    "floors": null,
    "fetched_at": "2026-09-15T21:38:50"
+  },
+  "2009/0407.03": {
+   "rows": [
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 785.79,
+     "tosefet": 93.95,
+     "total": 879.74
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 228.83,
+     "tosefet": 14.44,
+     "total": 243.27
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 18.7,
+     "tosefet": 0.0,
+     "total": 18.7
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 785.79,
+     "tosefet": 93.95,
+     "total": 879.74
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 5.0,
+     "total": 5.0
+    },
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 12.9,
+     "total": 12.9
+    },
+    {
+     "label": "גובה מקו קרקע סופי",
+     "kayam": 12.9,
+     "tosefet": 4.79,
+     "total": 17.69
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": 5.0,
+   "fetched_at": "2026-10-25T15:18:41"
+  },
+  "2024/0390.00": {
+   "rows": [
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 77.8,
+     "total": 77.8
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 24.0,
+     "total": 24.0
+    },
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 107.0,
+     "total": 107.0
+    }
+   ],
+   "units": 107.0,
+   "units_existing": 0.0,
+   "units_added": 107.0,
+   "floors": 24.0,
+   "fetched_at": "2026-10-25T15:18:43"
+  },
+  "2024/0390.01": {
+   "rows": [
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 81.0,
+     "total": 81.0
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 24.0,
+     "total": 24.0
+    },
+    {
+     "label": "אורך גדר במטרים",
+     "kayam": 0.0,
+     "tosefet": 153.6,
+     "total": 153.6
+    },
+    {
+     "label": "שטח עיקרי מתחת קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 244.43,
+     "total": 244.43
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 10212.23,
+     "total": 10212.23
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 278.36,
+     "total": 278.36
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 0.0,
+     "tosefet": 13013.54,
+     "total": 13013.54
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 10456.66,
+     "total": 10456.66
+    },
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 107.0,
+     "total": 107.0
+    }
+   ],
+   "units": 107.0,
+   "units_existing": 0.0,
+   "units_added": 107.0,
+   "floors": 24.0,
+   "fetched_at": "2026-10-25T15:18:45"
+  },
+  "2024/0528.01": {
+   "rows": [
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 66.0,
+     "total": 66.0
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 18.0,
+     "total": 18.0
+    },
+    {
+     "label": "אורך גדר במטרים",
+     "kayam": 240.0,
+     "tosefet": null,
+     "total": null
+    },
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 126.0,
+     "total": 126.0
+    }
+   ],
+   "units": 126.0,
+   "units_existing": 0.0,
+   "units_added": 126.0,
+   "floors": 18.0,
+   "fetched_at": "2026-10-25T15:18:46"
+  },
+  "2020/0218.02": {
+   "rows": [
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 83.45,
+     "tosefet": 0.0,
+     "total": 83.45
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 83.45,
+     "tosefet": 0.0,
+     "total": 83.45
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 7.0,
+     "total": 7.0
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": 7.0,
+   "fetched_at": "2026-10-25T15:18:48"
+  },
+  "1992/0265.05": {
+   "rows": [
+    {
+     "label": "מספר קומות מרתף",
+     "kayam": 0.0,
+     "tosefet": 1.0,
+     "total": 1.0
+    },
+    {
+     "label": "גובה מקו קרקע סופי",
+     "kayam": 16.0,
+     "tosefet": 19.0,
+     "total": 35.0
+    },
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 9.36,
+     "total": 9.36
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 2.0,
+     "tosefet": 2.0,
+     "total": 4.0
+    },
+    {
+     "label": "אורך גדר במטרים",
+     "kayam": 80.0,
+     "tosefet": 20.0,
+     "total": 100.0
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 461.77,
+     "tosefet": 559.96,
+     "total": 1021.73
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 191.46,
+     "tosefet": 131.24,
+     "total": 322.7
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 461.77,
+     "tosefet": 559.96,
+     "total": 1021.73
+    },
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 4.0,
+     "tosefet": 4.0,
+     "total": 8.0
+    }
+   ],
+   "units": 8.0,
+   "units_existing": 4.0,
+   "units_added": 4.0,
+   "floors": 4.0,
+   "fetched_at": "2026-10-25T15:18:49"
+  },
+  "2026/0208.00": {
+   "rows": [
+    {
+     "label": "גובה מקו קרקע סופי",
+     "kayam": 0.0,
+     "tosefet": 25.97,
+     "total": 25.97
+    },
+    {
+     "label": "מספר קומות מרתף",
+     "kayam": 0.0,
+     "tosefet": 4.0,
+     "total": 4.0
+    },
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 19.58,
+     "total": 19.58
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 8.0,
+     "total": 8.0
+    },
+    {
+     "label": "שטח עיקרי מתחת קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 97.81,
+     "total": 97.81
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 3095.98,
+     "total": 3095.98
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 59.55,
+     "total": 59.55
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 0.0,
+     "tosefet": 5052.33,
+     "total": 5052.33
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 3193.79,
+     "total": 3193.79
+    },
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 35.0,
+     "total": 35.0
+    }
+   ],
+   "units": 35.0,
+   "units_existing": 0.0,
+   "units_added": 35.0,
+   "floors": 8.0,
+   "fetched_at": "2026-10-25T15:18:51"
+  },
+  "2015/0073.04": {
+   "rows": [
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 1288.28,
+     "tosefet": 56.6,
+     "total": 1344.88
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 873.25,
+     "tosefet": 0.0,
+     "total": 873.25
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 232.33,
+     "tosefet": 3.12,
+     "total": 235.45
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 1100.36,
+     "tosefet": 33.26,
+     "total": 1133.62
+    },
+    {
+     "label": "שטח עיקרי מתחת קו קרקע",
+     "kayam": 187.92,
+     "tosefet": 23.34,
+     "total": 211.26
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 7.0,
+     "total": 7.0
+    },
+    {
+     "label": "גובה מקו קרקע סופי",
+     "kayam": 17.5,
+     "tosefet": 0.0,
+     "total": 17.5
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": 7.0,
+   "fetched_at": "2026-10-25T15:18:53"
+  },
+  "2023/0026.00": {
+   "rows": [
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 15.0,
+     "total": 15.0
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 1128.35,
+     "total": 1128.35
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 0.0,
+     "tosefet": 1786.51,
+     "total": 1786.51
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 313.16,
+     "total": 313.16
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 518.25,
+     "total": 518.25
+    },
+    {
+     "label": "שטח עיקרי מתחת קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 610.1,
+     "total": 610.1
+    }
+   ],
+   "units": 15.0,
+   "units_existing": 0.0,
+   "units_added": 15.0,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:18:54"
+  },
+  "2002/0087.02": {
+   "rows": [
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 1555.89,
+     "total": 1555.89
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 0.0,
+     "tosefet": 77.32,
+     "total": 77.32
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 1302.27,
+     "total": 1302.27
+    },
+    {
+     "label": "שטח עיקרי מתחת קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 253.62,
+     "total": 253.62
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 4.0,
+     "total": 4.0
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": 4.0,
+   "fetched_at": "2026-10-25T15:18:56"
+  },
+  "2026/0088.00": {
+   "rows": [
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 28.0,
+     "total": 28.0
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 1856.48,
+     "total": 1856.48
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 0.0,
+     "tosefet": 2409.39,
+     "total": 2409.39
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 342.69,
+     "total": 342.69
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 0.0,
+     "tosefet": 1856.48,
+     "total": 1856.48
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 6.0,
+     "total": 6.0
+    },
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 20.82,
+     "total": 20.82
+    },
+    {
+     "label": "גובה מקו קרקע סופי",
+     "kayam": 0.0,
+     "tosefet": 30.0,
+     "total": 30.0
+    },
+    {
+     "label": "מספר קומות מרתף",
+     "kayam": 0.0,
+     "tosefet": 2.0,
+     "total": 2.0
+    },
+    {
+     "label": "מספר מרחבים מוגנים",
+     "kayam": 0.0,
+     "tosefet": 28.0,
+     "total": 28.0
+    },
+    {
+     "label": "מספר מחסנים",
+     "kayam": 0.0,
+     "tosefet": 6.0,
+     "total": 6.0
+    }
+   ],
+   "units": 28.0,
+   "units_existing": 0.0,
+   "units_added": 28.0,
+   "floors": 6.0,
+   "fetched_at": "2026-10-25T15:18:57"
+  },
+  "1992/0176.00": {
+   "rows": [
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 9.0,
+     "total": 9.0
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 103.8,
+     "total": 103.8
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 3.0,
+     "tosefet": 0.0,
+     "total": 3.0
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": 3.0,
+   "fetched_at": "2026-10-25T15:18:59"
+  },
+  "1992/0176.01": {
+   "rows": [
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 18.0,
+     "total": 18.0
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 35.0,
+     "total": 35.0
+    }
+   ],
+   "units": 18.0,
+   "units_existing": 0.0,
+   "units_added": 18.0,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:01"
+  },
+  "1992/0176.02": {
+   "rows": [
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 137.2,
+     "total": 137.2
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 31.8,
+     "total": 31.8
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:02"
+  },
+  "1992/0176.03": {
+   "rows": [
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 24.0,
+     "total": 24.0
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 5.55,
+     "total": 5.55
+    }
+   ],
+   "units": 24.0,
+   "units_existing": 0.0,
+   "units_added": 24.0,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:04"
+  },
+  "1992/0176.04": {
+   "rows": [],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:12"
+  },
+  "1992/0176.05": {
+   "rows": [
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 40.01,
+     "total": 40.01
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 7.8,
+     "total": 7.8
+    },
+    {
+     "label": "מספר קומות מרתף",
+     "kayam": 1.0,
+     "tosefet": 0.0,
+     "total": 1.0
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 3.0,
+     "tosefet": 0.0,
+     "total": 3.0
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": 3.0,
+   "fetched_at": "2026-10-25T15:19:14"
+  },
+  "1992/0176.06": {
+   "rows": [
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 3.0,
+     "tosefet": 0.0,
+     "total": 3.0
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 112.6,
+     "total": 112.6
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 32.37,
+     "total": 32.37
+    },
+    {
+     "label": "מספר קומות מרתף",
+     "kayam": 1.0,
+     "tosefet": 0.0,
+     "total": 1.0
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": 3.0,
+   "fetched_at": "2026-10-25T15:19:16"
+  },
+  "1992/0176.09": {
+   "rows": [
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 20.17,
+     "total": 20.17
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 0.0,
+     "tosefet": 140.0,
+     "total": 140.0
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 0.0,
+     "tosefet": 105.47,
+     "total": 105.47
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:17"
+  },
+  "2017/0280.00": {
+   "rows": [
+    {
+     "label": "שטח עיקרי מתחת קו קרקע",
+     "kayam": 36.63,
+     "tosefet": 39.26,
+     "total": 75.89
+    },
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 30.38,
+     "tosefet": 39.26,
+     "total": 69.64
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 23.97,
+     "total": 23.97
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 67.01,
+     "tosefet": 78.52,
+     "total": 145.53
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:19"
+  },
+  "2017/1040.00": {
+   "rows": [
+    {
+     "label": "שטח עיקרי מתחת קו קרקע",
+     "kayam": 130.95,
+     "tosefet": 46.83,
+     "total": 177.78
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 17.7,
+     "total": 17.7
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 0.0,
+     "tosefet": 64.51,
+     "total": 64.51
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 132.5,
+     "tosefet": 45.84,
+     "total": 178.34
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:20"
+  },
+  "2017/1040.01": {
+   "rows": [],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-10-25T15:19:29"
   }
  },
- "count": 1544
+ "count": 1566
 }

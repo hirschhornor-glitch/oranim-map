@@ -4352,5 +4352,47 @@
   "conservation": null,
   "conservation_kind": null,
   "flag": null
+ },
+ "507": {
+  "address": "הפלמח 41",
+  "tik": "2026/0439.00",
+  "master_plan": "רסקו",
+  "floors_tama": 8.0,
+  "floors_unverified": false,
+  "floors_src": "",
+  "cap": 6.0,
+  "cap_source": "subzone",
+  "zone": "העיר ההיסטורית",
+  "conservation": null,
+  "conservation_kind": null,
+  "flag": "הפרה"
+ },
+ "509": {
+  "address": "מבצע קדש 3",
+  "tik": "2026/0450.00",
+  "master_plan": "מושבות",
+  "floors_tama": 7.0,
+  "floors_unverified": false,
+  "floors_src": "",
+  "cap": 6.0,
+  "cap_source": "subzone",
+  "zone": "",
+  "conservation": null,
+  "conservation_kind": null,
+  "flag": "הפרה"
+ },
+ "510": {
+  "address": "יהודה 30",
+  "tik": "2026/0427.00",
+  "master_plan": "בקעה",
+  "floors_tama": 3.0,
+  "floors_unverified": false,
+  "floors_src": "",
+  "cap": null,
+  "cap_source": "texture",
+  "zone": "אזור שימור מרקמי",
+  "conservation": "אזור שימור מרקמי",
+  "conservation_kind": "באזור שימור",
+  "flag": null
  }
 }

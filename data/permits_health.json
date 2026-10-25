@@ -1,35 +1,41 @@
 {
-  "generated_at": "2026-10-19T05:08:57",
+  "generated_at": "2026-10-25T15:27:33",
   "sources": [
     {
       "file": "all_permits.json",
       "label": "היתרים לפי תב\"ע",
       "refresh": "דו-שבועי (סריקה)",
-      "records": 776,
-      "last_publish": "2026-10-05",
-      "age_days": 14,
+      "records": 801,
+      "last_publish": "2026-10-25",
+      "age_days": 0,
       "status": "green",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "tama38_permits.json",
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
-      "records": 1355,
-      "last_publish": "2026-10-12",
-      "age_days": 7,
+      "records": 1358,
+      "last_publish": "2026-10-25",
+      "age_days": 0,
       "status": "green",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
       "refresh": "דו-שבועי (סטטוס)",
       "records": 103,
-      "last_publish": "2026-10-15",
-      "age_days": 4,
+      "last_publish": "2026-10-25",
+      "age_days": 0,
       "status": "info",
-      "notes": [],
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ],
       "status_staleness": {
         "entries": 103,
         "open": 99,
@@ -44,7 +50,7 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 2,
       "last_publish": "2026-10-18",
-      "age_days": 1,
+      "age_days": 7,
       "status": "green",
       "notes": []
     },
@@ -54,19 +60,17 @@
       "refresh": "שבועי (ועדות)",
       "records": 16,
       "last_publish": "2026-10-19",
-      "age_days": 0,
+      "age_days": 6,
       "status": "green",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ]
+      "notes": []
     },
     {
       "file": "objections_permits.json",
       "label": "היתרים פתוחים להתנגדות §149",
       "refresh": "שבועי",
-      "records": 1,
-      "last_publish": "2026-10-18",
-      "age_days": 1,
+      "records": 0,
+      "last_publish": "2026-10-25",
+      "age_days": 0,
       "status": "green",
       "notes": []
     },
@@ -76,7 +80,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 108,
+      "age_days": 114,
       "status": "info",
       "notes": []
     },
@@ -85,8 +89,8 @@
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
       "records": 7,
-      "last_publish": "2026-10-16",
-      "age_days": 3,
+      "last_publish": "2026-10-25",
+      "age_days": 0,
       "status": "green",
       "notes": []
     },
@@ -96,7 +100,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 120,
+      "age_days": 126,
       "status": "info",
       "notes": []
     },
@@ -106,7 +110,7 @@
       "refresh": "לפי צורך",
       "records": 49,
       "last_publish": "2026-10-04",
-      "age_days": 15,
+      "age_days": 21,
       "status": "info",
       "notes": []
     }
@@ -125,11 +129,11 @@
       "status": 17,
       "removed": 0
     },
-    "age_days": 15
+    "age_days": 21
   },
   "committee_audit": {
     "date": "2026-10-19",
-    "age_days": 0,
+    "age_days": 6,
     "status": "green",
     "checked": 8,
     "matched": 3,
@@ -172,26 +176,6 @@
       "log": "mavat_sync_last_run.log",
       "sample": "Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...",
       "count": 2
-    },
-    {
-      "log": "muni_gis_last_run.log",
-      "sample": "Aborting",
-      "count": 4
-    },
-    {
-      "log": "objections_weekly_last_run.log",
-      "sample": "Aborting",
-      "count": 2
-    },
-    {
-      "log": "tama38_dev_backfill_last.log",
-      "sample": "DONE-DEVELOPERS: 256/284 enriched; 252 with developer; 2 residents-led; 28 still throttled.",
-      "count": 1
-    },
-    {
-      "log": "tama38_street_harvest_last_run.log",
-      "sample": "[13:36:29]    cooldown 90s (throttle recovery)...",
-      "count": 115
     }
   ],
   "hidden_permits": {
@@ -200,35 +184,35 @@
       "tama38": 89
     },
     "filtered_examples": [
-      "1999/0678.06",
-      "2005/0866.11",
+      "2016/0948.01",
       "2016/0258.02",
       "2008/0076.06",
       "2017/0237.01",
-      "2016/0948.01",
+      "1999/0678.06",
+      "2005/0866.11",
       "1981/0916.03",
-      "2008/0152.00",
-      "1972/0871.01",
-      "1991/0946.02",
-      "2007/0331.04",
-      "1983/0586.00",
-      "1986/0827.00",
-      "1984/0782.00",
-      "2021/0138.00"
+      "1967/0782.03",
+      "2021/0138.00",
+      "2023/0499.00",
+      "1977/0303.06",
+      "1949/1829.01",
+      "1994/0187.01",
+      "1985/0473.00",
+      "1985/0796.00"
     ],
     "cross_attributed": 8,
     "cross_attributed_examples": [
       "2021/0479.00",
-      "2022/0311.00",
       "2025/0258.00",
       "2025/0102.00",
-      "2025/0225.00",
       "2024/0568.01",
+      "2022/0311.00",
+      "2025/0225.00",
       "2017/1080.00",
       "2021/0112.00"
     ],
-    "closed_hidden_by_default": 332,
-    "online_submission_units_not_counted": 45,
+    "closed_hidden_by_default": 329,
+    "online_submission_units_not_counted": 44,
     "online_submission_units": 552,
     "total_hidden": 104
   }

@@ -18911,10 +18911,9 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-10-05",
     "__rec_stat": null,
-    "units_in": null,
-    "units_out": null,
-    "floors_tama": null,
-    "first_detected": "2026-10-05"
+    "floors_tama": 8,
+    "first_detected": "2026-10-05",
+    "units_add": 13
    },
    "geometry": {
     "type": "MultiPoint",
@@ -18950,10 +18949,9 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-10-05",
     "__rec_stat": null,
-    "units_in": null,
-    "units_out": null,
-    "floors_tama": null,
-    "first_detected": "2026-10-05"
+    "floors_tama": 5,
+    "first_detected": "2026-10-05",
+    "units_add": 9
    },
    "geometry": {
     "type": "MultiPoint",
@@ -18989,10 +18987,9 @@
     "last_edite": "spatial_2110",
     "last_edi_1": "2026-10-12",
     "__rec_stat": null,
-    "units_in": null,
-    "units_out": 25,
     "floors_tama": 7,
-    "first_detected": "2026-10-12"
+    "first_detected": "2026-10-12",
+    "units_add": 25
    },
    "geometry": {
     "type": "MultiPoint",
@@ -19028,7 +19025,6 @@
     "last_edite": "spatial_2110",
     "last_edi_1": "2026-10-12",
     "__rec_stat": null,
-    "units_in": null,
     "units_out": 4,
     "floors_tama": 3,
     "first_detected": "2026-10-12"
@@ -19067,10 +19063,9 @@
     "last_edite": "spatial_2110",
     "last_edi_1": "2026-10-12",
     "__rec_stat": null,
-    "units_in": null,
-    "units_out": 4,
     "floors_tama": 3,
-    "first_detected": "2026-10-12"
+    "first_detected": "2026-10-12",
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -19106,8 +19101,6 @@
     "last_edite": "spatial_2110",
     "last_edi_1": "2026-10-12",
     "__rec_stat": null,
-    "units_in": null,
-    "units_out": null,
     "floors_tama": 4,
     "first_detected": "2026-10-12"
    },
@@ -19145,10 +19138,9 @@
     "last_edite": "spatial_2110",
     "last_edi_1": "2026-10-12",
     "__rec_stat": null,
-    "units_in": null,
-    "units_out": 4,
     "floors_tama": 4,
-    "first_detected": null
+    "first_detected": null,
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
