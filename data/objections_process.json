@@ -1,29 +1,9 @@
 {
- "scanned": 8,
- "candidates": 8,
+ "scanned": 12,
+ "candidates": 12,
  "unverified": [],
- "generated": "2026-10-18",
- "confirmed_open": [
-  {
-   "tik": "2026/0264.00",
-   "address": "הרב חיים ברלין 12",
-   "stored_status": "פורסמה בקשה להקלה",
-   "status_date": "27/09/2026",
-   "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , תוספת בניה / הרחבה לבניין קיים, התקנת מעלית פנימית, בנית מחסן/מחסנים, בניית מרפסת",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "18/10/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2026/0264.00",
-   "lnglat": [
-    35.210899,
-    31.769443
-   ],
-   "in_district": true,
-   "category": "confirmed"
-  }
- ],
+ "generated": "2026-10-25",
+ "confirmed_open": [],
  "verify": [
   {
    "tik": "2021/0465.01",
@@ -40,6 +20,82 @@
    "lnglat": [
     35.210873,
     31.767462
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "2010/1061.04",
+   "address": "רחל אמנו 23",
+   "stored_status": "תחילת הודעות לפני תקנה 36",
+   "status_date": "18/10/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "תקנה 36",
+   "deadline_publish": "08/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2010/1061.04",
+   "lnglat": [
+    35.214109,
+    31.763634
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "2026/0439.00",
+   "address": "הפלמח 41",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "18/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "24/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0439.00",
+   "lnglat": [
+    35.206943,
+    31.764515
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "1993/0664.03",
+   "address": "י. אלפסי 9",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "04/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "10/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "1993/0664.03",
+   "lnglat": [
+    35.213741,
+    31.772826
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "2026/0223.00",
+   "address": "אלעזר בן יאיר 24",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "21/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "29/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0223.00",
+   "lnglat": [
+    35.201618,
+    31.753381
    ],
    "in_district": true,
    "category": "verify"
@@ -66,23 +122,80 @@
    "category": "verify"
   },
   {
-   "tik": "2026/0264.00",
-   "address": "הרב חיים ברלין 12",
-   "stored_status": "פורסמה בקשה להקלה",
-   "status_date": "27/09/2026",
-   "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , תוספת בניה / הרחבה לבניין קיים, התקנת מעלית פנימית, בנית מחסן/מחסנים, בניית מרפסת",
+   "tik": "2010/1061.04",
+   "address": "רחל אמנו 23",
+   "stored_status": "תחילת הודעות לפני תקנה 36",
+   "status_date": "18/10/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "תקנה 36",
+   "deadline_publish": "08/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2010/1061.04",
+   "lnglat": [
+    35.214109,
+    31.763634
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "2026/0439.00",
+   "address": "הפלמח 41",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "18/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
    "src": "tama38",
    "open": true,
    "route": "§149",
-   "deadline_publish": "18/10/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2026/0264.00",
+   "deadline_publish": "24/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0439.00",
    "lnglat": [
-    35.210899,
-    31.769443
+    35.206943,
+    31.764515
    ],
    "in_district": true,
-   "category": "confirmed"
+   "category": "verify"
+  },
+  {
+   "tik": "1993/0664.03",
+   "address": "י. אלפסי 9",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "04/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "10/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "1993/0664.03",
+   "lnglat": [
+    35.213741,
+    31.772826
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "2026/0223.00",
+   "address": "אלעזר בן יאיר 24",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "21/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "29/11/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0223.00",
+   "lnglat": [
+    35.201618,
+    31.753381
+   ],
+   "in_district": true,
+   "category": "verify"
   }
  ]
 }
