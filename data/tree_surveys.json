@@ -3602,8 +3602,8 @@
     "source": "xplan"
   },
   "1353739": {
-    "total": 15,
-    "shimur": 15,
+    "total": 12,
+    "shimur": 12,
     "krita": 0,
     "haataka": 0,
     "lo_nidresh": 0,
@@ -4731,6 +4731,24 @@
     "shimur": 94,
     "krita": 15,
     "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1487560": {
+    "total": 17,
+    "shimur": 0,
+    "krita": 17,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1214279": {
+    "total": 207,
+    "shimur": 159,
+    "krita": 46,
+    "haataka": 2,
     "lo_nidresh": 0,
     "confidence": "xplan",
     "source": "xplan"
