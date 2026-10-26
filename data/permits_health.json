@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-25T15:27:33",
+  "generated_at": "2026-10-26T05:09:54",
   "sources": [
     {
       "file": "all_permits.json",
@@ -7,11 +7,9 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 801,
       "last_publish": "2026-10-25",
-      "age_days": 0,
+      "age_days": 1,
       "status": "green",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ]
+      "notes": []
     },
     {
       "file": "tama38_permits.json",
@@ -19,11 +17,9 @@
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1358,
       "last_publish": "2026-10-25",
-      "age_days": 0,
+      "age_days": 1,
       "status": "green",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ]
+      "notes": []
     },
     {
       "file": "extra_permits.json",
@@ -31,17 +27,15 @@
       "refresh": "דו-שבועי (סטטוס)",
       "records": 103,
       "last_publish": "2026-10-25",
-      "age_days": 0,
+      "age_days": 1,
       "status": "info",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ],
+      "notes": [],
       "status_staleness": {
         "entries": 103,
         "open": 99,
         "not_checked_90d": 0,
         "not_checked_examples": [],
-        "status_date_older_90d": 73
+        "status_date_older_90d": 74
       }
     },
     {
@@ -49,8 +43,8 @@
       "label": "אתרי בנייה פעילים (gov.il)",
       "refresh": "דו-שבועי (סריקה)",
       "records": 2,
-      "last_publish": "2026-10-18",
-      "age_days": 7,
+      "last_publish": "2026-10-25",
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -58,11 +52,13 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 16,
-      "last_publish": "2026-10-19",
-      "age_days": 6,
+      "records": 20,
+      "last_publish": "2026-10-26",
+      "age_days": 0,
       "status": "green",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "objections_permits.json",
@@ -70,7 +66,7 @@
       "refresh": "שבועי",
       "records": 0,
       "last_publish": "2026-10-25",
-      "age_days": 0,
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -80,7 +76,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 114,
+      "age_days": 115,
       "status": "info",
       "notes": []
     },
@@ -90,7 +86,7 @@
       "refresh": "יומי (CI)",
       "records": 7,
       "last_publish": "2026-10-25",
-      "age_days": 0,
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -100,7 +96,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 126,
+      "age_days": 127,
       "status": "info",
       "notes": []
     },
@@ -110,66 +106,35 @@
       "refresh": "לפי צורך",
       "records": 49,
       "last_publish": "2026-10-04",
-      "age_days": 21,
+      "age_days": 22,
       "status": "info",
       "notes": []
     }
   ],
   "scan": {
-    "date": "2026-10-04",
+    "date": "2026-10-25",
     "removed_flag": false,
-    "raw": "2026-10-05T01:23:00 | date=2026-10-04 | all=new:1,status:14,removed:0 | tama38=new:1,status:17,removed:0",
+    "raw": "2026-10-25T15:31:10 | date=2026-10-25 | all=new:25,status:29,removed:0 | tama38=new:3,status:23,removed:0",
     "all": {
-      "new": 1,
-      "status": 14,
+      "new": 25,
+      "status": 29,
       "removed": 0
     },
     "tama38": {
-      "new": 1,
-      "status": 17,
+      "new": 3,
+      "status": 23,
       "removed": 0
     },
-    "age_days": 21
+    "age_days": 1
   },
   "committee_audit": {
-    "date": "2026-10-19",
-    "age_days": 6,
+    "date": "2026-10-26",
+    "age_days": 0,
     "status": "green",
-    "checked": 8,
-    "matched": 3,
-    "missing": 5,
-    "missing_list": [
-      {
-        "permit_no": "2004/0135.06",
-        "neighborhood": "קטמון הישנה",
-        "address": "ניקנור 216, קטמון הישנה",
-        "essence": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ריצוף מרפסת גג, בניית מחסן"
-      },
-      {
-        "permit_no": "2010/0196.01",
-        "neighborhood": "גוננים",
-        "address": "ניקנור 217, גוננים",
-        "essence": "תוספת בניה, ממ\"ד, מחסן"
-      },
-      {
-        "permit_no": "2011/0028.01",
-        "neighborhood": "גוננים",
-        "address": "הנוטרים 14, גוננים",
-        "essence": "תוספת בניה ומרפסת בקומת הקרקע, בנית ממ\"ד ומחסן בקומת המרתף"
-      },
-      {
-        "permit_no": "2012/0918.03",
-        "neighborhood": "גוננים",
-        "address": "יחיל חיים 8, גוננים",
-        "essence": "תוספת מרפסת זיז בהמשך לתכנית צל מאושרת"
-      },
-      {
-        "permit_no": "1999/0519.05",
-        "neighborhood": "גוננים",
-        "address": "רשב\"ג 16, גוננים",
-        "essence": "הרחבות לבניין קיים ותוספת על הגג ע\"פ תבע 6990 א הרחבת ממ\"ד, הפיכת שטח שרות לשטח "
-      }
-    ]
+    "checked": 0,
+    "matched": 0,
+    "missing": 0,
+    "missing_list": []
   },
   "known_failures": [
     {
