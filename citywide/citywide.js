@@ -33,6 +33,9 @@
   // and 73 of the 152 rental ones. "Is the fund money actually coming?" and "are
   // the rental units being built?" are the same question as "did it get a permit".
   var PERMITS = "../data/ce_permit_status_citywide.json";
+  // What moved since the previous biweekly refresh. Written by
+  // biweekly_citywide_refresh.py, which diffs each rebuild against the one before.
+  var CHANGES = "../data/ce_citywide_changes.json";
   // Fields the spec asks for that no single source holds: approval date (to filter
   // "from 2022"), neighbourhood (asked for in all three tabs, absent from the commerce
   // file), developer, the unit count the commerce tab needs for its 100+ filter, and
@@ -46,7 +49,7 @@
   // describe everything in the file — but it is switchable, because a number nobody
   // can widen is a number nobody can check.
   var state = { tab: "ce", q: "", status: "", sub: "", src: "", sort: "", desc: true,
-                sel: null, scope: true, hood: "", year: "", kind: "" };
+                sel: null, scope: true, hood: "", year: "", kind: "", onlyNew: false };
   // The initial tab is "ce", whose scope is off by default; the hash parser may
   // still turn it on. Set after SCOPES exists -- see applyScopeDefault() below.
   var D = { ce: null, housing: null, parcels: null, bounds: null, permits: null, meta: null };
@@ -68,6 +71,11 @@
   };
   // Realization, shared by all three reports. Keyed by the same padded plan number.
   var realOf = function (plan) { return (D.permits || {})[plan] || null; };
+  // Did this plan move in the latest refresh? Returns the change record, so the
+  // row can say WHAT moved rather than only that something did.
+  var changeOf = function (plan) {
+    return (D.changes && D.changes.by_plan && D.changes.by_plan[plan]) || null;
+  };
   var metaOf = function (plan) { return ((D.meta || {}).by_plan || {})[plan] || {}; };
   var _ceKeys = null;
   var inCommerce = function (plan) {
@@ -778,6 +786,7 @@
     // CE tab only: dedicated employment/commerce schemes vs commerce inside housing.
     if (state.kind && state.tab === "ce")
       rows = rows.filter(function (r) { return (r.ce || {}).project_kind === state.kind; });
+    if (state.onlyNew) rows = rows.filter(function (r) { return !!changeOf(r.plan); });
     if (state.src) rows = rows.filter(function (r) { return r.source === state.src; });
     if (state.sort) {
       var col = R.cols.filter(function (c) { return c.k === state.sort; })[0];
@@ -963,6 +972,7 @@
     if (!state.scope && defOn) p.push("all=1");
     if (state.scope && !defOn) p.push("scope=1");
     if (state.kind) p.push("kind=" + state.kind);
+    if (state.onlyNew) p.push("new=1");
     if (state.src) p.push("src=" + state.src);
     if (state.sort) p.push("sort=" + state.sort + (state.desc ? ":d" : ":a"));
     if (state.sel) p.push("sel=" + state.sel);
@@ -985,6 +995,7 @@
       else if (k === "all") state.scope = false;
       else if (k === "scope") state.scope = true;
       else if (k === "kind") state.kind = v;
+      else if (k === "new") state.onlyNew = true;
       else if (k === "src") state.src = v; else if (k === "sel") state.sel = v;
       else if (k === "sort") { var s = v.split(":"); state.sort = s[0]; state.desc = s[1] !== "a"; }
     });
@@ -1046,10 +1057,19 @@
                                           : '<span class="pill stat">טקסט</span>') +
              (geoByPlan[r.plan] ? "" : ' <span class="pill nogeo">ללא מיקום</span>') + "</td>";
       var also = alsoIn(r.plan);
+      var chg = changeOf(r.plan);
+      // The outline says "this moved"; the tooltip says what, so the mark is
+      // actionable instead of merely decorative.
+      var chgTitle = chg ? "התעדכן ברענון האחרון: " + chg.labels.join(" · ") : "";
+      var titles = [];
+      if (also.length) titles.push("התכנית מופיעה גם בלשונית: " + also.join(", ") +
+                                   " — אין לחבר בין הלשוניות");
+      if (chgTitle) titles.push(chgTitle);
       var out = '<tr class="row' + (state.sel === r.plan ? " sel" : "") +
-                (also.length ? " multi" : "") + '" data-plan="' + esc(r.plan) + '"' +
-                (also.length ? ' title="התכנית מופיעה גם בלשונית: ' + esc(also.join(", ")) +
-                               ' — אין לחבר בין הלשוניות"' : "") + ">" + tds + "</tr>";
+                (also.length ? " multi" : "") + (chg ? " changed" : "") +
+                '" data-plan="' + esc(r.plan) + '"' +
+                (titles.length ? ' title="' + esc(titles.join(" | ")) + '"' : "") +
+                ">" + tds + "</tr>";
       if (state.sel === r.plan) {
         out += '<tr class="detail"><td colspan="' + (R.cols.length + 1) + '">' + R.detail(r) +
                '<div style="margin-top:7px" class="noprint">' +
@@ -1100,6 +1120,11 @@
           '<select id="fsrc"><option value="">טקסט + OCR</option>' +
           '<option value="text"' + (state.src === "text" ? " selected" : "") + ">טקסט בלבד</option>" +
           '<option value="ocr"' + (state.src === "ocr" ? " selected" : "") + ">OCR בלבד</option></select>") +
+        ((D.changes && D.changes.changed) ?
+          '<label class="scopebox" title="מסומנות בהיקף אדום התכניות שהשתנו ברענון הדו-שבועי האחרון (' +
+            esc(D.changes.generated_at || "") + ')">' +
+          '<input type="checkbox" id="fnew"' + (state.onlyNew ? " checked" : "") +
+          '> רק מה שהתעדכן (' + n0(D.changes.changed) + ")</label>" : "") +
         (SCOPES[state.tab]
           ? '<label class="scopebox" title="' + esc(SCOPES[state.tab].why) + '">' +
             '<input type="checkbox" id="fscope"' + (state.scope ? " checked" : "") + "> " +
@@ -1187,6 +1212,7 @@
     });
     on("fsrc", "change", function (e) { state.src = e.target.value; render(); });
     on("fkind", "change", function (e) { state.kind = e.target.value; state.sel = null; render(); });
+    on("fnew", "change", function (e) { state.onlyNew = e.target.checked; state.sel = null; render(); });
     on("csv", "click", csv);
     on("prn", "click", function () { window.print(); });
     on("lnk", "click", function () {
@@ -1234,11 +1260,12 @@
   }
 
   Promise.all([getJSON(HOUSING), getJSON(CE), getJSON(PARCELS, true), getJSON(BOUNDS, true),
-               getJSON(PERMITS, true), getJSON(META, true)])
+               getJSON(PERMITS, true), getJSON(META, true), getJSON(CHANGES, true)])
     .then(function (res) {
       D.housing = res[0]; D.ce = res[1]; D.parcels = res[2]; D.bounds = res[3];
       D.permits = (res[4] && res[4].by_plan) || {};
       D.meta = res[5] || { by_plan: {} };
+      D.changes = res[6] || null;
       if (!D.parcels) {
         // Losing the map is survivable; losing it silently is not.
         mapNote = "<b>המפה אינה זמינה:</b> שכבת המגרשים לא נטענה — " +
