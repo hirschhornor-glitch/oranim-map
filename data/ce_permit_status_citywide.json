@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-26T12:33:56",
+ "generated_at": "2026-10-26T22:25:29",
  "source": "YK licensing 242700437 + pikuah 242700474/473",
  "by_plan": {
   "101-0051813": {
@@ -11918,7 +11918,8 @@
      "closed_date": "07/03/2023",
      "stage": "ד-היתר בנייה"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T22:03:13"
   },
   "101-1071851": {
    "plan_name": "101-1071851",
@@ -11978,7 +11979,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:18:06"
   },
   "101-0958025": {
    "plan_name": "101-0958025",
@@ -12082,7 +12084,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:13:37"
   },
   "101-0970764": {
    "plan_name": "101-0970764",
@@ -12189,7 +12192,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:05:59"
   },
   "101-0649525": {
    "plan_name": "101-0649525",
@@ -12249,7 +12253,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ד-היתר בנייה"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:56:40"
   },
   "101-0979070": {
    "plan_name": "101-0979070",
@@ -12399,7 +12404,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:05:18"
   },
   "101-1070002": {
    "plan_name": "101-1070002",
@@ -12505,7 +12511,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:12:55"
   },
   "101-0737171": {
    "plan_name": "101-0737171",
@@ -12682,7 +12689,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T22:18:58"
   },
   "101-1095892": {
    "plan_name": "101-1095892",
@@ -12697,7 +12705,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:15:42"
   },
   "101-1016229": {
    "plan_name": "101-1016229",
@@ -12743,7 +12752,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:51:16"
   },
   "101-0759894": {
    "plan_name": "101-0759894",
@@ -12924,22 +12934,40 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:19:40"
   },
   "101-1211002": {
    "plan_name": "101-1211002",
    "pl_name": "תוספות בניה והגבהת הבנין ברחוב עמק רפאים 46,ירושלים",
    "station_desc": "אישור",
    "taba": "1211002",
-   "has_licensing_file": false,
-   "permit_count": 0,
+   "has_licensing_file": true,
+   "permit_count": 1,
    "any_issued": false,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null,
-   "permits": []
+   "stage": "ג-רישוי בתהליך",
+   "permits": [
+    {
+     "tik": "2009/407",
+     "revisions": [
+      "2009/0407.03"
+     ],
+     "status": "חידוש טיפול בבקשה",
+     "status_date": "2026-07-22",
+     "request_type": "",
+     "description": "תוספות בניה והגבהת הבנין ברחוב עמק רפאים 46,ירושלים",
+     "pikuah_class": "closed",
+     "pikuah_tik": "2009/0407.00",
+     "pikuah_status": "תיק נסגר",
+     "closed_date": "19/03/2012",
+     "stage": "ג-רישוי בתהליך"
+    }
+   ],
+   "fetched_at": "2026-10-26T21:44:15"
   },
   "101-0808840": {
    "plan_name": "101-0808840",
@@ -13014,7 +13042,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T22:15:52"
   },
   "101-0977694": {
    "plan_name": "101-0977694",
@@ -13036,15 +13065,32 @@
    "pl_name": "תוספות בינוי ויח\"ד בבניין למגורים ומסחר ברחוב אגריפס 101.",
    "station_desc": "אישור",
    "taba": "1135086",
-   "has_licensing_file": false,
-   "permit_count": 0,
-   "any_issued": false,
-   "in_construction": false,
+   "has_licensing_file": true,
+   "permit_count": 1,
+   "any_issued": true,
+   "in_construction": true,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null,
-   "permits": []
+   "stage": "ה-בבנייה",
+   "permits": [
+    {
+     "tik": "2021/77",
+     "revisions": [
+      "2021/0077.02"
+     ],
+     "status": "הגשה מקוונת הושלמה",
+     "status_date": "2026-07-20",
+     "request_type": "",
+     "description": "תוכנית שינויים לתמ\"א 38",
+     "pikuah_class": "construction",
+     "pikuah_tik": "2021/0077.00",
+     "pikuah_status": "הופק טופס 2",
+     "form2_date": "23/01/2025",
+     "stage": "ה-בבנייה"
+    }
+   ],
+   "fetched_at": "2026-10-26T21:59:50"
   },
   "101-1062744": {
    "plan_name": "101-1062744",
@@ -13074,7 +13120,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:52:44"
   },
   "101-1068295": {
    "plan_name": "101-1068295",
@@ -13209,7 +13256,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:03:55"
   },
   "101-1075811": {
    "plan_name": "101-1075811",
@@ -13262,15 +13310,17 @@
       "2022/0314.01"
      ],
      "status": "נדונה ברשות הרישוי",
-     "status_date": "2026-06-07",
+     "status_date": "2026-09-15",
      "request_type": "",
      "description": "הקמת מבנה בן 30 קומות הכולל 159 יח\"ד (מתוכן 60 יח\"ד להשכרה), מעונות ומסחר מעל הקרקע. מבנה ציבור בתת קרקע ו6 קומות מרתף",
      "pikuah_class": "construction",
      "pikuah_tik": "2022/0314.00",
-     "pikuah_status": "",
+     "pikuah_status": "הופק טופס 2",
+     "form2_date": "20/10/2026",
      "stage": "ה-בבנייה"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:41:54"
   },
   "101-1089721": {
    "plan_name": "101-1089721",
@@ -13285,7 +13335,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:16:43"
   },
   "101-1175934": {
    "plan_name": "101-1175934",
@@ -13347,7 +13398,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:02:51"
   },
   "101-0977728": {
    "plan_name": "101-0977728",
@@ -13377,7 +13429,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:44:04"
   },
   "101-1002625": {
    "plan_name": "101-1002625",
@@ -13482,7 +13535,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:12:13"
   },
   "101-1133388": {
    "plan_name": "101-1133388",
@@ -13497,7 +13551,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:01:59"
   },
   "101-0940528": {
    "plan_name": "101-0940528",
@@ -13542,7 +13597,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T22:03:02"
   },
   "101-0862904": {
    "plan_name": "101-0862904",
@@ -13649,7 +13705,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:55:35"
   },
   "101-1136191": {
    "plan_name": "101-1136191",
@@ -13679,7 +13736,8 @@
      "pikuah_status": "",
      "stage": "ה-בבנייה"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:58:15"
   },
   "101-0695890": {
    "plan_name": "101-0695890",
@@ -13701,15 +13759,31 @@
    "pl_name": "הסדנא 2 - מבנה מגורים, תעסוקה ומסחר, תלפיות.",
    "station_desc": "אישור",
    "taba": "1193531",
-   "has_licensing_file": false,
-   "permit_count": 0,
+   "has_licensing_file": true,
+   "permit_count": 1,
    "any_issued": false,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null,
-   "permits": []
+   "stage": "ג-רישוי בתהליך",
+   "permits": [
+    {
+     "tik": "2026/60",
+     "revisions": [
+      "2026/0060.00"
+     ],
+     "status": "נפתח תיק רישוי",
+     "status_date": "2026-04-15",
+     "request_type": "",
+     "description": "הריסת מבנה מסחרי קיים וחפירה ודיפון עבור 75 יח\"ד",
+     "pikuah_class": "file_opened",
+     "pikuah_tik": "2026/0060.00",
+     "pikuah_status": "נפתח תיק פיקוח",
+     "stage": "ג-רישוי בתהליך"
+    }
+   ],
+   "fetched_at": "2026-10-26T21:46:55"
   },
   "101-1089580": {
    "plan_name": "101-1089580",
@@ -13724,7 +13798,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:17:25"
   },
   "101-0947242": {
    "plan_name": "101-0947242",
@@ -13769,7 +13844,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:37:22"
   },
   "101-1118983": {
    "plan_name": "101-1118983",
@@ -13784,7 +13860,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:08:46"
   },
   "101-0791319": {
    "plan_name": "101-0791319",
@@ -13874,7 +13951,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:23:18"
   },
   "101-1290378": {
    "plan_name": "101-1290378",
@@ -13889,7 +13967,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:12:34"
   },
   "101-0925198": {
    "plan_name": "101-0925198",
@@ -13964,7 +14043,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:25:00"
   },
   "101-1167410": {
    "plan_name": "101-1167410",
@@ -13979,7 +14059,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:53:27"
   },
   "101-0690859": {
    "plan_name": "101-0690859",
@@ -14069,7 +14150,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:40:15"
   },
   "101-0914507": {
    "plan_name": "101-0914507",
@@ -14099,7 +14181,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:48:17"
   },
   "101-1164433": {
    "plan_name": "101-1164433",
@@ -14114,7 +14197,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:54:52"
   },
   "101-0465229": {
    "plan_name": "101-0465229",
@@ -14214,13 +14298,14 @@
      "status": "נדונה ברשות הרישוי",
      "status_date": "2026-06-29",
      "request_type": "",
-     "description": "הריסת חפירה דיפון יסודות וריצפה ראשונה הכולל הריסה מבנה לשימור  בהתאם לתכנית 1198613 , עבור בינוי הכולל 68 יח\"ד",
+     "description": "הריסת חפירה ודיפון כולל הריסת מבנה לשימור  בהתאם לתכנית 1198613 , עבור בינוי הכולל 68 יח\"ד",
      "pikuah_class": "file_opened",
      "pikuah_tik": "2025/0483.00",
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:46:34"
   },
   "101-0657593": {
    "plan_name": "101-0657593",
@@ -14250,7 +14335,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:10:09"
   },
   "101-1319946": {
    "plan_name": "101-1319946",
@@ -14265,7 +14351,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:00:23"
   },
   "101-1352533": {
    "plan_name": "101-1352533",
@@ -14295,7 +14382,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T20:53:31"
   },
   "101-1302629": {
    "plan_name": "101-1302629",
@@ -14310,7 +14398,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:07:54"
   },
   "101-0779587": {
    "plan_name": "101-0779587",
@@ -14355,7 +14444,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:45:41"
   },
   "101-1222421": {
    "plan_name": "101-1222421",
@@ -14370,7 +14460,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:38:05"
   },
   "101-1278407": {
    "plan_name": "101-1278407",
@@ -14401,7 +14492,8 @@
      "closed_date": "09/04/1997",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:15:43"
   },
   "101-1335298": {
    "plan_name": "101-1335298",
@@ -14416,7 +14508,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:56:28"
   },
   "101-1322684": {
    "plan_name": "101-1322684",
@@ -14431,7 +14524,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:59:26"
   },
   "101-1334069": {
    "plan_name": "101-1334069",
@@ -14446,7 +14540,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:57:54"
   },
   "101-1114131": {
    "plan_name": "101-1114131",
@@ -14461,7 +14556,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:10:50"
   },
   "101-1133180": {
    "plan_name": "101-1133180",
@@ -14483,15 +14579,16 @@
       "2025/0530.00"
      ],
      "status": "נדונה ברשות הרישוי",
-     "status_date": "2026-07-12",
+     "status_date": "2026-09-15",
      "request_type": "",
-     "description": "היתר הריסה, חפירה, דיפון וביסוס להקמת שני מבני מגורים במסגרת פינוי בינוי, בני 9 ו- 39 קומות,  242 יח\"ד. כולל מסחר, מבני ציבור וחניון תת\"ק",
+     "description": "היתר הריסה, חפירה, דיפון וביסוס רצפה ראשונה עבור הקמת שני מבני מגורים במסגרת פינוי בינוי, בני 9 ו- 39 קומות,  242 יח\"ד. כולל עירוב שימושים",
      "pikuah_class": "file_opened",
      "pikuah_tik": "2025/0530.00",
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T22:02:10"
   },
   "101-1240472": {
    "plan_name": "101-1240472",
@@ -14521,7 +14618,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ה-בבנייה"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:27:55"
   },
   "101-1026285": {
    "plan_name": "101-1026285",
@@ -14567,7 +14665,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:25:45"
   },
   "101-0921213": {
    "plan_name": "101-0921213",
@@ -14597,7 +14696,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:57:10"
   },
   "101-0976761": {
    "plan_name": "101-0976761",
@@ -14627,7 +14727,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:51:52"
   },
   "101-0990457": {
    "plan_name": "101-0990457",
@@ -14657,7 +14758,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:53:19"
   },
   "101-1206598": {
    "plan_name": "101-1206598",
@@ -14672,7 +14774,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:44:59"
   },
   "101-1204643": {
    "plan_name": "101-1204643",
@@ -14687,7 +14790,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:46:23"
   },
   "101-1299254": {
    "plan_name": "101-1299254",
@@ -14702,7 +14806,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:09:27"
   },
   "101-1296680": {
    "plan_name": "101-1296680",
@@ -14717,7 +14822,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:11:01"
   },
   "101-1273150": {
    "plan_name": "101-1273150",
@@ -14732,7 +14838,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:17:14"
   },
   "101-1300110": {
    "plan_name": "101-1300110",
@@ -14747,7 +14854,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:08:42"
   },
   "101-1135714": {
    "plan_name": "101-1135714",
@@ -14762,7 +14870,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:58:57"
   },
   "101-1267764": {
    "plan_name": "101-1267764",
@@ -14777,7 +14886,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:17:58"
   },
   "101-1133792": {
    "plan_name": "101-1133792",
@@ -14792,7 +14902,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:01:18"
   },
   "101-1255843": {
    "plan_name": "101-1255843",
@@ -14807,7 +14918,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:21:55"
   },
   "101-1348978": {
    "plan_name": "101-1348978",
@@ -14822,7 +14934,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:54:59"
   },
   "101-0696104": {
    "plan_name": "101-0696104",
@@ -14867,7 +14980,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:51:59"
   },
   "101-0921239": {
    "plan_name": "101-0921239",
@@ -14897,7 +15011,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:23:22"
   },
   "101-1276609": {
    "plan_name": "101-1276609",
@@ -14912,7 +15027,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:16:28"
   },
   "101-0826685": {
    "plan_name": "101-0826685",
@@ -14942,7 +15058,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:44:34"
   },
   "101-1326446": {
    "plan_name": "101-1326446",
@@ -14957,7 +15074,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:58:41"
   },
   "101-0967398": {
    "plan_name": "101-0967398",
@@ -14987,7 +15105,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:21:09"
   },
   "101-0836809": {
    "plan_name": "101-0836809",
@@ -15032,7 +15151,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:15:00"
   },
   "101-1219724": {
    "plan_name": "101-1219724",
@@ -15047,7 +15167,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:39:33"
   },
   "101-1121920": {
    "plan_name": "101-1121920",
@@ -15062,7 +15183,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:07:23"
   },
   "101-1310085": {
    "plan_name": "101-1310085",
@@ -15077,7 +15199,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:04:57"
   },
   "101-1260439": {
    "plan_name": "101-1260439",
@@ -15092,7 +15215,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:20:18"
   },
   "101-0982439": {
    "plan_name": "101-0982439",
@@ -15137,7 +15261,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:35:17"
   },
   "101-1025295": {
    "plan_name": "101-1025295",
@@ -15167,7 +15292,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:06:26"
   },
   "101-1282706": {
    "plan_name": "101-1282706",
@@ -15182,7 +15308,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:14:45"
   },
   "101-1231174": {
    "plan_name": "101-1231174",
@@ -15197,7 +15324,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:34:35"
   },
   "101-0888347": {
    "plan_name": "101-0888347",
@@ -15227,7 +15355,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:10:16"
   },
   "101-1013143": {
    "plan_name": "101-1013143",
@@ -15272,7 +15401,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:22:39"
   },
   "101-1155449": {
    "plan_name": "101-1155449",
@@ -15287,7 +15417,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:56:17"
   },
   "101-0879619": {
    "plan_name": "101-0879619",
@@ -15317,7 +15448,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:45:58"
   },
   "101-1133925": {
    "plan_name": "101-1133925",
@@ -15332,7 +15464,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:00:35"
   },
   "101-1191014": {
    "plan_name": "101-1191014",
@@ -15347,7 +15480,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:47:35"
   },
   "101-1417328": {
    "plan_name": "101-1417328",
@@ -15362,7 +15496,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:49:44"
   },
   "101-1227214": {
    "plan_name": "101-1227214",
@@ -15377,7 +15512,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:35:58"
   },
   "101-1310713": {
    "plan_name": "101-1310713",
@@ -15392,7 +15528,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:04:13"
   },
   "101-1072446": {
    "plan_name": "101-1072446",
@@ -15407,7 +15544,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:25:29"
   },
   "101-1410067": {
    "plan_name": "101-1410067",
@@ -15422,7 +15560,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:50:27"
   },
   "101-1304427": {
    "plan_name": "101-1304427",
@@ -15437,7 +15576,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:07:09"
   },
   "101-1361286": {
    "plan_name": "101-1361286",
@@ -15452,7 +15592,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:52:35"
   },
   "101-1420348": {
    "plan_name": "101-1420348",
@@ -15467,7 +15608,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:48:56"
   },
   "101-0926105": {
    "plan_name": "101-0926105",
@@ -15497,7 +15639,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:33:52"
   },
   "101-0714188": {
    "plan_name": "101-0714188",
@@ -15527,7 +15670,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:33:04"
   },
   "101-1338383": {
    "plan_name": "101-1338383",
@@ -15542,7 +15686,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:55:44"
   },
   "101-0681288": {
    "plan_name": "101-0681288",
@@ -15572,7 +15717,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:06:42"
   },
   "101-1225895": {
    "plan_name": "101-1225895",
@@ -15587,7 +15733,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:36:40"
   },
   "101-1422401": {
    "plan_name": "101-1422401",
@@ -15602,7 +15749,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:47:25"
   },
   "101-1350255": {
    "plan_name": "101-1350255",
@@ -15617,7 +15765,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:54:15"
   },
   "101-1182146": {
    "plan_name": "101-1182146",
@@ -15632,7 +15781,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:49:40"
   },
   "101-1291905": {
    "plan_name": "101-1291905",
@@ -15647,7 +15797,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:11:49"
   },
   "101-1087774": {
    "plan_name": "101-1087774",
@@ -15662,7 +15813,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:18:48"
   },
   "101-0061531": {
    "plan_name": "101-0061531",
@@ -15707,7 +15859,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:24:15"
   },
   "101-0615781": {
    "plan_name": "101-0615781",
@@ -15737,7 +15890,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:19:28"
   },
   "101-1312628": {
    "plan_name": "101-1312628",
@@ -15752,7 +15906,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:03:29"
   },
   "101-0979336": {
    "plan_name": "101-0979336",
@@ -15940,7 +16095,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:09:27"
   },
   "101-0403428": {
    "plan_name": "101-0403428",
@@ -16045,7 +16201,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:57:22"
   },
   "101-1019140": {
    "plan_name": "101-1019140",
@@ -16233,7 +16390,7 @@
       "2025/0424.01"
      ],
      "status": "נדונה ברשות הרישוי",
-     "status_date": "2026-08-18",
+     "status_date": "2026-10-13",
      "request_type": "",
      "description": "הקמת בניין חדש למטרת מגורים, מסחר ומבני ציבור במסגרת תכנית להתחדשות עירונית במתווה פינוי בינוי סה\"כ 193 יח\"ד",
      "pikuah_class": "file_opened",
@@ -16241,7 +16398,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:46:44"
   },
   "101-1004969": {
    "plan_name": "101-1004969",
@@ -16481,7 +16639,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:01:57"
   },
   "101-1062678": {
    "plan_name": "101-1062678",
@@ -16511,7 +16670,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:11:32"
   },
   "101-1074848": {
    "plan_name": "101-1074848",
@@ -16526,7 +16686,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:24:42"
   },
   "101-0948356": {
    "plan_name": "101-0948356",
@@ -16586,7 +16747,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:22:34"
   },
   "101-0889154": {
    "plan_name": "101-0889154",
@@ -16631,7 +16793,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T20:59:38"
   },
   "101-0764878": {
    "plan_name": "101-0764878",
@@ -16676,7 +16839,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:58:04"
   },
   "101-1025519": {
    "plan_name": "101-1025519",
@@ -16712,8 +16876,8 @@
      "revisions": [
       "2026/0393.00"
      ],
-     "status": "הגשה מקוונת הושלמה",
-     "status_date": "2026-08-27",
+     "status": "שולמה מקדמה",
+     "status_date": "2026-09-16",
      "request_type": "",
      "description": "בניית 107 יח\"ד בשני בניני מגורים בני 11 קומות, חזית מסחרית ומבני ציבור, 4 מרתפי חניה וצובר גז. במסגרת פינוי בינוי",
      "pikuah_class": "file_opened",
@@ -16721,7 +16885,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:49:50"
   },
   "101-0993345": {
    "plan_name": "101-0993345",
@@ -16826,7 +16991,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:04:36"
   },
   "101-1213339": {
    "plan_name": "101-1213339",
@@ -16841,7 +17007,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:43:21"
   },
   "101-0917138": {
    "plan_name": "101-0917138",
@@ -16886,7 +17053,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:26:35"
   },
   "101-1308501": {
    "plan_name": "101-1308501",
@@ -16901,7 +17069,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:05:41"
   },
   "101-1079771": {
    "plan_name": "101-1079771",
@@ -16916,7 +17085,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:21:53"
   },
   "101-0678920": {
    "plan_name": "101-0678920",
@@ -16961,7 +17131,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:48:09"
   },
   "101-1427525": {
    "plan_name": "101-1427525",
@@ -16976,7 +17147,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:46:43"
   },
   "101-1261510": {
    "plan_name": "101-1261510",
@@ -16991,7 +17163,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:18:43"
   },
   "101-1075902": {
    "plan_name": "101-1075902",
@@ -17006,7 +17179,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:24:00"
   },
   "101-1019157": {
    "plan_name": "101-1019157",
@@ -17036,7 +17210,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:01:10"
   },
   "101-1236736": {
    "plan_name": "101-1236736",
@@ -17051,7 +17226,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:29:25"
   },
   "101-0133819": {
    "plan_name": "101-0133819",
@@ -19788,7 +19964,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:08:04"
   },
   "101-1090166": {
    "plan_name": "101-1090166",
@@ -19819,7 +19996,8 @@
      "closed_date": "17/04/2013",
      "stage": "ג-רישוי בתהליך"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T22:16:03"
   },
   "101-0916171": {
    "plan_name": "101-0916171",
@@ -19864,7 +20042,8 @@
      "pikuah_status": "נפתח תיק פיקוח",
      "stage": "ד-היתר בנייה"
     }
-   ]
+   ],
+   "fetched_at": "2026-10-26T21:56:28"
   },
   "101-1080506": {
    "plan_name": "101-1080506",
@@ -19879,7 +20058,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:20:26"
   },
   "101-1015510": {
    "plan_name": "101-1015510",
@@ -19909,7 +20089,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:42:38"
   },
   "101-1221316": {
    "plan_name": "101-1221316",
@@ -19924,7 +20105,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:38:47"
   },
   "101-1102110": {
    "plan_name": "101-1102110",
@@ -19939,7 +20121,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:14:18"
   },
   "101-1219153": {
    "plan_name": "101-1219153",
@@ -19954,7 +20137,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:40:58"
   },
   "101-1182344": {
    "plan_name": "101-1182344",
@@ -19969,7 +20153,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:48:58"
   },
   "101-1135110": {
    "plan_name": "101-1135110",
@@ -19984,7 +20169,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:59:40"
   },
   "101-1236504": {
    "plan_name": "101-1236504",
@@ -19999,7 +20185,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:30:39"
   },
   "101-1281419": {
    "plan_name": "101-1281419",
@@ -20014,7 +20201,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:15:30"
   },
   "101-1317866": {
    "plan_name": "101-1317866",
@@ -20029,7 +20217,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:02:43"
   },
   "101-1285550": {
    "plan_name": "101-1285550",
@@ -20044,7 +20233,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:13:17"
   },
   "101-1175918": {
    "plan_name": "101-1175918",
@@ -20059,7 +20249,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:50:33"
   },
   "101-1297423": {
    "plan_name": "101-1297423",
@@ -20105,7 +20296,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:54:11"
   },
   "101-1496694": {
    "plan_name": "101-1496694",
@@ -20136,7 +20328,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:45:17"
   },
   "101-1500735": {
    "plan_name": "101-1500735",
@@ -20183,7 +20376,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:31:54"
   },
   "101-1526193": {
    "plan_name": "101-1526193",
@@ -20214,7 +20408,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:41:43"
   },
   "101-1363290": {
    "plan_name": "101-1363290",
@@ -20229,7 +20424,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T20:51:09"
   },
   "101-1284660": {
    "plan_name": "101-1284660",
@@ -20244,7 +20440,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T21:14:00"
   },
   "101-1080092": {
    "plan_name": "101-1080092",
@@ -20259,7 +20456,8 @@
    "occupied": false,
    "form4_date": null,
    "stage": null,
-   "permits": []
+   "permits": [],
+   "fetched_at": "2026-10-26T22:21:11"
   },
   "101-0932152": {
    "plan_name": "101-0932152",
