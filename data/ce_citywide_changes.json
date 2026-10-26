@@ -1,8 +1,34 @@
 {
- "generated_at": "2026-10-26T10:39:35",
- "previous_at": null,
- "first_run": true,
- "changed": 0,
- "plans": 944,
- "by_plan": {}
+ "generated_at": "2026-10-26T10:51:54",
+ "previous_at": "2026-10-26T10:39:35",
+ "first_run": false,
+ "plans": {
+  "ce": 944,
+  "housing": 242
+ },
+ "changed": {
+  "ce": 0,
+  "fund": 0,
+  "rental": 0
+ },
+ "horaot_gap": {
+  "archived": 4603,
+  "in_scope": 944,
+  "missing_count": 8,
+  "missing": [
+   "101-0466862",
+   "101-1013911",
+   "101-1082809",
+   "101-1181593",
+   "101-1288190",
+   "101-1535905",
+   "101-1596337",
+   "101-1598812"
+  ]
+ },
+ "by_tab": {
+  "ce": {},
+  "fund": {},
+  "rental": {}
+ }
 }
