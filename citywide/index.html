@@ -72,7 +72,12 @@
         .warnpill { color: var(--warn); font-size: 12px; border: 1px solid #5d3a1c;
                     background: #2a1c10; border-radius: 999px; padding: 3px 10px; font-weight: 700; }
 
-        .split { flex: 1; display: flex; min-height: 0; border-top: 1px solid var(--line); }
+        /* A floor for the map+table pane: the notes block above it can grow with
+           the data (the neighbourhood breakdown is 38 rows), and without a floor
+           it squeezes the map to a strip. 360px keeps the map usable; the notes
+           scroll instead. */
+        .split { flex: 1; display: flex; min-height: 360px; border-top: 1px solid var(--line); }
+        #notes { flex: 0 1 auto; overflow: auto; max-height: 46vh; }
         .list { width: 54%; min-width: 380px; overflow: auto; border-left: 1px solid var(--line); }
         #cmap { flex: 1; min-width: 0; background: #14141a; }
 
@@ -152,6 +157,6 @@
             <div style="color:#a6a2b5;font-weight:600;">טוען נתונים כלל עירוניים…</div>
         </div>
     </div>
-    <script src="citywide.js?v=2026-10-19g"></script>
+    <script src="citywide.js?v=2026-10-26a"></script>
 </body>
 </html>

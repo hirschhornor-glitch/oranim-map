@@ -319,7 +319,13 @@
     var rest = keys.length > 12
       ? '<div class="empty" style="padding:4px 6px">ועוד ' + (keys.length - 12) + " שכונות — ראו הסינון</div>"
       : "";
-    return '<details class="hoodsum" open><summary>פילוח לפי שכונה · ' + keys.length +
+    // Closed by default. Open, this block is 336px tall -- on a 860px window it
+    // left the map and table 197px between them, which is what "why is the map so
+    // small?" was. The open state lives in `state` because the whole block is
+    // re-rendered on every filter change, so an `open` attribute alone would snap
+    // back shut (or back open) on the next keystroke.
+    return '<details class="hoodsum"' + (state.hoodOpen ? " open" : "") +
+           '><summary>פילוח לפי שכונה · ' + keys.length +
            " שכונות</summary><table class=\"mini\"><thead><tr><th>שכונה</th><th>תכניות</th><th>" +
            esc(m.label) + "</th></tr></thead><tbody>" + rowsHtml + "</tbody></table>" + rest +
            "</details>";
@@ -1133,6 +1139,7 @@
     on("fhood", "change", function (e) { state.hood = e.target.value; state.sel = null; render(); });
     on("fyear", "change", function (e) { state.year = e.target.value; state.sel = null; render(); });
     var sum = document.querySelector(".hoodsum");
+    if (sum) sum.addEventListener("toggle", function () { state.hoodOpen = sum.open; });
     if (sum) sum.addEventListener("click", function (e) {
       var tr = e.target.closest("tr[data-hood]");
       if (!tr) return;
