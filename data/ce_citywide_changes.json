@@ -1,6 +1,6 @@
 {
  "generated_at": "2026-10-26T10:51:54",
- "previous_at": "2026-10-26T10:39:35",
+ "previous_at": "2026-10-04T16:07:26",
  "first_run": false,
  "plans": {
   "ce": 944,
@@ -8,8 +8,8 @@
  },
  "changed": {
   "ce": 0,
-  "fund": 0,
-  "rental": 0
+  "fund": 6,
+  "rental": 6
  },
  "horaot_gap": {
   "archived": 4603,
@@ -28,7 +28,177 @@
  },
  "by_tab": {
   "ce": {},
-  "fund": {},
-  "rental": {}
+  "fund": {
+   "101-0790360": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 84
+    },
+    "to": {
+     "units_total": 39
+    }
+   },
+   "101-1025295": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 145
+    },
+    "to": {
+     "units_total": 144
+    }
+   },
+   "101-1095330": {
+    "fields": [
+     "status"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "status": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "status": "הפקדה להתנגדויות/השגות"
+    }
+   },
+   "101-1114040": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 5
+    },
+    "to": {
+     "units_total": 3
+    }
+   },
+   "101-1422401": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 64
+    },
+    "to": {
+     "units_total": 112
+    }
+   },
+   "101-1571991": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 7
+    },
+    "to": {
+     "units_total": 9
+    }
+   }
+  },
+  "rental": {
+   "101-0790360": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 84
+    },
+    "to": {
+     "units_total": 39
+    }
+   },
+   "101-1025295": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 145
+    },
+    "to": {
+     "units_total": 144
+    }
+   },
+   "101-1095330": {
+    "fields": [
+     "status"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "status": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "status": "הפקדה להתנגדויות/השגות"
+    }
+   },
+   "101-1114040": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 5
+    },
+    "to": {
+     "units_total": 3
+    }
+   },
+   "101-1422401": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 64
+    },
+    "to": {
+     "units_total": 112
+    }
+   },
+   "101-1571991": {
+    "fields": [
+     "units_total"
+    ],
+    "labels": [
+     "יח\"ד בתכנית"
+    ],
+    "from": {
+     "units_total": 7
+    },
+    "to": {
+     "units_total": 9
+    }
+   }
+  }
  }
 }

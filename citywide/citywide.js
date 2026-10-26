@@ -73,8 +73,29 @@
   var realOf = function (plan) { return (D.permits || {})[plan] || null; };
   // Did this plan move in the latest refresh? Returns the change record, so the
   // row can say WHAT moved rather than only that something did.
-  var changeOf = function (plan) {
-    return (D.changes && D.changes.by_plan && D.changes.by_plan[plan]) || null;
+  // Per tab, not per plan: the three tabs show different columns off different
+  // files, so a plan whose commerce floorspace moved must NOT be outlined in the
+  // rental tab, where nothing the reader can see has changed. An outline on a
+  // row with no visible change teaches the eye to ignore outlines.
+  var changeOf = function (plan, tab) {
+    var by = D.changes && D.changes.by_tab;
+    if (!by) return null;
+    return (by[tab || state.tab] || {})[plan] || null;
+  };
+  // Count for the toggle label. Counted over the tab's OWN row set, not over the
+  // change pool: a plan can move in a shared column (status, units) while having
+  // no fund or rental finding, so it is in the pool but is not a row here. The
+  // pool size said 6 where the reader could count 1 outline -- a number that
+  // cannot be checked against the screen is worse than no number.
+  var changedCount = function () {
+    var by = D.changes && D.changes.by_tab;
+    if (!by) return 0;
+    var pool = by[state.tab] || {};
+    if (!REPORTS[state.tab]) return 0;
+    // visible(true) = every active filter EXCEPT this toggle, so the number is
+    // exactly the outlines on screen. Counting the raw row set instead said 2
+    // where the scope filter left 1 showing.
+    return visible(true).filter(function (r) { return !!pool[r.plan]; }).length;
   };
   var metaOf = function (plan) { return ((D.meta || {}).by_plan || {})[plan] || {}; };
   var _ceKeys = null;
@@ -765,7 +786,7 @@
   };
 
   /* ---------------- filtering ---------------- */
-  function visible() {
+  function visible(ignoreNew) {
     var R = REPORTS[state.tab], rows = R.rows();
     var sc = SCOPES[state.tab];
     if (state.scope && sc) rows = rows.filter(sc.test);
@@ -786,7 +807,7 @@
     // CE tab only: dedicated employment/commerce schemes vs commerce inside housing.
     if (state.kind && state.tab === "ce")
       rows = rows.filter(function (r) { return (r.ce || {}).project_kind === state.kind; });
-    if (state.onlyNew) rows = rows.filter(function (r) { return !!changeOf(r.plan); });
+    if (state.onlyNew && !ignoreNew) rows = rows.filter(function (r) { return !!changeOf(r.plan); });
     if (state.src) rows = rows.filter(function (r) { return r.source === state.src; });
     if (state.sort) {
       var col = R.cols.filter(function (c) { return c.k === state.sort; })[0];
@@ -1120,11 +1141,11 @@
           '<select id="fsrc"><option value="">טקסט + OCR</option>' +
           '<option value="text"' + (state.src === "text" ? " selected" : "") + ">טקסט בלבד</option>" +
           '<option value="ocr"' + (state.src === "ocr" ? " selected" : "") + ">OCR בלבד</option></select>") +
-        ((D.changes && D.changes.changed) ?
-          '<label class="scopebox" title="מסומנות בהיקף אדום התכניות שהשתנו ברענון הדו-שבועי האחרון (' +
-            esc(D.changes.generated_at || "") + ')">' +
+        (changedCount() ?
+          '<label class="scopebox" title="מסומנות בהיקף אדום התכניות שהשתנו בלשונית זו ברענון הדו-שבועי האחרון (' +
+            esc((D.changes || {}).generated_at || "") + ')">' +
           '<input type="checkbox" id="fnew"' + (state.onlyNew ? " checked" : "") +
-          '> רק מה שהתעדכן (' + n0(D.changes.changed) + ")</label>" : "") +
+          '> רק מה שהתעדכן (' + n0(changedCount()) + ")</label>" : "") +
         (SCOPES[state.tab]
           ? '<label class="scopebox" title="' + esc(SCOPES[state.tab].why) + '">' +
             '<input type="checkbox" id="fscope"' + (state.scope ? " checked" : "") + "> " +
