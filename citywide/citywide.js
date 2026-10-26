@@ -97,6 +97,20 @@
     // where the scope filter left 1 showing.
     return visible(true).filter(function (r) { return !!pool[r.plan]; }).length;
   };
+  // Some Table 5s never split עיקרי from שירות: every row fills only the total
+  // column. Those figures were read as 0 and published as "no commerce" -- 1.2M
+  // מ"ר across 68 plans. They are now counted off the total column, which means
+  // they INCLUDE service area and are not comparable with the עיקרי figures in
+  // the same column. Hence the mark: the number is real, the basis differs.
+  var basisMark = function (r) {
+    var ce = r.ce || r, n = ce.ce_from_total_sqm || 0;
+    if (!n) return "";
+    var all = ce.area_basis === "total";
+    var t = all
+      ? "טבלה 5 של התכנית אינה מפרידה עיקרי משירות — שטח המסחר/תעסוקה נקרא מעמודת הסך־הכל ולכן כולל שטחי שירות"
+      : "חלק מהשורות נקראו מעמודת הסך־הכל ולכן כוללות שטחי שירות: " + n0(n) + " מ" + "'" + "ר";
+    return '<sup class="vis" title="' + esc(t) + '">⊕</sup>';
+  };
   var metaOf = function (plan) { return ((D.meta || {}).by_plan || {})[plan] || {}; };
   var _ceKeys = null;
   var inCommerce = function (plan) {
@@ -593,9 +607,9 @@
                      : '<span class="empty" title="לא נמצאה בהוראות הוראה המתירה משרדים בשטחי המסחר">—</span>';
           } },
         { k: "com", t: "מסחר (מ\"ר)", n: true, get: function (r) { return r.ce.commerce_sqm || 0; },
-          fmt: function (v) { return v ? '<span class="hi">' + n0(v) + "</span>" : '<span class="empty">—</span>'; } },
+          fmt: function (v, r) { return (v ? '<span class="hi">' + n0(v) + "</span>" : '<span class="empty">—</span>') + basisMark(r); } },
         { k: "emp", t: "תעסוקה (מ\"ר)", n: true, get: function (r) { return r.ce.employment_sqm || 0; },
-          fmt: function (v) { return v ? '<span class="hi">' + n0(v) + "</span>" : '<span class="empty">—</span>'; } },
+          fmt: function (v, r) { return (v ? '<span class="hi">' + n0(v) + "</span>" : '<span class="empty">—</span>') + basisMark(r); } },
         { k: "uns", t: "לא מפוצל", n: true, get: function (r) { return r.ce.ce_unsplit_sqm || 0; },
           fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } },
         // Government offices. Table 5 designates these "מבנים ומוסדות ציבור
@@ -607,6 +621,16 @@
         // reported so the gap is visible, never attributed to either side.
         { k: "mix", t: "מעורב", n: true, get: function (r) { return r.ce.mixed_other_sqm || 0; },
           fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } },
+        // How much of this row's CE figure was read off the total column,
+        // i.e. includes service area. Its own column so the number can be
+        // subtracted, sorted and exported, not merely hinted at by a mark.
+        { k: "svc", t: "מתוכו כולל שירות (מ\"ר)", n: true,
+          get: function (r) { return r.ce.ce_from_total_sqm || 0; },
+          fmt: function (v) {
+            if (!v) return '<span class="empty" title="כל השטח נקרא כעיקרי">—</span>';
+            return '<span class="hi" title="נקרא מעמודת הסך־הכל של טבלה 5 — עיקרי ושירות יחד, כי הטבלה אינה מפרידה ביניהם">'
+                   + n0(v) + "</span>";
+          } },
         // Dedicated employment/commerce scheme, or commerce riding inside a
         // housing plan? 79 plans are pure (1.81M מ"ר) against 578 mixed (2.86M),
         // so most of the city's commerce and employment sits inside residential
