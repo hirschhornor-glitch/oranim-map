@@ -47,6 +47,8 @@
   // can widen is a number nobody can check.
   var state = { tab: "ce", q: "", status: "", sub: "", src: "", sort: "", desc: true,
                 sel: null, scope: true, hood: "", year: "", kind: "" };
+  // The initial tab is "ce", whose scope is off by default; the hash parser may
+  // still turn it on. Set after SCOPES exists -- see applyScopeDefault() below.
   var D = { ce: null, housing: null, parcels: null, bounds: null, permits: null, meta: null };
   var map = null, layer = null, geoByPlan = {}, mapNote = "";
 
@@ -332,8 +334,14 @@
   }
 
   var SCOPES = {
-    ce: { label: 'מאושרות · 100+ יח"ד',
-          why: 'האפיון: תכניות מאושרות בלבד, מעל 100 יח"ד.',
+    // OFF by default on this tab. A unit-count filter is a housing criterion, and
+    // on a commerce report it excludes, by construction, every dedicated
+    // employment or commerce scheme -- those have no יח"ד at all. With it on, all
+    // 79 pure schemes vanish (גן חוצבים, פארק גב ים, מגדלי טופז among them) and
+    // only the 114 housing plans that also grant commerce remain. The checkbox
+    // stays, so the spec's view is one click away.
+    ce: { label: 'מאושרות · 100+ יח"ד', off: true,
+          why: 'האפיון: תכניות מאושרות בלבד, מעל 100 יח"ד. כבוי כברירת מחדל — הוא מסנן החוצה פרויקטי תעסוקה/מסחר טהורים, שאין להם יח"ד.',
           test: function (r) { return isApproved(r.status) && (metaOf(r.plan).units || 0) >= 100; },
           drop: function (r) {
             if (!isApproved(r.status)) return "אינן מאושרות";
@@ -948,7 +956,13 @@
     if (state.status) p.push("st=" + encodeURIComponent(state.status));
     if (state.hood) p.push("hood=" + encodeURIComponent(state.hood));
     if (state.year) p.push("year=" + state.year);
-    if (!state.scope) p.push("all=1");
+    // Record the scope only when it differs from this tab's default, in either
+    // direction -- otherwise a CE link (default off) would always carry all=1,
+    // and turning the filter ON would not survive being shared.
+    var defOn = !(SCOPES[state.tab] && SCOPES[state.tab].off);
+    if (!state.scope && defOn) p.push("all=1");
+    if (state.scope && !defOn) p.push("scope=1");
+    if (state.kind) p.push("kind=" + state.kind);
     if (state.src) p.push("src=" + state.src);
     if (state.sort) p.push("sort=" + state.sort + (state.desc ? ":d" : ":a"));
     if (state.sel) p.push("sel=" + state.sel);
@@ -956,9 +970,12 @@
   }
   function readHash() {
     var h = (location.hash || "").replace(/^#/, "");
+    var parts = h ? h.split("&") : [];
+    if (parts.length && REPORTS[parts[0]]) state.tab = parts[0];
+    // Default for whichever tab we landed on, applied BEFORE the hash is read so
+    // an explicit all=1 / scope=1 in the link still wins.
+    state.scope = !(SCOPES[state.tab] && SCOPES[state.tab].off);
     if (!h) return;
-    var parts = h.split("&");
-    if (REPORTS[parts[0]]) state.tab = parts[0];
     parts.slice(1).forEach(function (kv) {
       var i = kv.indexOf("="); if (i < 0) return;
       var k = kv.slice(0, i), v = decodeURIComponent(kv.slice(i + 1));
@@ -966,6 +983,8 @@
       else if (k === "hood") state.hood = v;
       else if (k === "year") state.year = v;
       else if (k === "all") state.scope = false;
+      else if (k === "scope") state.scope = true;
+      else if (k === "kind") state.kind = v;
       else if (k === "src") state.src = v; else if (k === "sel") state.sel = v;
       else if (k === "sort") { var s = v.split(":"); state.sort = s[0]; state.desc = s[1] !== "a"; }
     });
@@ -1144,7 +1163,8 @@
       b.addEventListener("click", function () {
         state.tab = b.getAttribute("data-tab");
         state.sort = ""; state.sel = null; state.status = ""; state.src = "";
-        state.hood = ""; state.scope = true; state.year = "";
+        state.hood = ""; state.year = ""; state.kind = "";
+        state.scope = !(SCOPES[state.tab] && SCOPES[state.tab].off);
         render();
       });
     });
