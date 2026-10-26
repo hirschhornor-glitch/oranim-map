@@ -155,6 +155,33 @@
       return v ? '<span title="מתוך שם התכנית">' + esc(v) + "</span>"
                : '<span class="empty">—</span>';
     } };
+  // Year the plan came into effect, from XPLAN pl_date_8 via the side-car.
+  //
+  // Three states, because two of them are easy to confuse here:
+  //   1996   approved, date known                      (691 plans)
+  //   ?      status is אישור but XPLAN carries no date  (27 plans) -- a gap
+  //   —      not approved yet, so there IS no year      (the rest)
+  // Showing "—" for all 718 non-dated plans would assert that 27 approved plans
+  // have no approval date, when the truth is XPLAN did not give one.
+  // "הכרעה בהתנגדויות / אישור" and "בהליך אישור" contain the word אישור but are
+  // NOT approved, so the test is an exact match, not indexOf.
+  var YEAR_COL = { k: "year_ok", t: "שנת אישור", n: true,
+    get: function (r) {
+      var d = metaOf(r.plan).effective;
+      return d ? +String(d).slice(0, 4) : null;
+    },
+    fmt: function (v, r) {
+      var d = metaOf(r.plan).effective;
+      if (d) return '<span class="hi" title="תאריך תוקף: ' + esc(d) + '">' + esc(String(d).slice(0, 4)) + "</span>";
+      if ((r.status || "").trim() === "אישור")
+        return '<span class="empty" title="התכנית מאושרת אך XPLAN אינו מחזיק תאריך תוקף">?</span>';
+      return '<span class="empty" title="טרם אושרה — אין עדיין שנת אישור">—</span>';
+    },
+    exp: function (r) {
+      var d = metaOf(r.plan).effective;
+      if (d) return String(d).slice(0, 4);
+      return (r.status || "").trim() === "אישור" ? "?" : "";
+    } };
   var DEV_COL = { k: "dev", t: "יזם",
     get: function (r) { return metaOf(r.plan).developer || ""; },
     fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } };
@@ -546,7 +573,7 @@
         // The old plan number. It is in the commerce file already and was never shown.
         { k: "taba", t: 'תב"ע', get: function (r) { return metaOf(r.plan).taba || ""; },
           fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } },
-        ADDR_COL, HOOD_COL, DEV_COL,
+        ADDR_COL, HOOD_COL, DEV_COL, YEAR_COL,
         { k: "units", t: 'יח"ד', n: true, get: function (r) { return metaOf(r.plan).units || null; },
           fmt: function (v, r) {
             if (!v) return '<span class="empty" title="אין ספירת יח\"ד לתכנית זו — לא בטבלה 5 ולא בגיליון">—</span>';
@@ -639,7 +666,7 @@
         { k: "plan", t: "תכנית", get: function (r) { return r.plan; } },
         { k: "name", t: "שם התכנית", get: function (r) { return r.name || ""; } },
         { k: "status", t: "סטטוס", get: function (r) { return r.status || ""; } },
-        ADDR_COL, HOOD_COL, DEV_COL,
+        ADDR_COL, HOOD_COL, DEV_COL, YEAR_COL,
         { k: "floors", t: "קומות", n: true, get: function (r) { return r.fund.floors; } },
         { k: "cond", t: 'יח"ד מותנות', n: true,
           get: function (r) { return r.fund.conditional_units_t5; },
@@ -744,7 +771,7 @@
             return v ? '<span class="hi">' + (isNaN(+v) ? esc(v) : v + " שנים") + "</span>"
                      : '<span class="empty">לא צוין</span>';
           } },
-        ADDR_COL, HOOD_COL, DEV_COL,
+        ADDR_COL, HOOD_COL, DEV_COL, YEAR_COL,
         { k: "dsrc", t: "מקור המשך", get: function (r) { return r.rental.duration_source || ""; } },
         { k: "flag", t: "לבדיקה", get: function (r) { return r.rental.review ? 1 : 0; },
           fmt: function (v) { return v ? '<span class="pill ocr">שימוש מותר?</span>' : ""; } }
@@ -999,10 +1026,22 @@
   /* ---------------- export / deep link ---------------- */
   function csv() {
     var R = REPORTS[state.tab], rows = visible();
-    var lines = [R.cols.map(function (c) { return c.t; }).concat(["מקור קריאה"]).join(",")];
+    // Quote the header like the data rows. It used to be written raw, and
+    // six titles contain a double quote (תב"ע, יח"ד, מסחר (מ"ר)...), which
+    // a strict RFC-4180 parser reads as the start of a quoted field and then
+    // swallows the following commas -- 22 columns arriving as 16. Excel is
+    // lenient about it, which is why it went unnoticed.
+    var q = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
+    var lines = [R.cols.map(function (c) { return q(c.t); })
+                       .concat([q("מקור קריאה")]).join(",")];
     rows.forEach(function (r) {
       var cells = R.cols.map(function (c) {
-        return '"' + String(c.get(r) == null ? "" : c.get(r)).replace(/"/g, '""') + '"';
+        // `exp` lets a column export something its sort value cannot carry.
+        // The year column sorts numerically, so get() returns null both for
+        // "approved, date missing" and for "not approved yet" -- two different
+        // facts that would land in the CSV as one identical blank cell.
+        var v = c.exp ? c.exp(r) : c.get(r);
+        return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
       });
       cells.push('"' + (r.source === "ocr" ? "OCR" : "טקסט") + '"');
       lines.push(cells.join(","));
