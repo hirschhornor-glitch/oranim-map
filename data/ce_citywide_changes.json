@@ -1,204 +1,810 @@
 {
- "generated_at": "2026-10-26T10:51:54",
- "previous_at": "2026-10-04T16:07:26",
+ "generated_at": "2026-10-26T11:01:00",
+ "previous_at": "2026-10-26T10:51:54",
  "first_run": false,
  "plans": {
-  "ce": 944,
+  "ce": 945,
   "housing": 242
  },
  "changed": {
-  "ce": 0,
-  "fund": 6,
-  "rental": 6
+  "ce": 45,
+  "fund": 0,
+  "rental": 0
  },
  "horaot_gap": {
   "archived": 4603,
-  "in_scope": 944,
-  "missing_count": 8,
+  "in_scope": 945,
+  "missing_count": 13,
   "missing": [
+   "101-0185306",
    "101-0466862",
+   "101-1005461",
    "101-1013911",
    "101-1082809",
    "101-1181593",
    "101-1288190",
    "101-1535905",
-   "101-1596337",
-   "101-1598812"
+   "101-1541549",
+   "101-1547348",
+   "101-1550052",
+   "101-1598812",
+   "101-1623784"
   ]
  },
  "by_tab": {
-  "ce": {},
-  "fund": {
-   "101-0790360": {
+  "ce": {
+   "101-0185306": {
     "fields": [
-     "units_total"
+     "new"
     ],
     "labels": [
-     "יח\"ד בתכנית"
+     "תכנית חדשה בדוח"
     ],
-    "from": {
-     "units_total": 84
-    },
-    "to": {
-     "units_total": 39
-    }
+    "from": {},
+    "to": {}
    },
-   "101-1025295": {
+   "101-1005461": {
     "fields": [
-     "units_total"
+     "new"
     ],
     "labels": [
-     "יח\"ד בתכנית"
+     "תכנית חדשה בדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1057868": {
+    "fields": [
+     "commerce_sqm"
+    ],
+    "labels": [
+     "מסחר"
     ],
     "from": {
-     "units_total": 145
+     "commerce_sqm": 1615
     },
     "to": {
-     "units_total": 144
+     "commerce_sqm": 235
     }
    },
-   "101-1095330": {
+   "101-0731455": {
     "fields": [
-     "status"
+     "station_desc"
     ],
     "labels": [
      "סטטוס"
     ],
     "from": {
-     "status": "במילוי תנאים להפקדה"
+     "station_desc": "הכרעה בהתנגדויות / אישור"
     },
     "to": {
-     "status": "הפקדה להתנגדויות/השגות"
+     "station_desc": "בהליך אישור"
     }
    },
-   "101-1114040": {
+   "101-0502948": {
     "fields": [
-     "units_total"
+     "station_desc"
     ],
     "labels": [
-     "יח\"ד בתכנית"
+     "סטטוס"
     ],
     "from": {
-     "units_total": 5
+     "station_desc": "הפקדה להתנגדויות/השגות"
     },
     "to": {
-     "units_total": 3
+     "station_desc": "בהליך אישור"
     }
    },
-   "101-1422401": {
+   "101-1237767": {
     "fields": [
-     "units_total"
+     "station_desc"
     ],
     "labels": [
-     "יח\"ד בתכנית"
+     "סטטוס"
     ],
     "from": {
-     "units_total": 64
+     "station_desc": "בבדיקה תכנונית"
     },
     "to": {
-     "units_total": 112
+     "station_desc": "במילוי תנאים להפקדה"
     }
    },
-   "101-1571991": {
+   "101-1164854": {
     "fields": [
-     "units_total"
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
     ],
     "labels": [
-     "יח\"ד בתכנית"
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
     ],
     "from": {
-     "units_total": 7
+     "station_desc": "בהליך אישור",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
     },
     "to": {
-     "units_total": 9
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
     }
+   },
+   "101-1190362": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "הכרעה בהתנגדויות / אישור"
+    },
+    "to": {
+     "station_desc": "בהליך אישור"
+    }
+   },
+   "101-1451186": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1482132": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1429737": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1550052": {
+    "fields": [
+     "new"
+    ],
+    "labels": [
+     "תכנית חדשה בדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1478601": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1469246": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1305846": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "הכרעה בהתנגדויות / אישור"
+    },
+    "to": {
+     "station_desc": "בהליך אישור"
+    }
+   },
+   "101-1371368": {
+    "fields": [
+     "commerce_sqm",
+     "project_kind",
+     "t5_status"
+    ],
+    "labels": [
+     "מסחר",
+     "סוג הפרויקט",
+     "טבלה 5"
+    ],
+    "from": {
+     "commerce_sqm": 0,
+     "project_kind": null,
+     "t5_status": "not_fetched"
+    },
+    "to": {
+     "commerce_sqm": 261,
+     "project_kind": "mixed_resid",
+     "t5_status": "success"
+    }
+   },
+   "101-1336049": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1571736": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1516681": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "בבדיקה תכנונית"
+    },
+    "to": {
+     "station_desc": "במילוי תנאים להפקדה"
+    }
+   },
+   "101-1496694": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1442284": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1500735": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1363373": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "station_desc": "הפקדה להתנגדויות/השגות"
+    }
+   },
+   "101-1481985": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1233766": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1455443": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות"
+    },
+    "to": {
+     "station_desc": "הכרעה בהתנגדויות / אישור"
+    }
+   },
+   "101-1526193": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1366053": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "הפקדה להתנגדויות/השגות"
+    },
+    "to": {
+     "station_desc": "הכרעה בהתנגדויות / אישור"
+    }
+   },
+   "101-1623784": {
+    "fields": [
+     "new"
+    ],
+    "labels": [
+     "תכנית חדשה בדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1217165": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "בהליך אישור",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1363290": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "בהליך אישור",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1382423": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "station_desc": "הפקדה להתנגדויות/השגות"
+    }
+   },
+   "101-1252675": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "station_desc": "הפקדה להתנגדויות/השגות"
+    }
+   },
+   "101-1541549": {
+    "fields": [
+     "new"
+    ],
+    "labels": [
+     "תכנית חדשה בדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1283639": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "station_desc": "הפקדה להתנגדויות/השגות"
+    }
+   },
+   "101-1040138": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "station_desc": "בבדיקה תכנונית"
+    }
+   },
+   "101-1547348": {
+    "fields": [
+     "new"
+    ],
+    "labels": [
+     "תכנית חדשה בדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1095330": {
+    "fields": [
+     "station_desc"
+    ],
+    "labels": [
+     "סטטוס"
+    ],
+    "from": {
+     "station_desc": "במילוי תנאים להפקדה"
+    },
+    "to": {
+     "station_desc": "הפקדה להתנגדויות/השגות"
+    }
+   },
+   "101-1284660": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "בהליך אישור",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1080092": {
+    "fields": [
+     "station_desc",
+     "has_licensing_file",
+     "any_issued",
+     "in_construction",
+     "completed"
+    ],
+    "labels": [
+     "סטטוס",
+     "תיק רישוי",
+     "היתר",
+     "בביצוע",
+     "גמר בנייה"
+    ],
+    "from": {
+     "station_desc": "בהליך אישור",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
+     "has_licensing_file": false,
+     "any_issued": false,
+     "in_construction": false,
+     "completed": false
+    }
+   },
+   "101-1142264": {
+    "fields": [
+     "gone"
+    ],
+    "labels": [
+     "יצאה מהדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1315928": {
+    "fields": [
+     "gone"
+    ],
+    "labels": [
+     "יצאה מהדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1536739": {
+    "fields": [
+     "gone"
+    ],
+    "labels": [
+     "יצאה מהדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1527605": {
+    "fields": [
+     "gone"
+    ],
+    "labels": [
+     "יצאה מהדוח"
+    ],
+    "from": {},
+    "to": {}
+   },
+   "101-1596337": {
+    "fields": [
+     "gone"
+    ],
+    "labels": [
+     "יצאה מהדוח"
+    ],
+    "from": {},
+    "to": {}
    }
   },
-  "rental": {
-   "101-0790360": {
-    "fields": [
-     "units_total"
-    ],
-    "labels": [
-     "יח\"ד בתכנית"
-    ],
-    "from": {
-     "units_total": 84
-    },
-    "to": {
-     "units_total": 39
-    }
-   },
-   "101-1025295": {
-    "fields": [
-     "units_total"
-    ],
-    "labels": [
-     "יח\"ד בתכנית"
-    ],
-    "from": {
-     "units_total": 145
-    },
-    "to": {
-     "units_total": 144
-    }
-   },
-   "101-1095330": {
-    "fields": [
-     "status"
-    ],
-    "labels": [
-     "סטטוס"
-    ],
-    "from": {
-     "status": "במילוי תנאים להפקדה"
-    },
-    "to": {
-     "status": "הפקדה להתנגדויות/השגות"
-    }
-   },
-   "101-1114040": {
-    "fields": [
-     "units_total"
-    ],
-    "labels": [
-     "יח\"ד בתכנית"
-    ],
-    "from": {
-     "units_total": 5
-    },
-    "to": {
-     "units_total": 3
-    }
-   },
-   "101-1422401": {
-    "fields": [
-     "units_total"
-    ],
-    "labels": [
-     "יח\"ד בתכנית"
-    ],
-    "from": {
-     "units_total": 64
-    },
-    "to": {
-     "units_total": 112
-    }
-   },
-   "101-1571991": {
-    "fields": [
-     "units_total"
-    ],
-    "labels": [
-     "יח\"ד בתכנית"
-    ],
-    "from": {
-     "units_total": 7
-    },
-    "to": {
-     "units_total": 9
-    }
-   }
-  }
+  "fund": {},
+  "rental": {}
  }
 }
