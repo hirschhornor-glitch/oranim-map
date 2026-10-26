@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-26T22:35:01",
+ "generated_at": "2026-10-27T00:42:23",
  "count": 981,
  "by_plan": {
   "101-0051813": {
@@ -9711,12 +9711,12 @@
    "split_source": "טבלה 5",
    "has_licensing_file": true,
    "permit_count": 1,
-   "any_issued": false,
+   "any_issued": true,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": "ג-רישוי בתהליך"
+   "stage": "ד-היתר בנייה"
   },
   "101-0911610": {
    "pl_name": "תוספת שתי קומות על בניין קיים, שכונת בית צפפה",
@@ -11949,14 +11949,14 @@
    "t5_status": "success",
    "t5_source": "horaot_pdf",
    "split_source": "טבלה 5",
-   "has_licensing_file": false,
-   "permit_count": 0,
+   "has_licensing_file": true,
+   "permit_count": 1,
    "any_issued": false,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null
+   "stage": "ג-רישוי בתהליך"
   },
   "101-0931808": {
    "pl_name": "הקמת בניין  למסחר ומגורים בשכונת בית חנינה, ירושלים.",
@@ -12036,11 +12036,11 @@
    "has_licensing_file": true,
    "permit_count": 2,
    "any_issued": true,
-   "in_construction": false,
+   "in_construction": true,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": "ד-היתר בנייה"
+   "stage": "ה-בבנייה"
   },
   "101-1021344": {
    "pl_name": "תוספת קומות, יח\"ד ושטחי בניה, מתחם המשתלה, ירושלים",
@@ -12792,11 +12792,11 @@
    "has_licensing_file": true,
    "permit_count": 3,
    "any_issued": true,
-   "in_construction": true,
+   "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": "ה-בבנייה"
+   "stage": "ד-היתר בנייה"
   },
   "101-0857086": {
    "pl_name": "מסחר משולב מגורים, שצ\"פ משולב שב\"צ, צפונית לפארק המסילה",
@@ -15787,12 +15787,12 @@
    "split_source": "טבלה 5",
    "has_licensing_file": true,
    "permit_count": 1,
-   "any_issued": false,
+   "any_issued": true,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": "ג-רישוי בתהליך"
+   "stage": "ד-היתר בנייה"
   },
   "101-1221316": {
    "pl_name": "תיאטרון הפרגוד- שינוי ייעוד והוספת זכויות",
@@ -16037,14 +16037,14 @@
    "t5_status": "success",
    "t5_source": "xlsx",
    "split_source": "נספח תנועה (מאזן חניה: מסחר 1,310 / משרדים 2,650 — יחס 33/67 על סך טבלה 5)",
-   "has_licensing_file": false,
-   "permit_count": 0,
-   "any_issued": false,
-   "in_construction": false,
+   "has_licensing_file": true,
+   "permit_count": 1,
+   "any_issued": true,
+   "in_construction": true,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null
+   "stage": "ה-בבנייה"
   },
   "101-0894857": {
    "pl_name": "תכנית אב  ואדי ג'וז - ירושלים",
@@ -17633,14 +17633,14 @@
    "t5_status": "success",
    "t5_source": "xlsx",
    "split_source": "טבלה 5",
-   "has_licensing_file": false,
-   "permit_count": 0,
+   "has_licensing_file": true,
+   "permit_count": 1,
    "any_issued": false,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null
+   "stage": "ג-רישוי בתהליך"
   },
   "101-0657593": {
    "pl_name": "סטריפ דרך חברון, ירושלים - מתחם שימושים מעורבים על ציר רק\"ל",
@@ -19117,14 +19117,14 @@
    "t5_status": "success",
    "t5_source": "xlsx",
    "split_source": "טבלה 5",
-   "has_licensing_file": false,
-   "permit_count": 0,
+   "has_licensing_file": true,
+   "permit_count": 1,
    "any_issued": false,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null
+   "stage": "ג-רישוי בתהליך"
   },
   "101-0838490": {
    "pl_name": "מתחם כרמית - הקמת מתחם מגורים, מלונאות, מבני ציבור ופארק, קריית יובל",
@@ -25731,7 +25731,7 @@
    "in_construction": false,
    "completed": true,
    "occupied": true,
-   "form4_date": "26/08/2026",
+   "form4_date": "08/10/2026",
    "stage": "ו-גמר בנייה"
   },
   "101-1275551": {
