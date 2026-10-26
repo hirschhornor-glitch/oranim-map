@@ -158,7 +158,42 @@
   var DEV_COL = { k: "dev", t: "יזם",
     get: function (r) { return metaOf(r.plan).developer || ""; },
     fmt: function (v) { return v ? esc(v) : '<span class="empty">—</span>'; } };
-  var REAL_COLS = [CUR_COL];
+  // The licensing file number, asked for alongside the realization columns: once a
+  // plan is filtered to מאושרת and split into תכנון / ביצוע / אכלוס, the next question
+  // is which file to open. It is already in the permit payload as permits[].tik.
+  //
+  // Three-state, like the rest of the realization block. A plan the realization pass
+  // never examined shows "לא נבדק"; a plan it examined and found no file for shows
+  // "—". Collapsing those two into one blank would claim 226 plans have no licensing
+  // file when the truth is nobody asked.
+  var tiks = function (plan) {
+    var v = realOf(plan);
+    if (!v) return null;                       // not checked
+    var seen = {}, out = [];
+    (v.permits || []).forEach(function (pm) {
+      var t = (pm.tik || "").trim();
+      if (t && !seen[t]) { seen[t] = 1; out.push(t); }
+    });
+    return out;                                // [] = checked, none
+  };
+  var TIK_COL = {
+    k: "tik", t: "תיק רישוי",
+    // ALL of them, not just the first: the CSV export writes c.get() straight into
+    // the cell, and a plan with five files would export as one file number with
+    // nothing marking the omission. Sorting still orders by the first.
+    get: function (r) { var t = tiks(r.plan); return t && t.length ? t.join(" · ") : ""; },
+    fmt: function (v, r) {
+      var t = tiks(r.plan);
+      if (t === null) return '<span class="empty" title="מצב המימוש לא נבדק לתכנית זו">לא נבדק</span>';
+      if (!t.length) return '<span class="empty" title="נבדק — לא נמצא תיק רישוי">—</span>';
+      // One plan carries 88 files. Showing them all would break the row, and showing
+      // only the first without saying so would read as "this is the file".
+      var head = esc(t[0]);
+      var rest = t.length > 1 ? ' <span class="pill">+' + (t.length - 1) + "</span>" : "";
+      return '<span class="hi" title="' + esc(t.join(" · ")) + '">' + head + "</span>" + rest;
+    }
+  };
+  var REAL_COLS = [CUR_COL, TIK_COL];
 
   /* ---------------- realization model ----------------
    * Parameters taken verbatim from the municipal presentation
