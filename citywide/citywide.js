@@ -46,7 +46,7 @@
   // describe everything in the file — but it is switchable, because a number nobody
   // can widen is a number nobody can check.
   var state = { tab: "ce", q: "", status: "", sub: "", src: "", sort: "", desc: true,
-                sel: null, scope: true, hood: "", year: "" };
+                sel: null, scope: true, hood: "", year: "", kind: "" };
   var D = { ce: null, housing: null, parcels: null, bounds: null, permits: null, meta: null };
   var map = null, layer = null, geoByPlan = {}, mapNote = "";
 
@@ -507,7 +507,16 @@
         // CE combined with a use that is neither (residential/public/tourism):
         // reported so the gap is visible, never attributed to either side.
         { k: "mix", t: "מעורב", n: true, get: function (r) { return r.ce.mixed_other_sqm || 0; },
-          fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } }
+          fmt: function (v) { return v ? n0(v) : '<span class="empty">—</span>'; } },
+        // Dedicated employment/commerce scheme, or commerce riding inside a
+        // housing plan? 79 plans are pure (1.81M מ"ר) against 578 mixed (2.86M),
+        // so most of the city's commerce and employment sits inside residential
+        // plans. Blank where no Table 5 could be read -- not "no housing".
+        { k: "kind", t: "סוג הפרויקט", get: function (r) { return r.ce.project_kind || ""; },
+          fmt: function (v) {
+            return v === "pure_ce" ? '<span class="hi">תעסוקה/מסחר</span>'
+                 : v === "mixed_resid" ? 'מעורב עם מגורים'
+                 : '<span class="empty">?</span>'; } }
       ].concat(REAL_COLS).concat(FORECAST_COLS),
       detail: function (r) {
         var h = "";
@@ -758,6 +767,9 @@
       return ((r.plan || "") + " " + (r.name || "") + " " + (r.sub_neighborhood || "")).indexOf(q) !== -1;
     });
     if (state.status) rows = rows.filter(function (r) { return r.status === state.status; });
+    // CE tab only: dedicated employment/commerce schemes vs commerce inside housing.
+    if (state.kind && state.tab === "ce")
+      rows = rows.filter(function (r) { return (r.ce || {}).project_kind === state.kind; });
     if (state.src) rows = rows.filter(function (r) { return r.source === state.src; });
     if (state.sort) {
       var col = R.cols.filter(function (c) { return c.k === state.sort; })[0];
@@ -1058,6 +1070,13 @@
           Object.keys(statuses).sort(function (a, b) { return a.localeCompare(b, "he"); })
             .map(function (v) { return '<option' + (v === state.status ? " selected" : "") +
               ">" + esc(v) + "</option>"; }).join("") + "</select>" +
+        (state.tab === "ce" ?
+          // Pure employment/commerce scheme vs commerce inside a housing plan.
+          '<select id="fkind"><option value="">כל סוגי הפרויקטים</option>' +
+          '<option value="pure_ce"' + (state.kind === "pure_ce" ? " selected" : "") +
+            ">תעסוקה/מסחר בלבד</option>" +
+          '<option value="mixed_resid"' + (state.kind === "mixed_resid" ? " selected" : "") +
+            ">מעורב עם מגורים</option></select>" : "") +
         (state.tab === "ce" ? "" :
           '<select id="fsrc"><option value="">טקסט + OCR</option>' +
           '<option value="text"' + (state.src === "text" ? " selected" : "") + ">טקסט בלבד</option>" +
@@ -1147,6 +1166,7 @@
       state.hood = (state.hood === h ? "" : h); state.sel = null; render();
     });
     on("fsrc", "change", function (e) { state.src = e.target.value; render(); });
+    on("fkind", "change", function (e) { state.kind = e.target.value; state.sel = null; render(); });
     on("csv", "click", csv);
     on("prn", "click", function () { window.print(); });
     on("lnk", "click", function () {
