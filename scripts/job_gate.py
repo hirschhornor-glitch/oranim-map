@@ -95,6 +95,7 @@ SCHEDULE = {
     "run_weekly_decision_docs_scan.bat": "20:00",
     "run_biweekly_citywide_refresh.bat": "21:00",
     "run_biweekly_objections_scan.bat": "22:00",
+    "run_permits_full_sweep.bat": "22:45",
     "git_sync.py": "22:30",                       # Oranim_ScriptMirror_Daily
 }
 
