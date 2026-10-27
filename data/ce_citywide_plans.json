@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-27T00:42:23",
+ "generated_at": "2026-10-27T02:10:52",
  "count": 981,
  "by_plan": {
   "101-0051813": {
@@ -475,7 +475,7 @@
    "in_construction": true,
    "completed": true,
    "occupied": false,
-   "form4_date": "06/02/2017",
+   "form4_date": "29/09/2020",
    "stage": "ו-גמר בנייה"
   },
   "101-0120584": {
@@ -3214,7 +3214,7 @@
    "t5_source": "horaot_pdf",
    "split_source": "טבלה 5",
    "has_licensing_file": true,
-   "permit_count": 5,
+   "permit_count": 6,
    "any_issued": true,
    "in_construction": true,
    "completed": true,
@@ -3412,11 +3412,11 @@
    "has_licensing_file": true,
    "permit_count": 5,
    "any_issued": true,
-   "in_construction": false,
+   "in_construction": true,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": "ד-היתר בנייה"
+   "stage": "ה-בבנייה"
   },
   "101-0501403": {
    "pl_name": "בנין חדש למגורים ומסחר ברח' ברבר,שכ' ראס אל עמוד.",
@@ -4337,10 +4337,10 @@
    "permit_count": 2,
    "any_issued": true,
    "in_construction": true,
-   "completed": false,
+   "completed": true,
    "occupied": false,
-   "form4_date": null,
-   "stage": "ה-בבנייה"
+   "form4_date": "22/10/2026",
+   "stage": "ו-גמר בנייה"
   },
   "101-0499699": {
    "pl_name": "הקמת מבנה למסחר ותעסוקה, מרכז העיר מזרח, ירושלים.",
@@ -4392,11 +4392,11 @@
    "has_licensing_file": true,
    "permit_count": 1,
    "any_issued": true,
-   "in_construction": false,
+   "in_construction": true,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": "ד-היתר בנייה"
+   "stage": "ה-בבנייה"
   },
   "101-0388405": {
    "pl_name": "תוספת קומות ודירות לבניין קיים רח' שטראוס11 ,ירושלים",
@@ -5036,9 +5036,9 @@
    "has_licensing_file": true,
    "permit_count": 2,
    "any_issued": true,
-   "in_construction": true,
+   "in_construction": false,
    "completed": true,
-   "occupied": false,
+   "occupied": true,
    "form4_date": "25/12/2023",
    "stage": "ו-גמר בנייה"
   },
@@ -5067,7 +5067,7 @@
    "in_construction": false,
    "completed": true,
    "occupied": false,
-   "form4_date": "24/05/2023",
+   "form4_date": "23/05/2018",
    "stage": "ו-גמר בנייה"
   },
   "101-0672881": {
@@ -7190,12 +7190,12 @@
    "t5_source": "horaot_pdf",
    "split_source": "",
    "has_licensing_file": true,
-   "permit_count": 88,
+   "permit_count": 89,
    "any_issued": true,
    "in_construction": true,
    "completed": true,
    "occupied": false,
-   "form4_date": "19/11/2023",
+   "form4_date": "01/07/2025",
    "stage": "ו-גמר בנייה"
   },
   "101-0252379": {
@@ -7304,11 +7304,11 @@
    "has_licensing_file": true,
    "permit_count": 1,
    "any_issued": true,
-   "in_construction": true,
-   "completed": false,
-   "occupied": false,
-   "form4_date": null,
-   "stage": "ה-בבנייה"
+   "in_construction": false,
+   "completed": true,
+   "occupied": true,
+   "form4_date": "14/10/2026",
+   "stage": "ו-גמר בנייה"
   },
   "101-0758938": {
    "pl_name": "הגדלת מספר יחידות דיור ללא הגדלת סך כל השטחים המאושרים בשטח",
@@ -8259,7 +8259,7 @@
    "in_construction": false,
    "completed": true,
    "occupied": true,
-   "form4_date": "25/10/2023",
+   "form4_date": "14/08/2025",
    "stage": "ו-גמר בנייה"
   },
   "101-0761346": {
@@ -8679,7 +8679,7 @@
    "in_construction": true,
    "completed": true,
    "occupied": false,
-   "form4_date": "12/08/2026",
+   "form4_date": "30/12/2024",
    "stage": "ו-גמר בנייה"
   },
   "101-0614909": {
@@ -11362,13 +11362,13 @@
    "t5_source": "horaot_pdf",
    "split_source": "טבלה 5",
    "has_licensing_file": true,
-   "permit_count": 3,
-   "any_issued": false,
+   "permit_count": 4,
+   "any_issued": true,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": "ג-רישוי בתהליך"
+   "stage": "ד-היתר בנייה"
   },
   "101-0848796": {
    "pl_name": "בינוי לבניין בן 10 קומות ברח' הנטקה 30-32, ירושלים",
@@ -13882,7 +13882,7 @@
    "t5_source": "xlsx",
    "split_source": "",
    "has_licensing_file": true,
-   "permit_count": 7,
+   "permit_count": 8,
    "any_issued": true,
    "in_construction": true,
    "completed": false,
@@ -22701,14 +22701,14 @@
    "t5_status": "success",
    "t5_source": "xlsx",
    "split_source": "טבלה 5",
-   "has_licensing_file": false,
-   "permit_count": 0,
+   "has_licensing_file": true,
+   "permit_count": 1,
    "any_issued": false,
    "in_construction": false,
    "completed": false,
    "occupied": false,
    "form4_date": null,
-   "stage": null
+   "stage": "ג-רישוי בתהליך"
   },
   "101-1141290": {
    "pl_name": "התחדשות עירונית במתחם פטרי, נווה יעקב, ירושלים",
