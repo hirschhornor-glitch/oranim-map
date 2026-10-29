@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-26-ce';
+        const APP_VERSION = '2026-10-29-statuschg';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3943,6 +3943,7 @@ function planPermitHafrashUse(taba) {
                 overlapping: false,   // תבעות כפולות על אותו מרחב
                 objections: false,     // תכניות המופקדות להתנגדויות
                 new_plans: false,      // תכניות חדשות שזוהו ב-30 הימים האחרונים (first_detected)
+                status_changed: false, // תכניות ששינו סטטוס בבדיקה השבועית (7 ימים מהריצה)
                 meetings: false,       // תכניות עם ישיבה קרובה
                 infrastructure: false,
                 plan7778: false,         // תכניות בהודעה 77/78
@@ -4067,6 +4068,7 @@ function planPermitHafrashUse(taba) {
             const [objectionsReport, setObjectionsReport] = useState(false);
             const [residentSharedReport, setResidentSharedReport] = useState(false);
             const [newPlansReport, setNewPlansReport] = useState(false);
+            const [statusChangedReport, setStatusChangedReport] = useState(false);
             const [permitObjectionsReport, setPermitObjectionsReport] = useState(false);
             // מה חדש — צמצום דוחות הפקדות/היתרים לרשומות שפורסמו לאחרונה (0 = ללא סינון).
             const [objRecencyDays, setObjRecencyDays] = useState(0);
@@ -6121,6 +6123,8 @@ function planPermitHafrashUse(taba) {
                 window.__tama38Valencies = {};
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
+                window.__statusChanges = {}; // agam_id / plan_name → latest change of the last weekly run
+                window.__statusChangesLastRun = '';
                 window.__objectionsPermits = {};
                 window.__objectionsProcess = { confirmed_open: [], verify: [] };
                 window.__objectionsProcessByTik = {};
@@ -6156,6 +6160,7 @@ function planPermitHafrashUse(taba) {
                     ['__tama38TreeOverlap', 'data/tama38_tree_overlap.json'],
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
+                    ['__statusChanges', 'data/status_changes.json'],
                     ['__objectionsPermits', 'data/objections_permits.json'],
                     ['__objectionsProcess', 'data/objections_process.json'],
                     ['__treePermits', 'data/tree_permits.json'],
@@ -6818,6 +6823,26 @@ function planPermitHafrashUse(taba) {
                                     if (!cur || md < cur._d) { idx[pid] = { ...m, _d: md }; }
                                 });
                                 window.__meetings = idx;
+                            }
+                            else if (key === '__statusChanges') {
+                                // Keep changes detected by the weekly status check (update_mavat_ui)
+                                // within the last 7 days of the run itself (detected_ts, not mavat_date).
+                                // Index by agam_id and plan_name; a plan changed twice keeps the latest.
+                                const idx = {};
+                                const arr = (data && Array.isArray(data.changes)) ? data.changes : [];
+                                const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+                                let lastRun = '';
+                                arr.forEach(c => {
+                                    const ts = String(c.detected_ts || c.detected || '').trim();
+                                    if (ts > lastRun) lastRun = ts;
+                                    const d = new Date(ts.replace(' ', 'T'));
+                                    if (isNaN(d.getTime()) || d.getTime() < cutoff) return;
+                                    [String(c.agam_id || '').replace(/\.0$/, ''), String(c.plan_name || '').trim()].forEach(k => {
+                                        if (k && (!idx[k] || ts >= String(idx[k].detected_ts || ''))) idx[k] = c;
+                                    });
+                                });
+                                window.__statusChanges = idx;
+                                window.__statusChangesLastRun = lastRun;
                             }
                         });
                         // Merge side-file extra_permits (permits the taba-driven scraper missed,
@@ -17130,6 +17155,7 @@ function planPermitHafrashUse(taba) {
                         ser: () => ({ rec: objRecencyDays || '' }),
                         apply: p => { if (p.rec) setObjRecencyDays(parseInt(p.rec) || 0); } },
                     { key: 'newPlans', isOpen: () => newPlansReport, open: () => setNewPlansReport(true) },
+                    { key: 'statusChanged', isOpen: () => statusChangedReport, open: () => setStatusChangedReport(true) },
                     { key: 'permitObjections', isOpen: () => permitObjectionsReport, open: () => setPermitObjectionsReport(true),
                         ser: () => ({ rec: permObjRecencyDays || '' }),
                         apply: p => { if (p.rec) setPermObjRecencyDays(parseInt(p.rec) || 0); } },
@@ -18369,7 +18395,14 @@ function planPermitHafrashUse(taba) {
                     return d >= cutoff;
                 }
 
-                if (gd.plans && (planningTopics.overlapping || planningTopics.objections || planningTopics.new_plans || planningTopics.meetings || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
+                // "תכניות ששינו סטטוס" — matched in the last weekly status check
+                // (data/status_changes.json, filtered to 7 days at load time).
+                function recentStatusChange(p) {
+                    const sc = window.__statusChanges || {};
+                    return sc[String(p.agam_id || '').replace(/\.0$/, '')] || sc[String(p.plan_name || '').trim()] || null;
+                }
+
+                if (gd.plans && (planningTopics.overlapping || planningTopics.objections || planningTopics.new_plans || planningTopics.status_changed || planningTopics.meetings || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
                     // Inject SVG hatch patterns into map's SVG defs
                     const svgEl = map.getRenderer(L.geoJSON())._container || map.getPane('overlayPane').querySelector('svg');
                     if (svgEl) {
@@ -18403,6 +18436,7 @@ function planPermitHafrashUse(taba) {
                             const p = f.properties;
                             if (planningTopics.overlapping && isOverlapHighlighted(p)) return true;
                             if (planningTopics.new_plans && isNewPlan(p)) return true;
+                            if (planningTopics.status_changed && recentStatusChange(p)) return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 // Show only plans whose effective objection-end date is today or in the future.
                                 // For ועדה מחוזית: fall back to (mavat_date + 60 days) when no stored date,
@@ -18442,6 +18476,8 @@ function planPermitHafrashUse(taba) {
                             const p = f.properties;
                             if (planningTopics.new_plans && isNewPlan(p))
                                 return { color: '#e91e63', weight: 3, fillOpacity: 0 };
+                            if (planningTopics.status_changed && recentStatusChange(p))
+                                return { color: '#00bfa5', weight: 3, fillOpacity: 0, dashArray: '6 4' };
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.meetings) {
@@ -27716,6 +27752,7 @@ function planPermitHafrashUse(taba) {
                     { id: 'overlap',      title: 'תב"עות כפולות',            desc: 'תכניות חופפות', icon: '🔁' },
                     { id: 'objections',   title: 'הפקדות להתנגדויות',        desc: 'תכניות מופקדות', icon: '📝' },
                     { id: 'new_plans',    title: 'תכניות חדשות',            desc: 'זוהו ב-30 הימים האחרונים', icon: '🆕' },
+                    { id: 'status_changed', title: 'תכניות ששינו סטטוס', desc: 'בבדיקת הסטטוס השבועית (7 ימים)', icon: '🔄' },
                     { id: 'permit_objections', title: 'היתרים פתוחים להתנגדויות', desc: 'בקשות להיתר עם הקלות (סעיף 149)', icon: '⚖️' },
                     { id: 'tree_permits', title: 'אישורי כריתת עצים פתוחים לערר', desc: 'אישורי כריתה עם מועד אחרון לערר (מעירים/פקיד היערות)', icon: '🌳' },
                     { id: 'active_sites', title: 'אתרי בנייה פעילים', desc: 'קבלן מבצע, עגורן, צווי בטיחות ועיצומים (מנהל הבטיחות)', icon: '🏗️' },
@@ -27838,6 +27875,7 @@ function planPermitHafrashUse(taba) {
                     else if (id === 'overlap') setOverlapReport(true);
                     else if (id === 'objections') setObjectionsReport(true);
                     else if (id === 'new_plans') setNewPlansReport(true);
+                    else if (id === 'status_changed') setStatusChangedReport(true);
                     else if (id === 'permit_objections') setPermitObjectionsReport(true);
                     else if (id === 'tree_permits') setTreePermitsReport(true);
                     else if (id === 'active_sites') setActiveSitesReport(true);
@@ -28557,6 +28595,16 @@ function planPermitHafrashUse(taba) {
                                 <label style={{flex:1}}>תכניות חדשות</label>
                                 <button className="layer-legend-btn" title="דוח תכניות חדשות"
                                     onClick={(e) => { e.stopPropagation(); setNewPlansReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            <div className="layer-item"
+                                 title='תכניות ששינו סטטוס בבדיקת הסטטוס השבועית — מוצגות 7 ימים מהריצה'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, status_changed: !prev.status_changed}))}>
+                                <input type="checkbox" checked={planningTopics.status_changed} onChange={() => {}} />
+                                <label style={{flex:1}}>תכניות ששינו סטטוס</label>
+                                <button className="layer-legend-btn" title="דוח שינויי סטטוס"
+                                    onClick={(e) => { e.stopPropagation(); setStatusChangedReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             <div className="layer-item"
@@ -31564,6 +31612,7 @@ function planPermitHafrashUse(taba) {
                                 { icon:'📊', title:'שלביות ביצוע', desc:'מתי מתקבלות ההפרשות הציבוריות (מסירה בשלבים) ומשך התכנית', onClick:() => go(() => setStagingReport(true)) },
                                 { icon:'📝', title:'הפקדות להתנגדויות', desc:'תכניות מופקדות לפי סמכות', onClick:() => go(() => setObjectionsReport(true)) },
                                 { icon:'🆕', title:'תכניות חדשות', desc:'תכניות שזוהו ב-30 הימים האחרונים (יח"ד, שב"צ/שצ"פ יוצא)', onClick:() => go(() => setNewPlansReport(true)) },
+                                { icon:'🔄', title:'תכניות ששינו סטטוס', desc:'שינויי סטטוס שנמצאו בבדיקה השבועית (7 ימים מהריצה) — סטטוס קודם → חדש', onClick:() => go(() => setStatusChangedReport(true)) },
                                 { icon:'📅', title:'ישיבות קרובות', desc:'תכניות בדיון בוועדות הקרובות', onClick:() => go(() => setMeetingsReport(true)) },
                                 { icon:'🔁', title:'תב"עות כפולות', desc:'תכניות חופפות באותו מרחב', onClick:() => go(() => setOverlapReport(true)) },
                                 { icon:'📎', title:'נספחי תכניות ודוחות כלכליים', desc:'אילו נספחים יש לכל תכנית (עצים, חברתי, תיעוד, כלכלי, ניקוז…), עיקרי תיקי התיעוד, ומכפיל נדרש מול מאושר מחוות הדעת הכלכליות — לפי מינה"ק', onClick:() => go(() => setAppendicesReport(true)) },
@@ -36523,6 +36572,117 @@ function planPermitHafrashUse(taba) {
                                             });
                                             const csvContent = csvRows.join('\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="תכניות_חדשות.csv";a.click()});<\/script>');
+                                            printWin.document.write('</body></html>');
+                                            printWin.document.close();
+                                            printWin.focus();
+                                        }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {/* ── תכניות ששינו סטטוס — last weekly status check (data/status_changes.json) ── */}
+                    {statusChangedReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const adminLayersS = Object.values(LAYER_CONFIG).flatMap(g => g.layers).filter(l => l.minahak);
+                        const selectedMinahaksS = adminLayersS.filter(l => layers[l.id]).map(l => l.minahak);
+                        const allAdminOnS = adminLayersS.every(l => layers[l.id]);
+                        const checkMinahakS = (props) => allAdminOnS || selectedMinahaksS.includes(props.minahak || '');
+                        const sc = window.__statusChanges || {};
+                        const seen = new Set();
+                        const rows = [];
+                        gd.plans.features.forEach(f => {
+                            const p = f.properties;
+                            const c = sc[String(p.agam_id || '').replace(/\.0$/, '')] || sc[String(p.plan_name || '').trim()];
+                            if (!c || !checkMinahakS(p)) return;
+                            const id = p.plan_name || '';
+                            if (seen.has(id)) return;
+                            seen.add(id);
+                            rows.push({ plan_name: p.plan_name, taba: p.taba, plan_summary: p.plan_summary, plan_name_he: p.plan_name_he,
+                                minahak: p.minahak, old_status: c.old_status, new_status: c.new_status,
+                                mavat_date: c.mavat_date, detected: c.detected, detected_ts: c.detected_ts });
+                        });
+                        rows.sort((a, b) => String(b.detected_ts || '').localeCompare(String(a.detected_ts || '')) ||
+                            String(a.plan_name || '').localeCompare(String(b.plan_name || '')));
+                        const lastRun = String(window.__statusChangesLastRun || '').split(' ')[0];
+                        const fmtDay = (d) => { const s = String(d || '').split(' ')[0].split('-'); return s.length === 3 ? `${s[2]}/${s[1]}/${s[0]}` : (d || '-'); };
+                        const subtitle = `${rows.length} תכניות ששינו סטטוס בבדיקה השבועית האחרונה` + (lastRun ? ` (ריצה ${fmtDay(lastRun)})` : '') + ' — מוצגות 7 ימים מהריצה';
+                        const cols = ['#','מספר תכנית','שם תכנית','מינה"ק','סטטוס קודם','סטטוס חדש','תאריך במבא"ת','זוהה'];
+                        const cells = (p, i) => [i+1, p.plan_name||'', p.plan_summary||p.plan_name_he||'-', String(p.minahak||'-').trim(),
+                            p.old_status||'-', p.new_status||'-', p.mavat_date||'-', fmtDay(p.detected)];
+                        return (
+                        <div className="units-overlay" onClick={() => setStatusChangedReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(880px, 96vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setStatusChangedReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🔄 תכניות ששינו סטטוס</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{subtitle}</p>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            {cols.map((c, j) => <th key={j} style={{textAlign: j < 4 ? 'right' : 'center',padding:'6px 4px',color:'#fff'}}>{c}</th>)}
+                                        </tr></thead>
+                                        <tbody>
+                                            {rows.map((p, i) => (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} ref={el => { if (el) el.onclick = (e) => {
+                                                    e.stopPropagation();
+                                                    const gd = geoDataRef.current;
+                                                    if (!gd.plans || !mapInstanceRef.current) return;
+                                                    const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name || f.properties.taba === p.taba);
+                                                    if (!feat || !feat.geometry) return;
+                                                    const coords = [];
+                                                    const g = feat.geometry;
+                                                    if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                                                    else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                                                    if (!coords.length) return;
+                                                    const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                                                    const bounds = [[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+                                                    const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
+                                                    const props = JSON.parse(JSON.stringify(feat.properties));
+                                                    setStatusChangedReport(false);
+                                                    setTimeout(() => {
+                                                        mapInstanceRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
+                                                        setTimeout(() => {
+                                                            const mapped = mapPlanProps(props);
+                                                            const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
+                                                            popup.openOn(mapInstanceRef.current);
+                                                            bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
+                                                        }, 600);
+                                                    }, 100);
+                                                }; }}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{String(p.minahak || '-').trim()}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#999',fontSize:11}}>{p.old_status || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#00bfa5',fontSize:11,fontWeight:600}}>{p.new_status || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#bbb',fontSize:11}}>{p.mavat_date || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#4fc3f7',fontSize:11}}>{fmtDay(p.detected)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const esc = (v) => String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+                                            const printWin = window.open('', '_blank');
+                                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח תכניות ששינו סטטוס</title>');
+                                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}@media print{.no-print{display:none!important}}</style>');
+                                            printWin.document.write('</head><body>');
+                                            printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
+                                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                                            printWin.document.write('</div>');
+                                            printWin.document.write('<div class="header"><h2>תכניות ששינו סטטוס</h2><p>' + esc(subtitle) + '</p></div>');
+                                            printWin.document.write('<table><thead><tr>' + cols.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>');
+                                            rows.forEach((p, i) => printWin.document.write('<tr>' + cells(p, i).map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>'));
+                                            printWin.document.write('</tbody></table>');
+                                            const q = (v) => '"' + String(v).replace(/"/g,'""') + '"';
+                                            const csvContent = [cols.map(q).join(',')].concat(rows.map((p, i) => cells(p, i).map(q).join(','))).join('\n');
+                                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="תכניות_ששינו_סטטוס.csv";a.click()});<\/script>');
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
                                             printWin.focus();

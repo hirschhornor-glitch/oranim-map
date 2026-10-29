@@ -287,6 +287,54 @@ def update_geojson(updates):
         log_msg(f"Failed to update GeoJSON: {e}")
 
 
+STATUS_CHANGES_KEEP_DAYS = 180
+
+
+def record_status_changes(updates):
+    """Append this run's applied status changes to data/status_changes.json.
+
+    Feeds the "תכניות שהסטטוס שלהן השתנה" map layer, which shows plans whose
+    `detected` date is within the last 7 days — i.e. the latest weekly run.
+    `detected` is the run date, not mavat_date (Mavat's date can be weeks older).
+    Entries older than STATUS_CHANGES_KEEP_DAYS are pruned; (agam_id, new_status,
+    detected) is the dedup key, so a re-applied push or a same-day re-run adds nothing."""
+    if not updates:
+        return
+    now = datetime.now()
+    day, ts = now.strftime("%Y-%m-%d"), now.strftime("%Y-%m-%d %H:%M:%S")
+    cutoff = (now - timedelta(days=STATUS_CHANGES_KEEP_DAYS)).strftime("%Y-%m-%d")
+    rows = []
+    for u in updates:
+        aid = str(u['agam_id'])
+        if aid.endswith('.0'):
+            aid = aid[:-2]
+        rows.append({
+            'agam_id': aid, 'plan_name': u.get('plan_name', ''),
+            'plan_name_he': u.get('plan_name_he', ''), 'minhak': u.get('minhak', ''),
+            'old_status': u.get('old_status', ''), 'new_status': u.get('new_status', ''),
+            'mavat_date': u.get('new_date', ''), 'detected': day, 'detected_ts': ts,
+        })
+
+    def _apply(data):
+        changes = data.setdefault('changes', [])
+        before = len(changes)
+        changes[:] = [c for c in changes if c.get('detected', '') >= cutoff]
+        pruned = before - len(changes)
+        keys = {(c.get('agam_id'), c.get('new_status'), c.get('detected')) for c in changes}
+        added = 0
+        for r in rows:
+            k = (r['agam_id'], r['new_status'], r['detected'])
+            if k not in keys:
+                changes.append(r); keys.add(k); added += 1
+        if added or pruned:
+            data['generated'] = ts
+            log_msg(f"status_changes.json: +{added} change(s), -{pruned} pruned")
+        return added or pruned
+
+    update_json_and_push('data/status_changes.json', _apply,
+                         f'data: status changes log ({len(rows)} plans) (update_mavat_ui)')
+
+
 def update_future_shavaz_status(updates):
     """Sync Mavat_Status on future_shavaz.geojson features whose plan changed status.
 
@@ -2512,6 +2560,12 @@ async def main():
 
         update_geojson(updates)
         update_future_shavaz_status(updates)
+        try:
+            record_status_changes(updates)
+        except Exception as e:
+            # Not silent: counts as a failed write → alert email + exit 1 at the end.
+            GIT_FAILURES.append(f"status_changes.json: {e}")
+            log_msg(f"Failed to record status changes: {e}")
 
     # ── Check XPLAN for geometry/landuse/shavaz changes ──
     # New plans (added by detect_new_plans this run) also need their land-use
