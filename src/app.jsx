@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-29-statuschg';
+        const APP_VERSION = '2026-10-29-statuschg2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3943,7 +3943,7 @@ function planPermitHafrashUse(taba) {
                 overlapping: false,   // תבעות כפולות על אותו מרחב
                 objections: false,     // תכניות המופקדות להתנגדויות
                 new_plans: false,      // תכניות חדשות שזוהו ב-30 הימים האחרונים (first_detected)
-                status_changed: false, // תכניות ששינו סטטוס בבדיקה השבועית (7 ימים מהריצה)
+                status_changed: false, // תכניות ששינו סטטוס — אלה שבמייל הסטטוס האחרון
                 meetings: false,       // תכניות עם ישיבה קרובה
                 infrastructure: false,
                 plan7778: false,         // תכניות בהודעה 77/78
@@ -6825,24 +6825,20 @@ function planPermitHafrashUse(taba) {
                                 window.__meetings = idx;
                             }
                             else if (key === '__statusChanges') {
-                                // Keep changes detected by the weekly status check (update_mavat_ui)
-                                // within the last 7 days of the run itself (detected_ts, not mavat_date).
-                                // Index by agam_id and plan_name; a plan changed twice keeps the latest.
+                                // Show exactly the changes of the last status email: update_mavat_ui
+                                // stamps `emailed_run` (that run's detected_ts) only after the email is
+                                // sent, so the layer swaps when the email does. Index by agam_id + plan_name.
                                 const idx = {};
                                 const arr = (data && Array.isArray(data.changes)) ? data.changes : [];
-                                const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
-                                let lastRun = '';
+                                const run = String((data && data.emailed_run) || '').trim();
                                 arr.forEach(c => {
-                                    const ts = String(c.detected_ts || c.detected || '').trim();
-                                    if (ts > lastRun) lastRun = ts;
-                                    const d = new Date(ts.replace(' ', 'T'));
-                                    if (isNaN(d.getTime()) || d.getTime() < cutoff) return;
+                                    if (!run || String(c.detected_ts || '').trim() !== run) return;
                                     [String(c.agam_id || '').replace(/\.0$/, ''), String(c.plan_name || '').trim()].forEach(k => {
-                                        if (k && (!idx[k] || ts >= String(idx[k].detected_ts || ''))) idx[k] = c;
+                                        if (k) idx[k] = c;
                                     });
                                 });
                                 window.__statusChanges = idx;
-                                window.__statusChangesLastRun = lastRun;
+                                window.__statusChangesLastRun = run;
                             }
                         });
                         // Merge side-file extra_permits (permits the taba-driven scraper missed,
@@ -18396,7 +18392,7 @@ function planPermitHafrashUse(taba) {
                 }
 
                 // "תכניות ששינו סטטוס" — matched in the last weekly status check
-                // (data/status_changes.json, filtered to 7 days at load time).
+                // (data/status_changes.json → the run of the last status email).
                 function recentStatusChange(p) {
                     const sc = window.__statusChanges || {};
                     return sc[String(p.agam_id || '').replace(/\.0$/, '')] || sc[String(p.plan_name || '').trim()] || null;
@@ -18477,7 +18473,7 @@ function planPermitHafrashUse(taba) {
                             if (planningTopics.new_plans && isNewPlan(p))
                                 return { color: '#e91e63', weight: 3, fillOpacity: 0 };
                             if (planningTopics.status_changed && recentStatusChange(p))
-                                return { color: '#00bfa5', weight: 3, fillOpacity: 0, dashArray: '6 4' };
+                                return { color: '#d500f9', weight: 4, fillOpacity: 0.08, fillColor: '#d500f9' };
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.meetings) {
@@ -27752,7 +27748,7 @@ function planPermitHafrashUse(taba) {
                     { id: 'overlap',      title: 'תב"עות כפולות',            desc: 'תכניות חופפות', icon: '🔁' },
                     { id: 'objections',   title: 'הפקדות להתנגדויות',        desc: 'תכניות מופקדות', icon: '📝' },
                     { id: 'new_plans',    title: 'תכניות חדשות',            desc: 'זוהו ב-30 הימים האחרונים', icon: '🆕' },
-                    { id: 'status_changed', title: 'תכניות ששינו סטטוס', desc: 'בבדיקת הסטטוס השבועית (7 ימים)', icon: '🔄' },
+                    { id: 'status_changed', title: 'תכניות ששינו סטטוס', desc: 'מהמייל האחרון של בדיקת הסטטוס', icon: '🔄' },
                     { id: 'permit_objections', title: 'היתרים פתוחים להתנגדויות', desc: 'בקשות להיתר עם הקלות (סעיף 149)', icon: '⚖️' },
                     { id: 'tree_permits', title: 'אישורי כריתת עצים פתוחים לערר', desc: 'אישורי כריתה עם מועד אחרון לערר (מעירים/פקיד היערות)', icon: '🌳' },
                     { id: 'active_sites', title: 'אתרי בנייה פעילים', desc: 'קבלן מבצע, עגורן, צווי בטיחות ועיצומים (מנהל הבטיחות)', icon: '🏗️' },
@@ -28598,7 +28594,7 @@ function planPermitHafrashUse(taba) {
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             <div className="layer-item"
-                                 title='תכניות ששינו סטטוס בבדיקת הסטטוס השבועית — מוצגות 7 ימים מהריצה'
+                                 title='תכניות ששינו סטטוס במייל האחרון של בדיקת הסטטוס — מתחלף עם כל מייל חדש'
                                  style={{display:'flex',alignItems:'center'}}
                                  onClick={() => setPlanningTopics(prev => ({...prev, status_changed: !prev.status_changed}))}>
                                 <input type="checkbox" checked={planningTopics.status_changed} onChange={() => {}} />
@@ -31612,7 +31608,7 @@ function planPermitHafrashUse(taba) {
                                 { icon:'📊', title:'שלביות ביצוע', desc:'מתי מתקבלות ההפרשות הציבוריות (מסירה בשלבים) ומשך התכנית', onClick:() => go(() => setStagingReport(true)) },
                                 { icon:'📝', title:'הפקדות להתנגדויות', desc:'תכניות מופקדות לפי סמכות', onClick:() => go(() => setObjectionsReport(true)) },
                                 { icon:'🆕', title:'תכניות חדשות', desc:'תכניות שזוהו ב-30 הימים האחרונים (יח"ד, שב"צ/שצ"פ יוצא)', onClick:() => go(() => setNewPlansReport(true)) },
-                                { icon:'🔄', title:'תכניות ששינו סטטוס', desc:'שינויי סטטוס שנמצאו בבדיקה השבועית (7 ימים מהריצה) — סטטוס קודם → חדש', onClick:() => go(() => setStatusChangedReport(true)) },
+                                { icon:'🔄', title:'תכניות ששינו סטטוס', desc:'שינויי הסטטוס מהמייל האחרון של בדיקת הסטטוס — סטטוס קודם → חדש', onClick:() => go(() => setStatusChangedReport(true)) },
                                 { icon:'📅', title:'ישיבות קרובות', desc:'תכניות בדיון בוועדות הקרובות', onClick:() => go(() => setMeetingsReport(true)) },
                                 { icon:'🔁', title:'תב"עות כפולות', desc:'תכניות חופפות באותו מרחב', onClick:() => go(() => setOverlapReport(true)) },
                                 { icon:'📎', title:'נספחי תכניות ודוחות כלכליים', desc:'אילו נספחים יש לכל תכנית (עצים, חברתי, תיעוד, כלכלי, ניקוז…), עיקרי תיקי התיעוד, ומכפיל נדרש מול מאושר מחוות הדעת הכלכליות — לפי מינה"ק', onClick:() => go(() => setAppendicesReport(true)) },
@@ -36610,7 +36606,7 @@ function planPermitHafrashUse(taba) {
                             String(a.plan_name || '').localeCompare(String(b.plan_name || '')));
                         const lastRun = String(window.__statusChangesLastRun || '').split(' ')[0];
                         const fmtDay = (d) => { const s = String(d || '').split(' ')[0].split('-'); return s.length === 3 ? `${s[2]}/${s[1]}/${s[0]}` : (d || '-'); };
-                        const subtitle = `${rows.length} תכניות ששינו סטטוס בבדיקה השבועית האחרונה` + (lastRun ? ` (ריצה ${fmtDay(lastRun)})` : '') + ' — מוצגות 7 ימים מהריצה';
+                        const subtitle = `${rows.length} תכניות ששינו סטטוס במייל האחרון` + (lastRun ? ` (בדיקה מ-${fmtDay(lastRun)})` : '') + ' — מתחלף עם כל מייל חדש';
                         const cols = ['#','מספר תכנית','שם תכנית','מינה"ק','סטטוס קודם','סטטוס חדש','תאריך במבא"ת','זוהה'];
                         const cells = (p, i) => [i+1, p.plan_name||'', p.plan_summary||p.plan_name_he||'-', String(p.minahak||'-').trim(),
                             p.old_status||'-', p.new_status||'-', p.mavat_date||'-', fmtDay(p.detected)];
@@ -36658,7 +36654,7 @@ function planPermitHafrashUse(taba) {
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{padding:'4px',color:'#ce93d8'}}>{String(p.minahak || '-').trim()}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#999',fontSize:11}}>{p.old_status || '-'}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',color:'#00bfa5',fontSize:11,fontWeight:600}}>{p.new_status || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#e040fb',fontSize:11,fontWeight:600}}>{p.new_status || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#bbb',fontSize:11}}>{p.mavat_date || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#4fc3f7',fontSize:11}}>{fmtDay(p.detected)}</td>
                                                 </tr>

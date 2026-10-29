@@ -288,16 +288,20 @@ def update_geojson(updates):
 
 
 STATUS_CHANGES_KEEP_DAYS = 180
+# detected_ts of this run's recorded changes; stamped as `emailed_run` only after the
+# status email goes out, so the map layer swaps to the new run exactly when the email does.
+STATUS_RUN_TS = None
 
 
 def record_status_changes(updates):
     """Append this run's applied status changes to data/status_changes.json.
 
-    Feeds the "תכניות שהסטטוס שלהן השתנה" map layer, which shows plans whose
-    `detected` date is within the last 7 days — i.e. the latest weekly run.
+    Feeds the "תכניות ששינו סטטוס" map layer, which shows the changes of the run
+    named by `emailed_run` (set by mark_status_changes_emailed after the email is sent).
     `detected` is the run date, not mavat_date (Mavat's date can be weeks older).
     Entries older than STATUS_CHANGES_KEEP_DAYS are pruned; (agam_id, new_status,
     detected) is the dedup key, so a re-applied push or a same-day re-run adds nothing."""
+    global STATUS_RUN_TS
     if not updates:
         return
     now = datetime.now()
@@ -331,8 +335,22 @@ def record_status_changes(updates):
             log_msg(f"status_changes.json: +{added} change(s), -{pruned} pruned")
         return added or pruned
 
+    if update_json_and_push('data/status_changes.json', _apply,
+                            f'data: status changes log ({len(rows)} plans) (update_mavat_ui)'):
+        STATUS_RUN_TS = ts
+
+
+def mark_status_changes_emailed():
+    """Point the map layer at this run: called only after the status email was sent."""
+    if not STATUS_RUN_TS:
+        return
+    def _apply(data):
+        if data.get('emailed_run') == STATUS_RUN_TS:
+            return False
+        data['emailed_run'] = STATUS_RUN_TS
+        return True
     update_json_and_push('data/status_changes.json', _apply,
-                         f'data: status changes log ({len(rows)} plans) (update_mavat_ui)')
+                         f'data: status changes emailed ({STATUS_RUN_TS}) (update_mavat_ui)')
 
 
 def update_future_shavaz_status(updates):
@@ -1907,7 +1925,7 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         html += "<h2>עידכון סטטוסים ממבאת</h2>"
         html += f"<p>הסקריפט עדכן בהצלחה {len(updates)} סעיפים בגוגל שיטס:</p>"
         html += "<table border='1' cellpadding='8' style='border-collapse: collapse;'>"
-        html += "<tr style='background-color: #f2f2f2;'><th>מספר תכנית</th><th>מינה\"ק</th><th>שם תכנית</th><th>סטטוס קודם</th><th>סטטוס חדש</th><th>תאריך אישור</th></tr>"
+        html += "<tr style='background-color: #f2f2f2;'><th>מספר תכנית</th><th>מינה\"ק</th><th>שם תכנית</th><th>סטטוס קודם</th><th>סטטוס חדש</th><th>תאריך במבא\"ת</th></tr>"
         for u in updates:
             name_he = (u.get('plan_name_he') or '').split('זיהוי וסיווג')[0].strip().rstrip(',').strip()
             html += f"<tr>"
@@ -2048,6 +2066,12 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         server.send_message(msg)
         server.quit()
         log_msg("Email sent successfully!")
+        if has_updates:
+            try:
+                mark_status_changes_emailed()
+            except Exception as e:
+                GIT_FAILURES.append(f"status_changes.json emailed_run: {e}")
+                log_msg(f"Failed to mark status changes as emailed: {e}")
         # Advance the changelog-digest marker so the next email doesn't repeat
         # the same field changes. Only after a successful send.
         if digest_newest_ts:
