@@ -55,6 +55,16 @@ STREET_HARVEST = os.path.join(ROOT, "tama38_street_harvest.json")
 SOURCE_TAG = "committee_yk"
 PAUSE = 1.5           # the API throttles bursts by returning [] — see scrape_missing_permits_api
 SIGNIFICANT = {"tama38", "tava_gadol", "ibuy"}
+# YK's own neighborhood beats the tik point for out-of-scope Gilo. הסיגלית is a Gilo
+# street (all 48 buildings inside exclude_gila), but the 179-unit lot north of it puts
+# the muni tik point ~50 m over the line into the בית צפאפא polygon, and 2022/0272.00
+# went out in the 2026-11-01 email as ours. Real border permits of בית צפאפא (אל בוטמה,
+# שרפת, 84-143 m from Gilo) are labelled "בית צפפה" by YK and are not affected.
+OUT_OF_SCOPE_YK = ("גילה",)
+
+
+def out_of_scope_yk(rec):
+    return (rec.get("neighborhood_yk") or "").strip().startswith(OUT_OF_SCOPE_YK)
 
 
 def jload(path, default=None):
@@ -212,6 +222,21 @@ def assess(rec, essence):
         reasons.append("התחדשות עירונית")
     return {"category": cat, "bucket": bucket, "bucket_label": BUCKET_LABEL.get(bucket, ""),
             "significant": bucket in SIGNIFICANT, "reasons": reasons}
+
+
+def reassess(records):
+    """Re-run assess() on every stored record from its stored text — a record keeps the
+    verdict of the day it was fetched otherwise, so a classifier fix (2026-11: "ממ"ד ל-2
+    יח"ד" read as +2) never reaches it. Returns the norms whose verdict changed."""
+    changed = []
+    for k, r in records.items():
+        if not r.get("status"):
+            continue
+        new = assess(r, r.get("committee_essence", ""))
+        if any(r.get(f) != new[f] for f in ("bucket", "significant", "reasons")):
+            changed.append(k)
+        r.update(new)
+    return changed
 
 
 _DEAD = ("נסגרה", "נדחתה", "נדחה", "בוטל", "בוטלה", "גנוז")
@@ -433,6 +458,11 @@ def main():
         c = cands[k]
         tik = canon_tik(c["raw"]) or c["raw"]
         rec = fetch(tik, tabas)
+        if rec.get("status") and out_of_scope_yk(rec):
+            skipped[k] = rec["neighborhood_yk"]
+            print(f"[{i}/{len(todo)}] – {tik}  outside our area (YK: {skipped[k]})")
+            time.sleep(PAUSE)
+            continue
         g = geo.get(k) or {}
         if by_name and not g.get("minahak"):
             G, subn = by_name
@@ -466,6 +496,9 @@ def main():
               f"taba={rec.get('taba') or '-'}  {', '.join(rec['reasons'])}  | {rec['status'][:28]}")
         time.sleep(PAUSE)
 
+    for k in [k for k, r in records.items() if out_of_scope_yk(r)]:
+        skipped[k] = records.pop(k)["neighborhood_yk"]
+    reassess(records)
     with_taba = merge_into_extra(records)
     new_sig = [r for r in records.values()
                if r.get("significant") and r.get("status") and not r.get("alerted_at")]

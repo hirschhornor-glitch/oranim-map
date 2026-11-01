@@ -170,7 +170,9 @@ def classify(p):
         return "harisa"
     if has("חידוש היתר", "הסרת סכנה", "מבנה ארעי", 'מנ"ד'):
         return "tachzukah"
-    if has('ממ"ד', "מחסן", "מרפסת", "גדר", "מעלית"):
+    # private add-ons — "בניית בריכה ומעלון פנימי" fell through to "בניית" = new building
+    # and went out as a significant permit (2026-11). Mirrored in app.jsx.
+    if has('ממ"ד', "מחסן", "מרפסת", "גדר", "מעלית", "מעלון", "בריכ", "פרגול", "סככ", "ג'קוזי", "גקוזי"):
         return "mivne_nilve"
     if (float(p.get("units") or 0) > 0):
         if has("תוספ", "הרחב", "סגירת מרפסת"):
@@ -202,13 +204,41 @@ def units_added(p):
                 return int(n)
     except Exception:
         pass
-    text = (p.get("request_description") or "") + " " + (p.get("request_type") or "")
+    return units_from_text((p.get("request_description") or "") + " " + (p.get("request_type") or ""))
+
+
+# A bare "N דירות" in a permit text usually names the apartments the works SERVE, not
+# ones it adds: "תוספת בניה להרחבת 4 דירות", "תוספת ממ"ד ל-2 יח"ד קיימות", "ממ"דים עבור
+# 2 דירות" all read as +N and went out in the 2026-11 significant-permits email as new
+# units. So: an explicit addition ("תוספת 2 יח"ד", "3 יח"ד חדשות", "ומוצעות 3") wins and
+# also beats a "סה"כ" total; a new building may use any count; otherwise a count is
+# dropped when its context says it is the existing/served stock.
+_UW = r"""(?:יח["״'׳ד]|דירות|דירה|יחיד)"""
+_ADD_RES = [re.compile(r"תוספת\s+(?:של\s+)?(\d+)\s*" + _UW),
+            re.compile(r"(?:הוספת|ומוצעות|מוצעות)\s+(\d+)\s*" + _UW),
+            re.compile(r"(\d+)\s*" + _UW + r"""[^\s,.]*\s+(?:חדשות|חדשה|נוספות|נוספת)"""),
+            re.compile(r"""תוספת\s+יח["״'׳]+ד\s+(\d+)""")]
+_NEW_BUILDING_RE = re.compile(r"בני[יה]+ חדשה|בניין חדש|בנין חדש|מגורים חדש|בני[י]?ת (?:בניין|בנין|מבנה)|"
+                              r"הקמת (?:בניין|בנין|מבנה|שני|\d)|הקמת מלון")
+_SERVED_BEFORE_RE = re.compile(r"""(?:עבור|הרחב\S*|צמצום|איחוד|פיצול|בין|ובו|כולל|ממ["״]?ד\S*|מרפסות)\s*$"""
+                               r"|ל\s*-\s*$|(?:^|\s)ל\s*$|(?:^|\s)ב\s*-\s*$")
+_SERVED_AFTER_RE = re.compile(r"^\S*\s*(?:קיימ|חני)")
+
+
+def units_from_text(text):
+    text = re.sub(r"\s+", " ", text or "")
+    explicit = [int(m.group(1)) for r in _ADD_RES for m in r.finditer(text)]
+    if explicit:
+        return max(explicit)
+    if "ללא תוספת" in text:
+        return 0
+    new_building = bool(_NEW_BUILDING_RE.search(text))
     best = 0
     for m in _UNIT_RE.finditer(text):
-        try:
-            best = max(best, int(m.group(1)))
-        except Exception:
-            pass
+        if not new_building and (_SERVED_BEFORE_RE.search(text[max(0, m.start() - 14):m.start()])
+                                 or _SERVED_AFTER_RE.search(text[m.end():m.end() + 12])):
+            continue
+        best = max(best, int(m.group(1)))
     return best
 
 

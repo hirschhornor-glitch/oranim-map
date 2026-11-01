@@ -74,29 +74,33 @@ SETTLE_SEC = 8
 
 # Scheduled time-of-day per job (bat / script basename, lowercase), as set in
 # Task Scheduler. Only the order matters; keep in sync when a schedule moves.
+# Sunday chain must end by 07:30: it fires 05:00-06:05 and runs back-to-back
+# (~90 min). Multi-hour jobs live on weekday nights so they never hold the gate
+# into Sunday morning (01/11/2026: a 4.5h harvest + monthly pikuah pushed the
+# whole chain past 07:40). Task triggers carry no UTC offset (offset = DST drift).
 SCHEDULE = {
-    "run_biweekly_permits_scan.bat": "01:00",
-    "run_tama38_street_harvest_driver.bat": "02:00",
-    "run_monthly_pikuah_scan.bat": "03:00",
-    "run_monthly_tree_scan.bat": "03:00",
-    "run_mavat_revival_sweep.bat": "04:00",
-    "backup_repo_to_drive.ps1": "04:00",          # Oranim_RepoBackup_Weekly
+    "run_monthly_tree_scan.bat": "03:00",         # first Tue
+    "run_mavat_revival_sweep.bat": "04:00",       # first Wed
+    "backup_repo_to_drive.ps1": "03:00",          # Oranim_RepoBackup_Weekly, Fri
     "run_dev_backfill.bat": "04:30",
     "run_weekly_muni_gis.bat": "05:00",
     "run_weekly_tama38_149.bat": "05:00",
-    "run_all_committees.bat": "05:00",
-    "run_mavat_sync.bat": "06:00",
-    "run_weekly_objections.bat": "06:00",
-    "run_weekly_allocations_alert.bat": "06:30",
-    "run_weekly_yk_149_scan.bat": "07:00",
-    "run_enrich_changed_plans.bat": "08:00",
-    "run_process_objections_scan.bat": "08:00",
+    "run_all_committees.bat": "05:00",            # Mon
+    "run_mavat_sync.bat": "06:00",               # the weekly status check stays 06:00
+    "run_weekly_objections.bat": "05:05",
+    "run_weekly_allocations_alert.bat": "05:10",
+    "run_weekly_yk_149_scan.bat": "05:15",
+    "run_enrich_changed_plans.bat": "06:05",      # after mavat_sync: enriches what it changed
+    "run_process_objections_scan.bat": "06:05",
     "run_yearly_yearbook_reminder.bat": "09:00",
-    "run_weekly_decision_docs_scan.bat": "20:00",
-    "run_biweekly_citywide_refresh.bat": "21:00",
+    "run_weekly_decision_docs_scan.bat": "20:00",  # Thu
+    "run_biweekly_citywide_refresh.bat": "21:00",  # Sun
+    "git_sync.py": "21:30",                       # Oranim_ScriptMirror_Daily
     "run_biweekly_objections_scan.bat": "22:00",
+    "run_biweekly_permits_scan.bat": "22:00",     # Wed, every 2 weeks (3.5-4.5h)
+    "run_tama38_street_harvest_driver.bat": "22:00",  # first Mon (~4.5h)
+    "run_monthly_pikuah_scan.bat": "23:00",       # first Mon, after harvest (~1.5h)
     "run_permits_full_sweep.bat": "22:45",
-    "git_sync.py": "22:30",                       # Oranim_ScriptMirror_Daily
 }
 
 _k32 = ctypes.WinDLL("kernel32", use_last_error=True)
