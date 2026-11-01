@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-01T09:15:28",
- "count": 1740,
+ "generated_at": "2026-11-01T09:22:40",
+ "count": 1738,
  "bucket_counts": {
-  "tava_gadol": 611,
+  "tava_gadol": 609,
   "shimush_chorag": 42,
   "zchuyot": 388,
   "acher": 105,
@@ -14,7 +14,7 @@
   "shimush_chorech": 42,
   "tachzukah": 9,
   "drachim": 45,
-  "bniya_chadasha": 507,
+  "bniya_chadasha": 505,
   "acher": 60,
   "harisa": 26,
   "chafira_milui": 42,
@@ -58344,41 +58344,6 @@
    "bucket": "tava_gadol",
    "bucket_label": "תב\"ע גדול / התחדשות"
   },
-  "2013/302": {
-   "tik": "2013/302",
-   "file_number": "2013/0302.01",
-   "revisions": [
-    "2013/302.0",
-    "2013/302.1"
-   ],
-   "status": "הבקשה נסגרה",
-   "status_date": "09/02/2023",
-   "request_type": "חפירה ומילוי",
-   "request_description": "היתר חפירה ודיפון עבור הקמת 3 בנייני מגורים \r\nחפירה- 31.500 קוב  , מילוי- 1800 קוב",
-   "units": 100,
-   "tama_type": "",
-   "address": "הסיגלית 1",
-   "taba": null,
-   "provenance": [
-    "committee_yk"
-   ],
-   "in_tama38_registry": false,
-   "floors": 12,
-   "units_source": "yk_quantities",
-   "lat": 31.740771922372108,
-   "lng": 35.19645588168869,
-   "on_committee_agenda": false,
-   "open_for_objections": false,
-   "has_field_obs": false,
-   "unassigned": false,
-   "is_tama38": false,
-   "units_added": 100,
-   "urban_renewal": false,
-   "category": "bniya_chadasha",
-   "category_label": "בניה חדשה",
-   "bucket": "tava_gadol",
-   "bucket_label": "תב\"ע גדול / התחדשות"
-  },
   "2013/706": {
    "tik": "2013/706",
    "file_number": "2013/0706.00",
@@ -59259,40 +59224,6 @@
    "unassigned": false,
    "is_tama38": false,
    "units_added": 0,
-   "urban_renewal": false,
-   "category": "bniya_chadasha",
-   "category_label": "בניה חדשה",
-   "bucket": "tava_gadol",
-   "bucket_label": "תב\"ע גדול / התחדשות"
-  },
-  "2022/272": {
-   "tik": "2022/272",
-   "file_number": "2022/0272.00",
-   "revisions": [
-    "2022/272.0"
-   ],
-   "status": "הופק-הוצא היתר בניה",
-   "status_date": "25/08/2025",
-   "request_type": "בניה חדשה / בניין חדש",
-   "request_description": "בקשה עבור הקמת 2 בניינים חדשים למגורים על מסד מסחרי וגן ילדים - סה\"כ 179 יח\"ד",
-   "units": 179,
-   "tama_type": "",
-   "address": "הסיגלית",
-   "taba": null,
-   "provenance": [
-    "committee_yk"
-   ],
-   "in_tama38_registry": false,
-   "floors": null,
-   "units_source": "yk_quantities",
-   "lat": 31.740780940835958,
-   "lng": 35.196455880920894,
-   "on_committee_agenda": false,
-   "open_for_objections": false,
-   "has_field_obs": true,
-   "unassigned": false,
-   "is_tama38": false,
-   "units_added": 179,
    "urban_renewal": false,
    "category": "bniya_chadasha",
    "category_label": "בניה חדשה",

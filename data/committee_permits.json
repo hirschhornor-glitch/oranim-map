@@ -1,8 +1,8 @@
 {
  "generated_at": "2026-11-01T06:30:46",
  "source": "YK API — היתרים שלא היו במאגר: מסדר היום של ועדת הרישוי + משמעותיים מסריקת הרחובות",
- "count": 453,
- "significant": 369,
+ "count": 450,
+ "significant": 366,
  "permits": {
   "1957/354.7": {
    "file_number": "1957/0354.07",
@@ -15527,80 +15527,6 @@
    ],
    "alerted_at": "suppressed:inactive"
   },
-  "2013/302.0": {
-   "file_number": "2013/0302.00",
-   "status": "הבקשה נסגרה",
-   "status_date": "09/02/2023",
-   "request_type": "בניה חדשה / בניין חדש",
-   "request_description": "3 בנייני מגורים בנין א' 33 יח\"ד, בנין ב'  33 יח\"ד, בנין ג' 34 יח\"ד - סה\"כ 100 יח\"ד\r\n+ מסחר במסד בניין א' +שצ\"פ.",
-   "address": "הסיגלית 1",
-   "neighborhood_yk": "גילה",
-   "maslul": "רישוי מלא",
-   "tochnit_all": [
-    "13290א"
-   ],
-   "parcels": [
-    "28116/5003"
-   ],
-   "units": 100,
-   "units_source": "yk_quantities",
-   "units_existing": 0,
-   "units_added": 100,
-   "floors": 12,
-   "matched_tabas": [],
-   "taba": null,
-   "norm": "2013/302.0",
-   "meeting_dates": [],
-   "origin": "street_harvest",
-   "committee_essence": "3 בנייני מגורים בנין א' 33 יח\"ד, בנין ב'  33 יח\"ד, בנין ג' 34 יח\"ד - סה\"כ 100 יח\"ד\r\n+ מסחר במסד בניין א' +שצ\"פ.",
-   "committee_address": "הסיגלית",
-   "lat": 31.740771922372108,
-   "lng": 35.19645588168869,
-   "minahak": "בית צפאפא",
-   "fetched_at": "2026-11-01T06:26:00",
-   "category": "bniya_chadasha",
-   "bucket": "tava_gadol",
-   "bucket_label": "תב\"ע גדול / התחדשות",
-   "significant": true,
-   "reasons": [
-    "בנייה חדשה / הריסה",
-    "+100 יח\"ד"
-   ],
-   "alerted_at": "suppressed:inactive"
-  },
-  "2013/302.1": {
-   "file_number": "2013/0302.01",
-   "status": "הבקשה נסגרה",
-   "status_date": "09/02/2023",
-   "request_type": "חפירה ומילוי",
-   "request_description": "היתר חפירה ודיפון עבור הקמת 3 בנייני מגורים \r\nחפירה- 31.500 קוב  , מילוי- 1800 קוב",
-   "address": "הסיגלית 1",
-   "neighborhood_yk": "גילה",
-   "maslul": "רישוי מלא",
-   "tochnit_all": [
-    "13290א"
-   ],
-   "parcels": [
-    "28116/5003"
-   ],
-   "matched_tabas": [],
-   "taba": null,
-   "norm": "2013/302.1",
-   "meeting_dates": [],
-   "origin": "street_harvest",
-   "committee_essence": "היתר חפירה ודיפון עבור הקמת 3 בנייני מגורים \r\nחפירה- 31.500 קוב  , מילוי- 1800 קוב",
-   "committee_address": "הסיגלית",
-   "lat": 31.741096587062685,
-   "lng": 35.196455854047095,
-   "minahak": "בית צפאפא",
-   "fetched_at": "2026-11-01T06:26:10",
-   "category": "chafira_milui",
-   "bucket": "tava_gadol",
-   "bucket_label": "תב\"ע גדול / התחדשות",
-   "significant": true,
-   "reasons": [],
-   "alerted_at": "suppressed:inactive"
-  },
   "2013/706.0": {
    "file_number": "2013/0706.00",
    "status": "הבקשה נסגרה",
@@ -16688,52 +16614,6 @@
     "בנייה חדשה / הריסה"
    ],
    "alerted_at": "suppressed:inactive"
-  },
-  "2022/272.0": {
-   "file_number": "2022/0272.00",
-   "status": "הופק-הוצא היתר בניה",
-   "status_date": "25/08/2025",
-   "request_type": "בניה חדשה / בניין חדש",
-   "request_description": "בקשה עבור הקמת 2 בניינים חדשים למגורים על מסד מסחרי וגן ילדים - סה\"כ 179 יח\"ד",
-   "address": "הסיגלית",
-   "neighborhood_yk": "גילה",
-   "maslul": "רישוי מלא עם הקלות",
-   "tochnit_all": [
-    "13290א",
-    "517383"
-   ],
-   "parcels": [
-    "28116/5069",
-    "28116/55",
-    "28116/61",
-    "28116/66",
-    "28116/67",
-    "28116/68"
-   ],
-   "units": 179,
-   "units_source": "yk_quantities",
-   "units_existing": 0,
-   "units_added": 179,
-   "matched_tabas": [],
-   "taba": null,
-   "norm": "2022/272.0",
-   "meeting_dates": [],
-   "origin": "street_harvest",
-   "committee_essence": "בקשה עבור הקמת 2 בניינים חדשים למגורים על מסד מסחרי וגן ילדים - סה\"כ 179 יח\"ד",
-   "committee_address": "הסיגלית",
-   "lat": 31.740780940835958,
-   "lng": 35.196455880920894,
-   "minahak": "בית צפאפא",
-   "fetched_at": "2026-11-01T06:28:53",
-   "category": "bniya_chadasha",
-   "bucket": "tava_gadol",
-   "bucket_label": "תב\"ע גדול / התחדשות",
-   "significant": true,
-   "reasons": [
-    "בנייה חדשה / הריסה",
-    "+179 יח\"ד"
-   ],
-   "alerted_at": "2026-11-01T06:30:46"
   },
   "2022/300.0": {
    "file_number": "2022/0300.00",
@@ -17899,6 +17779,9 @@
   "2005/313.0": "גבעת אורן",
   "2006/687.1": "נחלאות, שערי חסד",
   "2019/54.2": "מרכז העיר",
-  "2025/528.0": "גילה"
+  "2025/528.0": "גילה",
+  "2013/302.0": "גילה",
+  "2013/302.1": "גילה",
+  "2022/272.0": "גילה"
  }
 }
