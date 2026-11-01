@@ -1,12 +1,12 @@
 {
- "generated_at": "2026-11-01T06:30:47",
+ "generated_at": "2026-11-01T09:07:45",
  "count": 1740,
  "bucket_counts": {
   "tava_gadol": 624,
   "shimush_chorag": 42,
-  "zchuyot": 349,
-  "acher": 106,
-  "ibuy": 135,
+  "zchuyot": 373,
+  "acher": 107,
+  "ibuy": 110,
   "tama38": 484
  },
  "category_counts": {
@@ -10676,7 +10676,7 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 5,
+   "units_added": 2,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
@@ -22371,7 +22371,7 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 15,
+   "units_added": 13,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
@@ -28627,12 +28627,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 6,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2024/321": {
    "tik": "2024/321",
@@ -28695,7 +28695,7 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": true,
-   "units_added": 4,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tama38",
    "category_label": "תמ\"א 38",
@@ -45290,7 +45290,7 @@
    "has_field_obs": true,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 9,
+   "units_added": 3,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
@@ -49654,12 +49654,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1974/528": {
    "tik": "1974/528",
@@ -49824,12 +49824,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1979/517": {
    "tik": "1979/517",
@@ -50471,12 +50471,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 4,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "shinuyim",
    "category_label": "תוכנית שינויים",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1996/619": {
    "tik": "1996/619",
@@ -52518,7 +52518,7 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 3,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "bniya_chadasha",
    "category_label": "בניה חדשה",
@@ -53606,12 +53606,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 8,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1968/477": {
    "tik": "1968/477",
@@ -55340,12 +55340,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1976/459": {
    "tik": "1976/459",
@@ -55782,12 +55782,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1981/130": {
    "tik": "1981/130",
@@ -56327,12 +56327,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "acher",
    "category_label": "אחר",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "acher",
+   "bucket_label": "אחר"
   },
   "1989/220": {
    "tik": "1989/220",
@@ -56498,12 +56498,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1991/1020": {
    "tik": "1991/1020",
@@ -57248,12 +57248,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 9,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "mivne_nilve",
    "category_label": "מבנה נלווה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1998/787": {
    "tik": "1998/787",
@@ -57350,12 +57350,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 3,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "1999/790": {
    "tik": "1999/790",
@@ -57520,12 +57520,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 4,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2003/180": {
    "tik": "2003/180",
@@ -57554,12 +57554,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 6,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2003/458": {
    "tik": "2003/458",
@@ -57622,12 +57622,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 3,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2004/827": {
    "tik": "2004/827",
@@ -57793,12 +57793,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2006/217": {
    "tik": "2006/217",
@@ -57895,12 +57895,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2007/172": {
    "tik": "2007/172",
@@ -57963,12 +57963,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 4,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2007/741": {
    "tik": "2007/741",
@@ -58201,12 +58201,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2011/341": {
    "tik": "2011/341",
@@ -58440,12 +58440,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 1,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "mivne_nilve",
    "category_label": "מבנה נלווה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2014/380": {
    "tik": "2014/380",
@@ -58474,12 +58474,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "mivne_nilve",
    "category_label": "מבנה נלווה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2014/524": {
    "tik": "2014/524",
@@ -58644,12 +58644,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2016/575": {
    "tik": "2016/575",
@@ -59394,12 +59394,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2023/274": {
    "tik": "2023/274",
@@ -59564,12 +59564,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 3,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "mivne_nilve",
    "category_label": "מבנה נלווה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2023/587": {
    "tik": "2023/587",
@@ -59803,12 +59803,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 3,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "tosefet",
    "category_label": "תוספת בניה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2025/159": {
    "tik": "2025/159",
@@ -59871,12 +59871,12 @@
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
-   "units_added": 2,
+   "units_added": 0,
    "urban_renewal": false,
    "category": "mivne_nilve",
    "category_label": "מבנה נלווה",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)"
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)"
   },
   "2025/46": {
    "tik": "2025/46",

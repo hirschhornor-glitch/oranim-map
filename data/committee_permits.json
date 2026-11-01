@@ -2,7 +2,7 @@
  "generated_at": "2026-11-01T06:30:46",
  "source": "YK API — היתרים שלא היו במאגר: מסדר היום של ועדת הרישוי + משמעותיים מסריקת הרחובות",
  "count": 453,
- "significant": 409,
+ "significant": 381,
  "permits": {
   "1957/354.7": {
    "file_number": "1957/0354.07",
@@ -1270,12 +1270,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-10-12T13:57:19",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1970/913.0": {
@@ -1541,12 +1539,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-10-12T13:58:42",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1974/528.0": {
@@ -1723,12 +1719,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-10-12T13:58:56",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-10-15T05:06:12"
   },
   "1979/517.0": {
@@ -2627,12 +2621,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-10-12T14:00:48",
    "category": "shinuyim",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+4 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-10-15T05:06:12"
   },
   "1996/619.0": {
@@ -8837,8 +8829,7 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [
-    "בנייה חדשה / הריסה",
-    "+3 יח\"ד"
+    "בנייה חדשה / הריסה"
    ],
    "alerted_at": "suppressed:inactive"
   },
@@ -10020,12 +10011,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-11-01T05:58:36",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+8 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "1968/477.0": {
@@ -11943,12 +11932,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-11-01T06:11:27",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1976/459.0": {
@@ -12436,12 +12423,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-11-01T06:12:49",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1981/130.0": {
@@ -12746,12 +12731,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:13:36",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1984/698.5": {
@@ -13084,12 +13067,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-11-01T06:14:28",
    "category": "acher",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "acher",
+   "bucket_label": "אחר",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1988/713.2": {
@@ -13400,12 +13381,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-11-01T06:16:01",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1991/1020.0": {
@@ -14335,12 +14314,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:20:05",
    "category": "mivne_nilve",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+9 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "1998/787.0": {
@@ -14438,12 +14415,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:21:33",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+3 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "1999/790.6": {
@@ -14652,12 +14627,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:23:16",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+4 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2003/180.3": {
@@ -14688,12 +14661,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:23:19",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+6 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2003/458.2": {
@@ -14758,12 +14729,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:23:29",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+3 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2004/827.0": {
@@ -14950,12 +14919,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:24:26",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2006/141.3": {
@@ -14986,12 +14953,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:24:29",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2006/217.3": {
@@ -15097,12 +15062,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:24:55",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2007/172.0": {
@@ -15171,12 +15134,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:25:02",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+4 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2007/741.25": {
@@ -15436,12 +15397,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-11-01T06:25:30",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2011/341.1": {
@@ -15730,12 +15689,10 @@
    "minahak": "גוננים",
    "fetched_at": "2026-11-01T06:26:16",
    "category": "mivne_nilve",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+1 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2014/380.1": {
@@ -15766,12 +15723,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:26:20",
    "category": "mivne_nilve",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2014/524.0": {
@@ -15948,12 +15903,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:26:50",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2016/575.0": {
@@ -16907,12 +16860,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:29:03",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2023/274.0": {
@@ -17147,12 +17098,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:29:22",
    "category": "mivne_nilve",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+3 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2023/587.0": {
@@ -17543,12 +17492,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:29:53",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+3 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "suppressed:inactive"
   },
   "2024/62.1": {
@@ -17579,12 +17526,10 @@
    "minahak": "גינות העיר",
    "fetched_at": "2026-11-01T06:29:57",
    "category": "tosefet",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+3 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2025/159.0": {
@@ -17654,12 +17599,10 @@
    "minahak": "בקעה רבתי",
    "fetched_at": "2026-11-01T06:30:24",
    "category": "mivne_nilve",
-   "bucket": "ibuy",
-   "bucket_label": "עיבוי (תוספת יח\"ד)",
-   "significant": true,
-   "reasons": [
-    "+2 יח\"ד"
-   ],
+   "bucket": "zchuyot",
+   "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
+   "significant": false,
+   "reasons": [],
    "alerted_at": "2026-11-01T06:30:46"
   },
   "2025/46.0": {
