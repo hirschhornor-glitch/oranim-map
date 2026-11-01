@@ -322,5 +322,14 @@
   "held_value": 4150,
   "status": "אישור",
   "first_seen": "2026-10-25 14:22:55"
+ },
+ "1549260|hafrash_sqm": {
+  "taba": 1549260,
+  "plan_name": "101-1549260",
+  "field": "hafrash_sqm",
+  "old": "",
+  "held_value": 441,
+  "status": "הפקדה להתנגדויות/השגות",
+  "first_seen": "2026-11-01 09:52:46"
  }
 }
