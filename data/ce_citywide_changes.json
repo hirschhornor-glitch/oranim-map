@@ -1,20 +1,20 @@
 {
- "generated_at": "2026-10-27T19:06:32",
- "previous_at": "2026-10-26T12:37:35",
+ "generated_at": "2026-11-01T21:38:49",
+ "previous_at": "2026-10-27T19:06:32",
  "first_run": false,
  "plans": {
-  "ce": 981,
+  "ce": 982,
   "housing": 242
  },
  "changed": {
-  "ce": 31,
+  "ce": 3,
   "fund": 0,
   "rental": 0
  },
  "horaot_gap": {
   "archived": 4603,
-  "in_scope": 981,
-  "missing_count": 13,
+  "in_scope": 982,
+  "missing_count": 14,
   "missing": [
    "101-0185306",
    "101-0466862",
@@ -27,560 +27,81 @@
    "101-1541549",
    "101-1547348",
    "101-1550052",
+   "101-1560895",
    "101-1598812",
    "101-1623784"
   ]
  },
  "by_tab": {
   "ce": {
-   "101-0063933": {
+   "101-1560895": {
     "fields": [
-     "form4_date"
+     "new"
     ],
     "labels": [
-     "טופס 4"
+     "תכנית חדשה בדוח"
     ],
-    "from": {
-     "form4_date": "06/02/2017"
-    },
-    "to": {
-     "form4_date": "29/09/2020"
-    }
+    "from": {},
+    "to": {}
    },
-   "101-0098251": {
+   "101-1455443": {
     "fields": [
-     "in_construction",
-     "stage"
-    ],
-    "labels": [
-     "בביצוע",
-     "שלב"
-    ],
-    "from": {
-     "in_construction": false,
-     "stage": "ד-היתר בנייה"
-    },
-    "to": {
-     "in_construction": true,
-     "stage": "ה-בבנייה"
-    }
-   },
-   "101-0357319": {
-    "fields": [
-     "completed",
-     "form4_date",
-     "stage"
-    ],
-    "labels": [
-     "גמר בנייה",
-     "טופס 4",
-     "שלב"
-    ],
-    "from": {
-     "completed": false,
-     "form4_date": null,
-     "stage": "ה-בבנייה"
-    },
-    "to": {
-     "completed": true,
-     "form4_date": "22/10/2026",
-     "stage": "ו-גמר בנייה"
-    }
-   },
-   "101-0383109": {
-    "fields": [
-     "in_construction",
-     "stage"
-    ],
-    "labels": [
-     "בביצוע",
-     "שלב"
-    ],
-    "from": {
-     "in_construction": false,
-     "stage": "ד-היתר בנייה"
-    },
-    "to": {
-     "in_construction": true,
-     "stage": "ה-בבנייה"
-    }
-   },
-   "101-0195875": {
-    "fields": [
-     "in_construction"
-    ],
-    "labels": [
-     "בביצוע"
-    ],
-    "from": {
-     "in_construction": true
-    },
-    "to": {
-     "in_construction": false
-    }
-   },
-   "101-0684340": {
-    "fields": [
-     "form4_date"
-    ],
-    "labels": [
-     "טופס 4"
-    ],
-    "from": {
-     "form4_date": "24/05/2023"
-    },
-    "to": {
-     "form4_date": "23/05/2018"
-    }
-   },
-   "101-0178129": {
-    "fields": [
-     "form4_date"
-    ],
-    "labels": [
-     "טופס 4"
-    ],
-    "from": {
-     "form4_date": "19/11/2023"
-    },
-    "to": {
-     "form4_date": "01/07/2025"
-    }
-   },
-   "101-0757534": {
-    "fields": [
-     "in_construction",
-     "completed",
-     "form4_date",
-     "stage"
-    ],
-    "labels": [
-     "בביצוע",
-     "גמר בנייה",
-     "טופס 4",
-     "שלב"
-    ],
-    "from": {
-     "in_construction": true,
-     "completed": false,
-     "form4_date": null,
-     "stage": "ה-בבנייה"
-    },
-    "to": {
-     "in_construction": false,
-     "completed": true,
-     "form4_date": "14/10/2026",
-     "stage": "ו-גמר בנייה"
-    }
-   },
-   "101-0217364": {
-    "fields": [
-     "form4_date"
-    ],
-    "labels": [
-     "טופס 4"
-    ],
-    "from": {
-     "form4_date": "25/10/2023"
-    },
-    "to": {
-     "form4_date": "14/08/2025"
-    }
-   },
-   "101-0560110": {
-    "fields": [
-     "form4_date"
-    ],
-    "labels": [
-     "טופס 4"
-    ],
-    "from": {
-     "form4_date": "12/08/2026"
-    },
-    "to": {
-     "form4_date": "30/12/2024"
-    }
-   },
-   "101-0859322": {
-    "fields": [
-     "any_issued",
-     "stage"
-    ],
-    "labels": [
-     "היתר",
-     "שלב"
-    ],
-    "from": {
-     "any_issued": false,
-     "stage": "ג-רישוי בתהליך"
-    },
-    "to": {
-     "any_issued": true,
-     "stage": "ד-היתר בנייה"
-    }
-   },
-   "101-0484477": {
-    "fields": [
-     "any_issued",
-     "stage"
-    ],
-    "labels": [
-     "היתר",
-     "שלב"
-    ],
-    "from": {
-     "any_issued": false,
-     "stage": "ג-רישוי בתהליך"
-    },
-    "to": {
-     "any_issued": true,
-     "stage": "ד-היתר בנייה"
-    }
-   },
-   "101-1053289": {
-    "fields": [
-     "has_licensing_file",
-     "stage"
-    ],
-    "labels": [
-     "תיק רישוי",
-     "שלב"
-    ],
-    "from": {
-     "has_licensing_file": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "stage": "ג-רישוי בתהליך"
-    }
-   },
-   "101-1002054": {
-    "fields": [
-     "in_construction",
-     "stage"
-    ],
-    "labels": [
-     "בביצוע",
-     "שלב"
-    ],
-    "from": {
-     "in_construction": false,
-     "stage": "ד-היתר בנייה"
-    },
-    "to": {
-     "in_construction": true,
-     "stage": "ה-בבנייה"
-    }
-   },
-   "101-0958025": {
-    "fields": [
-     "in_construction",
-     "stage"
-    ],
-    "labels": [
-     "בביצוע",
-     "שלב"
-    ],
-    "from": {
-     "in_construction": true,
-     "stage": "ה-בבנייה"
-    },
-    "to": {
-     "in_construction": false,
-     "stage": "ד-היתר בנייה"
-    }
-   },
-   "101-1211002": {
-    "fields": [
-     "has_licensing_file",
-     "stage"
-    ],
-    "labels": [
-     "תיק רישוי",
-     "שלב"
-    ],
-    "from": {
-     "has_licensing_file": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "stage": "ג-רישוי בתהליך"
-    }
-   },
-   "101-1135086": {
-    "fields": [
+     "station_desc",
      "has_licensing_file",
      "any_issued",
      "in_construction",
-     "stage"
+     "completed"
     ],
     "labels": [
+     "סטטוס",
      "תיק רישוי",
      "היתר",
      "בביצוע",
-     "שלב"
+     "גמר בנייה"
     ],
     "from": {
+     "station_desc": "הכרעה בהתנגדויות / אישור",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
      "has_licensing_file": false,
      "any_issued": false,
      "in_construction": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "any_issued": true,
-     "in_construction": true,
-     "stage": "ה-בבנייה"
+     "completed": false
     }
    },
-   "101-1004969": {
+   "101-1236876": {
     "fields": [
-     "any_issued",
-     "stage"
-    ],
-    "labels": [
-     "היתר",
-     "שלב"
-    ],
-    "from": {
-     "any_issued": false,
-     "stage": "ג-רישוי בתהליך"
-    },
-    "to": {
-     "any_issued": true,
-     "stage": "ד-היתר בנייה"
-    }
-   },
-   "101-0897934": {
-    "fields": [
+     "station_desc",
      "has_licensing_file",
      "any_issued",
      "in_construction",
-     "stage"
+     "completed"
     ],
     "labels": [
+     "סטטוס",
      "תיק רישוי",
      "היתר",
      "בביצוע",
-     "שלב"
+     "גמר בנייה"
     ],
     "from": {
+     "station_desc": "בהליך אישור",
+     "has_licensing_file": null,
+     "any_issued": null,
+     "in_construction": null,
+     "completed": null
+    },
+    "to": {
+     "station_desc": "אישור",
      "has_licensing_file": false,
      "any_issued": false,
      "in_construction": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "any_issued": true,
-     "in_construction": true,
-     "stage": "ה-בבנייה"
-    }
-   },
-   "101-1193531": {
-    "fields": [
-     "has_licensing_file",
-     "stage"
-    ],
-    "labels": [
-     "תיק רישוי",
-     "שלב"
-    ],
-    "from": {
-     "has_licensing_file": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "stage": "ג-רישוי בתהליך"
-    }
-   },
-   "101-1062678": {
-    "fields": [
-     "has_licensing_file",
-     "stage"
-    ],
-    "labels": [
-     "תיק רישוי",
-     "שלב"
-    ],
-    "from": {
-     "has_licensing_file": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "stage": "ג-רישוי בתהליך"
-    }
-   },
-   "101-0948356": {
-    "fields": [
-     "commerce_sqm",
-     "employment_sqm",
-     "ce_unsplit_sqm"
-    ],
-    "labels": [
-     "מסחר",
-     "תעסוקה",
-     "מסחר+תעסוקה יחד"
-    ],
-    "from": {
-     "commerce_sqm": 0,
-     "employment_sqm": 0,
-     "ce_unsplit_sqm": 2975
-    },
-    "to": {
-     "commerce_sqm": 1700,
-     "employment_sqm": 1275,
-     "ce_unsplit_sqm": 0
-    }
-   },
-   "101-1025519": {
-    "fields": [
-     "has_licensing_file",
-     "stage"
-    ],
-    "labels": [
-     "תיק רישוי",
-     "שלב"
-    ],
-    "from": {
-     "has_licensing_file": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "stage": "ג-רישוי בתהליך"
-    }
-   },
-   "101-0293761": {
-    "fields": [
-     "has_licensing_file",
-     "stage"
-    ],
-    "labels": [
-     "תיק רישוי",
-     "שלב"
-    ],
-    "from": {
-     "has_licensing_file": false,
-     "stage": null
-    },
-    "to": {
-     "has_licensing_file": true,
-     "stage": "ג-רישוי בתהליך"
-    }
-   },
-   "101-1304344": {
-    "fields": [
-     "commerce_sqm",
-     "ce_unsplit_sqm"
-    ],
-    "labels": [
-     "מסחר",
-     "מסחר+תעסוקה יחד"
-    ],
-    "from": {
-     "commerce_sqm": 0,
-     "ce_unsplit_sqm": 745
-    },
-    "to": {
-     "commerce_sqm": 745,
-     "ce_unsplit_sqm": 0
-    }
-   },
-   "101-1185578": {
-    "fields": [
-     "station_desc"
-    ],
-    "labels": [
-     "סטטוס"
-    ],
-    "from": {
-     "station_desc": "הפקדה להתנגדויות/השגות"
-    },
-    "to": {
-     "station_desc": "הכרעה בהתנגדויות / אישור"
-    }
-   },
-   "101-1082809": {
-    "fields": [
-     "employment_sqm",
-     "ce_unsplit_sqm"
-    ],
-    "labels": [
-     "תעסוקה",
-     "מסחר+תעסוקה יחד"
-    ],
-    "from": {
-     "employment_sqm": 0,
-     "ce_unsplit_sqm": 4800
-    },
-    "to": {
-     "employment_sqm": 4800,
-     "ce_unsplit_sqm": 0
-    }
-   },
-   "101-1297423": {
-    "fields": [
-     "form4_date"
-    ],
-    "labels": [
-     "טופס 4"
-    ],
-    "from": {
-     "form4_date": "26/08/2026"
-    },
-    "to": {
-     "form4_date": "08/10/2026"
-    }
-   },
-   "101-1549260": {
-    "fields": [
-     "station_desc"
-    ],
-    "labels": [
-     "סטטוס"
-    ],
-    "from": {
-     "station_desc": "במילוי תנאים להפקדה"
-    },
-    "to": {
-     "station_desc": "הפקדה להתנגדויות/השגות"
-    }
-   },
-   "101-0924480": {
-    "fields": [
-     "commerce_sqm",
-     "ce_unsplit_sqm"
-    ],
-    "labels": [
-     "מסחר",
-     "מסחר+תעסוקה יחד"
-    ],
-    "from": {
-     "commerce_sqm": 0,
-     "ce_unsplit_sqm": 675
-    },
-    "to": {
-     "commerce_sqm": 675,
-     "ce_unsplit_sqm": 0
-    }
-   },
-   "101-0833038": {
-    "fields": [
-     "station_desc"
-    ],
-    "labels": [
-     "סטטוס"
-    ],
-    "from": {
-     "station_desc": "במילוי תנאים להפקדה"
-    },
-    "to": {
-     "station_desc": "הפקדה להתנגדויות/השגות"
+     "completed": false
     }
    }
   },

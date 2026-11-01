@@ -20621,344 +20621,6 @@
    }
   ]
  },
- "101-0975292": {
-  "pl_name": "התחדשות עירונית רמות פולין",
-  "mp_id": 1005139016,
-  "station": 2030,
-  "station_desc": "במילוי תנאים להפקדה",
-  "parcels": [
-   {
-    "num": "101",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1909.5167
-   },
-   {
-    "num": "514",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 1.8731
-   },
-   {
-    "num": "252",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 2090.6296
-   },
-   {
-    "num": "105",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1939.1508
-   },
-   {
-    "num": "501",
-    "mavat_code": 820,
-    "mavat_name": "דרך מאושרת",
-    "legal_area": 2532.8383
-   },
-   {
-    "num": "513",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 12.5159
-   },
-   {
-    "num": "400",
-    "mavat_code": 280,
-    "mavat_name": "מתקנים הנדסיים",
-    "legal_area": 60.5973
-   },
-   {
-    "num": "102",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1967.1686
-   },
-   {
-    "num": "107",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1646.4215
-   },
-   {
-    "num": "120",
-    "mavat_code": 995,
-    "mavat_name": "יעוד עפ\"י תכנית מאושרת אחרת",
-    "legal_area": 54.6615
-   },
-   {
-    "num": "309",
-    "mavat_code": 1670,
-    "mavat_name": "שטחים פתוחים ומבנים ומוסדות ציבור",
-    "legal_area": 1226.4868
-   },
-   {
-    "num": "270",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 148.3573
-   },
-   {
-    "num": "104",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1765.2899
-   },
-   {
-    "num": "260",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 308.4976
-   },
-   {
-    "num": "503",
-    "mavat_code": 820,
-    "mavat_name": "דרך מאושרת",
-    "legal_area": 605.0118
-   },
-   {
-    "num": "106",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 2195.1683
-   },
-   {
-    "num": "517",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 42.0623
-   },
-   {
-    "num": "401",
-    "mavat_code": 280,
-    "mavat_name": "מתקנים הנדסיים",
-    "legal_area": 61.6616
-   },
-   {
-    "num": "264",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 233.5623
-   },
-   {
-    "num": "511",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 7424.9314
-   },
-   {
-    "num": "262",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 193.3399
-   },
-   {
-    "num": "265",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 2784.8186
-   },
-   {
-    "num": "110",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 658.1365
-   },
-   {
-    "num": "109",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 2618.5504
-   },
-   {
-    "num": "259",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 234.0235
-   },
-   {
-    "num": "103",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1945.2125
-   },
-   {
-    "num": "250",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 1829.3465
-   },
-   {
-    "num": "108",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1388.5883
-   },
-   {
-    "num": "308",
-    "mavat_code": 400,
-    "mavat_name": "מבנים ומוסדות ציבור",
-    "legal_area": 1669.2254
-   },
-   {
-    "num": "269",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 321.6013
-   },
-   {
-    "num": "302",
-    "mavat_code": 400,
-    "mavat_name": "מבנים ומוסדות ציבור",
-    "legal_area": 3037.7741
-   },
-   {
-    "num": "303",
-    "mavat_code": 400,
-    "mavat_name": "מבנים ומוסדות ציבור",
-    "legal_area": 5011.274
-   },
-   {
-    "num": "251",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 1113.244
-   },
-   {
-    "num": "516",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 244.7719
-   },
-   {
-    "num": "311",
-    "mavat_code": 400,
-    "mavat_name": "מבנים ומוסדות ציבור",
-    "legal_area": 1416.3641
-   },
-   {
-    "num": "519",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 106.0772
-   },
-   {
-    "num": "263",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 141.4973
-   },
-   {
-    "num": "304",
-    "mavat_code": 1670,
-    "mavat_name": "שטחים פתוחים ומבנים ומוסדות ציבור",
-    "legal_area": 2554.6854
-   },
-   {
-    "num": "267",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 331.5345
-   },
-   {
-    "num": "280",
-    "mavat_code": 1670,
-    "mavat_name": "שטחים פתוחים ומבנים ומוסדות ציבור",
-    "legal_area": 424.0768
-   },
-   {
-    "num": "268",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 2171.9906
-   },
-   {
-    "num": "117",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1456.2292
-   },
-   {
-    "num": "515",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 739.736
-   },
-   {
-    "num": "118",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1554.525
-   },
-   {
-    "num": "402",
-    "mavat_code": 280,
-    "mavat_name": "מתקנים הנדסיים",
-    "legal_area": 73.8653
-   },
-   {
-    "num": "119",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1337.6021
-   },
-   {
-    "num": "266",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 1267.891
-   },
-   {
-    "num": "518",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 195.581
-   },
-   {
-    "num": "305",
-    "mavat_code": 400,
-    "mavat_name": "מבנים ומוסדות ציבור",
-    "legal_area": 1814.0426
-   },
-   {
-    "num": "114",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1117.9951
-   },
-   {
-    "num": "502",
-    "mavat_code": 820,
-    "mavat_name": "דרך מאושרת",
-    "legal_area": 1144.3406
-   },
-   {
-    "num": "113",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1170.0731
-   },
-   {
-    "num": "112",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 1303.2671
-   },
-   {
-    "num": "512",
-    "mavat_code": 830,
-    "mavat_name": "דרך מוצעת",
-    "legal_area": 172.3532
-   },
-   {
-    "num": "310",
-    "mavat_code": 400,
-    "mavat_name": "מבנים ומוסדות ציבור",
-    "legal_area": 965.6322
-   }
-  ]
- },
  "101-1021278": {
   "pl_name": "התחדשות עירונית - קרית משה, הרצל 54,56,58, רב צעיר 3,5 הברון הירש 3",
   "mp_id": 1005184392,
@@ -21675,20 +21337,6 @@
    }
   ]
  },
- "101-1352947": {
-  "pl_name": "מבנה מגורים ומסחר ברח' ירמיהו 72 רוממה, ירושלים",
-  "mp_id": 1005391500,
-  "station": 2050,
-  "station_desc": "הכרעה בהתנגדויות / אישור",
-  "parcels": [
-   {
-    "num": "1",
-    "mavat_code": 1410,
-    "mavat_name": "מגורים מסחר ומבנים ומוסדות ציבור",
-    "legal_area": 0
-   }
-  ]
- },
  "101-1231174": {
   "pl_name": "תוספת בניה לפרויקט ברח' אברהם תלמודי 19, ירושלים.",
   "mp_id": 1005314652,
@@ -22290,6 +21938,20 @@
     "mavat_code": 1000,
     "mavat_name": "מגורים ומסחר",
     "legal_area": 1657
+   }
+  ]
+ },
+ "101-1560895": {
+  "pl_name": "הקמת מבנה רב שימושי בבית צפאפא",
+  "mp_id": 1005519406,
+  "station": 2020,
+  "station_desc": "בבדיקה תכנונית",
+  "parcels": [
+   {
+    "num": "101",
+    "mavat_code": 1000,
+    "mavat_name": "מגורים ומסחר",
+    "legal_area": 848
    }
   ]
  },
@@ -23471,20 +23133,6 @@
    }
   ]
  },
- "101-1436971": {
-  "pl_name": "הריסת בנין קיים ובניית בניין חדש ברח' אליעזר הלוי 23 קרית משה",
-  "mp_id": 1005442802,
-  "station": 2030,
-  "station_desc": "במילוי תנאים להפקדה",
-  "parcels": [
-   {
-    "num": "1",
-    "mavat_code": 140,
-    "mavat_name": "מגורים ד'",
-    "legal_area": 0
-   }
-  ]
- },
  "101-1075902": {
   "pl_name": "גואטמלה 25-27-29",
   "mp_id": 1005216752,
@@ -23687,20 +23335,6 @@
    }
   ]
  },
- "101-1478775": {
-  "pl_name": "תוספת זכויות בניה בחלקה 17 בגוש 30408, קרית יובל, ירושלים",
-  "mp_id": 1005468278,
-  "station": 2030,
-  "station_desc": "במילוי תנאים להפקדה",
-  "parcels": [
-   {
-    "num": "1",
-    "mavat_code": 140,
-    "mavat_name": "מגורים ד'",
-    "legal_area": 540.4
-   }
-  ]
- },
  "101-1511377": {
   "pl_name": "רחוב ההגנה 19 ירושלים - תיקון לתב\"ע מס' 101-0793612",
   "mp_id": 1005488402,
@@ -23726,26 +23360,6 @@
     "mavat_code": 1000,
     "mavat_name": "מגורים ומסחר",
     "legal_area": 220
-   }
-  ]
- },
- "101-1082809": {
-  "pl_name": "צביה ויצחק 800- התחדשות עירונית, גילה",
-  "mp_id": 1005221118,
-  "station": 2030,
-  "station_desc": "במילוי תנאים להפקדה",
-  "parcels": [
-   {
-    "num": "1",
-    "mavat_code": 1050,
-    "mavat_name": "מגורים מסחר ותעסוקה",
-    "legal_area": 8.6029
-   },
-   {
-    "num": "2",
-    "mavat_code": 1050,
-    "mavat_name": "מגורים מסחר ותעסוקה",
-    "legal_area": 8.6029
    }
   ]
  },
@@ -23981,6 +23595,344 @@
    }
   ]
  },
+ "101-0975292": {
+  "pl_name": "התחדשות עירונית רמות פולין",
+  "mp_id": 1005139016,
+  "station": 2030,
+  "station_desc": "במילוי תנאים להפקדה",
+  "parcels": [
+   {
+    "num": "266",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 1267.891
+   },
+   {
+    "num": "114",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1117.9951
+   },
+   {
+    "num": "518",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 195.581
+   },
+   {
+    "num": "305",
+    "mavat_code": 400,
+    "mavat_name": "מבנים ומוסדות ציבור",
+    "legal_area": 1814.0426
+   },
+   {
+    "num": "502",
+    "mavat_code": 820,
+    "mavat_name": "דרך מאושרת",
+    "legal_area": 1144.3406
+   },
+   {
+    "num": "113",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1170.0731
+   },
+   {
+    "num": "112",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1303.2671
+   },
+   {
+    "num": "512",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 172.3532
+   },
+   {
+    "num": "310",
+    "mavat_code": 400,
+    "mavat_name": "מבנים ומוסדות ציבור",
+    "legal_area": 965.6322
+   },
+   {
+    "num": "517",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 42.0623
+   },
+   {
+    "num": "401",
+    "mavat_code": 280,
+    "mavat_name": "מתקנים הנדסיים",
+    "legal_area": 61.6616
+   },
+   {
+    "num": "264",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 233.5623
+   },
+   {
+    "num": "511",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 7424.9314
+   },
+   {
+    "num": "262",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 193.3399
+   },
+   {
+    "num": "265",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 2784.8186
+   },
+   {
+    "num": "110",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 658.1365
+   },
+   {
+    "num": "109",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 2618.5504
+   },
+   {
+    "num": "259",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 234.0235
+   },
+   {
+    "num": "103",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1945.2125
+   },
+   {
+    "num": "250",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 1829.3465
+   },
+   {
+    "num": "108",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1388.5883
+   },
+   {
+    "num": "308",
+    "mavat_code": 400,
+    "mavat_name": "מבנים ומוסדות ציבור",
+    "legal_area": 1669.2254
+   },
+   {
+    "num": "102",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1967.1686
+   },
+   {
+    "num": "107",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1646.4215
+   },
+   {
+    "num": "120",
+    "mavat_code": 995,
+    "mavat_name": "יעוד עפ\"י תכנית מאושרת אחרת",
+    "legal_area": 54.6615
+   },
+   {
+    "num": "309",
+    "mavat_code": 1670,
+    "mavat_name": "שטחים פתוחים ומבנים ומוסדות ציבור",
+    "legal_area": 1226.4868
+   },
+   {
+    "num": "270",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 148.3573
+   },
+   {
+    "num": "104",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1765.2899
+   },
+   {
+    "num": "260",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 308.4976
+   },
+   {
+    "num": "503",
+    "mavat_code": 820,
+    "mavat_name": "דרך מאושרת",
+    "legal_area": 605.0118
+   },
+   {
+    "num": "106",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 2195.1683
+   },
+   {
+    "num": "101",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1909.5167
+   },
+   {
+    "num": "514",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 1.8731
+   },
+   {
+    "num": "252",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 2090.6296
+   },
+   {
+    "num": "105",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1939.1508
+   },
+   {
+    "num": "501",
+    "mavat_code": 820,
+    "mavat_name": "דרך מאושרת",
+    "legal_area": 2532.8383
+   },
+   {
+    "num": "513",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 12.5159
+   },
+   {
+    "num": "400",
+    "mavat_code": 280,
+    "mavat_name": "מתקנים הנדסיים",
+    "legal_area": 60.5973
+   },
+   {
+    "num": "269",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 321.6013
+   },
+   {
+    "num": "302",
+    "mavat_code": 400,
+    "mavat_name": "מבנים ומוסדות ציבור",
+    "legal_area": 3037.7741
+   },
+   {
+    "num": "303",
+    "mavat_code": 400,
+    "mavat_name": "מבנים ומוסדות ציבור",
+    "legal_area": 5011.274
+   },
+   {
+    "num": "251",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 1113.244
+   },
+   {
+    "num": "516",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 244.7719
+   },
+   {
+    "num": "304",
+    "mavat_code": 1670,
+    "mavat_name": "שטחים פתוחים ומבנים ומוסדות ציבור",
+    "legal_area": 2554.6854
+   },
+   {
+    "num": "267",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 331.5345
+   },
+   {
+    "num": "280",
+    "mavat_code": 1670,
+    "mavat_name": "שטחים פתוחים ומבנים ומוסדות ציבור",
+    "legal_area": 424.0768
+   },
+   {
+    "num": "268",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 2171.9906
+   },
+   {
+    "num": "515",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 739.736
+   },
+   {
+    "num": "402",
+    "mavat_code": 280,
+    "mavat_name": "מתקנים הנדסיים",
+    "legal_area": 73.8653
+   },
+   {
+    "num": "311",
+    "mavat_code": 400,
+    "mavat_name": "מבנים ומוסדות ציבור",
+    "legal_area": 1416.3641
+   },
+   {
+    "num": "519",
+    "mavat_code": 830,
+    "mavat_name": "דרך מוצעת",
+    "legal_area": 106.0772
+   },
+   {
+    "num": "263",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 141.4973
+   },
+   {
+    "num": "119",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1410.7521
+   },
+   {
+    "num": "118",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1519.6231
+   },
+   {
+    "num": "117",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 1418.3919
+   }
+  ]
+ },
  "101-1070911": {
   "pl_name": "התחדשות עירונית במתחם חסבון, ירושלים",
   "mp_id": 1005213798,
@@ -24114,8 +24066,8 @@
  "101-1455443": {
   "pl_name": "הקמת בניין למסחר, תעסוקה ותיירות במע''ר מזרח",
   "mp_id": 1005454444,
-  "station": 2050,
-  "station_desc": "הכרעה בהתנגדויות / אישור",
+  "station": 3010,
+  "station_desc": "אישור",
   "parcels": [
    {
     "num": "1",
@@ -24927,6 +24879,20 @@
    }
   ]
  },
+ "101-1352947": {
+  "pl_name": "מבנה מגורים ומסחר ברח' ירמיהו 72 רוממה, ירושלים",
+  "mp_id": 1005391500,
+  "station": 2050,
+  "station_desc": "הכרעה בהתנגדויות / אישור",
+  "parcels": [
+   {
+    "num": "1",
+    "mavat_code": 1410,
+    "mavat_name": "מגורים מסחר ומבנים ומוסדות ציבור",
+    "legal_area": 0
+   }
+  ]
+ },
  "101-1623784": {
   "pl_name": "תוספת קומות למלון אריסטובולוס, ירושלים",
   "mp_id": 1005557446,
@@ -24986,32 +24952,6 @@
     "mavat_code": 1410,
     "mavat_name": "מגורים מסחר ומבנים ומוסדות ציבור",
     "legal_area": null
-   }
-  ]
- },
- "101-0892588": {
-  "pl_name": "התחדשות עירונית, אפרסמון, המור, מבוא הדודאים, מבוא קטורה",
-  "mp_id": 1005089738,
-  "station": 2060,
-  "station_desc": "בהליך אישור",
-  "parcels": [
-   {
-    "num": "3",
-    "mavat_code": 1000,
-    "mavat_name": "מגורים ומסחר",
-    "legal_area": 0.9927
-   },
-   {
-    "num": "2",
-    "mavat_code": 1410,
-    "mavat_name": "מגורים מסחר ומבנים ומוסדות ציבור",
-    "legal_area": 2.5051
-   },
-   {
-    "num": "1",
-    "mavat_code": 1480,
-    "mavat_name": "מגורים תעסוקה ומבנים ומוסדות ציבור",
-    "legal_area": 1.272
    }
   ]
  },
@@ -25439,20 +25379,6 @@
    }
   ]
  },
- "101-1494814": {
-  "pl_name": "מגדל ליפמן - רחוב התעשייה 3 ירושלים",
-  "mp_id": 1005478106,
-  "station": 2030,
-  "station_desc": "במילוי תנאים להפקדה",
-  "parcels": [
-   {
-    "num": "1",
-    "mavat_code": 1050,
-    "mavat_name": "מגורים מסחר ותעסוקה",
-    "legal_area": 0
-   }
-  ]
- },
  "101-1311133": {
   "pl_name": "נווה יעקב- פינת רחובות שדרות נווה יעקב ומעגלות הרב פרדס",
   "mp_id": 1005365466,
@@ -25711,6 +25637,32 @@
    }
   ]
  },
+ "101-0892588": {
+  "pl_name": "התחדשות עירונית, אפרסמון, המור, מבוא הדודאים, מבוא קטורה",
+  "mp_id": 1005089738,
+  "station": 2060,
+  "station_desc": "בהליך אישור",
+  "parcels": [
+   {
+    "num": "3",
+    "mavat_code": 1000,
+    "mavat_name": "מגורים ומסחר",
+    "legal_area": 0.9927
+   },
+   {
+    "num": "2",
+    "mavat_code": 1410,
+    "mavat_name": "מגורים מסחר ומבנים ומוסדות ציבור",
+    "legal_area": 2.5051
+   },
+   {
+    "num": "1",
+    "mavat_code": 1480,
+    "mavat_name": "מגורים תעסוקה ומבנים ומוסדות ציבור",
+    "legal_area": 1.272
+   }
+  ]
+ },
  "101-1080092": {
   "pl_name": "התחדשות עירונית בורוכוב 57-61 הכשרת היישוב",
   "mp_id": 1005219496,
@@ -25742,6 +25694,26 @@
     "mavat_code": 1410,
     "mavat_name": "מגורים מסחר ומבנים ומוסדות ציבור",
     "legal_area": 3235.3
+   }
+  ]
+ },
+ "101-1082809": {
+  "pl_name": "צביה ויצחק 800- התחדשות עירונית, גילה",
+  "mp_id": 1005221118,
+  "station": 2030,
+  "station_desc": "במילוי תנאים להפקדה",
+  "parcels": [
+   {
+    "num": "2",
+    "mavat_code": 1050,
+    "mavat_name": "מגורים מסחר ותעסוקה",
+    "legal_area": 8.6029
+   },
+   {
+    "num": "1",
+    "mavat_code": 1050,
+    "mavat_name": "מגורים מסחר ותעסוקה",
+    "legal_area": 8.6029
    }
   ]
  },
@@ -25919,35 +25891,17 @@
    }
   ]
  },
- "101-1236876": {
-  "pl_name": "נופי גילה - מתחם אונטרמן, ירושלים",
-  "mp_id": 1005318156,
-  "station": 2060,
-  "station_desc": "בהליך אישור",
+ "101-1494814": {
+  "pl_name": "מגדל ליפמן - רחוב התעשייה 3 ירושלים",
+  "mp_id": 1005478106,
+  "station": 2030,
+  "station_desc": "במילוי תנאים להפקדה",
   "parcels": [
    {
-    "num": "101",
-    "mavat_code": 140,
-    "mavat_name": "מגורים ד'",
-    "legal_area": 2.2897
-   },
-   {
-    "num": "201",
-    "mavat_code": 670,
-    "mavat_name": "שטח ציבורי פתוח",
-    "legal_area": 1.54
-   },
-   {
-    "num": "102",
-    "mavat_code": 150,
-    "mavat_name": "דיור מיוחד",
-    "legal_area": 1.7168999999999999
-   },
-   {
-    "num": "301",
-    "mavat_code": 10,
-    "mavat_name": "מגורים",
-    "legal_area": 0.1852
+    "num": "1",
+    "mavat_code": 1050,
+    "mavat_name": "מגורים מסחר ותעסוקה",
+    "legal_area": 0
    }
   ]
  },
@@ -25985,6 +25939,52 @@
    }
   ]
  },
+ "101-1436971": {
+  "pl_name": "תוספת בניה על מבנה קיים והקמת בניין חדש ברחוב אליעזר הלוי 23 קרית משה",
+  "mp_id": 1005442802,
+  "station": 2030,
+  "station_desc": "במילוי תנאים להפקדה",
+  "parcels": [
+   {
+    "num": "1",
+    "mavat_code": 1410,
+    "mavat_name": "מגורים מסחר ומבנים ומוסדות ציבור",
+    "legal_area": 0
+   }
+  ]
+ },
+ "101-1236876": {
+  "pl_name": "נופי גילה - מתחם אונטרמן, ירושלים",
+  "mp_id": 1005318156,
+  "station": 3010,
+  "station_desc": "אישור",
+  "parcels": [
+   {
+    "num": "101",
+    "mavat_code": 140,
+    "mavat_name": "מגורים ד'",
+    "legal_area": 2.2897
+   },
+   {
+    "num": "201",
+    "mavat_code": 670,
+    "mavat_name": "שטח ציבורי פתוח",
+    "legal_area": 1.54
+   },
+   {
+    "num": "102",
+    "mavat_code": 150,
+    "mavat_name": "דיור מיוחד",
+    "legal_area": 1.7168999999999999
+   },
+   {
+    "num": "301",
+    "mavat_code": 10,
+    "mavat_name": "מגורים",
+    "legal_area": 0.1852
+   }
+  ]
+ },
  "101-1257922": {
   "pl_name": "פינוי בינוי ברחוב החבצלת 3,5,7, ירושלים",
   "mp_id": 1005331336,
@@ -25996,6 +25996,20 @@
     "mavat_code": 1050,
     "mavat_name": "מגורים מסחר ותעסוקה",
     "legal_area": 0
+   }
+  ]
+ },
+ "101-1478775": {
+  "pl_name": "תוספת זכויות בניה בחלקה 17 בגוש 30408, קרית יובל, ירושלים",
+  "mp_id": 1005468278,
+  "station": 2030,
+  "station_desc": "במילוי תנאים להפקדה",
+  "parcels": [
+   {
+    "num": "1",
+    "mavat_code": 140,
+    "mavat_name": "מגורים ד'",
+    "legal_area": 540.4
    }
   ]
  },

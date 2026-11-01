@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-27T19:09:15",
+ "generated_at": "2026-11-01T21:43:24",
  "source": "YK licensing 242700437 + pikuah 242700474/473",
  "by_plan": {
   "101-0051813": {
@@ -1057,7 +1057,7 @@
      "stage": "ג-רישוי בתהליך"
     }
    ],
-   "recheck_regressed_at": "2026-10-27T19:09:10"
+   "recheck_regressed_at": "2026-11-01T21:43:16"
   },
   "101-0149112": {
    "plan_name": "101-0149112",
@@ -1987,7 +1987,7 @@
      "stage": "ה-בבנייה"
     }
    ],
-   "recheck_regressed_at": "2026-10-27T19:09:15"
+   "recheck_regressed_at": "2026-11-01T21:43:24"
   },
   "101-0150805": {
    "plan_name": "101-0150805",
@@ -13353,7 +13353,7 @@
      "stage": "ג-רישוי בתהליך"
     }
    ],
-   "recheck_regressed_at": "2026-10-27T19:08:52"
+   "recheck_regressed_at": "2026-11-01T21:42:42"
   },
   "101-1008911": {
    "plan_name": "101-1008911",
@@ -14430,7 +14430,7 @@
      "stage": "ג-רישוי בתהליך"
     }
    ],
-   "recheck_regressed_at": "2026-10-27T19:08:34"
+   "recheck_regressed_at": "2026-11-01T21:42:08"
   },
   "101-0855585": {
    "plan_name": "101-0855585",
@@ -16894,7 +16894,7 @@
      "stage": "ג-רישוי בתהליך"
     }
    ],
-   "recheck_regressed_at": "2026-10-27T19:08:16"
+   "recheck_regressed_at": "2026-11-01T21:41:33"
   },
   "101-1034545": {
    "plan_name": "101-1034545",
@@ -21753,9 +21753,41 @@
     }
    ],
    "fetched_at": "2026-10-26T12:29:20"
+  },
+  "101-1455443": {
+   "plan_name": "101-1455443",
+   "pl_name": "הקמת בניין למסחר, תעסוקה ותיירות במע''ר מזרח",
+   "station_desc": "אישור",
+   "taba": "1455443",
+   "has_licensing_file": false,
+   "permit_count": 0,
+   "any_issued": false,
+   "in_construction": false,
+   "completed": false,
+   "occupied": false,
+   "form4_date": null,
+   "stage": null,
+   "permits": [],
+   "fetched_at": "2026-11-01T21:40:17"
+  },
+  "101-1236876": {
+   "plan_name": "101-1236876",
+   "pl_name": "נופי גילה - מתחם אונטרמן, ירושלים",
+   "station_desc": "אישור",
+   "taba": "1236876",
+   "has_licensing_file": false,
+   "permit_count": 0,
+   "any_issued": false,
+   "in_construction": false,
+   "completed": false,
+   "occupied": false,
+   "form4_date": null,
+   "stage": null,
+   "permits": [],
+   "fetched_at": "2026-11-01T21:40:58"
   }
  },
- "count": 757,
+ "count": 759,
  "application_only_completion_steps": [
   {
    "tik": "2000/194",
