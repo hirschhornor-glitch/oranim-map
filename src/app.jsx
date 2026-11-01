@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-10-29-statuschg2';
+        const APP_VERSION = '2026-11-01-permit-amenities';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -24482,7 +24482,7 @@ function planPermitHafrashUse(taba) {
                 if (text.includes('חפירה ומילוי') || text.includes('חפירה ודיפון')) return PERMIT_CAT_CHAFIRA;
                 if (text.includes('עבודות הריסה')) return PERMIT_CAT_HARISA;
                 if (text.includes('חידוש היתר') || text.includes('הסרת סכנה') || text.includes('מבנה ארעי') || text.includes('מנ"ד')) return PERMIT_CAT_TACHZUKA;
-                if (text.includes('ממ"ד') || text.includes('מחסן') || text.includes('מרפסת') || text.includes('גדר') || text.includes('מעלית')) return PERMIT_CAT_MIVNE;
+                if (text.includes('ממ"ד') || text.includes('מחסן') || text.includes('מרפסת') || text.includes('גדר') || text.includes('מעלית') || ['מעלון', 'בריכ', 'פרגול', 'סככ', "ג'קוזי", 'גקוזי'].some(w => text.includes(w))) return PERMIT_CAT_MIVNE;
                 // Looser heuristic fallback for permits where neither field uses an
                 // official term. Stem-prefix matching handles Hebrew construct forms
                 // (הריס catches הריסה/הריסת, הרחב catches הרחבה/הרחבת, תוספ catches
