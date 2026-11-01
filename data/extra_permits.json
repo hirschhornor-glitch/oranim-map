@@ -1,7 +1,7 @@
 {
  "source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
  "source_date": "2026-06-21",
- "count": 103,
+ "count": 112,
  "by_taba": {
   "897066": [
    {
@@ -347,6 +347,20 @@
     "all_matched_tabas": [
      "178129"
     ]
+   },
+   {
+    "file_number": "2024/0234.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "18/06/2026",
+    "request_type": "בניה חדשה / בניין חדש, תחנת שנאים",
+    "request_description": "בניית שני חדרי שנאים תת-קרקעיים",
+    "address": "רבן יוחנן בן זכאי 1",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
+    "all_matched_tabas": [
+     "178129"
+    ]
    }
   ],
   "4539ב": [
@@ -518,6 +532,33 @@
     "floors": 1,
     "source": "committee_yk",
     "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "209593"
+    ]
+   },
+   {
+    "file_number": "2021/0209.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "13/02/2025",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "הריסה מבנה קיים ובניית מבנה למסחר ומשרדים בהתאם לתכנית המתאר לירושלים",
+    "address": "המוסכים 11",
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
+    "all_matched_tabas": [
+     "209593"
+    ]
+   },
+   {
+    "file_number": "2023/0381.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "27/08/2025",
+    "request_type": "בניה חדשה / בניין חדש, ריצוף חצר ועבודות פיתוח",
+    "request_description": "הקמת מבנה בית ספר יסודי \"כרמים\"  הכולל 18 כיתות, ביתן שומר, חדר טראפו, פיתוח שטח ומגרש ספורט",
+    "address": "בלפור 1",
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
     "all_matched_tabas": [
      "209593"
     ]
@@ -929,6 +970,20 @@
     "floors": 1,
     "source": "committee_yk",
     "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1095124"
+    ]
+   },
+   {
+    "file_number": "2026/0475.00",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "26/10/2026",
+    "request_type": "חפירה ומילוי",
+    "request_description": "בקשה להיתר חפירה ודיפון עבור תחמ\"ש וכן העתקת נישה גמל מים תחנת כב\"א סמוכה",
+    "address": "דרך משה ברעם 1",
+    "floors": -5,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
     "all_matched_tabas": [
      "1095124"
     ]
@@ -1849,6 +1904,97 @@
     "source_date": "2026-10-15",
     "all_matched_tabas": [
      "1360544"
+    ]
+   }
+  ],
+  "1094721": [
+   {
+    "file_number": "1988/0713.02",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "19/10/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "הרחבה ותוספת יחידות דיור באמצעות תוספת בניה - סה\"כ 8 יח\"ד",
+    "address": "אל זיתון 25",
+    "units": 2,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 2,
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
+    "all_matched_tabas": [
+     "1094721"
+    ]
+   }
+  ],
+  "1324854": [
+   {
+    "file_number": "1989/0415.04",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "11/08/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "שימור מבנה קיים בן שלוש קומות, תוספת קומה ויח\"ד ובניה בעורף ומפלס חניה תת קרקעי. סה\"כ 7 יח\"ד.",
+    "address": "ראובן 12",
+    "units": 7,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 7,
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
+    "all_matched_tabas": [
+     "1324854",
+     "663641"
+    ]
+   }
+  ],
+  "492199": [
+   {
+    "file_number": "2000/0393.02",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "02/09/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "הריסת בניין קיים תוך שימור חזיתות ,הריסת פנים הבניין ,חפירת קומות מרתף לחניה ומחסנים ובניית מבנה בן 5 קומות.",
+    "address": "רחל אמנו 28",
+    "units": 7,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 7,
+    "floors": 5,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
+    "all_matched_tabas": [
+     "492199"
+    ]
+   }
+  ],
+  "800771": [
+   {
+    "file_number": "2024/0164.00",
+    "status": "הוכנה טיוטת היתר בניה",
+    "status_date": "29/10/2026",
+    "request_type": "בניה חדשה / בניין חדש, תחנת שנאים",
+    "request_description": "הקמת תחנת טרנספורמציה תת קרקעית",
+    "address": "רבן יוחנן בן זכאי 38",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
+    "all_matched_tabas": [
+     "800771"
+    ]
+   },
+   {
+    "file_number": "2024/0165.00",
+    "status": "הוכנה טיוטת היתר בניה",
+    "status_date": "29/10/2026",
+    "request_type": "בניה חדשה / בניין חדש, תחנת שנאים",
+    "request_description": "הקמת תחנת טרנספורמציה תת קרקעית",
+    "address": "רבן יוחנן בן זכאי 45",
+    "floors": 1,
+    "source": "committee_yk",
+    "source_date": "2026-11-01",
+    "all_matched_tabas": [
+     "800771"
     ]
    }
   ]
