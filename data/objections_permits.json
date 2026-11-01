@@ -1,1 +1,25 @@
-{}
+{
+  "2026/0439.00": {
+    "tik": "2026/0439.00",
+    "status": "פרסום פעיל לפי סעיף 149",
+    "status_date": null,
+    "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
+    "request_description": "תכנית במתווה תמ\"א 38 הריסה ובנייה מחדש.",
+    "address": "הפלמח 41",
+    "street": "הפלמח",
+    "house": "41",
+    "schn": "קטמון הישנה",
+    "deadline_publish": "13/11/2026",
+    "deadline_verified": "2026-11-01",
+    "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
+    "lnglat": [
+      35.206943,
+      31.764515
+    ],
+    "subs": [],
+    "tabas": [],
+    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=c47d28af-0588-4ae4-8aa2-056fac3210b6",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0439.00&SystemCode=26400046&Page=BakashalInfo",
+    "source": "official_activepublications"
+  }
+}
