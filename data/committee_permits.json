@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-11-02T05:11:03",
+ "generated_at": "2026-11-02T08:39:01",
  "source": "YK API — היתרים שלא היו במאגר: מסדר היום של ועדת הרישוי + משמעותיים מסריקת הרחובות",
- "count": 460,
+ "count": 476,
  "significant": 369,
  "permits": {
   "1957/354.7": {
@@ -42,7 +42,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": true
   },
   "1971/766.2": {
    "file_number": "1971/0766.02",
@@ -76,7 +77,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1971/766.3": {
    "file_number": "1971/0766.03",
@@ -118,7 +120,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1981/501.5": {
    "file_number": "1981/0501.05",
@@ -154,7 +157,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1986/422.11": {
    "file_number": "1986/0422.11",
@@ -191,7 +195,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1986/648.7": {
    "file_number": "1986/0648.07",
@@ -227,7 +232,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1991/407.11": {
    "file_number": "1991/0407.11",
@@ -263,7 +269,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1991/449.14": {
    "file_number": "1991/0449.14",
@@ -299,7 +306,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1991/449.15": {
    "file_number": "1991/0449.15",
@@ -336,7 +344,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1999/718.6": {
    "file_number": "1999/0718.06",
@@ -373,7 +382,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2001/556.2": {
    "file_number": "2001/0556.02",
@@ -410,7 +420,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2005/292.2": {
    "file_number": "2005/0292.02",
@@ -449,7 +460,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2006/100.7": {
    "file_number": "2006/0100.07",
@@ -485,7 +497,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2007/428.3": {
    "file_number": "2007/0428.03",
@@ -527,7 +540,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2012/573.2": {
    "file_number": "2012/0573.02",
@@ -563,7 +577,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2015/753.5": {
    "file_number": "2015/0753.05",
@@ -598,7 +613,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2015/858.3": {
    "file_number": "2015/0858.03",
@@ -635,7 +651,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": true
   },
   "2019/129.2": {
    "file_number": "2019/0129.02",
@@ -669,7 +686,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2021/507.1": {
    "file_number": "2021/0507.01",
@@ -709,7 +727,8 @@
    "reasons": [
     "תמ\"א 38"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": true
   },
   "2022/299.1": {
    "file_number": "2022/0299.01",
@@ -749,7 +768,8 @@
    "reasons": [
     "תמ\"א 38"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": true
   },
   "2024/367.0": {
    "file_number": "2024/0367.00",
@@ -792,7 +812,8 @@
     "בנייה חדשה / הריסה",
     "+7 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2025/238.0": {
    "file_number": "2025/0238.00",
@@ -834,7 +855,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2025/385.0": {
    "file_number": "2025/0385.00",
@@ -874,7 +896,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2026/88.0": {
    "file_number": "2026/0088.00",
@@ -924,7 +947,8 @@
     "בנייה חדשה / הריסה",
     "+28 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1910/2027.4": {
    "file_number": "1910/2027.04",
@@ -965,7 +989,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1956/567.0": {
    "file_number": "1956/0567.00",
@@ -999,7 +1024,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1957/815.3": {
    "file_number": "1957/0815.03",
@@ -1032,7 +1058,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1958/693.0": {
    "file_number": "1958/0693.00",
@@ -1066,7 +1093,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1962/280.0": {
    "file_number": "1962/0280.00",
@@ -1101,7 +1129,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1968/787.0": {
    "file_number": "1968/0787.00",
@@ -1135,7 +1164,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/1135.0": {
    "file_number": "1969/1135.00",
@@ -1169,7 +1199,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/1315.0": {
    "file_number": "1969/1315.00",
@@ -1203,7 +1234,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/446.0": {
    "file_number": "1970/0446.00",
@@ -1237,7 +1269,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/446.2": {
    "file_number": "1970/0446.02",
@@ -1272,7 +1305,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/913.0": {
    "file_number": "1970/0913.00",
@@ -1313,7 +1347,8 @@
     "בנייה חדשה / הריסה",
     "+55 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/914.0": {
    "file_number": "1970/0914.00",
@@ -1349,7 +1384,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/302.0": {
    "file_number": "1971/0302.00",
@@ -1391,7 +1427,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/115.0": {
    "file_number": "1972/0115.00",
@@ -1430,7 +1467,8 @@
     "בנייה חדשה / הריסה",
     "+18 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/615.0": {
    "file_number": "1972/0615.00",
@@ -1469,7 +1507,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/954.0": {
    "file_number": "1972/0954.00",
@@ -1508,7 +1547,8 @@
     "בנייה חדשה / הריסה",
     "+32 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1973/150.1": {
    "file_number": "1973/0150.01",
@@ -1541,7 +1581,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1974/528.0": {
    "file_number": "1974/0528.00",
@@ -1579,7 +1620,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1975/28.0": {
    "file_number": "1975/0028.00",
@@ -1615,7 +1657,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1975/625.0": {
    "file_number": "1975/0625.00",
@@ -1651,7 +1694,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1978/110.0": {
    "file_number": "1978/0110.00",
@@ -1687,7 +1731,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1978/433.3": {
    "file_number": "1978/0433.03",
@@ -1721,7 +1766,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1979/517.0": {
    "file_number": "1979/0517.00",
@@ -1762,7 +1808,8 @@
     "בנייה חדשה / הריסה",
     "+16 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1982/871.0": {
    "file_number": "1982/0871.00",
@@ -1801,7 +1848,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1982/871.1": {
    "file_number": "1982/0871.01",
@@ -1842,7 +1890,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1983/154.3": {
    "file_number": "1983/0154.03",
@@ -1878,7 +1927,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1983/195.1": {
    "file_number": "1983/0195.01",
@@ -1921,7 +1971,8 @@
    "reasons": [
     "+6 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1983/948.1": {
    "file_number": "1983/0948.01",
@@ -1957,7 +2008,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1984/495.4": {
    "file_number": "1984/0495.04",
@@ -1991,7 +2043,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1985/698.1": {
    "file_number": "1985/0698.01",
@@ -2033,7 +2086,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1986/217.0": {
    "file_number": "1986/0217.00",
@@ -2074,7 +2128,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1987/182.3": {
    "file_number": "1987/0182.03",
@@ -2111,7 +2166,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1987/80.1": {
    "file_number": "1987/0080.01",
@@ -2154,7 +2210,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1988/176.0": {
    "file_number": "1988/0176.00",
@@ -2195,7 +2252,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1988/48.1": {
    "file_number": "1988/0048.01",
@@ -2231,7 +2289,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1988/510.4": {
    "file_number": "1988/0510.04",
@@ -2264,7 +2323,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1989/194.3": {
    "file_number": "1989/0194.03",
@@ -2304,7 +2364,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1990/115.1": {
    "file_number": "1990/0115.01",
@@ -2344,7 +2405,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1990/694.0": {
    "file_number": "1990/0694.00",
@@ -2385,7 +2447,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1991/970.1": {
    "file_number": "1991/0970.01",
@@ -2421,7 +2484,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1993/683.2": {
    "file_number": "1993/0683.02",
@@ -2460,7 +2524,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1995/297.6": {
    "file_number": "1995/0297.06",
@@ -2501,7 +2566,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1995/655.3": {
    "file_number": "1995/0655.03",
@@ -2543,7 +2609,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1996/1066.1": {
    "file_number": "1996/1066.01",
@@ -2583,7 +2650,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1996/271.2": {
    "file_number": "1996/0271.02",
@@ -2617,7 +2685,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1996/619.0": {
    "file_number": "1996/0619.00",
@@ -2658,7 +2727,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1996/7.4": {
    "file_number": "1996/0007.04",
@@ -2700,7 +2770,8 @@
    "reasons": [
     "+6 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "1999/37.3": {
    "file_number": "1999/0037.03",
@@ -2737,7 +2808,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2001/291.1": {
    "file_number": "2001/0291.01",
@@ -2776,7 +2848,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2003/26.6": {
    "file_number": "2003/0026.06",
@@ -2815,7 +2888,8 @@
    "reasons": [
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2004/317.2": {
    "file_number": "2004/0317.02",
@@ -2856,7 +2930,8 @@
    "reasons": [
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2005/308.0": {
    "file_number": "2005/0308.00",
@@ -2897,7 +2972,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2008/103.2": {
    "file_number": "2008/0103.02",
@@ -2937,7 +3013,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2009/159.3": {
    "file_number": "2009/0159.03",
@@ -2972,7 +3049,8 @@
    "reasons": [
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2009/541.1": {
    "file_number": "2009/0541.01",
@@ -3017,7 +3095,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2011/329.3": {
    "file_number": "2011/0329.03",
@@ -3051,7 +3130,8 @@
    "reasons": [
     "+12 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2012/106.0": {
    "file_number": "2012/0106.00",
@@ -3089,7 +3169,8 @@
    "reasons": [
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2012/624.4": {
    "file_number": "2012/0624.04",
@@ -3130,7 +3211,8 @@
     "בנייה חדשה / הריסה",
     "+12 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2013/764.0": {
    "file_number": "2013/0764.00",
@@ -3171,7 +3253,8 @@
     "בנייה חדשה / הריסה",
     "+22 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2014/391.0": {
    "file_number": "2014/0391.00",
@@ -3207,7 +3290,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2015/66.1": {
    "file_number": "2015/0066.01",
@@ -3247,7 +3331,8 @@
    "reasons": [
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/620.0": {
    "file_number": "2016/0620.00",
@@ -3285,7 +3370,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2017/151.0": {
    "file_number": "2017/0151.00",
@@ -3325,7 +3411,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2017/67.1": {
    "file_number": "2017/0067.01",
@@ -3366,7 +3453,8 @@
     "בנייה חדשה / הריסה",
     "+12 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2019/575.0": {
    "file_number": "2019/0575.00",
@@ -3406,7 +3494,8 @@
     "בנייה חדשה / הריסה",
     "+7 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/132.0": {
    "file_number": "2020/0132.00",
@@ -3445,7 +3534,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/256.0": {
    "file_number": "2020/0256.00",
@@ -3483,7 +3573,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/490.0": {
    "file_number": "2020/0490.00",
@@ -3523,7 +3614,8 @@
     "בנייה חדשה / הריסה",
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/560.0": {
    "file_number": "2020/0560.00",
@@ -3563,7 +3655,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/563.0": {
    "file_number": "2020/0563.00",
@@ -3605,7 +3698,8 @@
     "בנייה חדשה / הריסה",
     "+20 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/656.0": {
    "file_number": "2020/0656.00",
@@ -3645,7 +3739,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2020/768.0": {
    "file_number": "2020/0768.00",
@@ -3684,7 +3779,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2021/406.0": {
    "file_number": "2021/0406.00",
@@ -3725,7 +3821,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2021/41.0": {
    "file_number": "2021/0041.00",
@@ -3763,7 +3860,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/112.0": {
    "file_number": "2022/0112.00",
@@ -3801,7 +3899,8 @@
     "בנייה חדשה / הריסה",
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/112.1": {
    "file_number": "2022/0112.01",
@@ -3842,7 +3941,8 @@
     "בנייה חדשה / הריסה",
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/390.0": {
    "file_number": "2022/0390.00",
@@ -3874,7 +3974,8 @@
    "bucket_label": "אחר",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2022/435.0": {
    "file_number": "2022/0435.00",
@@ -3916,7 +4017,8 @@
    "reasons": [
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/489.0": {
    "file_number": "2022/0489.00",
@@ -3957,7 +4059,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/498.0": {
    "file_number": "2022/0498.00",
@@ -3997,7 +4100,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2022/97.0": {
    "file_number": "2022/0097.00",
@@ -4035,7 +4139,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2023/128.0": {
    "file_number": "2023/0128.00",
@@ -4081,7 +4186,8 @@
     "בנייה חדשה / הריסה",
     "+15 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2023/186.0": {
    "file_number": "2023/0186.00",
@@ -4123,7 +4229,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2023/195.0": {
    "file_number": "2023/0195.00",
@@ -4168,7 +4275,8 @@
     "בנייה חדשה / הריסה",
     "+114 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2023/276.0": {
    "file_number": "2023/0276.00",
@@ -4211,7 +4319,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2023/304.0": {
    "file_number": "2023/0304.00",
@@ -4254,7 +4363,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2023/306.0": {
    "file_number": "2023/0306.00",
@@ -4296,7 +4406,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2023/335.0": {
    "file_number": "2023/0335.00",
@@ -4340,7 +4451,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2023/380.0": {
    "file_number": "2023/0380.00",
@@ -4382,7 +4494,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2023/399.0": {
    "file_number": "2023/0399.00",
@@ -4423,7 +4536,8 @@
     "בנייה חדשה / הריסה",
     "+15 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2023/468.0": {
    "file_number": "2023/0468.00",
@@ -4467,7 +4581,8 @@
     "בנייה חדשה / הריסה",
     "+12 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2023/488.0": {
    "file_number": "2023/0488.00",
@@ -4505,7 +4620,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2023/595.0": {
    "file_number": "2023/0595.00",
@@ -4544,7 +4660,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2024/193.0": {
    "file_number": "2024/0193.00",
@@ -4591,7 +4708,8 @@
     "בנייה חדשה / הריסה",
     "+28 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2024/273.0": {
    "file_number": "2024/0273.00",
@@ -4629,7 +4747,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2024/273.1": {
    "file_number": "2024/0273.01",
@@ -4664,7 +4783,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2024/30.1": {
    "file_number": "2024/0030.01",
@@ -4710,7 +4830,8 @@
    "reasons": [
     "+14 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2024/388.0": {
    "file_number": "2024/0388.00",
@@ -4765,7 +4886,8 @@
    "bucket_label": "אחר",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2024/573.0": {
    "file_number": "2024/0573.00",
@@ -4802,7 +4924,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2025/14.0": {
    "file_number": "2025/0014.00",
@@ -4845,7 +4968,8 @@
     "בנייה חדשה / הריסה",
     "+16 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2025/200.0": {
    "file_number": "2025/0200.00",
@@ -4890,7 +5014,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": true
   },
   "2025/200.1": {
    "file_number": "2025/0200.01",
@@ -4942,7 +5067,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2025/347.0": {
    "file_number": "2025/0347.00",
@@ -4986,7 +5112,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2025/422.0": {
    "file_number": "2025/0422.00",
@@ -5027,7 +5154,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2025/429.0": {
    "file_number": "2025/0429.00",
@@ -5071,7 +5199,8 @@
     "בנייה חדשה / הריסה",
     "+19 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2026/100.0": {
    "file_number": "2026/0100.00",
@@ -5119,7 +5248,8 @@
     "בנייה חדשה / הריסה",
     "+44 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2026/277.0": {
    "file_number": "2026/0277.00",
@@ -5163,7 +5293,8 @@
     "בנייה חדשה / הריסה",
     "+27 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": true
   },
   "2026/277.1": {
    "file_number": "2026/0277.01",
@@ -5202,7 +5333,8 @@
    "reasons": [
     "+27 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": true
   },
   "2026/278.0": {
    "file_number": "2026/0278.00",
@@ -5245,7 +5377,8 @@
     "בנייה חדשה / הריסה",
     "+12 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": true
   },
   "2026/278.1": {
    "file_number": "2026/0278.01",
@@ -5283,7 +5416,8 @@
    "reasons": [
     "+12 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": true
   },
   "2026/432.0": {
    "file_number": "2026/0432.00",
@@ -5327,7 +5461,8 @@
     "בנייה חדשה / הריסה",
     "+48 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2026/441.0": {
    "file_number": "2026/0441.00",
@@ -5370,7 +5505,8 @@
     "בנייה חדשה / הריסה",
     "+53 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:06:12"
+   "alerted_at": "2026-10-15T05:06:12",
+   "known_tik": false
   },
   "2026/93.0": {
    "file_number": "2026/0093.00",
@@ -5413,7 +5549,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2026/60.1": {
    "file_number": "2026/0060.01",
@@ -5459,7 +5596,8 @@
     "בנייה חדשה / הריסה",
     "+75 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": true
   },
   "2026/57.0": {
    "file_number": "2026/0057.00",
@@ -5504,7 +5642,8 @@
    "reasons": [
     "+148 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/452.0": {
    "file_number": "2026/0452.00",
@@ -5547,7 +5686,8 @@
    "bucket_label": "אחר",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2026/404.0": {
    "file_number": "2026/0404.00",
@@ -5594,7 +5734,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/394.0": {
    "file_number": "2026/0394.00",
@@ -5642,7 +5783,8 @@
    "reasons": [
     "+5 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/375.0": {
    "file_number": "2026/0375.00",
@@ -5687,7 +5829,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/321.1": {
    "file_number": "2026/0321.01",
@@ -5737,7 +5880,8 @@
     "+142 יח\"ד",
     "התחדשות עירונית"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/314.1": {
    "file_number": "2026/0314.01",
@@ -5791,7 +5935,8 @@
     "+301 יח\"ד",
     "התחדשות עירונית"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/286.0": {
    "file_number": "2026/0286.00",
@@ -5837,7 +5982,8 @@
     "בנייה חדשה / הריסה",
     "+42 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/234.1": {
    "file_number": "2026/0234.01",
@@ -5877,7 +6023,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/230.0": {
    "file_number": "2026/0230.00",
@@ -5925,7 +6072,8 @@
     "בנייה חדשה / הריסה",
     "+68 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/208.0": {
    "file_number": "2026/0208.00",
@@ -5974,7 +6122,8 @@
     "בנייה חדשה / הריסה",
     "+35 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/202.1": {
    "file_number": "2026/0202.01",
@@ -6020,7 +6169,8 @@
     "בנייה חדשה / הריסה",
     "+34 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/189.1": {
    "file_number": "2026/0189.01",
@@ -6067,7 +6217,8 @@
     "+80 יח\"ד",
     "התחדשות עירונית"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/126.0": {
    "file_number": "2026/0126.00",
@@ -6113,7 +6264,8 @@
     "בנייה חדשה / הריסה",
     "+34 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/119.0": {
    "file_number": "2026/0119.00",
@@ -6158,7 +6310,8 @@
    "reasons": [
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2025/66.0": {
    "file_number": "2025/0066.00",
@@ -6204,7 +6357,8 @@
     "בנייה חדשה / הריסה",
     "+14 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2025/397.1": {
    "file_number": "2025/0397.01",
@@ -6259,7 +6413,8 @@
    "reasons": [
     "+56 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2025/311.0": {
    "file_number": "2025/0311.00",
@@ -6300,7 +6455,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2025/235.0": {
    "file_number": "2025/0235.00",
@@ -6338,7 +6494,8 @@
    "bucket_label": "שימוש חורג",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2025/216.0": {
    "file_number": "2025/0216.00",
@@ -6382,7 +6539,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/81.2": {
    "file_number": "2024/0081.02",
@@ -6430,7 +6588,8 @@
     "בנייה חדשה / הריסה",
     "+116 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/80.2": {
    "file_number": "2024/0080.02",
@@ -6477,7 +6636,8 @@
     "בנייה חדשה / הריסה",
     "+60 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2024/509.0": {
    "file_number": "2024/0509.00",
@@ -6518,7 +6678,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2024/466.0": {
    "file_number": "2024/0466.00",
@@ -6564,7 +6725,8 @@
     "בנייה חדשה / הריסה",
     "+160 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/385.0": {
    "file_number": "2024/0385.00",
@@ -6605,7 +6767,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/368.0": {
    "file_number": "2024/0368.00",
@@ -6659,7 +6822,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/349.0": {
    "file_number": "2024/0349.00",
@@ -6711,7 +6875,8 @@
     "+242 יח\"ד",
     "התחדשות עירונית"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/199.0": {
    "file_number": "2024/0199.00",
@@ -6759,7 +6924,8 @@
     "בנייה חדשה / הריסה",
     "+20 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2023/606.0": {
    "file_number": "2023/0606.00",
@@ -6800,7 +6966,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2023/487.0": {
    "file_number": "2023/0487.00",
@@ -6848,7 +7015,8 @@
     "בנייה חדשה / הריסה",
     "+57 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2023/373.0": {
    "file_number": "2023/0373.00",
@@ -6892,7 +7060,8 @@
    "bucket_label": "שימוש חורג",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2023/357.0": {
    "file_number": "2023/0357.00",
@@ -6973,7 +7142,8 @@
    "bucket_label": "אחר",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2023/287.0": {
    "file_number": "2023/0287.00",
@@ -7018,7 +7188,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2023/248.0": {
    "file_number": "2023/0248.00",
@@ -7063,7 +7234,8 @@
     "בנייה חדשה / הריסה",
     "+22 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2023/211.0": {
    "file_number": "2023/0211.00",
@@ -7120,7 +7292,8 @@
     "בנייה חדשה / הריסה",
     "+34 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2023/192.0": {
    "file_number": "2023/0192.00",
@@ -7167,7 +7340,8 @@
     "בנייה חדשה / הריסה",
     "+20 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2022/576.0": {
    "file_number": "2022/0576.00",
@@ -7213,7 +7387,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2022/457.0": {
    "file_number": "2022/0457.00",
@@ -7253,7 +7428,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2020/203.0": {
    "file_number": "2020/0203.00",
@@ -7297,7 +7473,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2016/602.1": {
    "file_number": "2016/0602.01",
@@ -7341,7 +7518,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/450.0": {
    "file_number": "2026/0450.00",
@@ -7384,7 +7562,8 @@
     "תמ\"א 38",
     "+25 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/439.0": {
    "file_number": "2026/0439.00",
@@ -7426,7 +7605,8 @@
     "תמ\"א 38",
     "+13 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/427.0": {
    "file_number": "2026/0427.00",
@@ -7470,7 +7650,8 @@
     "תמ\"א 38",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/264.0": {
    "file_number": "2026/0264.00",
@@ -7513,7 +7694,8 @@
     "תמ\"א 38",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/252.0": {
    "file_number": "2026/0252.00",
@@ -7550,7 +7732,8 @@
    "reasons": [
     "תמ\"א 38"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2025/307.0": {
    "file_number": "2025/0307.00",
@@ -7592,7 +7775,8 @@
     "תמ\"א 38",
     "+7 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2024/60.1": {
    "file_number": "2024/0060.01",
@@ -7648,7 +7832,8 @@
    "bucket_label": "אחר",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2024/426.1": {
    "file_number": "2024/0426.01",
@@ -7695,7 +7880,8 @@
     "בנייה חדשה / הריסה",
     "+50 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/269.0": {
    "file_number": "2024/0269.00",
@@ -7743,7 +7929,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2024/143.0": {
    "file_number": "2024/0143.00",
@@ -7783,7 +7970,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2023/339.0": {
    "file_number": "2023/0339.00",
@@ -7832,7 +8020,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2023/305.0": {
    "file_number": "2023/0305.00",
@@ -7874,7 +8063,8 @@
    "bucket_label": "אחר",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2022/497.0": {
    "file_number": "2022/0497.00",
@@ -7913,7 +8103,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2021/535.0": {
    "file_number": "2021/0535.00",
@@ -7949,7 +8140,8 @@
    "reasons": [
     "תמ\"א 38"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2021/411.0": {
    "file_number": "2021/0411.00",
@@ -7991,7 +8183,8 @@
     "תמ\"א 38",
     "+13 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2021/298.0": {
    "file_number": "2021/0298.00",
@@ -8033,7 +8226,8 @@
     "תמ\"א 38",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2021/295.0": {
    "file_number": "2021/0295.00",
@@ -8075,7 +8269,8 @@
     "תמ\"א 38",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2019/453.2": {
    "file_number": "2019/0453.02",
@@ -8114,7 +8309,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2017/568.0": {
    "file_number": "2017/0568.00",
@@ -8156,7 +8352,8 @@
     "תמ\"א 38",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "suppressed:backfill",
+   "known_tik": false
   },
   "2017/515.2": {
    "file_number": "2017/0515.02",
@@ -8199,7 +8396,8 @@
    "reasons": [
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2015/196.1": {
    "file_number": "2015/0196.01",
@@ -8243,7 +8441,8 @@
    "reasons": [
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:backfill"
+   "alerted_at": "2026-11-02T12:30:47",
+   "known_tik": false
   },
   "2026/464.0": {
    "file_number": "2026/0464.00",
@@ -8288,7 +8487,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "2026-10-15T05:07:25"
+   "alerted_at": "2026-10-15T05:07:25",
+   "known_tik": false
   },
   "2026/460.0": {
    "file_number": "2026/0460.00",
@@ -8329,7 +8529,8 @@
    "bucket": "zchuyot",
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
-   "reasons": []
+   "reasons": [],
+   "known_tik": false
   },
   "1999/519.5": {
    "file_number": "1999/0519.05",
@@ -8366,7 +8567,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2004/135.6": {
    "file_number": "2004/0135.06",
@@ -8402,7 +8604,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2010/196.1": {
    "file_number": "2010/0196.01",
@@ -8438,7 +8641,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2011/28.1": {
    "file_number": "2011/0028.01",
@@ -8473,7 +8677,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2012/918.3": {
    "file_number": "2012/0918.03",
@@ -8508,7 +8713,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1950/211.3": {
    "file_number": "1950/0211.03",
@@ -8547,7 +8753,8 @@
    "reasons": [
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1953/634.2": {
    "file_number": "1953/0634.02",
@@ -8581,7 +8788,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1954/433.0": {
    "file_number": "1954/0433.00",
@@ -8615,7 +8823,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1954/584.0": {
    "file_number": "1954/0584.00",
@@ -8649,7 +8858,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1954/774.0": {
    "file_number": "1954/0774.00",
@@ -8683,7 +8893,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1955/40.1": {
    "file_number": "1955/0040.01",
@@ -8717,7 +8928,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1957/13.2": {
    "file_number": "1957/0013.02",
@@ -8750,7 +8962,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1957/214.0": {
    "file_number": "1957/0214.00",
@@ -8789,7 +9002,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1957/396.1": {
    "file_number": "1957/0396.01",
@@ -8823,7 +9037,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1957/412.0": {
    "file_number": "1957/0412.00",
@@ -8862,7 +9077,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1957/906.0": {
    "file_number": "1957/0906.00",
@@ -8896,7 +9112,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1957/997.0": {
    "file_number": "1957/0997.00",
@@ -8930,7 +9147,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1958/192.0": {
    "file_number": "1958/0192.00",
@@ -8966,7 +9184,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1958/386.0": {
    "file_number": "1958/0386.00",
@@ -9005,7 +9224,8 @@
     "בנייה חדשה / הריסה",
     "+50 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1959/266.0": {
    "file_number": "1959/0266.00",
@@ -9039,7 +9259,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1959/495.0": {
    "file_number": "1959/0495.00",
@@ -9078,7 +9299,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1959/654.0": {
    "file_number": "1959/0654.00",
@@ -9114,7 +9336,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1961/373.4": {
    "file_number": "1961/0373.04",
@@ -9152,7 +9375,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1961/460.0": {
    "file_number": "1961/0460.00",
@@ -9186,7 +9410,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1961/680.0": {
    "file_number": "1961/0680.00",
@@ -9225,7 +9450,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1961/79.0": {
    "file_number": "1961/0079.00",
@@ -9264,7 +9490,8 @@
     "בנייה חדשה / הריסה",
     "+33 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1962/153.0": {
    "file_number": "1962/0153.00",
@@ -9301,7 +9528,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1963/309.0": {
    "file_number": "1963/0309.00",
@@ -9340,7 +9568,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1963/387.0": {
    "file_number": "1963/0387.00",
@@ -9379,7 +9608,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1963/583.0": {
    "file_number": "1963/0583.00",
@@ -9415,7 +9645,8 @@
     "בנייה חדשה / הריסה",
     "+150 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1963/647.0": {
    "file_number": "1963/0647.00",
@@ -9454,7 +9685,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1964/114.0": {
    "file_number": "1964/0114.00",
@@ -9488,7 +9720,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1964/38.0": {
    "file_number": "1964/0038.00",
@@ -9522,7 +9755,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1964/596.0": {
    "file_number": "1964/0596.00",
@@ -9557,7 +9791,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1964/674.0": {
    "file_number": "1964/0674.00",
@@ -9591,7 +9826,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1964/923.0": {
    "file_number": "1964/0923.00",
@@ -9631,7 +9867,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1965/337.0": {
    "file_number": "1965/0337.00",
@@ -9672,7 +9909,8 @@
     "בנייה חדשה / הריסה",
     "+11 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1965/577.0": {
    "file_number": "1965/0577.00",
@@ -9707,7 +9945,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1966/255.0": {
    "file_number": "1966/0255.00",
@@ -9741,7 +9980,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1966/441.0": {
    "file_number": "1966/0441.00",
@@ -9782,7 +10022,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1966/981.0": {
    "file_number": "1966/0981.00",
@@ -9823,7 +10064,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1967/190.0": {
    "file_number": "1967/0190.00",
@@ -9863,7 +10105,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1967/213.0": {
    "file_number": "1967/0213.00",
@@ -9900,7 +10143,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1967/441.0": {
    "file_number": "1967/0441.00",
@@ -9939,7 +10183,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1968/330.0": {
    "file_number": "1968/0330.00",
@@ -9973,7 +10218,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1968/396.2": {
    "file_number": "1968/0396.02",
@@ -10007,7 +10253,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "1968/477.0": {
    "file_number": "1968/0477.00",
@@ -10046,7 +10293,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/1076.0": {
    "file_number": "1969/1076.00",
@@ -10087,7 +10335,8 @@
     "בנייה חדשה / הריסה",
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/1199.0": {
    "file_number": "1969/1199.00",
@@ -10128,7 +10377,8 @@
     "בנייה חדשה / הריסה",
     "+24 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/1200.0": {
    "file_number": "1969/1200.00",
@@ -10172,7 +10422,8 @@
     "בנייה חדשה / הריסה",
     "+31 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/1321.1": {
    "file_number": "1969/1321.01",
@@ -10206,7 +10457,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/1367.0": {
    "file_number": "1969/1367.00",
@@ -10247,7 +10499,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/191.0": {
    "file_number": "1969/0191.00",
@@ -10289,7 +10542,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/277.0": {
    "file_number": "1969/0277.00",
@@ -10330,7 +10584,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/286.0": {
    "file_number": "1969/0286.00",
@@ -10369,7 +10624,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/300.0": {
    "file_number": "1969/0300.00",
@@ -10403,7 +10659,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/371.0": {
    "file_number": "1969/0371.00",
@@ -10437,7 +10694,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/395.0": {
    "file_number": "1969/0395.00",
@@ -10476,7 +10734,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/505.0": {
    "file_number": "1969/0505.00",
@@ -10512,7 +10771,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/59.0": {
    "file_number": "1969/0059.00",
@@ -10551,7 +10811,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1969/76.0": {
    "file_number": "1969/0076.00",
@@ -10585,7 +10846,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/1009.1": {
    "file_number": "1970/1009.01",
@@ -10626,7 +10888,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/1072.0": {
    "file_number": "1970/1072.00",
@@ -10667,7 +10930,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/1102.0": {
    "file_number": "1970/1102.00",
@@ -10702,7 +10966,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/114.0": {
    "file_number": "1970/0114.00",
@@ -10738,7 +11003,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/129.0": {
    "file_number": "1970/0129.00",
@@ -10777,7 +11043,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/181.0": {
    "file_number": "1970/0181.00",
@@ -10811,7 +11078,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/335.0": {
    "file_number": "1970/0335.00",
@@ -10853,7 +11121,8 @@
     "בנייה חדשה / הריסה",
     "+7 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/365.0": {
    "file_number": "1970/0365.00",
@@ -10892,7 +11161,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/4.0": {
    "file_number": "1970/0004.00",
@@ -10926,7 +11196,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/603.0": {
    "file_number": "1970/0603.00",
@@ -10963,7 +11234,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/671.0": {
    "file_number": "1970/0671.00",
@@ -10997,7 +11269,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/864.0": {
    "file_number": "1970/0864.00",
@@ -11039,7 +11312,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1970/996.0": {
    "file_number": "1970/0996.00",
@@ -11073,7 +11347,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/1030.0": {
    "file_number": "1971/1030.00",
@@ -11115,7 +11390,8 @@
     "בנייה חדשה / הריסה",
     "+18 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/130.0": {
    "file_number": "1971/0130.00",
@@ -11151,7 +11427,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/1330.0": {
    "file_number": "1971/1330.00",
@@ -11192,7 +11469,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/134.0": {
    "file_number": "1971/0134.00",
@@ -11229,7 +11507,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/355.0": {
    "file_number": "1971/0355.00",
@@ -11270,7 +11549,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/671.0": {
    "file_number": "1971/0671.00",
@@ -11308,7 +11588,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/672.0": {
    "file_number": "1971/0672.00",
@@ -11344,7 +11625,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1971/726.0": {
    "file_number": "1971/0726.00",
@@ -11380,7 +11662,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/1121.0": {
    "file_number": "1972/1121.00",
@@ -11416,7 +11699,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/264.0": {
    "file_number": "1972/0264.00",
@@ -11450,7 +11734,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/426.1": {
    "file_number": "1972/0426.01",
@@ -11491,7 +11776,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/56.0": {
    "file_number": "1972/0056.00",
@@ -11526,7 +11812,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1972/61.0": {
    "file_number": "1972/0061.00",
@@ -11572,7 +11859,8 @@
     "בנייה חדשה / הריסה",
     "+32 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1973/438.0": {
    "file_number": "1973/0438.00",
@@ -11608,7 +11896,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1973/627.0": {
    "file_number": "1973/0627.00",
@@ -11640,7 +11929,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1973/745.0": {
    "file_number": "1973/0745.00",
@@ -11672,7 +11962,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1974/744.0": {
    "file_number": "1974/0744.00",
@@ -11711,7 +12002,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1975/27.0": {
    "file_number": "1975/0027.00",
@@ -11744,7 +12036,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1975/500.0": {
    "file_number": "1975/0500.00",
@@ -11783,7 +12076,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1975/703.1": {
    "file_number": "1975/0703.01",
@@ -11817,7 +12111,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1975/859.0": {
    "file_number": "1975/0859.00",
@@ -11853,7 +12148,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1976/424.0": {
    "file_number": "1976/0424.00",
@@ -11894,7 +12190,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1976/435.3": {
    "file_number": "1976/0435.03",
@@ -11928,7 +12225,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1976/459.0": {
    "file_number": "1976/0459.00",
@@ -11965,7 +12263,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1977/107.0": {
    "file_number": "1977/0107.00",
@@ -12001,7 +12300,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1978/129.4": {
    "file_number": "1978/0129.04",
@@ -12036,7 +12336,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1979/646.0": {
    "file_number": "1979/0646.00",
@@ -12077,7 +12378,8 @@
     "בנייה חדשה / הריסה",
     "+14 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1979/891.3": {
    "file_number": "1979/0891.03",
@@ -12110,7 +12412,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1980/233.2": {
    "file_number": "1980/0233.02",
@@ -12143,7 +12446,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1980/280.0": {
    "file_number": "1980/0280.00",
@@ -12184,7 +12488,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1980/49.0": {
    "file_number": "1980/0049.00",
@@ -12225,7 +12530,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1980/507.0": {
    "file_number": "1980/0507.00",
@@ -12266,7 +12572,8 @@
     "בנייה חדשה / הריסה",
     "+17 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1980/581.0": {
    "file_number": "1980/0581.00",
@@ -12307,7 +12614,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1980/681.0": {
    "file_number": "1980/0681.00",
@@ -12348,7 +12656,8 @@
     "בנייה חדשה / הריסה",
     "+33 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1980/914.0": {
    "file_number": "1980/0914.00",
@@ -12381,7 +12690,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1981/1061.5": {
    "file_number": "1981/1061.05",
@@ -12415,7 +12725,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1981/130.0": {
    "file_number": "1981/0130.00",
@@ -12454,7 +12765,8 @@
     "בנייה חדשה / הריסה",
     "+28 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1981/588.0": {
    "file_number": "1981/0588.00",
@@ -12490,7 +12802,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1983/488.3": {
    "file_number": "1983/0488.03",
@@ -12525,7 +12838,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1983/515.2": {
    "file_number": "1983/0515.02",
@@ -12563,7 +12877,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1983/887.0": {
    "file_number": "1983/0887.00",
@@ -12604,7 +12919,8 @@
     "בנייה חדשה / הריסה",
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1984/529.0": {
    "file_number": "1984/0529.00",
@@ -12645,7 +12961,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1984/628.1": {
    "file_number": "1984/0628.01",
@@ -12688,7 +13005,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1984/628.2": {
    "file_number": "1984/0628.02",
@@ -12723,7 +13041,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1984/698.5": {
    "file_number": "1984/0698.05",
@@ -12757,7 +13076,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1984/722.0": {
    "file_number": "1984/0722.00",
@@ -12799,7 +13119,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1985/744.0": {
    "file_number": "1985/0744.00",
@@ -12840,7 +13161,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1986/765.0": {
    "file_number": "1986/0765.00",
@@ -12876,7 +13198,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1987/277.7": {
    "file_number": "1987/0277.07",
@@ -12909,7 +13232,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1987/50.0": {
    "file_number": "1987/0050.00",
@@ -12948,7 +13272,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1988/120.5": {
    "file_number": "1988/0120.05",
@@ -12983,7 +13308,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1988/163.1": {
    "file_number": "1988/0163.01",
@@ -13022,7 +13348,8 @@
    "reasons": [
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1988/209.4": {
    "file_number": "1988/0209.04",
@@ -13055,7 +13382,8 @@
    "bucket_label": "אחר",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1988/713.2": {
    "file_number": "1988/0713.02",
@@ -13097,7 +13425,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "1989/220.0": {
    "file_number": "1989/0220.00",
@@ -13138,7 +13467,8 @@
     "בנייה חדשה / הריסה",
     "+11 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1989/227.1": {
    "file_number": "1989/0227.01",
@@ -13174,7 +13504,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1989/415.4": {
    "file_number": "1989/0415.04",
@@ -13221,7 +13552,8 @@
    "reasons": [
     "+7 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "1989/582.0": {
    "file_number": "1989/0582.00",
@@ -13262,7 +13594,8 @@
     "בנייה חדשה / הריסה",
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1989/814.5": {
    "file_number": "1989/0814.05",
@@ -13298,7 +13631,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1989/814.7": {
    "file_number": "1989/0814.07",
@@ -13334,7 +13668,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1990/709.2": {
    "file_number": "1990/0709.02",
@@ -13369,7 +13704,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1991/1020.0": {
    "file_number": "1991/1020.00",
@@ -13410,7 +13746,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1991/266.8": {
    "file_number": "1991/0266.08",
@@ -13445,7 +13782,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1991/378.5": {
    "file_number": "1991/0378.05",
@@ -13478,7 +13816,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1991/567.0": {
    "file_number": "1991/0567.00",
@@ -13513,7 +13852,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1991/58.1": {
    "file_number": "1991/0058.01",
@@ -13554,7 +13894,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1991/8.1": {
    "file_number": "1991/0008.01",
@@ -13595,7 +13936,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1991/8.2": {
    "file_number": "1991/0008.02",
@@ -13630,7 +13972,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "1993/11.6": {
    "file_number": "1993/0011.06",
@@ -13669,7 +14012,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1993/407.0": {
    "file_number": "1993/0407.00",
@@ -13710,7 +14054,8 @@
     "בנייה חדשה / הריסה",
     "+7 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1994/128.0": {
    "file_number": "1994/0128.00",
@@ -13751,7 +14096,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1994/941.4": {
    "file_number": "1994/0941.04",
@@ -13791,7 +14137,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1994/993.0": {
    "file_number": "1994/0993.00",
@@ -13827,7 +14174,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1995/477.0": {
    "file_number": "1995/0477.00",
@@ -13868,7 +14216,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1996/167.1": {
    "file_number": "1996/0167.01",
@@ -13906,7 +14255,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1996/560.0": {
    "file_number": "1996/0560.00",
@@ -13947,7 +14297,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1996/723.0": {
    "file_number": "1996/0723.00",
@@ -13982,7 +14333,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1997/344.1": {
    "file_number": "1997/0344.01",
@@ -14022,7 +14374,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1997/713.2": {
    "file_number": "1997/0713.02",
@@ -14064,7 +14417,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1997/775.0": {
    "file_number": "1997/0775.00",
@@ -14106,7 +14460,8 @@
     "בנייה חדשה / הריסה",
     "+18 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1997/795.0": {
    "file_number": "1997/0795.00",
@@ -14147,7 +14502,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1997/795.1": {
    "file_number": "1997/0795.01",
@@ -14188,7 +14544,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1997/876.0": {
    "file_number": "1997/0876.00",
@@ -14224,7 +14581,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1998/242.0": {
    "file_number": "1998/0242.00",
@@ -14265,7 +14623,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1998/26.1": {
    "file_number": "1998/0026.01",
@@ -14300,7 +14659,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "1998/787.0": {
    "file_number": "1998/0787.00",
@@ -14333,7 +14693,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1999/473.8": {
    "file_number": "1999/0473.08",
@@ -14366,7 +14727,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1999/713.4": {
    "file_number": "1999/0713.04",
@@ -14401,7 +14763,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "1999/790.6": {
    "file_number": "1999/0790.06",
@@ -14435,7 +14798,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2000/393.2": {
    "file_number": "2000/0393.02",
@@ -14479,7 +14843,8 @@
    "reasons": [
     "+7 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2000/478.2": {
    "file_number": "2000/0478.02",
@@ -14514,7 +14879,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2000/769.0": {
    "file_number": "2000/0769.00",
@@ -14547,7 +14913,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2001/355.3": {
    "file_number": "2001/0355.03",
@@ -14578,7 +14945,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2002/173.2": {
    "file_number": "2002/0173.02",
@@ -14611,7 +14979,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2003/180.3": {
    "file_number": "2003/0180.03",
@@ -14645,7 +15014,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2003/458.2": {
    "file_number": "2003/0458.02",
@@ -14680,7 +15050,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2004/663.1": {
    "file_number": "2004/0663.01",
@@ -14713,7 +15084,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2004/827.0": {
    "file_number": "2004/0827.00",
@@ -14754,7 +15126,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2005/32.1": {
    "file_number": "2005/0032.01",
@@ -14789,7 +15162,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2005/499.0": {
    "file_number": "2005/0499.00",
@@ -14827,7 +15201,8 @@
    "reasons": [
     "+4 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2005/890.0": {
    "file_number": "2005/0890.00",
@@ -14868,7 +15243,8 @@
    "reasons": [
     "+64 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2006/141.2": {
    "file_number": "2006/0141.02",
@@ -14903,7 +15279,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2006/141.3": {
    "file_number": "2006/0141.03",
@@ -14937,7 +15314,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2006/217.3": {
    "file_number": "2006/0217.03",
@@ -14972,7 +15350,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2006/571.5": {
    "file_number": "2006/0571.05",
@@ -15012,7 +15391,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2006/767.3": {
    "file_number": "2006/0767.03",
@@ -15046,7 +15426,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2007/172.0": {
    "file_number": "2007/0172.00",
@@ -15082,7 +15463,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2007/187.7": {
    "file_number": "2007/0187.07",
@@ -15118,7 +15500,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2007/741.25": {
    "file_number": "2007/0741.25",
@@ -15158,7 +15541,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2008/730.2": {
    "file_number": "2008/0730.02",
@@ -15193,7 +15577,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2008/754.0": {
    "file_number": "2008/0754.00",
@@ -15234,7 +15619,8 @@
     "בנייה חדשה / הריסה",
     "+3 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2010/14.1": {
    "file_number": "2010/0014.01",
@@ -15270,7 +15656,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2010/193.3": {
    "file_number": "2010/0193.03",
@@ -15308,7 +15695,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2010/460.0": {
    "file_number": "2010/0460.00",
@@ -15348,7 +15736,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2010/910.0": {
    "file_number": "2010/0910.00",
@@ -15381,7 +15770,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2011/341.1": {
    "file_number": "2011/0341.01",
@@ -15422,7 +15812,8 @@
    "reasons": [
     "+5 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2011/752.1": {
    "file_number": "2011/0752.01",
@@ -15457,7 +15848,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2012/232.1": {
    "file_number": "2012/0232.01",
@@ -15490,7 +15882,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2012/822.0": {
    "file_number": "2012/0822.00",
@@ -15525,7 +15918,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2013/706.0": {
    "file_number": "2013/0706.00",
@@ -15566,7 +15960,8 @@
     "בנייה חדשה / הריסה",
     "+9 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2014/253.1": {
    "file_number": "2014/0253.01",
@@ -15599,7 +15994,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2014/380.1": {
    "file_number": "2014/0380.01",
@@ -15633,7 +16029,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2014/524.0": {
    "file_number": "2014/0524.00",
@@ -15674,7 +16071,8 @@
     "בנייה חדשה / הריסה",
     "+66 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2015/256.0": {
    "file_number": "2015/0256.00",
@@ -15709,7 +16107,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2015/306.0": {
    "file_number": "2015/0306.00",
@@ -15742,7 +16141,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/1013.2": {
    "file_number": "2016/1013.02",
@@ -15779,7 +16179,8 @@
    "reasons": [
     "+27 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/1088.0": {
    "file_number": "2016/1088.00",
@@ -15813,7 +16214,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/575.0": {
    "file_number": "2016/0575.00",
@@ -15854,7 +16256,8 @@
     "בנייה חדשה / הריסה",
     "+58 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/609.0": {
    "file_number": "2016/0609.00",
@@ -15898,7 +16301,8 @@
     "בנייה חדשה / הריסה",
     "+22 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/63.3": {
    "file_number": "2016/0063.03",
@@ -15935,7 +16339,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/674.1": {
    "file_number": "2016/0674.01",
@@ -15969,7 +16374,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2016/842.0": {
    "file_number": "2016/0842.00",
@@ -16009,7 +16415,8 @@
     "בנייה חדשה / הריסה",
     "+46 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2017/208.0": {
    "file_number": "2017/0208.00",
@@ -16049,7 +16456,8 @@
     "בנייה חדשה / הריסה",
     "+22 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2017/742.0": {
    "file_number": "2017/0742.00",
@@ -16082,7 +16490,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2017/851.0": {
    "file_number": "2017/0851.00",
@@ -16119,7 +16528,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2017/874.3": {
    "file_number": "2017/0874.03",
@@ -16162,7 +16572,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2018/785.1": {
    "file_number": "2018/0785.01",
@@ -16195,7 +16606,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2019/121.0": {
    "file_number": "2019/0121.00",
@@ -16231,7 +16643,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/41.1": {
    "file_number": "2020/0041.01",
@@ -16267,7 +16680,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/41.2": {
    "file_number": "2020/0041.02",
@@ -16303,7 +16717,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2020/666.0": {
    "file_number": "2020/0666.00",
@@ -16344,7 +16759,8 @@
     "בנייה חדשה / הריסה",
     "+10 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2020/79.0": {
    "file_number": "2020/0079.00",
@@ -16378,7 +16794,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2021/131.0": {
    "file_number": "2021/0131.00",
@@ -16420,7 +16837,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2021/209.0": {
    "file_number": "2021/0209.00",
@@ -16458,7 +16876,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2021/334.0": {
    "file_number": "2021/0334.00",
@@ -16492,7 +16911,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2021/339.0": {
    "file_number": "2021/0339.00",
@@ -16533,7 +16953,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/157.0": {
    "file_number": "2022/0157.00",
@@ -16574,7 +16995,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/157.1": {
    "file_number": "2022/0157.01",
@@ -16613,7 +17035,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/300.0": {
    "file_number": "2022/0300.00",
@@ -16654,7 +17077,8 @@
     "בנייה חדשה / הריסה",
     "+8 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2022/45.0": {
    "file_number": "2022/0045.00",
@@ -16689,7 +17113,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2022/589.0": {
    "file_number": "2022/0589.00",
@@ -16722,7 +17147,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2023/274.0": {
    "file_number": "2023/0274.00",
@@ -16764,7 +17190,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2023/337.0": {
    "file_number": "2023/0337.00",
@@ -16802,7 +17229,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2023/350.0": {
    "file_number": "2023/0350.00",
@@ -16836,7 +17264,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2023/376.0": {
    "file_number": "2023/0376.00",
@@ -16878,7 +17307,8 @@
     "בנייה חדשה / הריסה",
     "+1 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2023/381.0": {
    "file_number": "2023/0381.00",
@@ -16920,7 +17350,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2023/409.0": {
    "file_number": "2023/0409.00",
@@ -16958,7 +17389,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2023/587.0": {
    "file_number": "2023/0587.00",
@@ -16995,7 +17427,8 @@
    "reasons": [
     "+2 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2024/157.0": {
    "file_number": "2024/0157.00",
@@ -17036,7 +17469,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2024/164.0": {
    "file_number": "2024/0164.00",
@@ -17076,7 +17510,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2024/165.0": {
    "file_number": "2024/0165.00",
@@ -17117,7 +17552,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2024/20.0": {
    "file_number": "2024/0020.00",
@@ -17163,7 +17599,8 @@
     "בנייה חדשה / הריסה",
     "+2 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2024/205.0": {
    "file_number": "2024/0205.00",
@@ -17205,7 +17642,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2024/234.0": {
    "file_number": "2024/0234.00",
@@ -17244,7 +17682,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2024/574.0": {
    "file_number": "2024/0574.00",
@@ -17281,7 +17720,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2024/575.0": {
    "file_number": "2024/0575.00",
@@ -17318,7 +17758,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2024/62.0": {
    "file_number": "2024/0062.00",
@@ -17352,7 +17793,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "suppressed:inactive"
+   "alerted_at": "suppressed:inactive",
+   "known_tik": false
   },
   "2024/62.1": {
    "file_number": "2024/0062.01",
@@ -17386,7 +17828,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2025/159.0": {
    "file_number": "2025/0159.00",
@@ -17425,7 +17868,8 @@
     "בנייה חדשה / הריסה",
     "+5 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2025/174.1": {
    "file_number": "2025/0174.01",
@@ -17459,7 +17903,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2025/46.0": {
    "file_number": "2025/0046.00",
@@ -17497,7 +17942,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2025/82.0": {
    "file_number": "2025/0082.00",
@@ -17535,7 +17981,8 @@
    "reasons": [
     "בנייה חדשה / הריסה"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2026/34.0": {
    "file_number": "2026/0034.00",
@@ -17577,7 +18024,8 @@
     "בנייה חדשה / הריסה",
     "+6 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2026/475.0": {
    "file_number": "2026/0475.00",
@@ -17615,7 +18063,8 @@
    "bucket_label": "תב\"ע גדול / התחדשות",
    "significant": true,
    "reasons": [],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "2026/50.0": {
    "file_number": "2026/0050.00",
@@ -17660,7 +18109,8 @@
     "בנייה חדשה / הריסה",
     "+12 יח\"ד"
    ],
-   "alerted_at": "2026-11-01T06:30:46"
+   "alerted_at": "2026-11-01T06:30:46",
+   "known_tik": false
   },
   "1976/425.10": {
    "file_number": "1976/0425.10",
@@ -17696,7 +18146,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1982/264.4": {
    "file_number": "1982/0264.04",
@@ -17733,7 +18184,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1987/212.7": {
    "file_number": "1987/0212.07",
@@ -17769,7 +18221,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1990/451.4": {
    "file_number": "1990/0451.04",
@@ -17806,7 +18259,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "1995/41.6": {
    "file_number": "1995/0041.06",
@@ -17850,7 +18304,8 @@
    "reasons": [
     "+1 יח\"ד"
    ],
-   "alerted_at": "2026-11-02T05:09:45"
+   "alerted_at": "2026-11-02T05:09:45",
+   "known_tik": false
   },
   "2000/798.12": {
    "file_number": "2000/0798.12",
@@ -17886,7 +18341,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2017/1087.2": {
    "file_number": "2017/1087.02",
@@ -17924,7 +18380,8 @@
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
    "reasons": [],
-   "alerted_at": null
+   "alerted_at": null,
+   "known_tik": false
   },
   "2025/299.0": {
    "file_number": "2025/0299.00",
@@ -17964,7 +18421,8 @@
    "reasons": [
     "+1 יח\"ד"
    ],
-   "alerted_at": "2026-11-02T05:09:45"
+   "alerted_at": "2026-11-02T05:09:45",
+   "known_tik": false
   },
   "2026/60.0": {
    "file_number": "2026/0060.00",
@@ -18008,7 +18466,8 @@
    "reasons": [
     "+75 יח\"ד"
    ],
-   "alerted_at": "2026-11-02T05:09:45"
+   "alerted_at": "2026-11-02T05:09:45",
+   "known_tik": true
   },
   "2026/477.0": {
    "file_number": "2026/0477.00",
@@ -18047,7 +18506,759 @@
    "bucket": "zchuyot",
    "bucket_label": "הגדלת זכויות (ללא יח\"ד)",
    "significant": false,
-   "reasons": []
+   "reasons": [],
+   "known_tik": false
+  },
+  "2026/453.0": {
+   "file_number": "2026/0453.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "08/10/2026",
+   "request_type": "חפירה ומילוי",
+   "request_description": "בקשה להיתר חפירה ",
+   "address": "אביגד נחמן 14",
+   "neighborhood_yk": "נוה שאנן/ניות",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "2004",
+    "30146ג",
+    "30180ג",
+    "30336ג",
+    "4029"
+   ],
+   "parcels": [
+    "30180/96"
+   ],
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2026/453.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.7728958207348,
+   "lng": 35.201372572430266,
+   "fetched_at": "2026-11-02T08:28:37",
+   "category": "chafira_milui",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2026/398.0": {
+   "file_number": "2026/0398.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "16/09/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, בניית מרפסת",
+   "request_description": "תוספת בניה במסגרת תב\"ע החלה על המקום",
+   "address": "יהודה אלחריזי 14",
+   "neighborhood_yk": "רחביה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1224",
+    "30038ג",
+    "9988"
+   ],
+   "parcels": [
+    "30038/5012"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2026/398.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.77616902999291,
+   "lng": 35.21579344363707,
+   "fetched_at": "2026-11-02T08:29:01",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2026/356.0": {
+   "file_number": "2026/0356.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "14/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, התקנת מעלית חיצונית, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת בניה על מבנה לשימור מכוח זכויות בתכנית המתאר",
+   "address": "בוסתנאי 16",
+   "neighborhood_yk": "קטמון הישנה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "0975",
+    "2878",
+    "30009ג"
+   ],
+   "parcels": [
+    "30009/107"
+   ],
+   "units": 1,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 1,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2026/356.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.76473392636484,
+   "lng": 35.21245641161204,
+   "fetched_at": "2026-11-02T08:29:22",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+1 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2026/351.0": {
+   "file_number": "2026/0351.00",
+   "status": "שולמה מקדמה",
+   "status_date": "13/07/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים",
+   "request_description": "תוספת קומה לבנין קיים ",
+   "address": "עמק רפאים 52",
+   "neighborhood_yk": "מושבה גרמנית",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [],
+   "parcels": [
+    "30008/15"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2026/351.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1405729"
+   ],
+   "lat": 31.762073069234294,
+   "lng": 35.217501701755424,
+   "fetched_at": "2026-11-02T08:29:49",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+4 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2025/86.0": {
+   "file_number": "2025/0086.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "18/03/2025",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניה חדשה / בניין חדש",
+   "request_description": "בניית תוספת ליד בניין מכון התקנים",
+   "address": "יד חרוצים 7",
+   "neighborhood_yk": "תלפיות תעשיה",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "3452"
+   ],
+   "parcels": [
+    "30001/49"
+   ],
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/86.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "414698"
+   ],
+   "lat": 31.752955419841953,
+   "lng": 35.21756374228823,
+   "fetched_at": "2026-11-02T08:31:07",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2025/71.0": {
+   "file_number": "2025/0071.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "15/02/2026",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "הקמת בניין חדש 3 קומות מעל קומת מסד",
+   "address": "אל רחמה סמטה 2",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2317",
+    "3801",
+    "3801א"
+   ],
+   "parcels": [
+    "30280/54"
+   ],
+   "units": 6,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 6,
+   "floors": 4,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/71.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.745118996982725,
+   "lng": 35.200159811175666,
+   "fetched_at": "2026-11-02T08:31:14",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+6 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2025/443.0": {
+   "file_number": "2025/0443.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "01/07/2026",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי, עבודות בדרכים, ריצוף חצר ועבודות פיתוח, עבודות הריסה",
+   "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הסגול. מקטע 7.91 כולל מבנה טכני תת קרקעי",
+   "address": "יהודה הנשיא 1",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "0871"
+   ],
+   "parcels": [
+    "30123/35",
+    "30123/41",
+    "30123/57",
+    "30123/60",
+    "30123/61",
+    "30123/62",
+    "30123/71",
+    "30133/114",
+    "30133/26",
+    "30143/100",
+    "30143/101",
+    "30143/128",
+    "30143/129",
+    "30143/13",
+    "30143/130",
+    "30143/136",
+    "30143/137",
+    "30143/138",
+    "30143/14",
+    "30143/146",
+    "30143/147",
+    "30143/15",
+    "30143/16",
+    "30143/165",
+    "30143/167",
+    "30143/17",
+    "30143/175",
+    "30143/18",
+    "30143/182",
+    "30143/20",
+    "30143/200",
+    "30143/22",
+    "30143/25",
+    "30143/26",
+    "30143/29",
+    "30143/31",
+    "30143/5",
+    "30143/6",
+    "30143/93",
+    "30143/97",
+    "30143/99",
+    "30171/100",
+    "30171/103",
+    "30171/105",
+    "30171/112",
+    "30171/134",
+    "30171/140",
+    "30171/141",
+    "30171/142",
+    "30171/161",
+    "30171/163",
+    "30171/164",
+    "30171/167",
+    "30171/169",
+    "30171/190",
+    "30171/203",
+    "30171/209",
+    "30171/210",
+    "30171/84",
+    "30171/85",
+    "30171/91",
+    "30171/92",
+    "30171/94",
+    "30171/96",
+    "30172/10",
+    "30172/109",
+    "30172/113",
+    "30172/119",
+    "30172/120",
+    "30172/15",
+    "30172/187",
+    "30172/191",
+    "30172/194",
+    "30172/197",
+    "30172/22",
+    "30172/3",
+    "30172/31",
+    "30172/35",
+    "30172/42",
+    "30172/56",
+    "30172/7",
+    "30172/72",
+    "30172/76",
+    "30172/77",
+    "30172/85",
+    "30172/86",
+    "30172/87"
+   ],
+   "floors": 1,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/443.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.756716717394834,
+   "lng": 35.199990407019875,
+   "fetched_at": "2026-11-02T08:32:05",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2025/370.1": {
+   "file_number": "2025/0370.01",
+   "status": "שולמה מקדמה",
+   "status_date": "01/01/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת יח\"ד כולל תוספת שטח.",
+   "address": "אברהם אלמליח 18",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "11661",
+    "5/06/04"
+   ],
+   "parcels": [
+    "30199/4"
+   ],
+   "units": 1,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 1,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/370.1",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.754218126160342,
+   "lng": 35.192454546012776,
+   "fetched_at": "2026-11-02T08:32:18",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+1 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2025/274.0": {
+   "file_number": "2025/0274.00",
+   "status": "נפתח תיק רישוי",
+   "status_date": "08/03/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת יח\"ד כולל תוספת שטח",
+   "address": "אברהם אלמליח 19",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "11661"
+   ],
+   "parcels": [
+    "30199/4"
+   ],
+   "units": 1,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 1,
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2025/274.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.754759200757626,
+   "lng": 35.192116727728965,
+   "fetched_at": "2026-11-02T08:32:38",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+1 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2025/151.0": {
+   "file_number": "2025/0151.00",
+   "status": "הופק-הוצא היתר בניה",
+   "status_date": "14/10/2026",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי, עבודות בדרכים, תחנת שנאים",
+   "request_description": "הקמת תחנת מיישרים וקירות תמך עבור הקו הכחול של הרכבת הקלה",
+   "address": "דוד המלך 1",
+   "neighborhood_yk": "טלביה/המוגרבים",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "178129",
+    "תתל/86"
+   ],
+   "parcels": [
+    "30017/6",
+    "30017/8",
+    "30197/115",
+    "30197/163",
+    "30197/165",
+    "30197/176",
+    "30197/68",
+    "30197/77",
+    "30197/78",
+    "30197/79"
+   ],
+   "matched_tabas": [
+    "178129"
+   ],
+   "taba": null,
+   "norm": "2025/151.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1097468",
+    "956516"
+   ],
+   "lat": 31.76895333326063,
+   "lng": 35.22375198138357,
+   "fetched_at": "2026-11-02T08:32:52",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2024/481.0": {
+   "file_number": "2024/0481.00",
+   "status": "פורסמה בקשה להקלה",
+   "status_date": "15/04/2026",
+   "request_type": "בניה חדשה / בניין חדש, תחנת שנאים",
+   "request_description": "בנית חדר טרפו ומאגר מים עבור חח\"י באליעזר הגדול 35, לבי\"ס מכיל פלא (ת.ב. 2022/157)",
+   "address": "אנטיגנוס 35",
+   "neighborhood_yk": "גוננים",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1784ד"
+   ],
+   "parcels": [
+    "30143/212"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2024/481.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [
+    "1322452"
+   ],
+   "lat": 31.7547597842177,
+   "lng": 35.20569001245182,
+   "fetched_at": "2026-11-02T08:34:31",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2024/449.0": {
+   "file_number": "2024/0449.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "17/12/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "בנית מתנ\"ס",
+   "address": "השופט חיים כהן",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "5303"
+   ],
+   "parcels": [
+    "30139/380"
+   ],
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2024/449.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.745289531286534,
+   "lng": 35.21940953254185,
+   "fetched_at": "2026-11-02T08:34:34",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2024/395.0": {
+   "file_number": "2024/0395.00",
+   "status": "תום תקופת פרסום",
+   "status_date": "29/09/2026",
+   "request_type": "בניה חדשה / בניין חדש, שינוי שימוש",
+   "request_description": "הקמת בניין מגורים חדש בעל 3 קומות מעל חניון תת קרקעי מכוח תב\"ע 4552",
+   "address": "",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "4552"
+   ],
+   "parcels": [],
+   "units": 7,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 7,
+   "floors": 3,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2024/395.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.739076145425,
+   "lng": 35.19251980370319,
+   "fetched_at": "2026-11-02T08:35:55",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה",
+    "+7 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2023/551.0": {
+   "file_number": "2023/0551.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "29/01/2025",
+   "request_type": "בניה חדשה / בניין חדש",
+   "request_description": "מועדון רב גילאי",
+   "address": "פישר מוריס 2",
+   "neighborhood_yk": "פת",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1599",
+    "1599א"
+   ],
+   "parcels": [
+    "30501/83"
+   ],
+   "floors": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/551.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.74957411320968,
+   "lng": 35.20014905503952,
+   "fetched_at": "2026-11-02T08:37:07",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2023/476.0": {
+   "file_number": "2023/0476.00",
+   "status": "נדונה בוועדת המשנה",
+   "status_date": "17/02/2026",
+   "request_type": "בניה חדשה / בניין חדש, חפירה ומילוי, פיתוח שטח ציבורי פתוח, ריצוף חצר ועבודות פיתוח",
+   "request_description": "הנגשת מעבר ציבורי להולכי רגל לאורך שדרות עין צורים על ידי רצף של גשרים ומעליות.",
+   "address": "שד עין צורים 00",
+   "neighborhood_yk": "ארנונה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "1721",
+    "1721א",
+    "178129"
+   ],
+   "parcels": [
+    "30116/105",
+    "30116/53",
+    "30116/54",
+    "30116/55",
+    "30116/56",
+    "30116/91",
+    "30116/92",
+    "30117/21",
+    "30117/27",
+    "30117/72",
+    "30117/78",
+    "30187/62",
+    "30187/63"
+   ],
+   "floors": 1,
+   "matched_tabas": [
+    "178129"
+   ],
+   "taba": null,
+   "norm": "2023/476.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.74875252604177,
+   "lng": 35.22016997788602,
+   "fetched_at": "2026-11-02T08:37:17",
+   "category": "bniya_chadasha",
+   "bucket": "tava_gadol",
+   "bucket_label": "תב\"ע גדול / התחדשות",
+   "significant": true,
+   "reasons": [
+    "בנייה חדשה / הריסה"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2023/368.0": {
+   "file_number": "2023/0368.00",
+   "status": "הוכנה טיוטת היתר בניה",
+   "status_date": "30/04/2026",
+   "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
+   "request_description": "תוספת יח\"ד.",
+   "address": "אל זיתון 4",
+   "neighborhood_yk": "בית צפפה",
+   "maslul": "רישוי מלא עם הקלות",
+   "tochnit_all": [
+    "2317"
+   ],
+   "parcels": [
+    "30283/50"
+   ],
+   "units": 2,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 2,
+   "matched_tabas": [],
+   "taba": null,
+   "norm": "2023/368.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.74281032948237,
+   "lng": 35.20611197618489,
+   "fetched_at": "2026-11-02T08:38:36",
+   "category": "tosefet",
+   "bucket": "ibuy",
+   "bucket_label": "עיבוי (תוספת יח\"ד)",
+   "significant": true,
+   "reasons": [
+    "+2 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-02T12:30:47"
   }
  },
  "out_of_area": {
