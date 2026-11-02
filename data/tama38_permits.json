@@ -18658,5 +18658,148 @@
     "scraped_at": "2026-10-25T13:03:41.319136",
     "permit_count": 1,
     "error": ""
+  },
+  "514": {
+    "tik": "2026/0245.00",
+    "address": "יהודה הנשיא 1",
+    "permits": [
+      {
+        "file_number": "2026/0245.00",
+        "status": "הגשה מקוונת הושלמה",
+        "status_date": "14/05/2026",
+        "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד ",
+        "request_description": "הריסת מבנה קיים והקמת מבנה חדש בן 11 קומות מעל קומות מרתף ניצול זכויות מאושרות לפי סעיף 13 לתמ\"א 38 - 59 יח\"ד",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      }
+    ],
+    "scraped_at": "2026-11-02T12:42:38.015343",
+    "permit_count": 1,
+    "error": ""
+  },
+  "515": {
+    "tik": "2024/0357.00",
+    "address": "אביטל 15",
+    "permits": [
+      {
+        "file_number": "2024/0357.00",
+        "status": "נדונה בוועדת המשנה",
+        "status_date": "11/06/2025",
+        "request_type": "בניה חדשה / בניין חדש, תמ\"א 38 הריסה ובניה",
+        "request_description": "הריסת מבנה המיועד למגורים והקמתו מחדש לפי הוראות סעיף 13 לתמ\"א 38 . סה\"כ 57 יח\"ד",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      },
+      {
+        "file_number": "2024/0357.01",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "24/03/2026",
+        "request_type": "חפירה ומילוי",
+        "request_description": "הריסת בנין וקירות קיימים, חפירה ,דיפון ויציקת רצפה ראשונה עבור חניון תת קרקעי לבינוי מבוקש בתיק 357/2024 עבור 57 יח\"ד",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      }
+    ],
+    "scraped_at": "2026-11-02T12:42:38.015436",
+    "permit_count": 2,
+    "error": ""
+  },
+  "516": {
+    "tik": "2024/0179.00",
+    "address": "דוד שמעוני 23",
+    "permits": [
+      {
+        "file_number": "2024/0179.00",
+        "status": "נדונה בוועדת המשנה",
+        "status_date": "03/12/2025",
+        "request_type": "תמ\"א 38 הריסה ובניה",
+        "request_description": " הריסת בניין קיים והקמת בניין מגורים חדש בעל 10 קומות , 21 יחידות דיור מכוח תב\"ע 101-1008390 ולפי סעיף 13 תמ\"א 38",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      }
+    ],
+    "scraped_at": "2026-11-02T12:42:38.015498",
+    "permit_count": 1,
+    "error": ""
+  },
+  "517": {
+    "tik": "2022/0547.00",
+    "address": "נתאי הארבלי 42",
+    "permits": [
+      {
+        "file_number": "2022/0547.00",
+        "status": "נדונה בועדת ערר",
+        "status_date": "06/07/2025",
+        "request_type": "תמ\"א 38 הריסה ובניה",
+        "request_description": "הריסת מבנה קיים ובניית בניין חדש בין 10 קומות ו13 יח ד מעל קומות חנייה ומסחר בהתאם לתמ א 38/2 ותב ע מס 2091270-101",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      }
+    ],
+    "scraped_at": "2026-11-02T12:42:38.015554",
+    "permit_count": 1,
+    "error": ""
+  },
+  "518": {
+    "tik": "2020/0358.00",
+    "address": "עין גדי 26",
+    "permits": [
+      {
+        "file_number": "2020/0358.00",
+        "status": "נדונה בוועדת המשנה",
+        "status_date": "31/12/2024",
+        "request_type": "בניה חדשה / בניין חדש, תמ\"א 38 - תוספות",
+        "request_description": "תוספת בניה הכוללת 12 יח\"ד למבנה קיים המיועד לשימור וכולל 2 יח\"ד בהתאם לסעיף 13 בתמ\"א 38, סה\"כ המבנה כולל 14 יח\"ד  .",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      }
+    ],
+    "scraped_at": "2026-11-02T12:42:38.015617",
+    "permit_count": 1,
+    "error": ""
+  },
+  "519": {
+    "tik": "1993/0095.03",
+    "address": "עמק רפאים 61",
+    "permits": [
+      {
+        "file_number": "1993/0095.03",
+        "status": "נפתח תיק רישוי",
+        "status_date": "02/09/2025",
+        "request_type": "תמ\"א 38 - תוספות",
+        "request_description": "תוספת שטחים עיקירים וממדים + תוספת 3 יח\"ד + חיזוק וחידוש הבנין עפ\"י תמ\"א 38.",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      }
+    ],
+    "scraped_at": "2026-11-02T12:42:38.015670",
+    "permit_count": 1,
+    "error": ""
+  },
+  "520": {
+    "tik": "1977/0324.04",
+    "address": "לייב יפה 5",
+    "permits": [
+      {
+        "file_number": "1977/0324.04",
+        "status": "נדונה בוועדת המשנה",
+        "status_date": "03/06/2026",
+        "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, שינוי שימוש",
+        "request_description": "הריסת מבנה קיים מעל קומת עמודים והקמת מבנה בן 7 קומות ו-2 קומות מרתף. בהתאם לתמ\"א 38 וסעיף 13.",
+        "units": null,
+        "units_source": null,
+        "filtered": false
+      }
+    ],
+    "scraped_at": "2026-11-02T12:42:38.015720",
+    "permit_count": 1,
+    "error": ""
   }
 }

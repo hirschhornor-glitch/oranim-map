@@ -19151,6 +19151,272 @@
      ]
     ]
    }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 514,
+    "qc_id": 514,
+    "tik": "2026/0245.00",
+    "address": "יהודה הנשיא 1",
+    "neighborho": "גוננים",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "14/05/2026",
+    "status": "הגשה מקוונת הושלמה",
+    "date": "14/05/2026",
+    "status_1": null,
+    "comment": "הריסת מבנה קיים והקמת מבנה חדש בן 11 קומות מעל קומות מרתף ניצול זכויות מאושרות לפי סעיף 13 לתמ\"א 38 - 59 יח\"ד | נוסף 2026-11-02 ממאגר ההיתרים (YK, תמ\"א 38)",
+    "harisaa": null,
+    "y": 629288.7,
+    "x": 218927.69,
+    "created_us": "permits_master",
+    "created_da": "2026-11-02",
+    "last_edite": "permits_master",
+    "last_edi_1": "2026-11-02",
+    "__rec_stat": null,
+    "units_out": 59,
+    "floors_tama": 11,
+    "first_detected": null
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.19886106366548,
+      31.756238696068493
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 515,
+    "qc_id": 515,
+    "tik": "2024/0357.00",
+    "address": "אביטל 15",
+    "neighborho": "מקור חיים",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "11/06/2025",
+    "status": "נדונה בוועדת המשנה",
+    "date": "11/06/2025",
+    "status_1": null,
+    "comment": "הריסת מבנה המיועד למגורים והקמתו מחדש לפי הוראות סעיף 13 לתמ\"א 38 . סה\"כ 57 יח\"ד | בקשת הבניין 2024/0357.00 (סעיף 13, 57 יח\"ד) נדונה בוועדת המשנה; 2024/0357.01 = היתר הריסה/חפירה ודיפון | נוסף 2026-11-02 ממאגר ההיתרים (YK, תמ\"א 38)",
+    "harisaa": null,
+    "y": 628699.7,
+    "x": 220143.69,
+    "created_us": "permits_master",
+    "created_da": "2026-11-02",
+    "last_edite": "permits_master",
+    "last_edi_1": "2026-11-02",
+    "__rec_stat": null,
+    "units_out": 57,
+    "floors_tama": 10,
+    "first_detected": null
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21169530908875,
+      31.75092674106458
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 516,
+    "qc_id": 516,
+    "tik": "2024/0179.00",
+    "address": "דוד שמעוני 23",
+    "neighborho": "גבעת הורדים",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "03/12/2025",
+    "status": "נדונה בוועדת המשנה",
+    "date": "03/12/2025",
+    "status_1": null,
+    "comment": "הריסת בניין קיים והקמת בניין מגורים חדש בעל 10 קומות , 21 יחידות דיור מכוח תב\"ע 101-1008390 ולפי סעיף 13 תמ\"א 38 | נוסף 2026-11-02 ממאגר ההיתרים (YK, תמ\"א 38)",
+    "harisaa": null,
+    "y": 630178.7,
+    "x": 219293.69,
+    "created_us": "permits_master",
+    "created_da": "2026-11-02",
+    "last_edite": "permits_master",
+    "last_edi_1": "2026-11-02",
+    "__rec_stat": null,
+    "units_in": 21,
+    "units_out": 22,
+    "floors_tama": 10,
+    "first_detected": null
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.20272398543217,
+      31.76426521319643
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 517,
+    "qc_id": 517,
+    "tik": "2022/0547.00",
+    "address": "נתאי הארבלי 42",
+    "neighborho": "גוננים",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "06/07/2025",
+    "status": "נדונה בועדת ערר",
+    "date": "06/07/2025",
+    "status_1": null,
+    "comment": "הריסת מבנה קיים ובניית בניין חדש בין 10 קומות ו13 יח ד מעל קומות חנייה ומסחר בהתאם לתמ א 38/2 ותב ע מס 2091270-101 | נוסף 2026-11-02 ממאגר ההיתרים (YK, תמ\"א 38)",
+    "harisaa": null,
+    "y": 628827.7,
+    "x": 219175.69,
+    "created_us": "permits_master",
+    "created_da": "2026-11-02",
+    "last_edite": "permits_master",
+    "last_edi_1": "2026-11-02",
+    "__rec_stat": null,
+    "units_out": 31,
+    "floors_tama": 10,
+    "first_detected": null
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.201478789108904,
+      31.752081279441587
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 518,
+    "qc_id": 518,
+    "tik": "2020/0358.00",
+    "address": "עין גדי 26",
+    "neighborho": "תלפיות",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "31/12/2024",
+    "status": "נדונה בוועדת המשנה",
+    "date": "31/12/2024",
+    "status_1": null,
+    "comment": "תוספת בניה הכוללת 12 יח\"ד למבנה קיים המיועד לשימור וכולל 2 יח\"ד בהתאם לסעיף 13 בתמ\"א 38, סה\"כ המבנה כולל 14 יח\"ד  . | נוסף 2026-11-02 ממאגר ההיתרים (YK, תמ\"א 38)",
+    "harisaa": null,
+    "y": 628858.7,
+    "x": 221256.69,
+    "created_us": "permits_master",
+    "created_da": "2026-11-02",
+    "last_edite": "permits_master",
+    "last_edi_1": "2026-11-02",
+    "__rec_stat": null,
+    "units_out": 14,
+    "first_detected": null
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.22344244825331,
+      31.752359458480004
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 519,
+    "qc_id": 519,
+    "tik": "1993/0095.03",
+    "address": "עמק רפאים 61",
+    "neighborho": "מושבה גרמנית",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "02/09/2025",
+    "status": "נפתח תיק רישוי",
+    "date": "02/09/2025",
+    "status_1": null,
+    "comment": "תוספת שטחים עיקירים וממדים + תוספת 3 יח\"ד + חיזוק וחידוש הבנין עפ\"י תמ\"א 38. | נוסף 2026-11-02 ממאגר ההיתרים (YK, תמ\"א 38) | יח\"ד: תוספת 3 לבניין קיים — סה\"כ לא ידוע (טבלת הכמויות נתנה יוצא=3)",
+    "harisaa": null,
+    "y": 629749.7,
+    "x": 220549.69,
+    "created_us": "permits_master",
+    "created_da": "2026-11-02",
+    "last_edite": "permits_master",
+    "last_edi_1": "2026-11-02",
+    "__rec_stat": null,
+    "units_out": null,
+    "first_detected": null,
+    "units_add": 3
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21598150287083,
+      31.76039578784583
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "fid": 520,
+    "qc_id": 520,
+    "tik": "1977/0324.04",
+    "address": "לייב יפה 5",
+    "neighborho": "תלפיות",
+    "rova": 4,
+    "units_exis": null,
+    "units_tose": null,
+    "open_": "03/06/2026",
+    "status": "נדונה בוועדת המשנה",
+    "date": "03/06/2026",
+    "status_1": null,
+    "comment": "הריסת מבנה קיים מעל קומת עמודים והקמת מבנה בן 7 קומות ו-2 קומות מרתף. בהתאם לתמ\"א 38 וסעיף 13. | נוסף 2026-11-02 ממאגר ההיתרים (YK, תמ\"א 38)",
+    "harisaa": null,
+    "y": 628450.7,
+    "x": 221245.69,
+    "created_us": "permits_master",
+    "created_da": "2026-11-02",
+    "last_edite": "permits_master",
+    "last_edi_1": "2026-11-02",
+    "__rec_stat": null,
+    "units_out": 13,
+    "floors_tama": 7,
+    "first_detected": null
+   },
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.22332560078654,
+      31.74867994832598
+     ]
+    ]
+   }
   }
  ]
 }

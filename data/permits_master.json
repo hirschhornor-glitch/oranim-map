@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-02T12:30:54",
+ "generated_at": "2026-11-02T12:43:54",
  "count": 1763,
  "bucket_counts": {
   "tava_gadol": 619,
@@ -994,16 +994,17 @@
    ],
    "status": "נפתח תיק רישוי",
    "status_date": "02/09/2025",
-   "request_type": "",
+   "request_type": "תמ\"א 38 - תוספות",
    "request_description": "תוספת שטחים עיקירים וממדים + תוספת 3 יח\"ד + חיזוק וחידוש הבנין עפ\"י תמ\"א 38.",
    "units": 3,
    "tama_type": "",
    "address": "",
    "taba": "666289",
    "provenance": [
-    "all_permits"
+    "all_permits",
+    "tama38"
    ],
-   "in_tama38_registry": false,
+   "in_tama38_registry": true,
    "floors": null,
    "units_source": "yk_quantities",
    "lat": 31.760396,
@@ -1388,16 +1389,17 @@
    ],
    "status": "הופק-הוצא היתר בניה",
    "status_date": "24/03/2026",
-   "request_type": "",
+   "request_type": "חפירה ומילוי",
    "request_description": "הריסת בנין וקירות קיימים, חפירה ,דיפון ויציקת רצפה ראשונה עבור חניון תת קרקעי לבינוי מבוקש בתיק 357/2024 עבור 57 יח\"ד",
    "units": 57,
    "tama_type": "",
    "address": "",
    "taba": "1016229",
    "provenance": [
-    "all_permits"
+    "all_permits",
+    "tama38"
    ],
-   "in_tama38_registry": false,
+   "in_tama38_registry": true,
    "floors": 10,
    "units_source": "yk_quantities",
    "lat": 31.750927,
@@ -5439,15 +5441,16 @@
    "status": "הופק-הוצא היתר בניה",
    "status_date": "05/05/2026",
    "request_type": "תמ\"א 38 הריסה ובניה",
-   "request_description": "הריסת מבנה קיים ובניית בנין חדש בין 10 קומות ו13 יח\"ד מעל קומות חניה ומסחר בהתאם לתמ\"א 38/2 ותב\"ע",
+   "request_description": "הריסת מבנה קיים ובניית בניין חדש בין 10 קומות ו13 יח ד מעל קומות חנייה ומסחר בהתאם לתמ א 38/2 ותב ע מס 2091270-101",
    "units": 31,
    "tama_type": "38/2",
    "address": "",
    "taba": "721902",
    "provenance": [
-    "all_permits"
+    "all_permits",
+    "tama38"
    ],
-   "in_tama38_registry": false,
+   "in_tama38_registry": true,
    "floors": null,
    "units_source": "yk_quantities",
    "lat": 31.752081,
@@ -7823,9 +7826,10 @@
    "address": "",
    "taba": "614586",
    "provenance": [
-    "all_permits"
+    "all_permits",
+    "tama38"
    ],
-   "in_tama38_registry": false,
+   "in_tama38_registry": true,
    "floors": null,
    "units_source": "yk_quantities",
    "lat": 31.752359,
@@ -11783,9 +11787,10 @@
    "address": "",
    "taba": "1039007",
    "provenance": [
-    "all_permits"
+    "all_permits",
+    "tama38"
    ],
-   "in_tama38_registry": false,
+   "in_tama38_registry": true,
    "floors": 7,
    "units_source": "yk_quantities",
    "lat": 31.74868,
@@ -11846,15 +11851,16 @@
    "status": "נדונה בוועדת המשנה",
    "status_date": "03/12/2025",
    "request_type": "תמ\"א 38 הריסה ובניה",
-   "request_description": "‎.‎",
+   "request_description": " הריסת בניין קיים והקמת בניין מגורים חדש בעל 10 קומות , 21 יחידות דיור מכוח תב\"ע 101-1008390 ולפי סעיף 13 תמ\"א 38",
    "units": 22,
    "tama_type": "",
    "address": "",
    "taba": "1008390",
    "provenance": [
-    "all_permits"
+    "all_permits",
+    "tama38"
    ],
-   "in_tama38_registry": false,
+   "in_tama38_registry": true,
    "floors": 10,
    "units_source": "yk_quantities",
    "lat": 31.764265,
@@ -45267,6 +45273,41 @@
    "bucket": "tama38",
    "bucket_label": "תמ\"א 38"
   },
+  "2026/245": {
+   "tik": "2026/245",
+   "file_number": "2026/0245.00",
+   "revisions": [
+    "2026/245.0"
+   ],
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "14/05/2026",
+   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד ",
+   "request_description": "הריסת מבנה קיים והקמת מבנה חדש בן 11 קומות מעל קומות מרתף ניצול זכויות מאושרות לפי סעיף 13 לתמ\"א 38 - 59 יח\"ד",
+   "units": null,
+   "tama_type": "",
+   "address": "יהודה הנשיא 1",
+   "taba": "2026/0245.00",
+   "provenance": [
+    "tama38",
+    "extra"
+   ],
+   "in_tama38_registry": true,
+   "floors": null,
+   "units_source": "",
+   "lat": 31.756239,
+   "lng": 35.198861,
+   "on_committee_agenda": false,
+   "open_for_objections": false,
+   "has_field_obs": false,
+   "unassigned": false,
+   "is_tama38": true,
+   "units_added": 59,
+   "urban_renewal": false,
+   "category": "tama38",
+   "category_label": "תמ\"א 38",
+   "bucket": "tama38",
+   "bucket_label": "תמ\"א 38"
+  },
   "2014/472": {
    "tik": "2014/472",
    "file_number": "2014/0472.01",
@@ -45510,40 +45551,6 @@
    "category_label": "הריסה",
    "bucket": "tava_gadol",
    "bucket_label": "תב\"ע גדול / התחדשות"
-  },
-  "2026/245": {
-   "tik": "2026/245",
-   "file_number": "2026/0245.00",
-   "revisions": [
-    "2026/245.0"
-   ],
-   "status": "הגשה מקוונת הושלמה",
-   "status_date": "14/05/2026",
-   "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד ",
-   "request_description": "הריסת מבנה קיים והקמת מבנה חדש בן 11 קומות מעל קומות מרתף ניצול זכויות מאושרות לפי סעיף 13 לתמ\"א 38 - 59 יח\"ד",
-   "units": null,
-   "tama_type": "",
-   "address": "יהודה הנשיא 1",
-   "taba": "862904",
-   "provenance": [
-    "extra"
-   ],
-   "in_tama38_registry": false,
-   "floors": null,
-   "units_source": "",
-   "lat": 31.756239,
-   "lng": 35.198861,
-   "on_committee_agenda": false,
-   "open_for_objections": false,
-   "has_field_obs": false,
-   "unassigned": false,
-   "is_tama38": true,
-   "units_added": 59,
-   "urban_renewal": false,
-   "category": "tama38",
-   "category_label": "תמ\"א 38",
-   "bucket": "tama38",
-   "bucket_label": "תמ\"א 38"
   },
   "2024/234": {
    "tik": "2024/234",
