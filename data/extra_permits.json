@@ -1,7 +1,7 @@
 {
  "source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
  "source_date": "2026-06-21",
- "count": 112,
+ "count": 114,
  "by_taba": {
   "897066": [
    {
@@ -934,6 +934,24 @@
     "floors": 13,
     "source": "committee_yk",
     "source_date": "2026-10-12",
+    "all_matched_tabas": [
+     "1193531"
+    ]
+   },
+   {
+    "file_number": "2026/0060.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "15/04/2026",
+    "request_type": "עבודות הריסה, חפירה ומילוי, בניית קיר תומך/מגן",
+    "request_description": "הריסת מבנה מסחרי קיים וחפירה ודיפון עבור 75 יח\"ד",
+    "address": "הסדנא 2",
+    "units": 75,
+    "units_source": "yk_quantities",
+    "units_existing": 0,
+    "units_added": 75,
+    "floors": 13,
+    "source": "committee_yk",
+    "source_date": "2026-11-02",
     "all_matched_tabas": [
      "1193531"
     ]
@@ -1995,6 +2013,22 @@
     "source_date": "2026-11-01",
     "all_matched_tabas": [
      "800771"
+    ]
+   }
+  ],
+  "999185": [
+   {
+    "file_number": "2026/0477.00",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "28/10/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה",
+    "request_description": "תוספת שטח עקרי בקומת מרתף ובקומת הקרקע",
+    "address": "י. אלפסי 26",
+    "floors": 4,
+    "source": "committee_yk",
+    "source_date": "2026-11-02",
+    "all_matched_tabas": [
+     "999185"
     ]
    }
   ]
