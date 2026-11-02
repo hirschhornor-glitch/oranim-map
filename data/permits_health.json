@@ -1,23 +1,25 @@
 {
-  "generated_at": "2026-11-02T12:30:57",
+  "generated_at": "2026-11-02T14:25:02",
   "sources": [
     {
       "file": "all_permits.json",
       "label": "היתרים לפי תב\"ע",
       "refresh": "דו-שבועי (סריקה)",
-      "records": 801,
-      "last_publish": "2026-10-25",
-      "age_days": 8,
+      "records": 802,
+      "last_publish": "2026-11-02",
+      "age_days": 0,
       "status": "green",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "tama38_permits.json",
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
-      "records": 1358,
-      "last_publish": "2026-10-25",
-      "age_days": 8,
+      "records": 1366,
+      "last_publish": "2026-11-02",
+      "age_days": 0,
       "status": "green",
       "notes": []
     },
@@ -234,7 +236,7 @@
     "total_hidden": 104
   },
   "silent_zero_plans": {
-    "count": 39,
+    "count": 38,
     "plans": {
       "1008176": [
         "2024/0349.00"
@@ -276,10 +278,6 @@
       ],
       "1189281": [
         "2026/0234.01"
-      ],
-      "1193531": [
-        "2026/0060.00",
-        "2026/0060.01"
       ],
       "1211838": [
         "1996/0007.04"
@@ -361,6 +359,8 @@
       "998336": [
         "1983/0195.01"
       ]
-    }
+    },
+    "index_gap": 38,
+    "scraper_suspect": []
   }
 }

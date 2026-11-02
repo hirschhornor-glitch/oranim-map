@@ -1,9 +1,10 @@
 {
   "934117": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:57:17.374121",
+    "scraped_at": "2026-11-02T14:21:06.625705",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1250026": {
     "permits": [],
@@ -283,15 +284,17 @@
   },
   "1131192": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:59:55.859116",
+    "scraped_at": "2026-11-02T13:53:31.178922",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1102136": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:20:38.283931",
+    "scraped_at": "2026-11-02T13:51:49.801695",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "821082": {
     "permits": [
@@ -314,9 +317,10 @@
   },
   "1244417": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:01:30.570114",
+    "scraped_at": "2026-11-02T13:59:41.668279",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1197755": {
     "permits": [
@@ -574,9 +578,10 @@
   },
   "1167410": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:33:30.473574",
+    "scraped_at": "2026-11-02T13:55:45.797056",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "690149": {
     "permits": [],
@@ -624,9 +629,10 @@
   },
   "1242700": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:44:56.565460",
+    "scraped_at": "2026-11-02T13:59:22.484642",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1322452": {
     "permits": [],
@@ -636,9 +642,10 @@
   },
   "932152": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:58:44.668784",
+    "scraped_at": "2026-11-02T14:20:44.687732",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "215509": {
     "permits": [
@@ -844,9 +851,10 @@
   },
   "731877": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:53:14.943763",
+    "scraped_at": "2026-11-02T14:11:11.663553",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1016229": {
     "permits": [
@@ -1244,9 +1252,10 @@
   },
   "1249358": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:58:28.267186",
+    "scraped_at": "2026-11-02T14:00:03.442320",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "657593": {
     "permits": [],
@@ -2719,9 +2728,10 @@
   },
   "1160019": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:45:21.034446",
+    "scraped_at": "2026-11-02T13:54:29.920955",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1285808": {
     "permits": [],
@@ -2782,9 +2792,10 @@
   },
   "575456": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:28:23.187280",
+    "scraped_at": "2026-11-02T14:07:29.905246",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "833046": {
     "permits": [],
@@ -2821,9 +2832,10 @@
   },
   "1117910": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:35:44.312008",
+    "scraped_at": "2026-11-02T13:53:06.236692",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "771550": {
     "permits": [
@@ -2849,9 +2861,10 @@
   },
   "665752": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:19:49.630558",
+    "scraped_at": "2026-11-02T14:08:46.277354",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "226886": {
     "permits": [],
@@ -2997,15 +3010,17 @@
   },
   "1360544": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:03:50.859744",
+    "scraped_at": "2026-11-02T14:02:28.788942",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1114305": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:37:22.398725",
+    "scraped_at": "2026-11-02T13:52:28.813779",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1125970": {
     "permits": [],
@@ -3127,9 +3142,10 @@
   },
   "563643": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:05:32.491695",
+    "scraped_at": "2026-11-02T14:06:47.809009",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "195032": {
     "permits": [
@@ -3269,9 +3285,10 @@
   },
   "1275866": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:23:17.800109",
+    "scraped_at": "2026-11-02T14:01:07.964414",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "950493": {
     "permits": [
@@ -3348,9 +3365,10 @@
   },
   "1185099": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:22:38.078525",
+    "scraped_at": "2026-11-02T13:57:02.137218",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "761858": {
     "permits": [],
@@ -3576,9 +3594,10 @@
   },
   "1256684": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:41:56.827200",
+    "scraped_at": "2026-11-02T14:00:23.071199",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "783548": {
     "permits": [
@@ -3728,9 +3747,10 @@
   },
   "928176": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:20:13.855176",
+    "scraped_at": "2026-11-02T14:20:22.803090",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1219724": {
     "permits": [],
@@ -3947,9 +3967,10 @@
   },
   "950642": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:05:56.701048",
+    "scraped_at": "2026-11-02T14:21:33.910817",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "352096": {
     "permits": [
@@ -4009,9 +4030,10 @@
   },
   "901140": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:49:56.786218",
+    "scraped_at": "2026-11-02T14:19:12.200638",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "978031": {
     "permits": [],
@@ -4113,9 +4135,10 @@
   },
   "785766": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:38:54.896936",
+    "scraped_at": "2026-11-02T14:12:49.218067",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1024645": {
     "permits": [],
@@ -4175,9 +4198,10 @@
   },
   "693432": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:21:42.794927",
+    "scraped_at": "2026-11-02T14:09:30.367949",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "779546": {
     "permits": [
@@ -4208,15 +4232,17 @@
   },
   "1091438": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:22:30.784712",
+    "scraped_at": "2026-11-02T13:50:29.274767",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "972968": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:01:14.788107",
+    "scraped_at": "2026-11-02T14:23:18.789095",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "תתל/ 108/ סעיף-78-77": {
     "permits": [],
@@ -4408,15 +4434,17 @@
   },
   "1163088": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:28:05.926049",
+    "scraped_at": "2026-11-02T13:55:08.134671",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "307116": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:00:59.095244",
+    "scraped_at": "2026-11-02T14:04:46.835309",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "764613": {
     "permits": [],
@@ -4457,9 +4485,10 @@
   },
   "870865": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:50:36.122552",
+    "scraped_at": "2026-11-02T14:16:45.165687",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "855668": {
     "permits": [
@@ -4559,15 +4588,17 @@
   },
   "1335298": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:21:58.505588",
+    "scraped_at": "2026-11-02T14:01:48.820386",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "827956": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:43:00.144496",
+    "scraped_at": "2026-11-02T14:15:14.921683",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "469874": {
     "permits": [],
@@ -4622,9 +4653,10 @@
   },
   "1422401": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:00:35.544464",
+    "scraped_at": "2026-11-02T14:02:51.007486",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1320233": {
     "permits": [
@@ -4894,9 +4926,10 @@
   },
   "1131945": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:27:26.113830",
+    "scraped_at": "2026-11-02T13:53:52.126431",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "614586": {
     "permits": [
@@ -5252,9 +5285,10 @@
   },
   "762039": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:55:26.987992",
+    "scraped_at": "2026-11-02T14:11:43.122009",
     "permit_count": 0,
-    "error": "no_input"
+    "error": "",
+    "source": "api_437"
   },
   "185421": {
     "permits": [
@@ -5450,9 +5484,10 @@
   },
   "1032291": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:14:35.004460",
+    "scraped_at": "2026-11-02T13:49:09.877927",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1205152": {
     "permits": [],
@@ -5856,21 +5891,24 @@
   },
   "216614": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:32:11.504521",
+    "scraped_at": "2026-11-02T14:04:09.393804",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1041870": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:31:13.974648",
+    "scraped_at": "2026-11-02T13:49:29.073800",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "663641": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:40:31.820812",
+    "scraped_at": "2026-11-02T14:08:25.450826",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "506733": {
     "permits": [
@@ -5939,9 +5977,10 @@
   },
   "899880": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:18:24.621017",
+    "scraped_at": "2026-11-02T14:18:48.831918",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "406504": {
     "permits": [
@@ -5962,9 +6001,10 @@
   },
   "182667": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:41:29.997396",
+    "scraped_at": "2026-11-02T14:03:50.019480",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "771600": {
     "permits": [
@@ -6179,9 +6219,10 @@
   },
   "1161439": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:32:02.928242",
+    "scraped_at": "2026-11-02T13:54:49.029327",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "800771": {
     "permits": [
@@ -6254,15 +6295,17 @@
   },
   "545657": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:33:05.742908",
+    "scraped_at": "2026-11-02T14:06:22.269566",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "897066": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:51:24.623781",
+    "scraped_at": "2026-11-02T14:18:20.086717",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1329770": {
     "permits": [
@@ -6404,9 +6447,10 @@
   },
   "1024272": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:20:22.648906",
+    "scraped_at": "2026-11-02T13:48:50.793081",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "252379": {
     "permits": [
@@ -6896,9 +6940,10 @@
   },
   "1095892": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:19:27.921146",
+    "scraped_at": "2026-11-02T13:51:31.051388",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1198613": {
     "permits": [
@@ -7074,15 +7119,17 @@
   },
   "961045": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:59:23.878357",
+    "scraped_at": "2026-11-02T14:22:27.798317",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1211838": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:47:43.464377",
+    "scraped_at": "2026-11-02T13:57:50.756264",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "798306": {
     "permits": [
@@ -7142,9 +7189,10 @@
   },
   "861393": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:44:42.366560",
+    "scraped_at": "2026-11-02T14:15:36.700942",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "826636": {
     "permits": [],
@@ -7332,9 +7380,10 @@
   },
   "1226307": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:38:41.265524",
+    "scraped_at": "2026-11-02T13:58:37.600005",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "459339": {
     "permits": [
@@ -7816,9 +7865,10 @@
   },
   "1095124": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:24:53.580346",
+    "scraped_at": "2026-11-02T13:51:10.724796",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1039007": {
     "permits": [
@@ -7880,9 +7930,10 @@
   },
   "57216": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:08:33.994384",
+    "scraped_at": "2026-11-02T14:07:10.285929",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1008390": {
     "permits": [
@@ -7998,9 +8049,10 @@
   },
   "117853": {
     "permits": [],
-    "scraped_at": "2026-10-25T10:08:09.884344",
+    "scraped_at": "2026-11-02T13:56:05.033269",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "926105": {
     "permits": [],
@@ -8031,9 +8083,10 @@
   },
   "998336": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:17:45.078545",
+    "scraped_at": "2026-11-02T14:23:45.823921",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "843797": {
     "permits": [
@@ -8200,10 +8253,10 @@
   },
   "867317": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:57:41.603081",
+    "scraped_at": "2026-11-02T14:16:24.990755",
     "permit_count": 0,
     "error": "",
-    "fallback_scraped_at": "2026-10-25T12:18:02.213922"
+    "source": "api_437"
   },
   "216515": {
     "permits": [],
@@ -8293,10 +8346,10 @@
   },
   "1115294": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:24:29.124145",
+    "scraped_at": "2026-11-02T13:52:48.268248",
     "permit_count": 0,
     "error": "",
-    "fallback_scraped_at": "2026-10-25T12:04:56.962708"
+    "source": "api_437"
   },
   "652685": {
     "permits": [],
@@ -8333,9 +8386,10 @@
   },
   "788422": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:37:36.810096",
+    "scraped_at": "2026-11-02T14:13:16.900458",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "420117": {
     "permits": [],
@@ -8870,9 +8924,10 @@
   },
   "923755": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:13:31.646994",
+    "scraped_at": "2026-11-02T14:19:56.553631",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "59873": {
     "permits": [
@@ -8897,10 +8952,10 @@
   },
   "175505": {
     "permits": [],
-    "scraped_at": "2026-10-25T11:02:48.973606",
+    "scraped_at": "2026-11-02T14:03:16.169872",
     "permit_count": 0,
     "error": "",
-    "fallback_scraped_at": "2026-10-25T11:17:54.988173"
+    "source": "api_437"
   },
   "1231349": {
     "permits": [],
@@ -8997,9 +9052,10 @@
   },
   "1106483": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:25:17.994382",
+    "scraped_at": "2026-11-02T13:52:09.834054",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "56754": {
     "permits": [
@@ -9030,9 +9086,10 @@
   },
   "824136": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:47:27.135286",
+    "scraped_at": "2026-11-02T14:14:52.115177",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "621318": {
     "permits": [],
@@ -9065,9 +9122,10 @@
   },
   "912337": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:55:50.667329",
+    "scraped_at": "2026-11-02T14:19:37.574009",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "499582": {
     "permits": [],
@@ -9114,9 +9172,10 @@
   },
   "820761": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:43:24.336598",
+    "scraped_at": "2026-11-02T14:13:54.099245",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "408567": {
     "permits": [],
@@ -9226,9 +9285,10 @@
   },
   "969162": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:04:05.412499",
+    "scraped_at": "2026-11-02T14:22:54.297628",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "433474": {
     "permits": [
@@ -9249,9 +9309,10 @@
   },
   "706804": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:33:08.151390",
+    "scraped_at": "2026-11-02T14:10:13.769133",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "349811": {
     "permits": [
@@ -9359,15 +9420,17 @@
   },
   "862904": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:09:42.568260",
+    "scraped_at": "2026-11-02T14:15:55.976622",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "872499": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:45:45.285797",
+    "scraped_at": "2026-11-02T14:17:08.658919",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "545806": {
     "permits": [
@@ -9392,9 +9455,10 @@
   },
   "770768": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:36:24.666667",
+    "scraped_at": "2026-11-02T14:12:16.528090",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1236736": {
     "permits": [],
@@ -9709,7 +9773,7 @@
         "status": "הופק-הוצא היתר בניה",
         "status_date": "19/11/2025",
         "request_type": "",
-        "request_description": "בקשה להיתר חפירה וביצוע של המקטע התת קרקעי של הקו הכחול.",
+        "request_description": " בקשה להיתר חפירה וביצוע של המקטע התת קרקעי של הקו הכחול. ",
         "units": null,
         "units_source": null,
         "filtered": false
@@ -9771,7 +9835,7 @@
         "status": "נדונה בוועדת המשנה",
         "status_date": "30/07/2025",
         "request_type": "",
-        "request_description": "היתר עבור פיר ברחוב פיתוחי חותם- שמעון הצדיק, כחלק מתכנית הקו הכחול.",
+        "request_description": "היתר עבור פיר ברחוב פיתוחי חותם- שמעון הצדיק, כחלק מתכנית הקו הכחול.  ",
         "units": null,
         "units_source": null,
         "filtered": false
@@ -10007,7 +10071,7 @@
         "status": "הופק-הוצא היתר בניה",
         "status_date": "19/09/2024",
         "request_type": "",
-        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול",
+        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול ",
         "units": null,
         "units_source": null,
         "filtered": false
@@ -10113,7 +10177,7 @@
         "status": "הופק-הוצא היתר בניה",
         "status_date": "28/11/2023",
         "request_type": "",
-        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול",
+        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול ",
         "units": null,
         "units_source": null,
         "filtered": false
@@ -10147,7 +10211,7 @@
         "status": "הופק-הוצא היתר בניה",
         "status_date": "25/01/2024",
         "request_type": "",
-        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול",
+        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול ",
         "units": null,
         "units_source": null,
         "filtered": false
@@ -10271,7 +10335,7 @@
         "status": "הופק-הוצא היתר בניה",
         "status_date": "30/07/2024",
         "request_type": "",
-        "request_description": "תוספת בניה לבניין קיים + הרחבת מרפסת",
+        "request_description": "תוספת בניה לבניין קיים + הרחבת מרפסת ",
         "units": null,
         "units_source": null,
         "filtered": false
@@ -10359,7 +10423,7 @@
         "status": "הופק-הוצא היתר בניה",
         "status_date": "31/03/2025",
         "request_type": "",
-        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול",
+        "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול ",
         "units": null,
         "units_source": null,
         "filtered": false,
@@ -10531,9 +10595,10 @@
         "floors_source": "yk_quantities"
       }
     ],
-    "scraped_at": "2026-10-25T10:16:41.651294",
+    "scraped_at": "2026-11-02T14:03:29.088832",
     "permit_count": 103,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "571190": {
     "permits": [
@@ -10568,9 +10633,10 @@
   },
   "823922": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:54:26.499451",
+    "scraped_at": "2026-11-02T14:14:28.158958",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "564583": {
     "permits": [
@@ -10856,9 +10922,10 @@
   },
   "605956": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:10:31.173221",
+    "scraped_at": "2026-11-02T14:07:54.250482",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "787861": {
     "permits": [],
@@ -10920,9 +10987,10 @@
   },
   "1179159": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:31:38.483598",
+    "scraped_at": "2026-11-02T13:56:24.069500",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1274489": {
     "permits": [
@@ -10945,9 +11013,10 @@
   },
   "1218999": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:36:57.973570",
+    "scraped_at": "2026-11-02T13:58:16.150946",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "95612": {
     "permits": [
@@ -11225,9 +11294,10 @@
   },
   "889428": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:48:54.021717",
+    "scraped_at": "2026-11-02T14:17:53.266960",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "956813": {
     "permits": [],
@@ -11237,15 +11307,17 @@
   },
   "702662": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:30:54.236093",
+    "scraped_at": "2026-11-02T14:09:51.973704",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1183128": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:34:49.257711",
+    "scraped_at": "2026-11-02T13:56:42.594442",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "תתל/ 108/ 77-78": {
     "permits": [],
@@ -11394,9 +11466,10 @@
   },
   "1227230": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:52:48.307476",
+    "scraped_at": "2026-11-02T13:59:03.550871",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1386762": {
     "permits": [],
@@ -11406,9 +11479,10 @@
   },
   "1189281": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:39:05.732118",
+    "scraped_at": "2026-11-02T13:57:22.829460",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "290049": {
     "permits": [
@@ -11473,21 +11547,24 @@
   },
   "1324854": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:50:42.722404",
+    "scraped_at": "2026-11-02T14:01:27.796411",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1052901": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:21:41.980672",
+    "scraped_at": "2026-11-02T13:50:08.368731",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1166586": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:30:18.948885",
+    "scraped_at": "2026-11-02T13:55:26.750453",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1002625": {
     "permits": [
@@ -11539,9 +11616,10 @@
   },
   "1008176": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:08:00.366967",
+    "scraped_at": "2026-11-02T13:48:32.756689",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "415976": {
     "permits": [
@@ -11783,9 +11861,10 @@
   },
   "1351147": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:57:17.845592",
+    "scraped_at": "2026-11-02T14:02:08.221617",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "330977": {
     "permits": [
@@ -12288,15 +12367,17 @@
   },
   "882571": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:51:00.349009",
+    "scraped_at": "2026-11-02T14:17:33.265360",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "490656": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:15:09.953439",
+    "scraped_at": "2026-11-02T14:05:31.236448",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "404996": {
     "permits": [
@@ -12316,10 +12397,19 @@
     "error": ""
   },
   "1193531": {
-    "permits": [],
-    "scraped_at": "2026-10-25T09:36:32.663541",
-    "permit_count": 0,
-    "error": ""
+    "permits": [
+      {
+        "file_number": "2026/0060.00",
+        "status": "נפתח תיק רישוי",
+        "status_date": "15/04/2026",
+        "request_type": "",
+        "request_description": "הריסת מבנה מסחרי קיים וחפירה ודיפון עבור 75 יח\"ד"
+      }
+    ],
+    "scraped_at": "2026-11-02T13:57:30.762449",
+    "permit_count": 1,
+    "error": "",
+    "source": "api_437"
   },
   "365767": {
     "permits": [
@@ -12393,9 +12483,10 @@
   },
   "1094721": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:22:06.383154",
+    "scraped_at": "2026-11-02T13:50:50.482419",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1360650": {
     "permits": [],
@@ -12411,9 +12502,10 @@
   },
   "1043702": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:16:32.673986",
+    "scraped_at": "2026-11-02T13:49:48.910951",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "218677": {
     "permits": [
@@ -12764,9 +12856,10 @@
   },
   "1257252": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:42:36.579641",
+    "scraped_at": "2026-11-02T14:00:47.633462",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "638544": {
     "permits": [],
@@ -12907,15 +13000,17 @@
   },
   "492199": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:16:21.655705",
+    "scraped_at": "2026-11-02T14:05:53.620814",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "713222": {
     "permits": [],
-    "scraped_at": "2026-10-25T08:24:35.805000",
+    "scraped_at": "2026-11-02T14:10:39.807981",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "477240": {
     "permits": [
@@ -12953,9 +13048,10 @@
   },
   "305904": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:08:29.402921",
+    "scraped_at": "2026-11-02T14:04:27.225152",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1247485": {
     "permits": [],
@@ -12977,9 +13073,10 @@
   },
   "343202": {
     "permits": [],
-    "scraped_at": "2026-10-25T07:11:52.460613",
+    "scraped_at": "2026-11-02T14:05:10.386510",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1454198": {
     "permits": [],
@@ -13014,9 +13111,10 @@
   },
   "1142629": {
     "permits": [],
-    "scraped_at": "2026-10-25T09:27:01.631642",
+    "scraped_at": "2026-11-02T13:54:11.734079",
     "permit_count": 0,
-    "error": ""
+    "error": "",
+    "source": "api_437"
   },
   "1300003": {
     "permits": [],
