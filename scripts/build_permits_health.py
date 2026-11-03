@@ -263,6 +263,61 @@ def hidden_permits():
     return out
 
 
+def silent_zero_plans():
+    """Plans the by-plan scraper returns with 0 permits while we hold a permit (from the
+    YK API: committee / spatial / extra) whose ONLY applicable plan is that plan — so the
+    plan is its main plan and the scraper should have seen it. 1193531 scraped 2026-10-25
+    → 0, no error, while 2026/0060 (+75) sat on it; first count (2026-11-02): 39 plans.
+    A plan with several applicable plans is left out: the scraper only sees files whose
+    MAIN plan it is, and which one that is the API doesn't say.
+
+    Root cause (checked 2026-11-02 over proc 242700437 = the by-plan index the UI search
+    uses): for 38 of the 39 the index itself returns nothing, so they are a YK INDEX GAP
+    (the file names the plan in 457 "תכניות חלות" but not as its mezahe), not a scraper
+    failure. Those permits are held through the committee/spatial paths. Since then the
+    scraper reads 437 directly, so `scraper_suspect` = only entries not confirmed by it."""
+    ap = load_json(os.path.join(DATA_DIR, "all_permits.json")) or {}
+    zero = {t for t, e in ap.items() if not (e or {}).get("permits")}
+    held = [r for r in ((load_json(os.path.join(DATA_DIR, "committee_permits.json")) or {})
+                        .get("permits") or {}).values() if r.get("status")]
+    for pl in ((load_json(os.path.join(DATA_DIR, "extra_permits.json")) or {})
+               .get("by_taba") or {}).values():
+        held += pl or []
+    plans = {}
+    for r in held:
+        ta = r.get("tochnit_all") or r.get("all_matched_tabas") or []
+        if len(ta) == 1 and ta[0] in zero:
+            fs = plans.setdefault(ta[0], [])
+            if r.get("file_number") not in fs:
+                fs.append(r.get("file_number"))
+    suspect = sorted(t for t in plans
+                     if (ap.get(t) or {}).get("source") != "api_437" or (ap.get(t) or {}).get("error"))
+    return {"count": len(plans), "plans": {t: sorted(v) for t, v in sorted(plans.items())},
+            "index_gap": len(plans) - len(suspect), "scraper_suspect": suspect}
+
+
+def alert_new_silent_zero(prev, out):
+    """Alert on plans that joined the list since the previous snapshot (not the standing
+    list — that would repeat weekly)."""
+    # Only scraper suspects alert: an index gap is YK's, and its permits are held anyway.
+    psz = (prev or {}).get("silent_zero_plans") or {}
+    was = set(psz.get("scraper_suspect", psz.get("plans") or {}))
+    if not psz:                      # first snapshot with this check = baseline
+        return []
+    now = out["silent_zero_plans"]["plans"]
+    new = sorted(set(out["silent_zero_plans"]["scraper_suspect"]) - was)
+    if not new:
+        return []
+    lines = [f"{t}: סורק לפי תכנית החזיר 0, אבל במאגר {', '.join(now[t][:EXAMPLES])}" for t in new]
+    try:
+        from ops_alert import send_alert
+        send_alert(f"היתרים: {len(new)} תכניות חדשות עם אפס שקט בסורק",
+                   "\n".join(lines) + f"\n\nהרשימה המלאה: silent_zero_plans ב-{OUT}")
+    except Exception as e:
+        print(f"  alert failed: {e}")
+    return new
+
+
 # extra_permits.json entries are refreshed by refresh_extra_permits_status.py (biweekly
 # permits scan), which stamps status_checked. An open entry not checked for this long
 # means that pass stopped reaching it. Old status_date alone is normal (an issued
@@ -384,6 +439,7 @@ def main():
         "committee_audit": latest_committee_audit(),
         "known_failures": known_failures(),
         "hidden_permits": hidden_permits(),
+        "silent_zero_plans": silent_zero_plans(),
     }
     with io.open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -405,6 +461,13 @@ def main():
     ex = next(s for s in sources if s["file"] == "extra_permits.json").get("status_staleness") or {}
     print(f"  extra_permits: {ex.get('not_checked_90d')}/{ex.get('open')} open not checked >"
           f"{EXTRA_STALE_DAYS}d; {ex.get('status_date_older_90d')} with status_date >{EXTRA_STALE_DAYS}d")
+    sz = out["silent_zero_plans"]
+    print(f"  silent-zero plans (scraper 0, held permit on that plan alone): {sz['count']} — "
+          f"YK index gap {sz['index_gap']}, scraper suspect {len(sz['scraper_suspect'])} "
+          f"{sz['scraper_suspect'][:EXAMPLES]}")
+    new_sz = alert_new_silent_zero(prev, out)
+    if new_sz:
+        print(f"  new silent-zero plans: {new_sz} (alert sent)")
     new_reds = alert_new_reds(prev, out)
     if new_reds:
         print(f"  newly red since last snapshot: {new_reds} (alert sent)")

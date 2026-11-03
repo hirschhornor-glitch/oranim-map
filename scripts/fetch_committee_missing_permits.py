@@ -103,6 +103,32 @@ def known_permits():
     return known
 
 
+def tik_of(norm):
+    return norm.rsplit(".", 1)[0] if norm else None
+
+
+def mark_known_tik(records, known):
+    """A new revision of a file we already hold is not a "new permit". 2026/0060.00 went
+    out on 2026-11-02 as "not in our store" while 2026/0060.01 (the same +75 project) had
+    been in it since 10-12 — `known` is by exact revision so the agenda's .00 looked new.
+    Flag it, and when a sibling revision was already EMAILED (a real timestamp, not a
+    suppressed:* marker) don't mail the tik again."""
+    known_tiks = {}
+    for k in known:
+        known_tiks.setdefault(tik_of(k), set()).add(k)
+    emailed = {tik_of(k) for k, r in records.items()
+               if re.match(r"\d{4}-", str(r.get("alerted_at") or ""))}
+    for k, r in records.items():
+        t = tik_of(k)
+        # a sibling fetched in the same run as this one is not "already held"
+        sib = bool(known_tiks.get(t, set()) - {k}) or any(
+            tik_of(o) == t and (q.get("fetched_at") or "")[:10] < (r.get("fetched_at") or "")[:10]
+            for o, q in records.items() if o != k)
+        r["known_tik"] = bool(sib)
+        if sib and not r.get("alerted_at") and t in emailed:
+            r["alerted_at"] = "suppressed:sibling_alerted"
+
+
 def geo_by_norm():
     """norm_permit → geocode-cache entry (minahak/lat/lng). The cache is keyed by the
     raw agenda spelling and keeps every permit ever geocoded, so it covers old audits."""
@@ -364,24 +390,29 @@ def merge_into_extra(records):
     return n
 
 
-def email_new_significant(new_sig, dry):
+def email_new_significant(new_sig, dry, intro=None, subject=None):
     if not new_sig:
         return False
     rows = "".join(
         "<tr>" + "".join(f'<td style="border:1px solid #ccc;padding:4px 8px">{c}</td>' for c in (
-            r["file_number"], r.get("address", ""), r.get("neighborhood_yk", ""),
+            r["file_number"] + ("<br><small>גרסה חדשה לתיק שבמאגר</small>" if r.get("known_tik") else ""),
+            r.get("address", ""), r.get("neighborhood_yk", ""),
             "، ".join(r.get("reasons", [])).replace("،", ","),
             (r.get("request_description") or r.get("committee_essence") or "")[:120],
             r.get("status", ""), r.get("taba") or "— (תכנית לא אצלנו)",
             ", ".join(r.get("meeting_dates", [])) or
-            ("סריקת רחובות" if r.get("origin") == "street_harvest" else ""))) + "</tr>"
+            {"street_harvest": "סריקת רחובות", "spatial_2110": "סריקה מרחבית"}.get(r.get("origin"), "")))
+        + "</tr>"
         for r in new_sig)
     head = "".join(f'<th style="border:1px solid #ccc;padding:4px 8px;background:#f2f2f2">{h}</th>'
                    for h in ("תיק", "כתובת", "שכונה", "למה משמעותי", "מהות", "סטטוס YK",
                              "תב\"ע אצלנו", "ישיבה / מקור"))
     n_st = sum(1 for r in new_sig if r.get("origin") == "street_harvest")
-    src_txt = ", ".join(t for t in (f"ועדת רישוי: {len(new_sig) - n_st}" if len(new_sig) - n_st else "",
-                                     f"סריקת רחובות: {n_st}" if n_st else "") if t)
+    n_sp = sum(1 for r in new_sig if r.get("origin") == "spatial_2110")
+    n_cm = len(new_sig) - n_st - n_sp
+    src_txt = ", ".join(t for t in (f"ועדת רישוי: {n_cm}" if n_cm else "",
+                                     f"סריקת רחובות: {n_st}" if n_st else "",
+                                     f"סריקה מרחבית: {n_sp}" if n_sp else "") if t)
     reg = set()
     for entry in (jload(os.path.join(DATA, "tama38_permits.json"), {}) or {}).values():
         for p in entry.get("permits") or []:
@@ -393,11 +424,14 @@ def email_new_significant(new_sig, dry):
     note = (f'<p>תיקי תמ"א 38 ({", ".join(tama)}) נכנסו למאגר ההיתרים אבל <b>לא</b> '
             f'לרישום הבניינים tama38.geojson — אם רוצים אותם בשכבת תמ"א 38, להוסיף ידנית.</p>'
             if tama else "")
+    n_rev = sum(1 for r in new_sig if r.get("known_tik"))
+    rev_txt = (f' — מתוכם {n_rev} גרסה חדשה של תיק שכבר היה במאגר (לא היה עליו מייל)'
+               if n_rev else "")
     body = (f'<div dir="rtl" style="font-family:Arial,sans-serif;font-size:14px">'
-            f'<p>{len(new_sig)} היתרים משמעותיים לא היו במאגר ונמשכו עכשיו מ-YK '
-            f'({src_txt}):</p><table style="border-collapse:collapse">'
+            f'<p>{intro or f"{len(new_sig)} היתרים משמעותיים לא היו במאגר ונמשכו עכשיו מ-YK ({src_txt}){rev_txt}:"}'
+            f'</p><table style="border-collapse:collapse">'
             f'<tr>{head}</tr>{rows}</table>{note}</div>')
-    subject = f"היתרים משמעותיים חדשים במאגר: {len(new_sig)} ({src_txt})"
+    subject = subject or f"היתרים משמעותיים חדשים במאגר: {len(new_sig)} ({src_txt})"
     if dry:
         print(f"[email skipped --no-email] {subject}")
         return False
@@ -412,12 +446,38 @@ def main():
     ap.add_argument("--no-email", action="store_true")
     ap.add_argument("--from-street-harvest", action="store_true",
                     help="candidates = significant_new of tama38_street_harvest.json")
+    ap.add_argument("--digest-backfill", action="store_true",
+                    help="one-off: one email of the significant, still-live permits that were "
+                         "never mailed (suppressed:backfill or not yet alerted), then exit")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
 
     store = jload(OUT, {}) or {}
     records = store.get("permits") or {}
     known = known_permits()
+
+    if args.digest_backfill:
+        # The first spatial run (2026-10-12) was --backfill: 51 significant finds got
+        # suppressed:backfill and were never mailed — 2026/0060 (+75) among them, which
+        # then came back on 11-02 as "new". Mail the ones still alive, once.
+        mark_known_tik(records, known)
+        rows = [r for r in records.values() if r.get("significant") and r.get("status")
+                and r.get("alerted_at") in (None, "suppressed:backfill")
+                and email_worthy({**r, "origin": "not-committee"})]
+        rows.sort(key=lambda r: -(r.get("units_added") or r.get("units") or 0))
+        print(f"digest: {len(rows)} significant live permits never mailed")
+        if email_new_significant(
+                rows, args.no_email,
+                intro=(f"{len(rows)} היתרים משמעותיים ופעילים שנכנסו למאגר בסריקות (רובם בסריקה "
+                       f"המרחבית הראשונה, 12/10) — אז הושתק המייל, ולכן לא נשלח עליהם עדכון. "
+                       f"ממוינים לפי יח\"ד:"),
+                subject=f"השלמה: {len(rows)} היתרים משמעותיים שלא נשלח עליהם מייל"):
+            now = datetime.now().isoformat(timespec="seconds")
+            for r in rows:
+                r["alerted_at"] = now
+            store["permits"] = records
+            jsave(OUT, store)
+        return
     geo = geo_by_norm()
     tabas = our_tabas()
 
@@ -499,6 +559,7 @@ def main():
     for k in [k for k, r in records.items() if out_of_scope_yk(r)]:
         skipped[k] = records.pop(k)["neighborhood_yk"]
     reassess(records)
+    mark_known_tik(records, known)
     with_taba = merge_into_extra(records)
     new_sig = [r for r in records.values()
                if r.get("significant") and r.get("status") and not r.get("alerted_at")]
