@@ -1,5 +1,5 @@
 {
- "count": 281,
+ "count": 288,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי יגאל ברגמן ומשה",
@@ -4485,6 +4485,109 @@
    "units": null,
    "is_residents": false,
    "minahak": "גינות העיר"
+  },
+  "2026/0245.00": {
+   "developer": "צבי ויצמן",
+   "developer_parts": [
+    {
+     "applicant": "צבי",
+     "group": "ויצמן",
+     "name": "צבי ויצמן"
+    }
+   ],
+   "architect": "זאב ארד",
+   "units": 59,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2024/0357.00": {
+   "developer": "מיכאל אלי נג\"ר",
+   "developer_parts": [
+    {
+     "applicant": "מיכאל אלי",
+     "group": "נג\"ר",
+     "name": "מיכאל אלי נג\"ר"
+    }
+   ],
+   "architect": "אלכסנדר אוסטרובסקי",
+   "units": 57,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "2024/0179.00": {
+   "developer": "י. קרסני ובנו חברה לבניין בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "ענבר קרסני",
+     "group": "י. קרסני ובנו חברה לבניין בע\"מ",
+     "name": "י. קרסני ובנו חברה לבניין בע\"מ"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": 21,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2022/0547.00": {
+   "developer": "עקיבא שמחון",
+   "developer_parts": [
+    {
+     "applicant": "עקיבא",
+     "group": "שמחון",
+     "name": "עקיבא שמחון"
+    }
+   ],
+   "architect": "מיכל דלה פרגולה",
+   "units": 13,
+   "is_residents": false,
+   "minahak": "גוננים"
+  },
+  "2020/0358.00": {
+   "developer": "השקעות ונכסים בע\"מ / דוד קמחין",
+   "developer_parts": [
+    {
+     "applicant": "הדסים ד.ח",
+     "group": "השקעות ונכסים בע\"מ",
+     "name": "השקעות ונכסים בע\"מ"
+    },
+    {
+     "applicant": "דוד",
+     "group": "קמחין",
+     "name": "דוד קמחין"
+    }
+   ],
+   "architect": "יואל בריידמן",
+   "units": 12,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
+  },
+  "1993/0095.03": {
+   "developer": "הדס סיטי עמק רפאים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "עמק רפאים בע\"מ",
+     "group": "הדס סיטי",
+     "name": "הדס סיטי עמק רפאים בע\"מ"
+    }
+   ],
+   "architect": "פרץ פרי חמם",
+   "units": 3,
+   "is_residents": false,
+   "minahak": "גינות העיר"
+  },
+  "1977/0324.04": {
+   "developer": "ש. בן - טובים נכסים בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "אורן",
+     "group": "ש. בן - טובים נכסים בע\"מ",
+     "name": "ש. בן - טובים נכסים בע\"מ"
+    }
+   ],
+   "architect": "משה חיים שפירא",
+   "units": null,
+   "is_residents": false,
+   "minahak": "בקעה רבתי"
   }
  }
 }
