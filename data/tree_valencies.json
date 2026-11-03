@@ -2549,6 +2549,39 @@
     "status": "partial",
     "unmapped_rows": 2
   },
+  "1475011": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 83,
+        "krita": 14
+      },
+      "17-20": {
+        "shimur": 24,
+        "krita": 6
+      },
+      "7-13": {
+        "shimur": 34,
+        "krita": 4
+      },
+      "0-6": {
+        "?": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 97,
+      "17-20": 30,
+      "7-13": 38,
+      "0-6": 1
+    },
+    "by_reco": {
+      "shimur": 141,
+      "krita": 24,
+      "?": 1
+    },
+    "total_trees": 166,
+    "status": "partial",
+    "unmapped_rows": 1
+  },
   "1475052": {
     "by_bucket": {
       "7-13": {
@@ -2703,6 +2736,26 @@
     "status": "partial",
     "unmapped_rows": 8
   },
+  "1560895": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 3
+      },
+      "14-16": {
+        "haataka": 27
+      }
+    },
+    "bucket_totals": {
+      "7-13": 3,
+      "14-16": 27
+    },
+    "by_reco": {
+      "krita": 3,
+      "haataka": 27
+    },
+    "total_trees": 30,
+    "status": "ok"
+  },
   "1561513": {
     "by_bucket": {
       "14-16": {
@@ -2726,6 +2779,27 @@
     "status": "partial",
     "unmapped_rows": 10
   },
+  "1590439": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 21,
+        "shimur": 2
+      },
+      "14-16": {
+        "krita": 2
+      }
+    },
+    "bucket_totals": {
+      "7-13": 23,
+      "14-16": 2
+    },
+    "by_reco": {
+      "krita": 23,
+      "shimur": 2
+    },
+    "total_trees": 25,
+    "status": "ok"
+  },
   "1614130": {
     "by_bucket": {
       "7-13": {
@@ -2741,6 +2815,31 @@
       "krita": 2
     },
     "total_trees": 5,
+    "status": "ok"
+  },
+  "1629724": {
+    "by_bucket": {
+      "7-13": {
+        "shimur": 7,
+        "krita": 8
+      },
+      "0-6": {
+        "krita": 3
+      },
+      "14-16": {
+        "shimur": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 15,
+      "0-6": 3,
+      "14-16": 1
+    },
+    "by_reco": {
+      "shimur": 8,
+      "krita": 11
+    },
+    "total_trees": 19,
     "status": "ok"
   },
   "314617": {
