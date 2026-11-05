@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-11-05-stalegmar';
+        const APP_VERSION = '2026-11-05-superseded';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2409,6 +2409,29 @@ function planPermitHafrashUse(taba) {
             // and a genuine standalone allocation never is
             const byTaba = window.__planByTaba || {};
             return !!(byTaba[op] || byTaba[String(rec.superseded_by || '').trim()]);
+        }
+        // ── A plan replaced by a later plan on the same site (succession) ──────────
+        // plans.geojson `superseded_by` (set by hand from the replacing plan's explanatory
+        // notes): 101-0660738 (approved 2021, 18→42) is cancelled by 101-1563451 (2026,
+        // 18→30) as "not feasible from an engineering standpoint". The old plan stays
+        // legally in force until the new one is approved and keeps its own figures in the
+        // popup, but unit TOTALS must count the building once — otherwise every
+        // all-status total adds +24 and +12 for the same building and its 18 existing flats twice.
+        // Returns the successor's plan_name, or '' (count normally). Only when the
+        // successor is loaded, not rejected, and already carries a unit figure: an
+        // unknown successor never erases a known plan.
+        function unitsSupersededBy(p) {
+            if (!p) return '';
+            const byTaba = window.__planByTaba || {};
+            const own = p.superseded_by ? p
+                      : (byTaba[String(p.taba || '').trim()] || byTaba[_bareTaba(p.taba || p.plan_name)] || null);
+            const succ = own && String(own.superseded_by || '').trim();
+            if (!succ) return '';
+            const sp = byTaba[_bareTaba(succ)] || byTaba[succ];
+            if (!sp) return '';
+            if (/נדח|נגנז|בוטל/.test(String(sp.status_mavat || ''))) return '';
+            if (!((parseFloat(sp.units_add) || 0) > 0 || (parseFloat(sp.units_total) || 0) > 0)) return '';
+            return succ;
         }
         function hafrashIsDuplicate(taba) { return _dupSide(taba, 'hafrash'); }
         function shavatzIsDuplicate(taba) { return _dupSide(taba, 'shavatz'); }
@@ -7911,6 +7934,7 @@ function planPermitHafrashUse(taba) {
                                 if (!c || !pip(c[0], c[1])) return;
                                 const props = f.properties || {};
                                 if (isOccupied(props)) return; // realized — added to existing above
+                                if (unitsSupersededBy(props)) return; // replaced — counted under the successor
                                 const m = calcMimush(props);
                                 if (!m) return;
                                 const u = parseInt(props.units_total) || parseInt(props.units_add) || 0;
@@ -13417,6 +13441,7 @@ function planPermitHafrashUse(taba) {
                     if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
                     if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
                     if (isOccupied(p)) return;            // occupied (טופס 4) = built, not planning reserve
+                    if (unitsSupersededBy(p)) return;     // replaced — counted under the successor
                     const ua = parseFloat(p.units_add) || 0;
                     if (ua <= 0) return;                 // only plans that add homes
                     if (taba) seenTaba.add(taba);        // dedup once, regardless of location
@@ -14933,7 +14958,7 @@ function planPermitHafrashUse(taba) {
                 });
                 // Occupied (טופס 4) plans are built stock, not pipeline: exclude their units
                 // from the future total (planUnitsAdd) and roll units_total into existing (Stage ב').
-                const planUnitsAdd = plansInside.reduce((s, x) => s + (isOccupied(x.props) ? 0 : (parseFloat(x.props.units_add) || 0)), 0);
+                const planUnitsAdd = plansInside.reduce((s, x) => s + ((isOccupied(x.props) || unitsSupersededBy(x.props)) ? 0 : (parseFloat(x.props.units_add) || 0)), 0);
                 const occupiedUnits = plansInside.reduce((s, x) => s + (isOccupied(x.props) ? (parseInt(x.props.units_total) || parseInt(x.props.units_add) || 0) : 0), 0);
                 const planByStatus = {};
                 plansInside.forEach(x => { const st = groupStatus(effectiveStatus(x.props)); planByStatus[st] = (planByStatus[st] || 0) + 1; });
@@ -15305,7 +15330,7 @@ function planPermitHafrashUse(taba) {
                     });
                 }
 
-                const totalPlanUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
+                const totalPlanUnits = plansInside.reduce((s, p) => s + (unitsSupersededBy(p) ? 0 : (parseFloat(p.units_add) || 0)), 0);
                 const totalTamaUnits = tamaInside.reduce((s, p) => s + tama38AddedUnits(p), 0);
                 const totalUnits = totalPlanUnits + totalTamaUnits;
                 const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
@@ -16230,8 +16255,10 @@ function planPermitHafrashUse(taba) {
                         // (mirrors foldRental()).
                         const addBase = parseInt(p.units_add) || 0;
                         const rentalExcess = Math.max((parseInt(p.rental) || 0) - (parseInt(p.units_total) || 0), 0);
-                        const addVal = isRejected ? 0 : (addBase + rentalExcess);
-                        const inVal = parseInt(p.units_in) || 0;
+                        // replaced by a later plan on the same site → counted under the successor
+                        const isSuperseded = !!unitsSupersededBy(p);
+                        const addVal = (isRejected || isSuperseded) ? 0 : (addBase + rentalExcess);
+                        const inVal = isSuperseded ? 0 : (parseInt(p.units_in) || 0);
                         byMinahak[m].units_in += inVal;
                         byMinahak[m].units_add += addVal;
 
@@ -35213,7 +35240,7 @@ function planPermitHafrashUse(taba) {
                                         }
                                         return true;
                                     });
-                                    const totalAdd = plans.reduce((s, f) => s + (parseFloat(f.properties.units_add) || 0), 0);
+                                    const totalAdd = plans.reduce((s, f) => s + (unitsSupersededBy(f.properties) ? 0 : (parseFloat(f.properties.units_add) || 0)), 0);
                                     // Count TAMA38 projects in this minahak
                                     const subs = MINAHAK_SUBS[minahakReport] || [];
                                     const tamaFeatures = (gd.tama38 && gd.tama38.features) ? gd.tama38.features.filter(f => {
@@ -35425,7 +35452,7 @@ function planPermitHafrashUse(taba) {
                                     const agg = { units_add:0, commerce_in:0, employment:0, shavatz_out:0, hafrash:0 };
                                     plansInMp.forEach(({ feat }) => {
                                         const pr = feat.properties;
-                                        agg.units_add   += parseFloat(pr.units_add) || 0;
+                                        agg.units_add   += unitsSupersededBy(pr) ? 0 : (parseFloat(pr.units_add) || 0);
                                         agg.commerce_in += parseFloat(pr.commerce_in) || 0;
                                         agg.employment  += parseFloat(pr.employment)  || 0;
                                         // skip the superseded half of a nested pair — see _dupSide()

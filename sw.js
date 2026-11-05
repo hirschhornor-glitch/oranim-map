@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v140-stalegmar';
+const CACHE_VERSION = 'v141-superseded';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
