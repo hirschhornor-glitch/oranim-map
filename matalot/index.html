@@ -401,8 +401,6 @@ var OSM = {"major": "M221558,-630960L221561,-630961L221562,-630962L221564,-63096
   var bucket = function (B, v) { if (v == null || !(v > 0)) return B[B.length - 1][0];
     for (var i = 0; i < B.length - 1; i++) if (v >= B[i][2] && v < B[i][3]) return B[i][0]; return B[B.length - 1][0]; };
   var subsOf = function (r) { return r.subs && r.subs.length ? r.subs : ["קהילה — כללי"]; };
-  // opened as a plain file / on another site (no Claude runtime): field updates are unavailable
-  var OFFLINE = !(window.claude && window.claude.use);
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   var fmt = function (n) { return n == null || isNaN(n) ? "?" : Math.round(n).toLocaleString("he-IL"); };
@@ -534,7 +532,7 @@ var OSM = {"major": "M221558,-630960L221561,-630961L221562,-630962L221564,-63096
       [fmt(plot), 'מ"ר מגרשים מופרשים'],
       [shown.filter(function (r) { return /נמסר|כתב התחייבות|תהליך הפרשה/.test(r.book || ""); }).length.toLocaleString("he-IL"), "עם רישום בספר הנכסים"],
       [shown.filter(function (r) { return updatesFor(r).length; }).length.toLocaleString("he-IL"), "מטלות עם עדכון מהשטח"]];
-    if (OFFLINE) k.pop();   // standalone copy: no updates store — a 0 here would read as data
+    if (!DB) k.pop();   // no updates store reachable — a 0 here would read as data
     if (st.routes.C) k.splice(1, 0, ["עד " + fmt(upper), 'מ"ר משורות ציבור כלליות (לא נסכם)']);
     document.getElementById("kpis").innerHTML = k.map(function (x) { return '<div class="kpi"><b>' + x[0] + "</b><span>" + x[1] + "</span></div>"; }).join("");
 
@@ -811,7 +809,30 @@ var OSM = {"major": "M221558,-630960L221561,-630961L221562,-630962L221564,-63096
   // for, the administration's need, partners, a licensing file. Keyed by plan + lot, so a
   // rebuild of the rows (phrasing fixes, new routes) never orphans them. Without db (signed
   // out, outside viewer, opened as a file) the page works exactly as before.
-  var UPD = {}, DB = null, USER = null, ME = null, CANW = null, NAMES = {}, updOpenForm = null, updMsg = "";
+  // Store: Supabase (public read; write/delete only through RPCs that check the shared edit code).
+  // DB = true once a read succeeded — until then (offline file, blocked network, Claude sandbox)
+  // the page shows no update counts at all, so a "0" never reads as data.
+  var SUPA = {"url": "https://gfnugahulxzxtrvefeir.supabase.co", "key": "sb_publishable_MRHHqNB6Z573oDhG4wS1CA_UQC9MR-_"};
+  var SITE_URL = "https://hirschhornor-glitch.github.io/oranim-map/matalot/";
+  var UPD = {}, DB = null, updOpenForm = null, updMsg = "";
+  var ED = (function () { try { return JSON.parse(localStorage.getItem("matalot_editor") || "null") || {}; } catch (e) { return {}; } })();
+  function saveEd() { try { localStorage.setItem("matalot_editor", JSON.stringify(ED)); } catch (e) {} }
+  function sb(path, body) {
+    return fetch(SUPA.url + path, { method: body ? "POST" : "GET", headers: { apikey: SUPA.key, "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined }).then(function (r) {
+        return r.text().then(function (x) { var j = null; try { j = x ? JSON.parse(x) : null; } catch (e) {}
+          if (!r.ok) throw (j || { message: "http " + r.status }); return j; }); });
+  }
+  function loadUpd() {
+    if (!SUPA) return Promise.resolve();
+    return sb("/rest/v1/matalot_updates?select=*&order=ts.desc&limit=5000").then(function (rows) {
+      var next = {};
+      (rows || []).forEach(function (u) { u._id = u.id; (next[u.plan] = next[u.plan] || []).push(u); });
+      UPD = next; var first = !DB; DB = true;
+      var uf = document.getElementById("updF"); if (uf) uf.closest(".f").hidden = false;
+      render();
+    }, function () { if (DB === null) { DB = false; render(); } });
+  }
   var FIELD_ST = ["", "טרם התחיל", "בתיאום בינוי / תכנון מפורט", "חפירה / בנייה החלה", "הושלם — טרם נמסר",
                   "נמסר לעירייה", "פעיל", "בוטל / השתנה בתכנית"];
   function updatesFor(r) {
@@ -820,22 +841,23 @@ var OSM = {"major": "M221558,-630960L221561,-630961L221562,-630962L221564,-63096
   function fmtDate(iso) { var d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("he-IL"); }
   function updatesHtml(r, ups) {
     var h = '<span class="upd"><h3>עדכונים מהשטח</h3>';
-    if (!ups.length && !OFFLINE) h += '<span class="hint">אין עדכונים עדיין.</span>';
+    if (!ups.length && DB) h += '<span class="hint">אין עדכונים עדיין.</span>';
     ups.forEach(function (u) {
-      var who = (u.author && NAMES[u.author]) || "משתמש/ת";
+      var who = u.author_name || "משתמש/ת";
       var parts = [["סטטוס בשטח", u.status], ["שימוש מבוקש / בפועל", u.use], ["צורך המינהל", u.need],
                    ['שת"פ עם ארגון', u.partner], ["תיק רישוי", u.tik], ["הערה", u.note]].filter(function (x) { return x[1]; });
       h += '<span class="upd-item"><span class="who"><span>' + esc(who) + " · " + esc(fmtDate(u.ts)) +
         (u.lot ? " · מגרש " + esc(u.lot) : " · כל התכנית") + "</span>" +
-        (u.author && u.author === ME ? '<button type="button" class="linkbtn" data-del="' + esc(u._id) + '">מחיקה</button>' : "") + "</span>" +
+        (ED.code && ED.name && u.author_name === ED.name ? '<button type="button" class="linkbtn" data-del="' + esc(u._id) + '">מחיקה</button>' : "") + "</span>" +
         parts.map(function (x) { return "<span><b>" + x[0] + ":</b> " + esc(x[1]) + "</span>"; }).join("") + "</span>";
     });
     var key = r.plan + "|" + (r.lot || "");
-    if (OFFLINE) h += '<span class="hint">עדכונים מהשטח זמינים רק בגרסה המקוונת של הדשבורד.</span>';
-    else if (!DB) h += '<span class="hint">עדכונים זמינים כשפותחים את הדשבורד כמשתמש/ת מחובר/ת.</span>';
-    else if (CANW === false) h += '<span class="hint">צפייה בלבד. כדי להוסיף עדכון צריך הרשאת עריכה בדשבורד.</span>';
+    if (!DB) h += '<span class="hint">' + (DB === null && SUPA ? "טוען עדכונים…" : 'עדכונים מהשטח זמינים בגרסה באתר: <a href="' + SITE_URL + '" target="_blank" rel="noopener">' + SITE_URL.replace("https://", "") + "</a>") + "</span>";
     else if (updOpenForm === key) {
       h += '<span class="upd-form" data-key="' + esc(key) + '">' +
+        (ED.code && ED.name ? '<span class="full hint">מעדכן/ת בשם <b>' + esc(ED.name) + '</b> · <button type="button" class="linkbtn" data-who="1">החלפה</button></span>'
+          : '<label>שם (יוצג ליד העדכון)<input id="u_name" maxlength="60" value="' + esc(ED.name || "") + '"></label>' +
+            '<label>קוד עריכה<input id="u_code" type="password" autocomplete="off" maxlength="40"></label>') +
         '<label>סטטוס בשטח<select id="u_status">' + FIELD_ST.map(function (s) { return "<option>" + esc(s) + "</option>"; }).join("") + "</select></label>" +
         '<label>מגרש<select id="u_lot"><option value="' + esc(r.lot || "") + '">' + (r.lot ? "מגרש " + esc(r.lot) : "כל התכנית") +
         '</option><option value="">כל התכנית</option></select></label>' +
@@ -854,42 +876,43 @@ var OSM = {"major": "M221558,-630960L221561,-630961L221562,-630962L221564,-63096
     var card = e.target.closest(".card");
     if (b.dataset.open) { updOpenForm = b.dataset.open; updMsg = ""; render(); return; }
     if (b.dataset.cancel) { updOpenForm = null; updMsg = ""; render(); return; }
+    if (b.dataset.who) { ED = { name: ED.name }; saveEd(); render(); return; }
     if (b.dataset.del) {
       if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "למחוק? לחיצה נוספת"; return; }
-      DB.collection("updates").doc(b.dataset.del).delete().catch(function () {});
+      b.disabled = true;
+      sb("/rest/v1/rpc/matalot_delete_update", { p_code: ED.code, p_id: b.dataset.del, p_name: ED.name }).then(loadUpd, function () {
+        b.disabled = false; b.textContent = "המחיקה לא הצליחה"; });
       return;
     }
     if (b.dataset.save) {
       var v = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+      if (!(ED.code && ED.name)) {
+        var nm = v("u_name"), cd = v("u_code");
+        if (nm.length < 2) { updMsg = "נא למלא שם."; render(); return; }
+        if (!cd) { updMsg = "נא למלא קוד עריכה."; render(); return; }
+        ED = { name: nm, code: cd };
+      }
       var rec = { plan: card.dataset.plan, lot: v("u_lot"), status: v("u_status"), use: v("u_use"), need: v("u_need"),
-                  partner: v("u_partner"), tik: v("u_tik"), note: v("u_note"), author: ME, ts: new Date().toISOString() };
+                  partner: v("u_partner"), tik: v("u_tik"), note: v("u_note"), author_name: ED.name };
       if (!rec.status && !rec.use && !rec.need && !rec.partner && !rec.tik && !rec.note) { updMsg = "מלאו לפחות שדה אחד."; render(); return; }
       b.disabled = true; b.textContent = "שומר…";
-      DB.collection("updates").add(rec).then(function () { updOpenForm = null; updMsg = ""; render(); }, function (err) {
-        if (err && err.code === "invalid_argument") { CANW = false; updMsg = "אין הרשאת עדכון בדשבורד הזה."; }
-        else if (err && err.code === "quota_exceeded") updMsg = "מאגר העדכונים מלא. פנו לבעלת הדשבורד.";
+      sb("/rest/v1/rpc/matalot_add_update", { p_code: ED.code, p: rec }).then(function () {
+        saveEd(); updOpenForm = null; updMsg = ""; return loadUpd();
+      }, function (err) {
+        var m = String((err && (err.message || err.hint)) || "");
+        if (/bad_code/.test(m)) { ED = { name: ED.name }; updMsg = "קוד העריכה שגוי."; }
         else updMsg = "השמירה לא הצליחה, נסו שוב בעוד רגע.";
         render();
       });
     }
   }
   (function connect() {
-    if (OFFLINE) { var uf = document.getElementById("updF"); if (uf) uf.closest(".f").hidden = true; return; }
-    Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (x) {
-      DB = x[0]; USER = x[1];
-      if (!DB) return;
-      Promise.all([USER ? USER.id() : null, USER ? USER.can("data.write") : null]).then(function (y) { ME = y[0]; CANW = y[1]; render(); });
-      DB.collection("updates").orderBy("ts", "desc").limit(1000).onSnapshot(function (s) {
-        var next = {}, ids = {};
-        s.docs.forEach(function (d) { var u = Object.assign({ _id: d.id }, d.data()); (next[u.plan] = next[u.plan] || []).push(u); if (u.author) ids[u.author] = 1; });
-        UPD = next;
-        var list = Object.keys(ids);
-        (USER && list.length ? USER.profiles(list) : Promise.resolve({})).then(function (ps) {
-          list.forEach(function (i) { NAMES[i] = (ps[i] && ps[i].name) || ""; });
-          render();
-        });
-      }, function () { /* terminal: the page keeps working without updates */ });
-    }).catch(function () {});
+    var uf = document.getElementById("updF"); if (uf) uf.closest(".f").hidden = true;   // until a read succeeds
+    if (!SUPA) { DB = false; return; }
+    loadUpd();
+    // others' updates: refresh every 2 minutes and when the tab comes back
+    setInterval(function () { if (!document.hidden && DB) loadUpd(); }, 120000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden && DB) loadUpd(); });
   })();
 
   // ---- map ------------------------------------------------------------------------
