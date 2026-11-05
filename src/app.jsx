@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-11-05-permits';
+        const APP_VERSION = '2026-11-05-stalegmar';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1756,7 +1756,7 @@ function planPermitHafrashUse(taba) {
         function planPikuahStage(props) {
             const m = window.__pikuahStageByTaba || {};
             const t = String((props && props.taba) || '').trim();
-            return (t && m[t]) ? m[t].stage : '';
+            return (t && m[t]) ? pikuahStageForPlan(m[t], props && props.mavat_date) : '';
         }
         // The LICENSING half of the same problem: pikuah only starts once there is a
         // permit, so it can never produce ג-רישוי בתהליך / ד-היתר בנייה — those two
@@ -1782,7 +1782,7 @@ function planPermitHafrashUse(taba) {
                 let best = base, src = '';
                 const lic = (lcm && t && lcm[t]) ? lcm[t].stage : '';
                 if (stageRank(lic) > stageRank(best)) { best = lic; src = 'licensing'; }
-                const pk = (pkm && t && pkm[t]) ? pkm[t].stage : '';
+                const pk = (pkm && t && pkm[t]) ? pikuahStageForPlan(pkm[t], obj.mavat_date) : '';
                 if (stageRank(pk) > stageRank(best)) { best = pk; src = 'pikuah'; }
                 obj.stage = best;
                 if (src) { obj.stage_source = src; return true; }
@@ -1837,6 +1837,44 @@ function planPermitHafrashUse(taba) {
             }
             return '';
         }
+        // "dd/mm/yyyy" → yyyymmdd number (0 when unparseable) — for date ORDER checks only.
+        function _dmyNum(s) {
+            const m = String(s || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            return m ? (+m[3]) * 10000 + (+m[2]) * 100 + (+m[1]) : 0;
+        }
+        // A completion signal (תעודת גמר / טופס 4) that cannot belong to this permit/plan.
+        // The pikuah scraper looks up the base ".00" tik first, so a certificate from an
+        // OLDER project on the same file lands on a later request: 101-0660738 showed
+        // "גמר 16/08/2018" from 2015/0519.00 although the plan was approved 07/03/2021
+        // and its own request 2015/0519.01 was never issued. Same rule as
+        // apply_pikuah_occupancy.py (which drives occupancy_status.json):
+        //   • signal dated before the plan's approval → stale;
+        //   • signal on another revision (pikuah_tik ≠ file_number) → stale unless the
+        //     permit was issued no later than the signal; a closed request keeps it.
+        function pikuahSignalStale(rec, permit, approvedDmy) {
+            if (!rec || pikuahConstructionState(rec) !== 'built') return false;
+            const gd = _dmyNum(rec.gmar_date || rec.form4_date);
+            if (!gd) return false;                                   // undated — legacy behaviour
+            const ad = _dmyNum(approvedDmy);
+            if (ad && gd < ad) return true;
+            const ptik = String(rec.pikuah_tik || '').trim(), fn = String(rec.file_number || '').trim();
+            if (!ptik || !fn || ptik === fn) return false;
+            const st = String((permit && permit.status) || rec.permit_status || '').trim();
+            if (st.indexOf('הופק') !== -1 || st.indexOf('הוצא היתר') !== -1) {
+                const sd = _dmyNum(permit && permit.status_date);
+                return !!(sd && gd < sd);
+            }
+            return !(st.indexOf('נסגר') !== -1 || st.indexOf('נגנז') !== -1 || st.indexOf('בוטל') !== -1);
+        }
+        // Plan-level pikuah stage for a plan, applying the approval-date half of the guard
+        // (the revision half was applied per record when rolling up).
+        function pikuahStageForPlan(entry, approvedDmy) {
+            if (!entry) return '';
+            if (entry.evidence && entry.evidence.construction > 0) return 'ה-בבנייה';
+            const ad = _dmyNum(approvedDmy);
+            const ok = (entry.builtDates || []).some(d => !ad || !d || d >= ad);
+            return ok ? 'ו-גמר בנייה' : '';
+        }
         // Roll the building-supervision files up per taba into a coarse plan stage, SKIPPING
         // permits that do not execute the plan (permitPlanIrrelevance): 101-0511923's tennis
         // centre has a closed תעודת גמר file, and rolling it up by taba is what handed the
@@ -1860,15 +1898,19 @@ function planPermitHafrashUse(taba) {
                 const p = byBase[permitBaseKey(r.permit_tik || r.file_number || '')];
                 if (p && p.plan_irrelevant) return;
                 const st = pikuahConstructionState(r);
-                const a = acc[t] || (acc[t] = { construction: 0, built: 0 });
+                const a = acc[t] || (acc[t] = { construction: 0, built: 0, builtDates: [] });
                 if (st === 'construction') a.construction++;
-                else if (st === 'built') a.built++;
+                else if (st === 'built' && !pikuahSignalStale(r, p, '')) {
+                    a.built++;
+                    a.builtDates.push(_dmyNum(r.gmar_date || r.form4_date));
+                }
             });
             const stageByTaba = {};
             Object.keys(acc).forEach(t => {
                 const a = acc[t];
                 const st = a.construction > 0 ? 'ה-בבנייה' : (a.built > 0 ? 'ו-גמר בנייה' : '');
-                if (st) stageByTaba[t] = { stage: st, evidence: a };
+                if (st) stageByTaba[t] = { stage: st, evidence: { construction: a.construction, built: a.built },
+                                           builtDates: a.builtDates };
             });
             window.__pikuahStageByTaba = stageByTaba;
             return stageByTaba;
@@ -6799,7 +6841,9 @@ function planPermitHafrashUse(taba) {
                                     const cur = pkByBase[bk];
                                     if (!cur || _stRank[pikuahConstructionState(r)] > _stRank[pikuahConstructionState(cur)]) {
                                         pkByBase[bk] = { classification: r.classification, pikuah_status: r.pikuah_status || '',
-                                                         steps: r.steps || 0, gmar_date: r.gmar_date || '', form4_date: r.form4_date || '' };
+                                                         steps: r.steps || 0, gmar_date: r.gmar_date || '', form4_date: r.form4_date || '',
+                                                         pikuah_tik: r.pikuah_tik || '', file_number: r.file_number || '',
+                                                         permit_status: r.permit_status || '' };
                                     }
                                 });
                                 window.__pikuahByBaseTik = pkByBase;
@@ -24215,7 +24259,8 @@ function planPermitHafrashUse(taba) {
                 const pkc = (window.__pikuahByBaseTik || {})[permitBaseKey((p && (p.tik || p.file_number)) || '')];
                 const pst = pikuahConstructionState(pkc);
                 if (pst === 'construction') return PERMIT_STAGE_CONSTR;   // בביצוע — real work (טופס 2/activity)
-                if (pst === 'built') return PERMIT_STAGE_BUILT;           // גמר בנייה — תעודת גמר / טופס 4
+                // גמר בנייה — תעודת גמר / טופס 4, unless it is an older project's certificate
+                if (pst === 'built' && !pikuahSignalStale(pkc, p, '')) return PERMIT_STAGE_BUILT;
                 // a merely-opened / enforcement / closed file is NOT construction → fall through
                 const s = (p && p.status || '').trim();
                 if (!s) return PERMIT_STAGE_PRE;
