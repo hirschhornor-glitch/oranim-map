@@ -1066,3 +1066,12 @@
 {"ts": "2026-11-01 16:43:03", "taba": 1560895, "plan_name": "101-1560895", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "בית צפאפא,שרפת"}
 {"ts": "2026-11-01 16:43:03", "taba": 1560895, "plan_name": "101-1560895", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
 {"ts": "2026-11-01 16:43:03", "taba": 1560895, "plan_name": "101-1560895", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "units_total", "old": "", "new": 30}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "units_in", "old": "", "new": 18}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "units_add", "old": "", "new": 12}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "Machpil", "old": "", "new": 1.666666667}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "rental", "old": "", "new": 12}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "High", "old": "", "new": 23}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "rental_duration", "old": "", "new": 15}
+{"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "rental_duration_source", "old": "", "new": "הוראות התכנית"}
