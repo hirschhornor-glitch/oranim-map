@@ -19366,9 +19366,8 @@
     "last_edite": "permits_master",
     "last_edi_1": "2026-11-02",
     "__rec_stat": null,
-    "units_out": null,
-    "first_detected": null,
-    "units_add": 3
+    "units_out": 3,
+    "first_detected": null
    },
    "geometry": {
     "type": "MultiPoint",

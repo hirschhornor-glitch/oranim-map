@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-25T15:19:30",
+ "generated_at": "2026-11-05T03:50:35",
  "source": "YK proc 242700454 (טבלת שטחים/כמויות של ההיתר)",
  "by_permit": {
   "1973/0818.07": {
@@ -52951,7 +52951,94 @@
    "units_added": null,
    "floors": null,
    "fetched_at": "2026-10-25T15:19:29"
+  },
+  "2017/0237.01": {
+   "rows": [
+    {
+     "label": "שטח עיקרי מעל קו קרקע",
+     "kayam": 1013.15,
+     "tosefet": 0.0,
+     "total": 1013.15
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 43.72,
+     "tosefet": 64.82,
+     "total": 108.54
+    },
+    {
+     "label": "שטחי שירות",
+     "kayam": 345.34,
+     "tosefet": 0.0,
+     "total": 345.34
+    },
+    {
+     "label": "שטח עיקרי. ובשימוש מעורב - מגורים",
+     "kayam": 1013.15,
+     "tosefet": 0.0,
+     "total": 1013.15
+    },
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": null,
+     "total": null
+    }
+   ],
+   "units": null,
+   "units_existing": 0.0,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-11-05T03:50:31"
+  },
+  "2026/0060.00": {
+   "rows": [
+    {
+     "label": "גובה מפלס ריצפת הכניסה בקומה העליונה ביחס למפלס 0.00",
+     "kayam": 0.0,
+     "tosefet": 60.75,
+     "total": 60.75
+    },
+    {
+     "label": "מספר קומות ללא מרתף",
+     "kayam": 0.0,
+     "tosefet": 13.0,
+     "total": 13.0
+    },
+    {
+     "label": "מספר כולל של יחידות דיור",
+     "kayam": 0.0,
+     "tosefet": 75.0,
+     "total": 75.0
+    }
+   ],
+   "units": 75.0,
+   "units_existing": 0.0,
+   "units_added": 75.0,
+   "floors": 13.0,
+   "fetched_at": "2026-11-05T03:50:32"
+  },
+  "2016/0948.01": {
+   "rows": [
+    {
+     "label": "שטח עיקרי לתמ\"א 38",
+     "kayam": 0.0,
+     "tosefet": 11.97,
+     "total": 11.97
+    },
+    {
+     "label": "שטח מרפסות",
+     "kayam": 0.0,
+     "tosefet": 157.54,
+     "total": 157.54
+    }
+   ],
+   "units": null,
+   "units_existing": null,
+   "units_added": null,
+   "floors": null,
+   "fetched_at": "2026-11-05T03:50:34"
   }
  },
- "count": 1566
+ "count": 1569
 }
