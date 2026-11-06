@@ -247,12 +247,13 @@ def is_urban_renewal(p):
     return any(k in text for k in ("פינוי בינוי", "פינוי-בינוי", "פינוי ובינוי", "התחדשות עירונית"))
 
 
-def bucket_of(cat, p):
+def bucket_of(cat, p, u=None):
     if cat == "tama38":
         return "tama38"
     if cat == "shimush_chorech":
         return "shimush_chorag"
-    u = units_added(p)
+    if u is None:
+        u = units_added(p)
     if is_urban_renewal(p) or u > IBUY_MAX_UNITS:
         return "tava_gadol"
     if cat in ("bniya_chadasha", "harisa", "chafira_milui"):
@@ -319,6 +320,9 @@ def upsert(master, permit, *, source, taba=None, in_registry=False):
     if permit.get("units_source") == "yk_quantities" and permit.get("units") not in (None, ""):
         rec["units"] = permit["units"]
         rec["units_source"] = "yk_quantities"
+        # the table's own split (kayam / tosefet). `units` is the building as the permit
+        # leaves it, so on a תמ"א 38/1 addition it is NOT what was added (see main).
+        rec["_yk_split"] = (permit.get("units_existing"), permit.get("units_added"))
     elif rec["units"] in (None, "", 0) and permit.get("units") not in (None, ""):
         rec["units"] = permit["units"]
         if not rec["units_source"]:
@@ -465,6 +469,7 @@ def main():
         agg = rec.pop("_text", "")
         rec.pop("_maxrev", None)
         rec.pop("_status_dt", None)
+        yk_split = rec.pop("_yk_split", None)
         rec["revisions"] = sorted(rec["revisions"], key=revision_of)
         rec["is_tama38"] = bool(rec.get("tama_type")) or ('תמ"א 38' in agg) or ("תמא 38" in agg)
         # classification view uses the aggregated text of all revisions
@@ -472,11 +477,24 @@ def main():
                 "units": rec.get("units"), "tama_type": rec.get("tama_type"),
                 "is_tama38": rec["is_tama38"]}
         cat = classify(view)
-        rec["units_added"] = units_added(view)
+        u = units_added(view)
+        # An existing building (kayam > 0): what the permit ADDS is the table's tosefet,
+        # not the building total. 2018/0558 "והוספת 13 יח"ד" — table 19+13, total 32 was
+        # counted as +32; 2019/0220 +10 read as +26. Same rule fetch_committee_missing_permits
+        # already uses. kayam = 0 (new building / demolish-and-rebuild) keeps the total.
+        if yk_split:
+            try:
+                kayam = int(float(yk_split[0] or 0))
+                tosefet = int(float(yk_split[1])) if yk_split[1] not in (None, "") else None
+            except (TypeError, ValueError):
+                kayam, tosefet = 0, None
+            if kayam > 0 and tosefet is not None and tosefet >= 0:
+                u = tosefet
+        rec["units_added"] = u
         rec["urban_renewal"] = is_urban_renewal(view)
         rec["category"] = cat
         rec["category_label"] = CAT_LABEL.get(cat, "אחר")
-        rec["bucket"] = bucket_of(cat, view)
+        rec["bucket"] = bucket_of(cat, view, u)
         rec["bucket_label"] = BUCKET_LABEL[rec["bucket"]]
         bucket_counts[rec["bucket"]] = bucket_counts.get(rec["bucket"], 0) + 1
         cat_counts[cat] = cat_counts.get(cat, 0) + 1
