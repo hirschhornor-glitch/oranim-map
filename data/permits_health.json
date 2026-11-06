@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T03:59:58",
+  "generated_at": "2026-11-06T08:02:45",
   "sources": [
     {
       "file": "all_permits.json",
@@ -7,18 +7,16 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 803,
       "last_publish": "2026-11-05",
-      "age_days": 0,
+      "age_days": 1,
       "status": "green",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ]
+      "notes": []
     },
     {
       "file": "tama38_permits.json",
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1366,
-      "last_publish": "2026-11-05",
+      "last_publish": "2026-11-06",
       "age_days": 0,
       "status": "green",
       "notes": [
@@ -31,11 +29,9 @@
       "refresh": "דו-שבועי (סטטוס)",
       "records": 114,
       "last_publish": "2026-11-05",
-      "age_days": 0,
+      "age_days": 1,
       "status": "info",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ],
+      "notes": [],
       "status_staleness": {
         "entries": 114,
         "open": 109,
@@ -49,8 +45,8 @@
       "label": "אתרי בנייה פעילים (gov.il)",
       "refresh": "דו-שבועי (סריקה)",
       "records": 2,
-      "last_publish": "2026-10-25",
-      "age_days": 11,
+      "last_publish": "2026-11-05",
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -60,7 +56,7 @@
       "refresh": "שבועי (ועדות)",
       "records": 32,
       "last_publish": "2026-11-02",
-      "age_days": 3,
+      "age_days": 4,
       "status": "green",
       "notes": []
     },
@@ -70,7 +66,7 @@
       "refresh": "שבועי",
       "records": 1,
       "last_publish": "2026-11-01",
-      "age_days": 4,
+      "age_days": 5,
       "status": "green",
       "notes": []
     },
@@ -80,7 +76,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 125,
+      "age_days": 126,
       "status": "info",
       "notes": []
     },
@@ -89,7 +85,7 @@
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
       "records": 5,
-      "last_publish": "2026-11-04",
+      "last_publish": "2026-11-05",
       "age_days": 1,
       "status": "green",
       "notes": []
@@ -100,7 +96,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 137,
+      "age_days": 138,
       "status": "info",
       "notes": []
     },
@@ -108,32 +104,32 @@
       "file": "occupancy_status.json",
       "label": "מאוכלס (טופס 4)",
       "refresh": "לפי צורך",
-      "records": 49,
-      "last_publish": "2026-10-04",
-      "age_days": 32,
+      "records": 25,
+      "last_publish": "2026-11-05",
+      "age_days": 1,
       "status": "info",
       "notes": []
     }
   ],
   "scan": {
-    "date": "2026-10-25",
+    "date": "2026-11-04",
     "removed_flag": false,
-    "raw": "2026-10-25T15:31:10 | date=2026-10-25 | all=new:25,status:29,removed:0 | tama38=new:3,status:23,removed:0",
+    "raw": "2026-11-05T04:02:59 | date=2026-11-04 | all=new:1,status:160,removed:0 | tama38=new:0,status:12,removed:0",
     "all": {
-      "new": 25,
-      "status": 29,
+      "new": 1,
+      "status": 160,
       "removed": 0
     },
     "tama38": {
-      "new": 3,
-      "status": 23,
+      "new": 0,
+      "status": 12,
       "removed": 0
     },
-    "age_days": 11
+    "age_days": 2
   },
   "committee_audit": {
     "date": "2026-11-02",
-    "age_days": 3,
+    "age_days": 4,
     "status": "green",
     "checked": 13,
     "matched": 5,
@@ -246,7 +242,7 @@
     ],
     "closed_hidden_by_default": 512,
     "online_submission_units_not_counted": 49,
-    "online_submission_units": 452,
+    "online_submission_units": 482,
     "total_hidden": 102
   },
   "silent_zero_plans": {
