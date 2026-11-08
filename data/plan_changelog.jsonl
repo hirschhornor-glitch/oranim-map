@@ -1075,3 +1075,36 @@
 {"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "rental_duration", "old": "", "new": 15}
 {"ts": "2026-11-05 19:50:25", "taba": 1563451, "plan_name": "101-1563451", "status": "בבדיקה תכנונית", "field": "rental_duration_source", "old": "", "new": "הוראות התכנית"}
+{"ts": "2026-11-08 11:27:37", "taba": 118984, "plan_name": "101-0118984", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 149922, "plan_name": "101-0149922", "status": "(חסר)", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 160119, "plan_name": "101-0160119", "status": "(חסר)", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1002062, "plan_name": "101-1002062", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1145184, "plan_name": "101-1145184", "status": "בבדיקה תכנונית", "field": "units_in", "old": 150, "new": 0}
+{"ts": "2026-11-08 11:27:37", "taba": 1145184, "plan_name": "101-1145184", "status": "בבדיקה תכנונית", "field": "units_add", "old": 0.0, "new": 150}
+{"ts": "2026-11-08 11:27:37", "taba": 1145184, "plan_name": "101-1145184", "status": "בבדיקה תכנונית", "field": "shavatz_out_sqm", "old": "", "new": 10956}
+{"ts": "2026-11-08 11:27:37", "taba": 1145184, "plan_name": "101-1145184", "status": "בבדיקה תכנונית", "field": "High", "old": "", "new": 24}
+{"ts": "2026-11-08 11:27:37", "taba": 1145184, "plan_name": "101-1145184", "status": "בבדיקה תכנונית", "field": "level_num", "old": "", "new": 6}
+{"ts": "2026-11-08 11:27:37", "taba": 1145184, "plan_name": "101-1145184", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1095330, "plan_name": "101-1095330", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 921510, "plan_name": "101-0921510", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1350719, "plan_name": "101-1350719", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1301753, "plan_name": "101-1301753", "status": "בהליך אישור", "field": "commerce_out", "old": 535, "new": 1020}
+{"ts": "2026-11-08 11:27:37", "taba": 1301753, "plan_name": "101-1301753", "status": "בהליך אישור", "field": "hafrash_sqm", "old": 260, "new": 272}
+{"ts": "2026-11-08 11:27:37", "taba": 1301753, "plan_name": "101-1301753", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1307255, "plan_name": "101-1307255", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1415090, "plan_name": "101-1415090", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1232818, "plan_name": "101-1232818", "status": "בבדיקה תכנונית", "field": "units_total", "old": 0, "new": 18}
+{"ts": "2026-11-08 11:27:37", "taba": 1232818, "plan_name": "101-1232818", "status": "בבדיקה תכנונית", "field": "level_num", "old": "", "new": 4}
+{"ts": "2026-11-08 11:27:37", "taba": 1232818, "plan_name": "101-1232818", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1443126, "plan_name": "101-1443126", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1507979, "plan_name": "101-1507979", "status": "בבדיקה תכנונית", "field": "shavatz_out_sqm", "old": "", "new": 465}
+{"ts": "2026-11-08 11:27:37", "taba": 1507979, "plan_name": "101-1507979", "status": "בבדיקה תכנונית", "field": "High", "old": "", "new": 10}
+{"ts": "2026-11-08 11:27:37", "taba": 1507979, "plan_name": "101-1507979", "status": "בבדיקה תכנונית", "field": "level_num", "old": "", "new": 2}
+{"ts": "2026-11-08 11:27:37", "taba": 1507979, "plan_name": "101-1507979", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1510296, "plan_name": "101-1510296", "status": "בבדיקה תכנונית", "field": "Machpil", "old": "", "new": 1}
+{"ts": "2026-11-08 11:27:37", "taba": 1510296, "plan_name": "101-1510296", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1446145, "plan_name": "101-1446145", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1554773, "plan_name": "101-1554773", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1582451, "plan_name": "101-1582451", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-08 11:27:37", "taba": 1001213, "plan_name": "101-1001213", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "תלפיות - תעשייה ומסחר"}
+{"ts": "2026-11-08 11:27:37", "taba": 1001213, "plan_name": "101-1001213", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
