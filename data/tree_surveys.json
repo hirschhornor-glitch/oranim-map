@@ -4797,5 +4797,41 @@
     "lo_nidresh": 0,
     "confidence": "xplan",
     "source": "xplan"
+  },
+  "921510": {
+    "total": 63,
+    "shimur": 60,
+    "krita": 0,
+    "haataka": 3,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1232818": {
+    "total": 28,
+    "shimur": 5,
+    "krita": 7,
+    "haataka": 16,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1510296": {
+    "total": 7,
+    "shimur": 7,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "118984": {
+    "total": 15,
+    "shimur": 15,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
   }
 }
