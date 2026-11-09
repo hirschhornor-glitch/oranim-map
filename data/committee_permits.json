@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-02T08:39:01",
+ "generated_at": "2026-11-09T05:13:23",
  "source": "YK API — היתרים שלא היו במאגר: מסדר היום של ועדת הרישוי + משמעותיים מסריקת הרחובות",
- "count": 476,
- "significant": 369,
+ "count": 477,
+ "significant": 385,
  "permits": {
   "1957/354.7": {
    "file_number": "1957/0354.07",
@@ -19259,6 +19259,52 @@
    ],
    "known_tik": false,
    "alerted_at": "2026-11-02T12:30:47"
+  },
+  "2026/489.0": {
+   "file_number": "2026/0489.00",
+   "status": "הגשה מקוונת הושלמה",
+   "status_date": "04/11/2026",
+   "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, תמ\"א 38 - תוספות",
+   "request_description": "תוספת קומה וחצי לבניין קיים בין 3 קומות וקומת מרתף",
+   "address": "הרב חיים ברלין 2",
+   "neighborhood_yk": "קריית שמואל",
+   "maslul": "רישוי מלא",
+   "tochnit_all": [
+    "1165",
+    "1165א",
+    "1210",
+    "9988"
+   ],
+   "parcels": [
+    "30024/47"
+   ],
+   "units": 4,
+   "units_source": "yk_quantities",
+   "units_existing": 0,
+   "units_added": 4,
+   "floors": 5,
+   "matched_tabas": [],
+   "taba": null,
+   "tama_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, תמ\"א 38 - תוספות",
+   "norm": "2026/489.0",
+   "origin": "spatial_2110",
+   "meeting_dates": [],
+   "committee_essence": "",
+   "committee_address": "",
+   "pip_plans": [],
+   "lat": 31.769964677866344,
+   "lng": 35.21136955884944,
+   "fetched_at": "2026-11-09T05:13:12",
+   "category": "tama38",
+   "bucket": "tama38",
+   "bucket_label": "תמ\"א 38",
+   "significant": true,
+   "reasons": [
+    "תמ\"א 38",
+    "+4 יח\"ד"
+   ],
+   "known_tik": false,
+   "alerted_at": "2026-11-09T05:13:19"
   }
  },
  "out_of_area": {
