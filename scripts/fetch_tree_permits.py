@@ -678,6 +678,23 @@ def _addr_key(street):
     return re.sub(r"\s+", " ", name).strip() + "|" + house
 
 
+def _addr_keys(street):
+    """Every street+number in a license address. Corner buildings come as two
+    addresses in one field — 'הפורצים 30 הפלמ''ח 41 .' — and reading that as one
+    street ('הפורצים 30 הפלמח|41') missed the תמ"א 38 file on הפלמ"ח 41 (1009372,
+    11/2026), so the file was never opened and the email fell back to a radius guess."""
+    s = re.sub(r"[\"'`״׳]", "", street or "")
+    keys = []
+    for name, house in re.findall(r"([^\d,;/]+?)\s*(\d+)\s*[א-ת]?(?=[\s,.;/-]|$)", s):
+        name = re.sub(r"\s+", " ", name.strip(" .-"))
+        if len(name) >= 2 and house != "0":
+            keys.append(name + "|" + house)
+    whole = _addr_key(street)
+    if whole and whole not in keys:
+        keys.append(whole)
+    return list(dict.fromkeys(keys))
+
+
 def _dist_m(a, b):
     # equirectangular approximation — exact enough at these distances/latitude
     import math
@@ -750,7 +767,8 @@ def _match_points(ll, addr_key, items, radius=None, limit=None):
     hits = []
     for pt, ak, obj in items:
         d = _dist_m(ll, pt)
-        exact = bool(addr_key) and ak == addr_key
+        keys = addr_key if isinstance(addr_key, (list, tuple, set)) else [addr_key]
+        exact = bool(ak) and ak in keys
         if exact and d <= 300:          # sanity cap: same name, wrong end of town
             hits.append((d, True, obj))
         elif d <= radius:
@@ -787,7 +805,7 @@ def attach_planning_context(recs):
             except Exception as e:
                 print(f"  [link] minahak derive failed for {rec.get('permit_number')}: {e}")
 
-        ak = _addr_key(rec.get("street") or rec.get("address"))
+        ak = _addr_keys(rec.get("street") or rec.get("address"))
         t_hits = _match_points(ll, ak, tama_pts, limit=MAX_LINKED_PERMITS)
         # A תמ"א 38 file registered on this exact address IS the answer to "what is
         # going on here" — so we stop looking around: no nearby-plan fallback, no
