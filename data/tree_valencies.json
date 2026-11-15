@@ -2866,6 +2866,31 @@
     "total_trees": 192,
     "status": "ok"
   },
+  "352096": {
+    "by_bucket": {
+      "0-6": {
+        "?": 36
+      },
+      "7-13": {
+        "?": 160
+      },
+      "14-16": {
+        "?": 39
+      },
+      "17-20": {
+        "?": 1
+      }
+    },
+    "bucket_totals": {
+      "0-6": 36,
+      "7-13": 160,
+      "14-16": 39,
+      "17-20": 1
+    },
+    "by_reco": {},
+    "total_trees": 236,
+    "status": "valency_only"
+  },
   "397752": {
     "by_bucket": {
       "7-13": {
@@ -3055,6 +3080,38 @@
     "total_trees": 31,
     "status": "ok"
   },
+  "581850": {
+    "by_bucket": {
+      "14-16": {
+        "krita": 11,
+        "haataka": 1,
+        "shimur": 1
+      },
+      "7-13": {
+        "krita": 25,
+        "shimur": 20,
+        "haataka": 1
+      },
+      "0-6": {
+        "krita": 2,
+        "?": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 13,
+      "7-13": 46,
+      "0-6": 3
+    },
+    "by_reco": {
+      "krita": 38,
+      "shimur": 21,
+      "haataka": 2,
+      "?": 1
+    },
+    "total_trees": 62,
+    "status": "partial",
+    "unmapped_rows": 1
+  },
   "588897": {
     "by_bucket": {
       "7-13": {
@@ -3178,6 +3235,27 @@
     },
     "total_trees": 16,
     "status": "ok"
+  },
+  "621045": {
+    "by_bucket": {
+      "0-6": {
+        "?": 34
+      },
+      "7-13": {
+        "?": 348
+      },
+      "14-16": {
+        "?": 36
+      }
+    },
+    "bucket_totals": {
+      "0-6": 34,
+      "7-13": 348,
+      "14-16": 36
+    },
+    "by_reco": {},
+    "total_trees": 418,
+    "status": "valency_only"
   },
   "622621": {
     "by_bucket": {
@@ -3394,6 +3472,43 @@
     "total_trees": 23,
     "status": "valency_only"
   },
+  "766154": {
+    "by_bucket": {
+      "0-6": {
+        "?": 37,
+        "shimur": 1,
+        "krita": 3
+      },
+      "7-13": {
+        "krita": 36,
+        "shimur": 24,
+        "haataka": 3
+      },
+      "14-16": {
+        "krita": 25,
+        "shimur": 41,
+        "haataka": 175
+      },
+      "17-20": {
+        "shimur": 1
+      }
+    },
+    "bucket_totals": {
+      "0-6": 41,
+      "7-13": 63,
+      "14-16": 241,
+      "17-20": 1
+    },
+    "by_reco": {
+      "?": 37,
+      "krita": 64,
+      "shimur": 67,
+      "haataka": 178
+    },
+    "total_trees": 346,
+    "status": "partial",
+    "unmapped_rows": 37
+  },
   "771600": {
     "by_bucket": {
       "14-16": {
@@ -3523,6 +3638,38 @@
       "krita": 9
     },
     "total_trees": 9,
+    "status": "ok"
+  },
+  "808840": {
+    "by_bucket": {
+      "14-16": {
+        "haataka": 9,
+        "krita": 18,
+        "shimur": 1
+      },
+      "17-20": {
+        "haataka": 4,
+        "krita": 2
+      },
+      "7-13": {
+        "krita": 12
+      },
+      "0-6": {
+        "krita": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 28,
+      "17-20": 6,
+      "7-13": 12,
+      "0-6": 1
+    },
+    "by_reco": {
+      "haataka": 13,
+      "krita": 33,
+      "shimur": 1
+    },
+    "total_trees": 47,
     "status": "ok"
   },
   "826636": {
