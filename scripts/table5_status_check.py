@@ -167,16 +167,28 @@ async def scrape_plan(page, plan, force=False):
     # for months. Fall back to XPLAN, which publishes the same two numbers, and
     # record what happened either way so the failure is never silent again.
     units_note = ""
+    # The accordion's נכנס is only as good as its own total. 101-1422401 (שער
+    # דרום, 2026-11-15): accordion total 599 / in 350, while Table 5 says 414 and
+    # XPLAN 302+112=414 — taking in=350 made units_add 414-350=64 instead of 112.
+    # When the accordion's total disagrees with Table 5, drop its נכנס and go to
+    # XPLAN (itself gated on reconciling with Table 5) — or write nothing.
+    t5_total = t5.get("total_residential_units")
+    acc_total = bal.get("units_total")
+    if (bal.get("units_in") is not None and t5_total and acc_total
+            and abs(float(acc_total) - float(t5_total)) > max(1.0, 0.05 * float(t5_total))):
+        units_note = f"אקורדיון מבא\"ת לא תואם טבלה 5 (סה\"כ {acc_total:g}≠{float(t5_total):g}) — נכנס שלו נזנח; "
+        bal.pop("units_in", None)
     # Only worth chasing (and only worth complaining about) when the plan
     # actually has residential units in Table 5.
     if bal.get("units_in") is None and t5.get("total_residential_units"):
         vals, why = units_for_plan(plan.get("plan_number") or plan.get("plan_name"),
                                    t5.get("total_residential_units"))
+        reason = units_note or "אקורדיון מבא\"ת ריק; "
         if vals:
             bal["units_in"] = vals["units_in"]
-            units_note = f"יח\"ד נכנס מ-XPLAN (אקורדיון מבא\"ת ריק) — {why}"
+            units_note = f"יח\"ד נכנס מ-XPLAN ({reason.rstrip('; ')}) — {why}"
         else:
-            units_note = f"⚠ יח\"ד נכנס לא נקרא — אקורדיון ריק; {why}"
+            units_note = f"⚠ יח\"ד נכנס לא נקרא — {reason}{why}"
     return {"t5": t5, "bal": bal, "units_note": units_note}
 
 

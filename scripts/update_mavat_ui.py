@@ -61,6 +61,7 @@ def _unpushed_commits():
 from scope_filter import is_blocklisted
 # Table 5 + quantity-balance re-check on status change (like the land-use check)
 from table5_status_check import scrape_plan as scrape_t5_balance, compute_changes as t5_compute_changes
+import xplan_versions as _xv
 from mavat_auth_js import MAVAT_AUTH_JS
 import gspread
 import requests
@@ -1182,32 +1183,43 @@ def sync_status_dates(rows_to_check, progress):
 
 
 def update_geojson_objection_btn(progress, rows_to_check):
-    """Update plans.geojson with has_objection_btn from progress."""
-    try:
-        with open(PLANS_GEOJSON, encoding='utf-8') as f:
-            geojson = json.load(f)
-        btn_map = {}
-        for row_info in rows_to_check:
-            aid = row_info['agam_id']
-            if aid in progress and not progress[aid].get('error'):
-                btn_map[aid] = bool(progress[aid].get('has_objection_btn'))
-        updated = 0
+    """Update plans.geojson with has_objection_btn from progress.
+
+    Re-appliable edit through update_json_and_push (2026-11-15). The old
+    write-then-commit path conflicted when the remote moved mid-run, and git_sync
+    then restored the OLD-base file into the working tree — a stale plans.geojson
+    that would have reverted 10 plans (incl. a corrected High) if committed.
+    It also rewrote every checked plan even when nothing changed: the sheet sync
+    stores "TRUE"/"FALSE" strings and this stored booleans, so each run churned.
+    Now only a real change of meaning is written."""
+    btn_map = {}
+    for row_info in rows_to_check:
+        aid = row_info['agam_id']
+        if aid in progress and not progress[aid].get('error'):
+            btn_map[aid] = bool(progress[aid].get('has_objection_btn'))
+    if not btn_map:
+        return
+
+    def _truthy(v):
+        return v is True or str(v).strip().upper() == 'TRUE'
+
+    def _apply(geojson):
+        changed = 0
         for feat in geojson['features']:
             agam = str(feat['properties'].get('agam_id', ''))
             if agam.endswith('.0'):
                 agam = agam[:-2]
-            if agam in btn_map:
+            if agam in btn_map and _truthy(feat['properties'].get('has_objection_btn')) != btn_map[agam]:
                 feat['properties']['has_objection_btn'] = btn_map[agam]
-                updated += 1
-        with open(PLANS_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(geojson, f, ensure_ascii=False)
-        log_msg(f"Updated {updated} features in plans.geojson with has_objection_btn")
-        if updated:
-            commit_and_push_after_write(
-                'data/plans.geojson',
-                f'data: has_objection_btn updates ({updated} plans) (update_mavat_ui)'
-            )
+                changed += 1
+        log_msg(f"has_objection_btn: {changed} of {len(btn_map)} checked plan(s) changed in plans.geojson")
+        return changed
+
+    try:
+        update_json_and_push('data/plans.geojson', _apply,
+                             'data: has_objection_btn updates (update_mavat_ui)')
     except Exception as e:
+        GIT_FAILURES.append(f"has_objection_btn: {e}")
         log_msg(f"Failed to update GeoJSON has_objection_btn: {e}")
 
 
@@ -1370,6 +1382,7 @@ def _yk_compute_objection_end(taba, status_date=None):
 
     # Explicit "תום תקופת הפקדה" wins — but only if not BEFORE status_date.
     pub_dates = []
+    news_dates = []
     for step in deposit_steps:
         step_text = step.get('stepCodeText') or ''
         exec_d = _parse_dmy(step.get('execDateStr'))
@@ -1390,17 +1403,34 @@ def _yk_compute_objection_end(taba, status_date=None):
             # With exec-only, no executed ילקוט → fall back to status_date(deposit)+60.
             if exec_d:
                 pub_dates.append(exec_d)
+                # The clock runs from the LAST NEWSPAPER, not from ילקוט (2026-11-15).
+                # Calibrated on 586 plans whose YK file carries the committee's own
+                # "תום תקופת ההפקדה": last newspaper + 60 days matched exactly in 91%
+                # (94% within a day); max(all publications incl. ילקוט) + 60 matched 60%
+                # and ran LATE in 36% — a closed window shown as open. Two calendar
+                # months matched 5%: the committee counts 60 days.
+                if step_text.startswith('פרסום ההפקדה בעיתון'):
+                    news_dates.append(exec_d)
 
     # Filter pub_dates to current cycle (>= status_date - 7d grace).
     if status_date:
         floor = status_date - timedelta(days=7)
+        news = [d for d in news_dates if d >= floor]
+        if news:
+            latest = max(news)
+            return (latest + timedelta(days=60)).strftime('%d/%m/%Y'), f'news({latest.strftime("%d/%m/%Y")})+60'
         relevant = [d for d in pub_dates if d >= floor]
         if relevant:
+            # No newspaper executed yet in this cycle — the clock may not have
+            # started; ילקוט/other publication + 60 is a provisional estimate.
             latest = max(relevant)
-            return (latest + timedelta(days=60)).strftime('%d/%m/%Y'), f'pub({latest.strftime("%d/%m/%Y")})+60'
+            return (latest + timedelta(days=60)).strftime('%d/%m/%Y'), f'pub({latest.strftime("%d/%m/%Y")})+60, no newspaper yet'
         return _status_fallback('YK pubs stale')
 
-    # No status_date provided — original behavior.
+    # No status_date provided.
+    if news_dates:
+        latest = max(news_dates)
+        return (latest + timedelta(days=60)).strftime('%d/%m/%Y'), f'news({latest.strftime("%d/%m/%Y")})+60'
     if pub_dates:
         latest = max(pub_dates)
         return (latest + timedelta(days=60)).strftime('%d/%m/%Y'), f'pub({latest.strftime("%d/%m/%Y")})+60'
@@ -2251,6 +2281,33 @@ async def main():
         rows_to_check_final = rows_to_check
         
     log_msg(f"Proceeding to check {len(rows_to_check_final)} plans.")
+
+    # ── Version trigger (2026-11-15) ──
+    # A plan whose הוראות were reissued under an unchanged status never got its
+    # Table 5 re-read (101-1151901: 35 checks, all "Unchanged", הוראות 33→43).
+    # XPLAN publishes the current print counter; a higher one than we last read
+    # means new documents. Skipped in collect-only runs — they write nothing, so
+    # nothing could be recorded. A failed lookup is reported, never read as
+    # "unchanged": those plans just get no version trigger this run.
+    xv_versions, xv_triggers, xv_report = {}, {}, []
+    if not COLLECT_ONLY and rows_to_check_final:
+        xv_seen = _xv.load_seen()
+        xv_versions, xv_fail = _xv.fetch_versions(r['plan_name'] for r in rows_to_check_final)
+        xv_triggers, xv_sum = _xv.plan_triggers(rows_to_check_final, xv_versions, xv_seen)
+        log_msg(f"VERSION TRIGGER: XPLAN versions for {len(xv_versions)}/{len(rows_to_check_final)} plans; "
+                f"{xv_sum['moved']} moved, {xv_sum['baseline_chosen']} baseline re-checks this run, "
+                f"{xv_sum['baseline_deferred']} baseline deferred to next run"
+                + (f"; {len(xv_fail)} XPLAN chunk(s) FAILED" if xv_fail else ""))
+        for pn, why in xv_triggers.items():
+            if why.startswith('moved'):
+                log_msg(f"  version {why}: {pn}")
+        xv_report.append(f"XPLAN: 🔢 גרסאות הוראות: {xv_sum['moved']} תכניות עם גרסה חדשה, "
+                         f"{xv_sum['baseline_chosen']} בדיקות בסיס, {xv_sum['baseline_deferred']} נדחו לריצה הבאה")
+        for fmsg in xv_fail:
+            log_msg(f"  ⚠ XPLAN version lookup failed — {fmsg}")
+            xv_report.append(f"XPLAN: ⚠ בדיקת הגרסאות נכשלה חלקית ({fmsg}) — "
+                             f"לתכניות האלה לא הופעל טריגר גרסה בריצה הזו")
+
     if not rows_to_check_final and not missing_mid:
         log_msg("No plans to check. Exiting.")
         return
@@ -2419,10 +2476,14 @@ async def main():
                 _date_moved = (result.get('new_date')
                                and item.get('current_date')
                                and result['new_date'].strip() != item['current_date'].strip())
+                _version_why = xv_triggers.get(item.get('plan_name', ''))
                 if (result.get('new_status') and not result.get('error')
                         and (result['new_status'] != item['current_status']
                              or _date_moved
+                             or _version_why
                              or PLANS_FILTER is not None)):
+                    if _version_why:
+                        log_msg(f"  ↳ version trigger ({_version_why})")
                     try:
                         _pn = item.get('plan_name', '')
                         _taba = str(int(_pn.split('-')[1])) if '-' in _pn else ''
@@ -2553,27 +2614,8 @@ async def main():
         # Drop skipped from updates so downstream steps don't re-touch them
         updates = [u for u in updates if u not in skipped]
 
-        # ── Table 5 + נכנס re-check for the changed plans (mirrors land-use check) ──
-        try:
-            _all = sheet.get_all_values()
-            _h = {n: i for i, n in enumerate(_all[0])} if _all else {}
-            for u in updates:
-                tb = progress.get(u['agam_id'], {}).get('t5_balance')
-                if not tb:
-                    continue
-                ridx = u['row']
-                if ridx - 1 >= len(_all):
-                    continue
-                cell_ups, rep = t5_compute_changes(_h, _all[ridx - 1], tb, u['plan_name'])
-                for c0, val in cell_ups.items():
-                    batch_updates.append({'range': gspread.utils.rowcol_to_a1(ridx, c0 + 1),
-                                          'values': [[val]]})
-                t5_report.extend(rep)
-            if t5_report:
-                n_plans = sum(1 for l in t5_report if l.startswith('  📊'))
-                log_msg(f"  📊 Table 5/נכנס updated on {n_plans} changed plan(s)")
-        except Exception as e:
-            log_msg(f"  Table 5 GS compare failed: {e}")
+        # Table 5 is applied below, after this block, for EVERY plan re-read this
+        # run — not only status changes (see "Table 5 apply" further down).
 
         if batch_updates:
             sheet.spreadsheet.values_batch_update({
@@ -2590,6 +2632,77 @@ async def main():
             # Not silent: counts as a failed write → alert email + exit 1 at the end.
             GIT_FAILURES.append(f"status_changes.json: {e}")
             log_msg(f"Failed to record status changes: {e}")
+
+    # ── Table 5 apply — every plan whose Table 5 was re-read this run ──
+    # Until 2026-11-15 this ran inside the status-change branch, over `updates`
+    # only. The date trigger and --plans-file (the enrichment pipeline) DID
+    # re-read Table 5, logged "Table 5 + נכנס re-checked", and then nothing was
+    # written: 182 of 386 logged re-checks had no status change behind them.
+    # Rows are re-located by plan_name in a fresh read (same race-safety as the
+    # status write above). XPLAN versions are recorded only after the write.
+    t5_targets = [r for r in rows_to_check
+                  if (progress.get(r['agam_id']) or {}).get('t5_balance')]
+    xv_done = []   # (plan_name, version, table_found)
+    if t5_targets:
+        try:
+            _all = get_sheet().get_all_values()
+            if not _all or not _all[0] or _all[0][0].strip() != 'agam_id':
+                raise RuntimeError("GS row 1 is not the header — Table 5 apply aborted")
+            _h = {n: i for i, n in enumerate(_all[0])}
+            _row_by_plan = {}
+            for _ri, _row in enumerate(_all[1:], start=2):
+                if len(_row) >= COL_PLAN_NAME and _row[COL_PLAN_NAME - 1].strip():
+                    _row_by_plan[_row[COL_PLAN_NAME - 1].strip()] = _ri
+            t5_batch, now_ts = [], datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            no_table = []
+            for r in t5_targets:
+                pn = r.get('plan_name', '')
+                ridx = _row_by_plan.get(pn)
+                if ridx is None:
+                    log_msg(f"  Table 5 apply SKIP {pn}: not found in fresh sheet")
+                    continue
+                tb = progress[r['agam_id']]['t5_balance']
+                why = xv_triggers.get(pn)
+                cell_ups, rep = t5_compute_changes(_h, _all[ridx - 1], tb, pn)
+                if rep and why:
+                    rep[0] = rep[0] + f" [טריגר גרסה: {why}]"
+                for c0, val in cell_ups.items():
+                    t5_batch.append({'range': gspread.utils.rowcol_to_a1(ridx, c0 + 1),
+                                     'values': [[val]]})
+                if cell_ups:
+                    # gspread writes must stamp last_modified or the mirror ignores them
+                    t5_batch.append({'range': gspread.utils.rowcol_to_a1(ridx, COL_LAST_MODIFIED),
+                                     'values': [[now_ts]]})
+                t5_report.extend(rep)
+                found = bool(tb.get('t5'))
+                if not found:
+                    no_table.append(pn)
+                if pn in xv_versions:
+                    xv_done.append((pn, xv_versions[pn], found))
+            if t5_batch:
+                get_sheet().spreadsheet.values_batch_update({'valueInputOption': 'RAW',
+                                                             'data': t5_batch})
+            n_plans = sum(1 for l in t5_report if l.startswith('  📊'))
+            log_msg(f"  📊 Table 5 re-read on {len(t5_targets)} plan(s); "
+                    f"{n_plans} changed in GS; {len(no_table)} without a Table 5 file")
+            if no_table:
+                xv_report.append(f"XPLAN: ℹ {len(no_table)} תכניות נבדקו ואין להן קובץ טבלה 5 במבא\"ת: "
+                                 + ", ".join(no_table[:15]))
+            # Record versions only now that the write went through.
+            if xv_done:
+                _seen = _xv.load_seen()
+                for pn, ver, found in xv_done:
+                    _xv.record(_seen, pn, ver)
+                    _seen[pn]['table5_found'] = found
+                _xv.save_seen(_seen)
+                log_msg(f"  recorded XPLAN version for {len(xv_done)} plan(s)")
+        except Exception as e:
+            # Not silent: the plans keep their old Table 5 and their versions stay
+            # unrecorded, so the trigger fires again next run.
+            log_msg(f"  ⚠ Table 5 apply FAILED: {e}")
+            xv_report.append(f"XPLAN: ⚠ עדכון טבלה 5 בגיליון נכשל: {e}")
+    if xv_report:
+        t5_report = xv_report + t5_report
 
     # ── Check XPLAN for geometry/landuse/shavaz changes ──
     # New plans (added by detect_new_plans this run) also need their land-use
