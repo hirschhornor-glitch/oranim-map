@@ -1108,3 +1108,12 @@
 {"ts": "2026-11-08 11:27:37", "taba": 1582451, "plan_name": "101-1582451", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-11-08 11:27:37", "taba": 1001213, "plan_name": "101-1001213", "status": "בבדיקה תכנונית", "field": "SUB_N", "old": null, "new": "תלפיות - תעשייה ומסחר"}
 {"ts": "2026-11-08 11:27:37", "taba": 1001213, "plan_name": "101-1001213", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-11-15 11:57:32", "taba": 1366053, "plan_name": "101-1366053", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 11:57:32", "taba": 1345420, "plan_name": "101-1345420", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 11:57:32", "taba": 1398130, "plan_name": "101-1398130", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 11:57:32", "taba": 1496140, "plan_name": "101-1496140", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 11:57:32", "taba": 1487560, "plan_name": "101-1487560", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 11:57:32", "taba": 1549260, "plan_name": "101-1549260", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 11:57:32", "taba": 1575943, "plan_name": "101-1575943", "status": "בהליך אישור", "field": "High", "old": 12, "new": 13}
+{"ts": "2026-11-15 11:57:32", "taba": 1575943, "plan_name": "101-1575943", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 11:57:32", "taba": 1207158, "plan_name": "101-1207158", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
