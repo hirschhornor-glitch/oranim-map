@@ -1,87 +1,10 @@
 {
- "scanned": 12,
- "candidates": 12,
+ "scanned": 10,
+ "candidates": 10,
  "unverified": [],
- "generated": "2026-11-01",
- "confirmed_open": [
-  {
-   "tik": "2010/1061.04",
-   "address": "רחל אמנו 23",
-   "stored_status": "תחילת הודעות לפני תקנה 36",
-   "status_date": "18/10/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "תקנה 36",
-   "deadline_publish": "12/11/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2010/1061.04",
-   "lnglat": [
-    35.214109,
-    31.763634
-   ],
-   "in_district": true,
-   "category": "confirmed"
-  },
-  {
-   "tik": "2026/0439.00",
-   "address": "הפלמח 41",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "18/10/2026",
-   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "13/11/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2026/0439.00",
-   "lnglat": [
-    35.206943,
-    31.764515
-   ],
-   "in_district": true,
-   "category": "confirmed"
-  }
- ],
+ "generated": "2026-11-15",
+ "confirmed_open": [],
  "verify": [
-  {
-   "tik": "2021/0465.01",
-   "address": "הפלמח 24",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "23/09/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "08/11/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2021/0465.01",
-   "lnglat": [
-    35.210873,
-    31.767462
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
-  {
-   "tik": "1993/0664.03",
-   "address": "י. אלפסי 9",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "04/10/2026",
-   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "10/11/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "1993/0664.03",
-   "lnglat": [
-    35.213741,
-    31.772826
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
   {
    "tik": "2026/0223.00",
    "address": "אלעזר בן יאיר 24",
@@ -103,82 +26,6 @@
   }
  ],
  "open_in_district": [
-  {
-   "tik": "2021/0465.01",
-   "address": "הפלמח 24",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "23/09/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "08/11/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2021/0465.01",
-   "lnglat": [
-    35.210873,
-    31.767462
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
-  {
-   "tik": "2010/1061.04",
-   "address": "רחל אמנו 23",
-   "stored_status": "תחילת הודעות לפני תקנה 36",
-   "status_date": "18/10/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "תקנה 36",
-   "deadline_publish": "12/11/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2010/1061.04",
-   "lnglat": [
-    35.214109,
-    31.763634
-   ],
-   "in_district": true,
-   "category": "confirmed"
-  },
-  {
-   "tik": "2026/0439.00",
-   "address": "הפלמח 41",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "18/10/2026",
-   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "13/11/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2026/0439.00",
-   "lnglat": [
-    35.206943,
-    31.764515
-   ],
-   "in_district": true,
-   "category": "confirmed"
-  },
-  {
-   "tik": "1993/0664.03",
-   "address": "י. אלפסי 9",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "04/10/2026",
-   "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "10/11/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "1993/0664.03",
-   "lnglat": [
-    35.213741,
-    31.772826
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
   {
    "tik": "2026/0223.00",
    "address": "אלעזר בן יאיר 24",
