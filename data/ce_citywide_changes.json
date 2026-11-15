@@ -1,13 +1,13 @@
 {
- "generated_at": "2026-11-01T21:38:49",
- "previous_at": "2026-10-27T19:06:32",
+ "generated_at": "2026-11-15T21:00:09",
+ "previous_at": "2026-11-01T21:38:49",
  "first_run": false,
  "plans": {
   "ce": 982,
   "housing": 242
  },
  "changed": {
-  "ce": 3,
+  "ce": 0,
   "fund": 0,
   "rental": 0
  },
@@ -33,78 +33,7 @@
   ]
  },
  "by_tab": {
-  "ce": {
-   "101-1560895": {
-    "fields": [
-     "new"
-    ],
-    "labels": [
-     "תכנית חדשה בדוח"
-    ],
-    "from": {},
-    "to": {}
-   },
-   "101-1455443": {
-    "fields": [
-     "station_desc",
-     "has_licensing_file",
-     "any_issued",
-     "in_construction",
-     "completed"
-    ],
-    "labels": [
-     "סטטוס",
-     "תיק רישוי",
-     "היתר",
-     "בביצוע",
-     "גמר בנייה"
-    ],
-    "from": {
-     "station_desc": "הכרעה בהתנגדויות / אישור",
-     "has_licensing_file": null,
-     "any_issued": null,
-     "in_construction": null,
-     "completed": null
-    },
-    "to": {
-     "station_desc": "אישור",
-     "has_licensing_file": false,
-     "any_issued": false,
-     "in_construction": false,
-     "completed": false
-    }
-   },
-   "101-1236876": {
-    "fields": [
-     "station_desc",
-     "has_licensing_file",
-     "any_issued",
-     "in_construction",
-     "completed"
-    ],
-    "labels": [
-     "סטטוס",
-     "תיק רישוי",
-     "היתר",
-     "בביצוע",
-     "גמר בנייה"
-    ],
-    "from": {
-     "station_desc": "בהליך אישור",
-     "has_licensing_file": null,
-     "any_issued": null,
-     "in_construction": null,
-     "completed": null
-    },
-    "to": {
-     "station_desc": "אישור",
-     "has_licensing_file": false,
-     "any_issued": false,
-     "in_construction": false,
-     "completed": false
-    }
-   }
-  },
+  "ce": {},
   "fund": {},
   "rental": {}
  }
