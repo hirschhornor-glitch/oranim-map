@@ -1117,3 +1117,23 @@
 {"ts": "2026-11-15 11:57:32", "taba": 1575943, "plan_name": "101-1575943", "status": "בהליך אישור", "field": "High", "old": 12, "new": 13}
 {"ts": "2026-11-15 11:57:32", "taba": 1575943, "plan_name": "101-1575943", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-11-15 11:57:32", "taba": 1207158, "plan_name": "101-1207158", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 18:51:19", "taba": 1151901, "plan_name": "101-1151901", "status": "במילוי תנאים להפקדה", "field": "units_total", "old": 148, "new": 143}
+{"ts": "2026-11-15 18:51:19", "taba": 1151901, "plan_name": "101-1151901", "status": "במילוי תנאים להפקדה", "field": "units_add", "old": 108, "new": 103}
+{"ts": "2026-11-15 18:51:19", "taba": 1151901, "plan_name": "101-1151901", "status": "במילוי תנאים להפקדה", "field": "Machpil", "old": 3.7, "new": 3.575}
+{"ts": "2026-11-15 18:51:19", "taba": 1151901, "plan_name": "101-1151901", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 800, "new": 360}
+{"ts": "2026-11-15 18:51:19", "taba": 1151901, "plan_name": "101-1151901", "status": "במילוי תנאים להפקדה", "field": "High", "old": 133, "new": 100}
+{"ts": "2026-11-15 18:51:19", "taba": 1151901, "plan_name": "101-1151901", "status": "במילוי תנאים להפקדה", "field": "level_num", "old": 36, "new": 27}
+{"ts": "2026-11-15 18:51:19", "taba": 1151901, "plan_name": "101-1151901", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 18:51:19", "taba": 1278654, "plan_name": "101-1278654", "status": "במילוי תנאים להפקדה", "field": "High", "old": 17, "new": 10.5}
+{"ts": "2026-11-15 18:51:19", "taba": 1278654, "plan_name": "101-1278654", "status": "במילוי תנאים להפקדה", "field": "level_num", "old": 4, "new": 3}
+{"ts": "2026-11-15 18:51:19", "taba": 1278654, "plan_name": "101-1278654", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 18:51:19", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "units_total", "old": 123, "new": 94}
+{"ts": "2026-11-15 18:51:19", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "units_add", "old": 93, "new": 64}
+{"ts": "2026-11-15 18:51:19", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "Machpil", "old": 4.1, "new": 3.1}
+{"ts": "2026-11-15 18:51:19", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "level_num", "old": 21, "new": 20}
+{"ts": "2026-11-15 18:51:19", "taba": 1215656, "plan_name": "101-1215656", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 18:51:19", "taba": 1442656, "plan_name": "101-1442656", "status": "במילוי תנאים להפקדה", "field": "High", "old": 34.9, "new": 28.4}
+{"ts": "2026-11-15 18:51:19", "taba": 1442656, "plan_name": "101-1442656", "status": "במילוי תנאים להפקדה", "field": "level_num", "old": 9, "new": 8}
+{"ts": "2026-11-15 18:51:19", "taba": 1442656, "plan_name": "101-1442656", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-11-15 18:51:19", "taba": 1500909, "plan_name": "101-1500909", "status": "הפקדה להתנגדויות/השגות", "field": "High", "old": 21, "new": 17.36}
+{"ts": "2026-11-15 18:51:19", "taba": 1500909, "plan_name": "101-1500909", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
