@@ -24,6 +24,7 @@ except Exception:
     pass
 
 import gspread
+import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
 from google.oauth2.service_account import Credentials
 
 from update_mavat_ui import (_yk_compute_objection_end, _parse_dmy,

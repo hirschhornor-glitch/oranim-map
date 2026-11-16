@@ -34,6 +34,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 import gspread
+import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
 from google.oauth2.service_account import Credentials
 
 # Shared out-of-scope filter (Gilo exclusion geometry + plan-number blocklist),

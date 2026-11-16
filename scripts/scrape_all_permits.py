@@ -18,6 +18,7 @@ import time
 from datetime import datetime
 
 import gspread
+import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
 import requests
 from google.oauth2.service_account import Credentials
 from playwright.async_api import async_playwright

@@ -176,6 +176,7 @@ async def main():
 
     # Update Sheets + GeoJSON
     import gspread
+    import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
     from google.oauth2.service_account import Credentials
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

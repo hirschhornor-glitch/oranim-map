@@ -6,6 +6,7 @@ import asyncio, json, sys
 from datetime import datetime
 from plan_name_util import clean_plan_name
 import gspread
+import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
 from google.oauth2.service_account import Credentials
 from playwright.async_api import async_playwright
 

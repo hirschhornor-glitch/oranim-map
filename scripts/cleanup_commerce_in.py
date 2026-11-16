@@ -28,6 +28,7 @@ import sys
 from datetime import datetime
 
 import gspread
+import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
 from google.oauth2.service_account import Credentials
 
 

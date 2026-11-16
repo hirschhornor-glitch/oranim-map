@@ -47,6 +47,7 @@ def load_gs(live=False):
     _gs_snapshot.json, which can be days old and show values already corrected."""
     if live:
         import gspread
+        import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
         from google.oauth2.service_account import Credentials
         gc = gspread.authorize(Credentials.from_service_account_file(
             r"C:\ORANIM\oranim-490018-ceaf784afe61.json",

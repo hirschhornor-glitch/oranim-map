@@ -64,6 +64,7 @@ from table5_status_check import scrape_plan as scrape_t5_balance, compute_change
 import xplan_versions as _xv
 from mavat_auth_js import MAVAT_AUTH_JS
 import gspread
+import gs_retry  # noqa: F401 — retry transient Sheets errors (2026-11-16)
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.ssl_ import create_urllib3_context
