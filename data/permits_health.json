@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-09T05:13:26",
+  "generated_at": "2026-11-16T06:32:09",
   "sources": [
     {
       "file": "all_permits.json",
@@ -7,7 +7,7 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 803,
       "last_publish": "2026-11-05",
-      "age_days": 4,
+      "age_days": 11,
       "status": "green",
       "notes": []
     },
@@ -17,7 +17,7 @@
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1366,
       "last_publish": "2026-11-06",
-      "age_days": 3,
+      "age_days": 10,
       "status": "green",
       "notes": []
     },
@@ -25,17 +25,17 @@
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
       "refresh": "דו-שבועי (סטטוס)",
-      "records": 114,
-      "last_publish": "2026-11-05",
-      "age_days": 4,
+      "records": 115,
+      "last_publish": "2026-11-09",
+      "age_days": 7,
       "status": "info",
       "notes": [],
       "status_staleness": {
-        "entries": 114,
-        "open": 109,
+        "entries": 115,
+        "open": 110,
         "not_checked_90d": 0,
         "not_checked_examples": [],
-        "status_date_older_90d": 81
+        "status_date_older_90d": 82
       }
     },
     {
@@ -44,7 +44,7 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 2,
       "last_publish": "2026-11-05",
-      "age_days": 4,
+      "age_days": 11,
       "status": "green",
       "notes": []
     },
@@ -52,8 +52,8 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 25,
-      "last_publish": "2026-11-09",
+      "records": 24,
+      "last_publish": "2026-11-16",
       "age_days": 0,
       "status": "green",
       "notes": [
@@ -64,8 +64,8 @@
       "file": "objections_permits.json",
       "label": "היתרים פתוחים להתנגדות §149",
       "refresh": "שבועי",
-      "records": 1,
-      "last_publish": "2026-11-08",
+      "records": 0,
+      "last_publish": "2026-11-15",
       "age_days": 1,
       "status": "green",
       "notes": []
@@ -76,7 +76,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 129,
+      "age_days": 136,
       "status": "info",
       "notes": []
     },
@@ -85,7 +85,7 @@
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
       "records": 8,
-      "last_publish": "2026-11-08",
+      "last_publish": "2026-11-15",
       "age_days": 1,
       "status": "green",
       "notes": []
@@ -96,7 +96,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 141,
+      "age_days": 148,
       "status": "info",
       "notes": []
     },
@@ -106,7 +106,7 @@
       "refresh": "לפי צורך",
       "records": 25,
       "last_publish": "2026-11-05",
-      "age_days": 4,
+      "age_days": 11,
       "status": "info",
       "notes": []
     }
@@ -125,37 +125,65 @@
       "status": 12,
       "removed": 0
     },
-    "age_days": 5
+    "age_days": 12
   },
   "committee_audit": {
-    "date": "2026-11-09",
+    "date": "2026-11-16",
     "age_days": 0,
     "status": "green",
-    "checked": 0,
-    "matched": 0,
-    "missing": 0,
-    "missing_list": []
+    "checked": 15,
+    "matched": 8,
+    "missing": 7,
+    "missing_list": [
+      {
+        "permit_no": "1996/0259.05",
+        "neighborhood": "גוננים",
+        "address": "יהודה הנשיא 13, גוננים",
+        "essence": "תוספת בניה, מרפסת וחדר מחוזק"
+      },
+      {
+        "permit_no": "1998/0939.02",
+        "neighborhood": "המושבה היוונית",
+        "address": "יותם 2, המושבה היוונית",
+        "essence": "תוספת בניה, תוספת מרפסת"
+      },
+      {
+        "permit_no": "2011/0362.04",
+        "neighborhood": "גוננים",
+        "address": "אלעזר בן יאיר 23, גוננים",
+        "essence": "תוספת בניה עפ\"י תב\"ע, הרחבה לבניין קיים, מרפסות זיז"
+      },
+      {
+        "permit_no": "1988/0658.09",
+        "neighborhood": "גוננים",
+        "address": "אנטיגנוס 22, גוננים",
+        "essence": "תוספת בניה / הרחבה לבניין קיים"
+      },
+      {
+        "permit_no": "1992/0389.02",
+        "neighborhood": "בית צפפה",
+        "address": "אל סאפח סמטה 3 3, בית צפפה",
+        "essence": "תוספת בניה לבניין קיים, בית צפפה"
+      },
+      {
+        "permit_no": "1989/0750.09",
+        "neighborhood": "גוננים",
+        "address": "אלכסנדריון 12, גוננים",
+        "essence": "תוספת בניה, השלמת דירת גג"
+      },
+      {
+        "permit_no": "2025/0081.00",
+        "neighborhood": "קטמון הישנה",
+        "address": "רחל אמנו 26, קטמון הישנה",
+        "essence": "תוספת בניה, עבודות הריסה, התקנת מעלית"
+      }
+    ]
   },
   "known_failures": [
-    {
-      "log": "last_run.log",
-      "sample": "API 437: with permits 280, confirmed empty 317, failed 0, empty-but-throttled 0 → UI fallback 0",
-      "count": 1
-    },
-    {
-      "log": "mavat_revival_last_run.log",
-      "sample": "Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...",
-      "count": 2
-    },
     {
       "log": "mavat_sync_last_run.log",
       "sample": "Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...",
       "count": 2
-    },
-    {
-      "log": "tama38_street_harvest_last_run.log",
-      "sample": "[05:16:12]    cooldown 90s (throttle recovery)...",
-      "count": 23
     }
   ],
   "hidden_permits": {

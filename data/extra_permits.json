@@ -1,7 +1,7 @@
 {
  "source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
  "source_date": "2026-06-21",
- "count": 114,
+ "count": 115,
  "by_taba": {
   "897066": [
    {
@@ -2029,6 +2029,21 @@
     "source_date": "2026-11-02",
     "all_matched_tabas": [
      "999185"
+    ]
+   }
+  ],
+  "515635": [
+   {
+    "file_number": "2020/0205.02",
+    "status": "התקבל תיק ורוד / מסמכים חתומים ",
+    "status_date": "10/11/2026",
+    "request_type": "חידוש היתר",
+    "request_description": "חידוש היתר לבקשה מספר 117075 2020/0205.00",
+    "address": "אנטיגנוס 14",
+    "source": "committee_yk",
+    "source_date": "2026-11-16",
+    "all_matched_tabas": [
+     "515635"
     ]
    }
   ]
