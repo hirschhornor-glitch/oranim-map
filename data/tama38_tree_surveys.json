@@ -482,6 +482,17 @@
     "doc_date": "04/05/2025",
     "file_number": "2024/0410.00"
   },
+  "2026/0075.00": {
+    "total": 12,
+    "shimur": 5,
+    "krita": 7,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "high",
+    "method": "harmonica_coord_summary",
+    "source": "harmonica",
+    "file_number": "2026/0075.00"
+  },
   "2026/0258.00": {
     "total": 15,
     "shimur": 9,
