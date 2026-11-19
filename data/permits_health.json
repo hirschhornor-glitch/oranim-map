@@ -1,41 +1,47 @@
 {
-  "generated_at": "2026-11-16T06:32:09",
+  "generated_at": "2026-11-19T04:10:13",
   "sources": [
     {
       "file": "all_permits.json",
       "label": "היתרים לפי תב\"ע",
       "refresh": "דו-שבועי (סריקה)",
-      "records": 803,
-      "last_publish": "2026-11-05",
-      "age_days": 11,
+      "records": 807,
+      "last_publish": "2026-11-19",
+      "age_days": 0,
       "status": "green",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "tama38_permits.json",
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1366,
-      "last_publish": "2026-11-06",
-      "age_days": 10,
+      "last_publish": "2026-11-19",
+      "age_days": 0,
       "status": "green",
-      "notes": []
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ]
     },
     {
       "file": "extra_permits.json",
       "label": "היתרים משלימים (YK API)",
       "refresh": "דו-שבועי (סטטוס)",
       "records": 115,
-      "last_publish": "2026-11-09",
-      "age_days": 7,
+      "last_publish": "2026-11-19",
+      "age_days": 0,
       "status": "info",
-      "notes": [],
+      "notes": [
+        "ממתין לפרסום בריצה זו"
+      ],
       "status_staleness": {
         "entries": 115,
         "open": 110,
         "not_checked_90d": 0,
         "not_checked_examples": [],
-        "status_date_older_90d": 82
+        "status_date_older_90d": 77
       }
     },
     {
@@ -44,7 +50,7 @@
       "refresh": "דו-שבועי (סריקה)",
       "records": 2,
       "last_publish": "2026-11-05",
-      "age_days": 11,
+      "age_days": 14,
       "status": "green",
       "notes": []
     },
@@ -54,11 +60,9 @@
       "refresh": "שבועי (ועדות)",
       "records": 24,
       "last_publish": "2026-11-16",
-      "age_days": 0,
+      "age_days": 3,
       "status": "green",
-      "notes": [
-        "ממתין לפרסום בריצה זו"
-      ]
+      "notes": []
     },
     {
       "file": "objections_permits.json",
@@ -66,7 +70,7 @@
       "refresh": "שבועי",
       "records": 0,
       "last_publish": "2026-11-15",
-      "age_days": 1,
+      "age_days": 4,
       "status": "green",
       "notes": []
     },
@@ -76,7 +80,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 136,
+      "age_days": 139,
       "status": "info",
       "notes": []
     },
@@ -85,7 +89,7 @@
       "label": "אישורי כריתת עצים",
       "refresh": "יומי (CI)",
       "records": 8,
-      "last_publish": "2026-11-15",
+      "last_publish": "2026-11-18",
       "age_days": 1,
       "status": "green",
       "notes": []
@@ -96,7 +100,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 148,
+      "age_days": 151,
       "status": "info",
       "notes": []
     },
@@ -106,7 +110,7 @@
       "refresh": "לפי צורך",
       "records": 25,
       "last_publish": "2026-11-05",
-      "age_days": 11,
+      "age_days": 14,
       "status": "info",
       "notes": []
     }
@@ -125,11 +129,11 @@
       "status": 12,
       "removed": 0
     },
-    "age_days": 12
+    "age_days": 15
   },
   "committee_audit": {
     "date": "2026-11-16",
-    "age_days": 0,
+    "age_days": 3,
     "status": "green",
     "checked": 15,
     "matched": 8,
@@ -181,6 +185,11 @@
   },
   "known_failures": [
     {
+      "log": "last_run.log",
+      "sample": "API 437: with permits 282, confirmed empty 323, failed 0, empty-but-throttled 0 → UI fallback 0",
+      "count": 1
+    },
+    {
       "log": "mavat_sync_last_run.log",
       "sample": "Waiting 45 seconds to let WAF challenge clear (or for you to solve it manually)...",
       "count": 2
@@ -194,34 +203,34 @@
     "filtered_examples": [
       "2016/0258.02",
       "2008/0076.06",
-      "1981/0916.03",
       "1999/0678.06",
       "2005/0866.11",
-      "2000/0756.00",
-      "1980/0245.00",
-      "1980/0245.01",
+      "1981/0916.03",
+      "1959/0244.02",
+      "1980/1018.00",
+      "1990/1004.02",
+      "1983/0586.00",
+      "1989/0603.00",
+      "1981/0060.00",
+      "1981/0060.01",
       "1963/0399.03",
       "2016/1083.01",
-      "2004/0313.00",
-      "1989/0747.00",
-      "1994/0452.04",
-      "1982/0180.03",
-      "1982/0180.04"
+      "1980/1018.00"
     ],
     "cross_attributed": 8,
     "cross_attributed_examples": [
-      "2022/0311.00",
       "2025/0258.00",
+      "2022/0311.00",
       "2017/1080.00",
-      "2025/0225.00",
       "2021/0479.00",
-      "2025/0102.00",
       "2024/0568.01",
-      "2021/0112.00"
+      "2021/0112.00",
+      "2025/0225.00",
+      "2025/0102.00"
     ],
-    "closed_hidden_by_default": 512,
-    "online_submission_units_not_counted": 54,
-    "online_submission_units": 596,
+    "closed_hidden_by_default": 511,
+    "online_submission_units_not_counted": 49,
+    "online_submission_units": 477,
     "total_hidden": 102
   },
   "silent_zero_plans": {
