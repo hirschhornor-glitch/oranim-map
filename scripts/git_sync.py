@@ -410,6 +410,41 @@ def _push_unpushed_scripts_commits(repo_dir: str) -> bool:
     return True
 
 
+def _missing_local_deps(root_dir: str, repo_scripts: str):
+    """Root-level modules imported (top-level, absolute) by any repo script that
+    exist as <root>/<mod>.py but not in repo scripts/. Iterates to a fixed point so
+    a dependency's own local imports are included too. A script that fails to parse
+    is reported, not skipped silently."""
+    import ast
+    root_mods = {os.path.splitext(os.path.basename(p))[0]
+                 for p in glob.glob(os.path.join(root_dir, '*.py'))}
+    have = {os.path.splitext(os.path.basename(p))[0]
+            for p in glob.glob(os.path.join(repo_scripts, '*.py'))}
+    to_scan = [os.path.join(repo_scripts, m + '.py') for m in sorted(have)]
+    added = []
+    while to_scan:
+        path = to_scan.pop()
+        try:
+            with open(path, encoding='utf-8') as f:
+                tree = ast.parse(f.read())
+        except Exception as e:  # noqa: BLE001 — reported, not swallowed
+            print(f"[git_sync] WARNING: could not parse {path} for deps: {e}", file=sys.stderr)
+            continue
+        for node in tree.body:
+            if isinstance(node, ast.Import):
+                mods = [a.name.split('.')[0] for a in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                mods = [node.module.split('.')[0]]
+            else:
+                continue
+            for m in mods:
+                if m in root_mods and m not in have:
+                    have.add(m)
+                    added.append(m + '.py')
+                    to_scan.append(os.path.join(root_dir, m + '.py'))
+    return sorted(added)
+
+
 def mirror_scripts_to_repo(root_dir: str = SCRIPTS_ROOT_DIR,
                            repo_dir: str = REPO_DIR,
                            push: bool = True):
@@ -447,6 +482,14 @@ def mirror_scripts_to_repo(root_dir: str = SCRIPTS_ROOT_DIR,
             continue  # identical content (ignoring line endings)
         shutil.copyfile(root_path, repo_path)
         changed.append(f"{SCRIPTS_REPO_SUBDIR}/{name}")
+    # A mirrored script may start importing a NEW root-level module (gs_retry,
+    # 2026-11-16). Only existing scripts/ files are mirrored, so that module never
+    # reached the repo and every CI job importing it died with ModuleNotFoundError
+    # (Check Bdika Tichnonit, 2026-11-18). Carry such sibling dependencies along.
+    for dep in _missing_local_deps(root_dir, repo_scripts):
+        shutil.copyfile(os.path.join(root_dir, dep), os.path.join(repo_scripts, dep))
+        changed.append(f"{SCRIPTS_REPO_SUBDIR}/{dep}")
+        print(f"[git_sync] added sibling dependency {dep} (imported by a mirrored script)")
     if pending:
         print(f"[git_sync] {len(pending)} script(s) copied by an earlier run but never "
               "committed/pushed: " + ", ".join(os.path.basename(p) for p in pending))
